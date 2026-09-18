@@ -141,6 +141,29 @@ def make_blob(name, loc, scale, mat, subdiv=2):
     return flat(obj)
 
 
+def make_soft_blob(name, loc, scale, mat, subdiv=3, j=0.004):
+    """Smooth-shaded, lightly-jittered blob for hands/feet.
+
+    `make_blob` is flat-shaded to match the papercraft body, which is fine
+    for a torso panel but makes hands/feet read as faceted paperweights.
+    This keeps the same handmade wobble (tiny jitter) but shades the result
+    smooth, so extremities look soft and rounded — more like a living hand
+    or foot — against the flat-faceted body and limbs.
+    """
+    bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=subdiv, radius=1, location=loc)
+    obj = bpy.context.active_object
+    obj.name = name
+    obj.scale = scale
+    bpy.ops.object.transform_apply(scale=True)
+    jitter_verts(obj, j)
+    if mat:
+        obj.data.materials.append(mat)
+    uv(obj)
+    for p in obj.data.polygons:
+        p.use_smooth = True
+    return obj
+
+
 def make_limb(name, loc, length, r0, r1, mat, axis="Z"):
     bpy.ops.mesh.primitive_cone_add(vertices=9, radius1=r0, radius2=r1, depth=length, location=loc)
     obj = bpy.context.active_object
@@ -227,7 +250,7 @@ def build():
     # Legs
     for side, x in (("L", -torso_w * 0.18), ("R", torso_w * 0.18)):
         parts.append(make_limb(f"Leg_{side}", (x, 0, leg_len / 2), leg_len, h * 0.072, h * 0.05, tunic))
-        foot = make_blob(f"Foot_{side}", (x, h * 0.05, h * 0.045), (h * 0.09, h * 0.13, h * 0.045), shoe, 1)
+        foot = make_soft_blob(f"Foot_{side}", (x, h * 0.06, h * 0.05), (h * 0.10, h * 0.14, h * 0.05), shoe)
         parts.append(foot)
 
     parts.append(make_tunic("Torso", (0, 0, hip_y + torso_h / 2), (torso_w, torso_d, torso_h), tunic))
@@ -239,7 +262,7 @@ def build():
     for side, xs in (("L", -1), ("R", 1)):
         x = xs * (torso_w * 0.55)
         parts.append(make_limb(f"Arm_{side}", (x, 0.02 * xs, shoulder_y - arm_len / 2), arm_len, h * 0.05, h * 0.038, skin))
-        parts.append(make_blob(f"Hand_{side}", (x, 0.02 * xs, shoulder_y - arm_len), (h * 0.055,) * 3, skin, 1))
+        parts.append(make_soft_blob(f"Hand_{side}", (x, 0.02 * xs, shoulder_y - arm_len), (h * 0.06, h * 0.058, h * 0.06), skin))
 
     # Head cluster
     head_z = shoulder_y + head_r * 0.95

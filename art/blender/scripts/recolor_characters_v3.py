@@ -39,6 +39,7 @@ DAVID_COLORS = {
     "D_Sandal": (0.40, 0.26, 0.16, 1.0),
     "D_Eye": (0.08, 0.08, 0.10, 1.0),
     "D_Sheep": (0.95, 0.92, 0.85, 1.0),
+    "D_Snout": (0.95, 0.65, 0.72, 1.0),  # pink snout
     "D_OL": (0.05, 0.04, 0.04, 1.0),
 }
 
@@ -47,6 +48,8 @@ ITEM_COLORS = {
     "I_Snout": (0.95, 0.65, 0.72, 1.0),    # pink snout
     "I_Wood": (0.65, 0.40, 0.18, 1.0),     # rich wood ≠ hills
     "I_Rock": (0.55, 0.62, 0.72, 1.0),     # cool grey-blue
+    "I_Eye": (0.08, 0.08, 0.10, 1.0),      # dark eye bead
+    "I_Horn": (0.62, 0.52, 0.38, 1.0),     # keratin tan-grey, reads against the wool
     "I_OL": (0.05, 0.04, 0.04, 1.0),
 }
 
@@ -117,7 +120,7 @@ def apply_colors(color_map):
     for name, color in color_map.items():
         mat = bpy.data.materials.get(name)
         if mat:
-            mix = 0.0 if name in ("OL", "D_OL", "I_OL", "Eye", "D_Eye", "Hair", "D_Hair") else GRAIN_MIX
+            mix = 0.0 if name in ("OL", "D_OL", "I_OL", "Eye", "D_Eye", "I_Eye", "Hair", "D_Hair") else GRAIN_MIX
             tint_material(mat, color, mix_fac=mix)
             print("RECOLOR", name, color)
         else:

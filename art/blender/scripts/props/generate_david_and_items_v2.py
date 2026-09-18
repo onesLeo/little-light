@@ -116,6 +116,29 @@ def blob(name, loc, scale, mat, subdiv=2, j=0.01):
     return flat(o)
 
 
+def soft_blob(name, loc, scale, mat, subdiv=3, j=0.003):
+    """Smooth-shaded blob for hands, feet and hooves.
+
+    `blob()` is flat-shaded to match the papercraft body panels, which reads
+    fine for a torso but makes hands/feet/hooves look like faceted paper
+    lumps. This keeps a whisper of the same handmade jitter but shades the
+    result smooth, so extremities read as soft and rounded — alive — against
+    the flat-faceted body and limbs.
+    """
+    bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=subdiv, radius=1, location=loc)
+    o = bpy.context.active_object
+    o.name = name
+    o.scale = scale
+    bpy.ops.object.transform_apply(scale=True)
+    jitter(o, j)
+    if mat:
+        o.data.materials.append(mat)
+    uv(o)
+    for p in o.data.polygons:
+        p.use_smooth = True
+    return o
+
+
 def soft_box(name, size, loc, mat, bevel=0.12, cuts=1):
     bpy.ops.mesh.primitive_cube_add(size=1, location=loc)
     o = bpy.context.active_object
@@ -185,6 +208,79 @@ def origin_at(obj, loc):
     bpy.ops.object.origin_set(type="ORIGIN_CURSOR")
 
 
+def build_lamb(prefix, origin, wool, leg_mat, eye_mat, snout_mat=None, horn_mat=None,
+               is_ram=False, scale=1.0):
+    """A flock animal built around `origin`: body, head, ears, snout, four
+    soft-hoofed legs and eyes — shared by David's companion sheep and the
+    collectible Wonder-Item lamb so both read as living animals rather than
+    wool cushions. `is_ram=True` (adult male) adds a pair of short,
+    backward-curving horns.
+    """
+    ox, oy, oz = origin
+
+    def P(dx, dy, dz):
+        return (ox + dx * scale, oy + dy * scale, oz + dz * scale)
+
+    def S(*v):
+        return tuple(c * scale for c in v)
+
+    parts = []
+    parts.append(blob(f"{prefix}Body", P(0, 0, 0.18), S(0.16, 0.14, 0.13), wool, 2, 0.012))
+    parts.append(blob(f"{prefix}Head", P(0, 0.16, 0.26), S(0.09, 0.08, 0.09), wool, 2, 0.008))
+    for side, xs in (("L", -1), ("R", 1)):
+        parts.append(blob(f"{prefix}Ear{side}", P(xs * 0.06, 0.20, 0.30), S(0.035, 0.02, 0.045), wool, 1, 0.003))
+    if snout_mat:
+        parts.append(blob(f"{prefix}Snout", P(0, 0.24, 0.22), S(0.05, 0.04, 0.04), snout_mat, 1, 0.003))
+
+    # Eyes — small dark beads flanking the snout. The single biggest thing
+    # that makes this read as an animal rather than a cushion of wool.
+    for side, xs in (("L", -1), ("R", 1)):
+        parts.append(soft_blob(f"{prefix}Eye{side}", P(xs * 0.045, 0.235, 0.275), S(0.015, 0.015, 0.015), eye_mat, 2, 0.0))
+
+    # Horns — adult male only. Two short segments per side, the second more
+    # sharply swept than the first: a single straight cone reads as a spike,
+    # two segments at different angles is what sells "curved ram horn" at
+    # this poly budget.
+    if is_ram and horn_mat:
+        for side, xs in (("L", -1), ("R", 1)):
+            base = Vector(P(xs * 0.055, 0.14, 0.35))
+            # Segment A: rooted at `base` (a cone is centered on its own
+            # location, so the true root/tip sit at +/- half its length along
+            # its rotated axis — chaining on the *center* would leave a gap).
+            len1 = 0.09 * scale
+            rot1 = Euler((math.radians(-30), 0, math.radians(xs * 25)))
+            h1 = limb(f"{prefix}Horn{side}A", tuple(base), len1, 0.020 * scale, 0.013 * scale, horn_mat, 6)
+            h1.rotation_euler = rot1
+            bpy.ops.object.transform_apply(rotation=True)
+            tip = base + (rot1.to_matrix() @ Vector((0, 0, 1))) * (len1 / 2)
+            # Segment B: swept back further, its near end centered exactly on
+            # segment A's tip so the two visibly join.
+            len2 = 0.07 * scale
+            rot2 = Euler((math.radians(-68), 0, math.radians(xs * 42)))
+            h2_center = tip + (rot2.to_matrix() @ Vector((0, 0, 1))) * (len2 / 2)
+            h2 = limb(f"{prefix}Horn{side}B", tuple(h2_center), len2, 0.013 * scale, 0.005 * scale, horn_mat, 6)
+            h2.rotation_euler = rot2
+            bpy.ops.object.transform_apply(rotation=True)
+            parts.append(h1)
+            parts.append(h2)
+
+    # Legs with a soft, smooth-shaded hoof cap instead of a bare cone point —
+    # softer silhouette and the tonal/shading break reads as an actual hoof.
+    leg_offsets = [(-0.08, -0.05, 0.0), (0.08, -0.05, 0.0), (-0.08, 0.09, 0.0), (0.08, 0.09, 0.0)]
+    for i, (dx, dy, dz) in enumerate(leg_offsets):
+        parts.append(limb(f"{prefix}Leg{i}", P(dx, dy, 0.07 + dz), 0.13 * scale, 0.027 * scale, 0.021 * scale, leg_mat, 6))
+        parts.append(soft_blob(f"{prefix}Hoof{i}", P(dx, dy, 0.006 + dz), S(0.026, 0.026, 0.02), leg_mat, 2))
+
+    # Shaggy wool fluff clumps for a less-uniform silhouette.
+    fluff_specs = [((0.08, 0.02, 0.06), 0.08), ((-0.07, -0.02, 0.05), 0.07),
+                   ((0.03, -0.08, 0.04), 0.065), ((-0.02, 0.08, 0.05), 0.06),
+                   ((0.0, 0.0, 0.10), 0.07)]
+    for i, (off, sc) in enumerate(fluff_specs):
+        parts.append(blob(f"{prefix}Fluff{i}", P(off[0], off[1], 0.18 + off[2]), S(sc, sc, sc), wool, 1, 0.012))
+
+    return parts
+
+
 def build_david():
     skin = paper("D_Skin", (0.88, 0.70, 0.53), 0.28)
     hair = paper("D_Hair", (0.32, 0.20, 0.12), 0.42)
@@ -193,6 +289,7 @@ def build_david():
     sandal = paper("D_Sandal", (0.38, 0.26, 0.16), 0.35)
     eye = paper("D_Eye", (0.07, 0.07, 0.09), 0.0)
     wool = paper("D_Sheep", (0.94, 0.92, 0.87), 0.45)
+    snout = paper("D_Snout", (0.90, 0.82, 0.75), 0.25)
     ol = paper("D_OL", (0.04, 0.04, 0.05), 0.0)
 
     parts = []
@@ -203,7 +300,7 @@ def build_david():
         shin.rotation_euler = Euler((math.pi / 2, 0, 0))
         bpy.ops.object.transform_apply(rotation=True)
         parts.append(shin)
-        parts.append(blob(f"Foot_{side}", (x, 0.28, 0.04), (0.08, 0.12, 0.04), sandal, 1, 0.006))
+        parts.append(soft_blob(f"Foot_{side}", (x, 0.28, 0.045), (0.085, 0.125, 0.045), sandal))
         parts.append(limb(f"Thigh_{side}", (x, 0.02, 0.28), 0.26, 0.065, 0.055, tunic, 10))
 
     hip_z = 0.42
@@ -213,7 +310,7 @@ def build_david():
     for side, xs in (("L", -1), ("R", 1)):
         x = xs * 0.20
         parts.append(limb(f"Arm_{side}", (x, 0.05 if xs > 0 else 0.0, hip_z + 0.16), 0.26, 0.045, 0.035, skin, 9))
-        parts.append(blob(f"Hand_{side}", (x, 0.12 if xs > 0 else -0.02, hip_z + 0.04), (0.05,) * 3, skin, 1))
+        parts.append(soft_blob(f"Hand_{side}", (x, 0.12 if xs > 0 else -0.02, hip_z + 0.04), (0.055,) * 3, skin))
 
     head_z = hip_z + 0.40
     parts.append(blob("Head", (0, 0, head_z), (0.13, 0.12, 0.14), skin, 2, 0.008))
@@ -223,19 +320,9 @@ def build_david():
         parts.append(blob(f"Cheek_{side}", (xs * 0.09, 0.04, head_z - 0.02), (0.04,) * 3, skin, 1, 0.004))
         parts.append(blob(f"Eye_{side}", (xs * 0.045, 0.11, head_z + 0.01), (0.018,) * 3, eye, 1, 0.001))
 
-    # Fluffier sheep — multiple wool blobs
-    sheep = []
-    sheep.append(blob("SheepBody", (0.48, 0.12, 0.18), (0.16, 0.14, 0.13), wool, 2, 0.012))
-    sheep.append(blob("SheepHead", (0.48, 0.28, 0.26), (0.09, 0.08, 0.09), wool, 2, 0.008))
-    sheep.append(blob("SheepEarL", (0.42, 0.32, 0.30), (0.03, 0.02, 0.04), wool, 1, 0.003))
-    sheep.append(blob("SheepEarR", (0.54, 0.32, 0.30), (0.03, 0.02, 0.04), wool, 1, 0.003))
-    for i, loc in enumerate([(0.40, 0.05, 0.06), (0.56, 0.05, 0.06), (0.42, 0.18, 0.06), (0.54, 0.18, 0.06)]):
-        sheep.append(limb(f"SheepLeg{i}", loc, 0.12, 0.025, 0.02, sandal, 6))
-    # wool clumps
-    for i, (off, sc) in enumerate([((0.05, 0, 0.06), 0.07), ((-0.04, 0.03, 0.05), 0.06), ((0.02, -0.05, 0.04), 0.055)]):
-        sheep.append(blob(f"Wool{i}", (0.48 + off[0], 0.12 + off[1], 0.18 + off[2]), (sc,) * 3, wool, 1, 0.01))
-
-    parts.extend(sheep)
+    # Companion sheep — shared lamb rig (body/head/ears/snout/eyes/hooves).
+    # Not a ram: David's flock companion stays hornless here.
+    parts.extend(build_lamb("Sheep", (0.48, 0.12, 0.0), wool, sandal, eye, snout_mat=snout, is_ram=False))
     body = join(parts, "David_Mentor")
     origin_at(body, (0, 0, 0))
     ol_o = outline(body, 0.011, ol)
@@ -246,6 +333,9 @@ def build_items():
     rock = paper("I_Rock", (0.64, 0.58, 0.48), 0.4)
     wood = paper("I_Wood", (0.50, 0.34, 0.18), 0.42)
     wool = paper("I_Wool", (0.95, 0.93, 0.88), 0.48)
+    snout = paper("I_Snout", (0.90, 0.82, 0.75), 0.25)
+    eye = paper("I_Eye", (0.07, 0.07, 0.09), 0.0)
+    horn = paper("I_Horn", (0.58, 0.48, 0.34), 0.4)
     ol = paper("I_OL", (0.04, 0.04, 0.05), 0.0)
 
     # --- Stone: irregular low-poly pebble (not a perfect sphere) ---
@@ -268,23 +358,9 @@ def build_items():
     origin_at(staff, (1.6, 0, 0))
     staff_ol = outline(staff, 0.009, ol)
 
-    # --- Lamb: fluffy multi-blob wool ---
-    lb = blob("LambBody", (3.2, 0, 0.22), (0.18, 0.15, 0.14), wool, 2, 0.014)
-    lh = blob("LambHead", (3.2, 0.20, 0.34), (0.10, 0.09, 0.10), wool, 2, 0.01)
-    le1 = blob("LambEarL", (3.12, 0.26, 0.40), (0.035, 0.02, 0.045), wool, 1)
-    le2 = blob("LambEarR", (3.28, 0.26, 0.40), (0.035, 0.02, 0.045), wool, 1)
-    snout = blob("LambSnout", (3.2, 0.28, 0.30), (0.05, 0.04, 0.04), paper("I_Snout", (0.90, 0.82, 0.75), 0.25), 1, 0.003)
-    legs = []
-    for i, loc in enumerate([(3.08, -0.06, 0.07), (3.32, -0.06, 0.07), (3.08, 0.10, 0.07), (3.32, 0.10, 0.07)]):
-        legs.append(limb(f"LambLeg{i}", loc, 0.14, 0.028, 0.022, wood, 7))
-    fluff = []
-    for i, (off, sc) in enumerate([
-        ((0.08, 0.02, 0.06), 0.08), ((-0.07, -0.02, 0.05), 0.07),
-        ((0.03, -0.08, 0.04), 0.065), ((-0.02, 0.08, 0.05), 0.06),
-        ((0.0, 0.0, 0.1), 0.07),
-    ]):
-        fluff.append(blob(f"LambFluff{i}", (3.2 + off[0], off[1], 0.22 + off[2]), (sc,) * 3, wool, 1, 0.012))
-    lamb = join([lb, lh, le1, le2, snout] + legs + fluff, "WonderItem_Lamb")
+    # --- Lamb: shared lamb rig, adult male (horned) ---
+    lamb_parts = build_lamb("Lamb", (3.2, 0.0, 0.0), wool, wood, eye, snout_mat=snout, horn_mat=horn, is_ram=True)
+    lamb = join(lamb_parts, "WonderItem_Lamb")
     origin_at(lamb, (3.2, 0, 0))
     lamb_ol = outline(lamb, 0.009, ol)
 
