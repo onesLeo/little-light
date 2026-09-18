@@ -78,7 +78,8 @@ func _physics_process(delta: float) -> void:
 		velocity.z = direction.z * move_speed
 		# Yaw only the mesh — keep CharacterBody + camera orientation fixed.
 		if _model:
-			var target_yaw := atan2(direction.x, direction.z)
+			# Godot Node3D forward is -Z; face move direction (fixes left/right moonwalk).
+			var target_yaw := atan2(-direction.x, -direction.z)
 			_model.rotation.y = lerp_angle(_model.rotation.y, target_yaw, clampf(turn_speed * delta, 0.0, 1.0))
 	else:
 		velocity.x = 0.0
