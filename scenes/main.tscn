@@ -1,4 +1,4 @@
-[gd_scene load_steps=28 format=3]
+[gd_scene load_steps=29 format=3]
 
 [ext_resource type="PackedScene" path="res://assets/wonder_walker_v6.glb" id="1_ww"]
 [ext_resource type="PackedScene" path="res://assets/bethlehem_valley_v6.glb" id="2_valley"]
@@ -16,6 +16,7 @@
 [ext_resource type="PackedScene" path="res://assets/bethlehem_stream_fish_alive.glb" id="14_stream"]
 [ext_resource type="Script" path="res://scripts/play_all_animation_loops.gd" id="15_loops"]
 [ext_resource type="Script" path="res://scripts/hide_static_valley_water.gd" id="16_hidewater"]
+[ext_resource type="Script" path="res://scripts/charm_award.gd" id="17_charm"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
 radius = 0.35
@@ -228,6 +229,13 @@ surface_material_override/0 = SubResource("Mat_gold")
 unique_name_in_owner = true
 script = ExtResource("4_sh")
 taps_required = 1
+
+[node name="CharmAward" type="Node3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, 1.15, 3.4)
+script = ExtResource("17_charm")
+player_path = NodePath("../Player")
+david_path = NodePath("../DavidMentor")
 
 [node name="ChapterDirector" type="Node" parent="."]
 script = ExtResource("5_dir")
