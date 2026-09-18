@@ -110,6 +110,9 @@ pixel. Remove the autoload again before committing.
 
 `assets/bethlehem_stream_fish_alive.glb` — papercraft brook + waterfall foam + 3 fish (12fps STEP loops). Instanced as `StreamFishAlive` on the west stream bank; static valley water/fish meshes are hidden at runtime. Water meshes skip collision via `mesh_collision_baker.gd`.
 
+## Wonder-Walker v8
+
+Player mesh uses `assets/wonder_walker_v8.glb` (solid hair crown for top-down read). `WW_Walk` @ 12fps STEP; import keeps `remove_immutable_tracks=false`.
 ## Courage charm award
 
 After Joshua 1:9 / "Don't. Be. Afraid.", beat `CHARM_AWARD` plays a placeholder bracelet+charm float-snap ceremony (`scripts/charm_award.gd`). Swap meshes later with authored art.
