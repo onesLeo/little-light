@@ -113,3 +113,6 @@ pixel. Remove the autoload again before committing.
 ## Wonder-Walker v8
 
 Player mesh uses `assets/wonder_walker_v8.glb` (solid hair crown for top-down read). `WW_Walk` @ 12fps STEP; import keeps `remove_immutable_tracks=false`.
+## Courage charm award
+
+After Joshua 1:9 / "Don't. Be. Afraid.", beat `CHARM_AWARD` plays a placeholder bracelet+charm float-snap ceremony (`scripts/charm_award.gd`). Swap meshes later with authored art.

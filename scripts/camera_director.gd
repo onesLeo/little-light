@@ -12,6 +12,8 @@ extends Node
 @export var tabletop_camera_path: NodePath = ^"../TabletopCamera"
 @export var closeup_camera_path: NodePath = ^"../CloseUpCamera"
 @export var closeup_look_height: float = 0.6
+@export var charm_camera_distance: float = 1.6
+@export var charm_camera_height: float = 1.1
 
 var _tabletop: Camera3D
 var _closeup: Camera3D
@@ -34,4 +36,15 @@ func cut_to_closeup(look_target: Node3D = null) -> void:
 		return
 	if look_target:
 		_closeup.look_at(look_target.global_position + Vector3(0.0, closeup_look_height, 0.0), Vector3.UP)
+	_closeup.current = true
+
+## Intimate framing on the Courage charm / bracelet ceremony.
+func cut_to_charm(look_target: Node3D = null) -> void:
+	if _closeup == null:
+		cut_to_tabletop()
+		return
+	if look_target:
+		var focus := look_target.global_position + Vector3(0.0, 0.15, 0.0)
+		_closeup.global_position = focus + Vector3(0.55, charm_camera_height, charm_camera_distance)
+		_closeup.look_at(focus, Vector3.UP)
 	_closeup.current = true
