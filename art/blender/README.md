@@ -130,3 +130,11 @@ offset, so they visibly join instead of floating apart.
 New materials from this pass (`D_Snout`, `I_Eye`, `I_Horn`) are recolored
 by `recolor_characters_v3.py` alongside the existing set — extend that
 script's color dicts too if you add another new material name.
+
+## Smooth heads and hair
+
+Wonder-Walker's and David's `Head`, `Hair*` and `Cheek_*` are now built with
+`make_soft_blob()` / `soft_blob()` (subdivision 3, whisper of jitter) instead of
+the flat-shaded `blob()`, so heads and hair read as smooth and rounded rather
+than faceted. Eyes stay flat. Regenerate with the usual chain: generator →
+`recolor_characters_v3.py` → `fix_outlines_v6.py`.
