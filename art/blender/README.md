@@ -62,3 +62,7 @@ See `docs/little-light-art-tech-pipeline.md`.
 ## Latest character
 
 Prefer **`generate_wonder_walker_v3.py`** (handmade silhouette jitter, creases, layered hair, grain, 12fps walk).
+
+## Latest props
+
+Prefer **`scripts/props/generate_david_and_items_v2.py`** for David mentor + Wonder Items (stone/staff/lamb) — softer handmade silhouettes than v1.
