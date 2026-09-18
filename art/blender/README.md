@@ -109,3 +109,24 @@ Prefer **`generate_wonder_walker_v3.py`** (handmade silhouette jitter, creases, 
 ## Latest props
 
 Prefer **`scripts/props/generate_david_and_items_v2.py`** for David mentor + Wonder Items (stone/staff/lamb).
+
+## Character liveliness pass
+
+Wonder-Walker's and David's `Hand_*`/`Foot_*` blobs, and the lamb/sheep
+hoof caps, are now built with `soft_blob()` / `make_soft_blob()` instead of
+`blob()` / `make_blob()`: same handmade jitter, but smooth-shaded instead of
+flat, so extremities read as soft and rounded against the flat-faceted
+paper body rather than as faceted lumps.
+
+The two sheep-shaped things in the game (David's companion and the
+collectible `WonderItem_Lamb`) are now built from one shared
+`build_lamb()` helper in `generate_david_and_items_v2.py`: body, head,
+ears, snout, eyes, and four legs with soft hoof caps. Passing
+`is_ram=True` (used for `WonderItem_Lamb`, the adult male) adds a pair of
+short, backward-curving horns — two cone segments per side, chained tip to
+tip using the segment's actual rotated endpoint rather than a guessed
+offset, so they visibly join instead of floating apart.
+
+New materials from this pass (`D_Snout`, `I_Eye`, `I_Horn`) are recolored
+by `recolor_characters_v3.py` alongside the existing set — extend that
+script's color dicts too if you add another new material name.
