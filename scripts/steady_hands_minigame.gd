@@ -38,8 +38,13 @@ func start_minigame() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not active:
 		return
-	# ui_accept = Space / gamepad A. Mobile would call _on_tap() from a button.
-	if event.is_action_pressed("ui_accept"):
+	# ui_accept = Space / Enter / gamepad A. Also accept raw Space if InputMap misses.
+	var space := event.is_action_pressed("ui_accept")
+	if not space and event is InputEventKey and event.pressed and not event.echo:
+		var k: int = event.keycode
+		var pk: int = event.physical_keycode
+		space = k == KEY_SPACE or pk == KEY_SPACE or k == KEY_ENTER or pk == KEY_ENTER
+	if space:
 		_on_tap()
 		get_viewport().set_input_as_handled()
 
