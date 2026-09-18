@@ -1,4 +1,4 @@
-[gd_scene load_steps=23 format=3]
+[gd_scene load_steps=25 format=3]
 
 [ext_resource type="PackedScene" path="res://assets/wonder_walker_v6.glb" id="1_ww"]
 [ext_resource type="PackedScene" path="res://assets/bethlehem_valley_v6.glb" id="2_valley"]
@@ -11,6 +11,8 @@
 [ext_resource type="Script" path="res://scripts/mesh_collision_baker.gd" id="9_bake"]
 [ext_resource type="Script" path="res://scripts/wonder_light.gd" id="10_wl"]
 [ext_resource type="Script" path="res://scripts/camera_director.gd" id="11_camdir"]
+[ext_resource type="Script" path="res://scripts/wonder_item_glow.gd" id="12_glow"]
+[ext_resource type="Script" path="res://scripts/audio_director.gd" id="13_audio"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
 radius = 0.35
@@ -158,6 +160,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 
 
 [node name="WonderItems" type="Node3D" parent="."]
+script = ExtResource("12_glow")
 
 [node name="WonderItemsVisual" parent="WonderItems" instance=ExtResource("7_items")]
 transform = Transform3D(1.35, 0, 0, 0, 1.35, 0, 0, 0, 1.35, 0, 0, 0)
@@ -214,6 +217,16 @@ taps_required = 1
 
 [node name="ChapterDirector" type="Node" parent="."]
 script = ExtResource("5_dir")
+
+[node name="AudioDirector" type="Node" parent="."]
+unique_name_in_owner = true
+script = ExtResource("13_audio")
+
+[node name="SfxA" type="AudioStreamPlayer" parent="AudioDirector"]
+
+[node name="SfxB" type="AudioStreamPlayer" parent="AudioDirector"]
+
+[node name="Vo" type="AudioStreamPlayer" parent="AudioDirector"]
 
 [node name="WonderLight" type="Node3D" parent="."]
 unique_name_in_owner = true
