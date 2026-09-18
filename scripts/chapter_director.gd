@@ -1,0 +1,228 @@
+extends Node
+## Beat walker for David & Goliath P0.2 vertical slice.
+## Arrive → Explore (3 Wonder Items) → Meet David (Band A) → Steady Hands
+## → Off-screen resolution → Reflect → Joshua 1:9 + "Don't. Be. Afraid." + Courage charm.
+## No violence shown. Wonder-Walker is a guest, not David.
+
+enum Beat {
+	ARRIVE,
+	MEET_DAVID_A,   # first David lines
+	MEET_DAVID_B,   # Band A auto reply + David's thanks
+	EXPLORE,
+	STEADY_INTRO,   # VO then enable minigame
+	STEADY_PLAY,    # waiting on minigame_completed
+	STEADY_DONE,    # David's thank-you after minigame
+	RESOLUTION,
+	REFLECT,
+	VERSE_REWARD,
+	DONE,
+}
+
+@onready var dialogue_label: Label = %DialogueLabel
+@onready var prompt_label: Label = %PromptLabel
+@onready var player: CharacterBody3D = %Player
+@onready var steady_hands: Node = %SteadyHands
+
+var beat: Beat = Beat.ARRIVE
+var wonder_items_found: int = 0
+const WONDER_ITEMS_NEEDED: int = 3
+
+const ITEM_FLAVOR := {
+	"WonderItem_Stone": "A stone, just right for a sling.",
+	"WonderItem_Staff": "Worn smooth from long days watching sheep.",
+	"WonderItem_Lamb": "Baa! This little one wandered off again.",
+}
+
+var _advance_ready: bool = false
+var _near_item: Area3D = null
+var _items_collected: Dictionary = {}
+
+func _ready() -> void:
+	dialogue_label.text = ""
+	prompt_label.text = ""
+	if steady_hands and steady_hands.has_signal("minigame_completed"):
+		steady_hands.minigame_completed.connect(_on_minigame_completed)
+	var items_root := get_node_or_null("../WonderItems")
+	if items_root:
+		for child in items_root.get_children():
+			if child is Area3D:
+				child.body_entered.connect(_on_wonder_item_entered.bind(child))
+				child.body_exited.connect(_on_wonder_item_exited.bind(child))
+	_enter_beat(Beat.ARRIVE)
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_accept") and _advance_ready:
+		_advance_ready = false
+		_on_advance()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("interact"):
+		_try_collect_near_item()
+		get_viewport().set_input_as_handled()
+
+func _enter_beat(next: Beat) -> void:
+	beat = next
+	match beat:
+		Beat.ARRIVE:
+			_set_player_move(false)
+			_show(
+				"Wonder Light: \"Ooh, look at that! A little valley, all made of paper and light.\"",
+				"Press Space to continue"
+			)
+			_advance_ready = true
+
+		Beat.EXPLORE:
+			_set_player_move(true)
+			_show(
+				"Wonder Light: \"Three Wonder Items are hidden on the hillside. Find them!\"",
+				"Walk near an item and press E  (%d / %d)" % [wonder_items_found, WONDER_ITEMS_NEEDED]
+			)
+			_advance_ready = false
+
+		Beat.MEET_DAVID_A:
+			_set_player_move(false)
+			_show(
+				"David: \"Oh! Hello there. Are you lost too?\"\nDavid: \"Everyone's scared of the big giant. But someone has to be brave.\"",
+				"Press Space to continue"
+			)
+			_advance_ready = true
+
+		Beat.MEET_DAVID_B:
+			# Band A: Wonder Light speaks for the child — no reply choices.
+			_show(
+				"Wonder Light: \"David is scared too. But he's still going to try.\"\nDavid: \"Thanks. Will you stay close while I get ready?\"",
+				"Press Space to continue"
+			)
+			_advance_ready = true
+
+		Beat.STEADY_INTRO:
+			_set_player_move(false)
+			_show(
+				"Wonder Light: \"Let's help David get calm and steady. Breathe in... and out.\"\nDavid: \"In... and out. Just like counting sheep.\"",
+				"Press Space to begin Steady Hands"
+			)
+			_advance_ready = true
+
+		Beat.STEADY_PLAY:
+			_show(
+				"Wonder Light: \"Breathe with David...\"",
+				"Press Space once  (Steady Hands — always succeeds)"
+			)
+			_advance_ready = false
+			if steady_hands and steady_hands.has_method("start_minigame"):
+				steady_hands.start_minigame()
+
+		Beat.STEADY_DONE:
+			_show(
+				"David: \"I feel steady now. Thank you for staying with me.\"",
+				"Press Space to continue"
+			)
+			_advance_ready = true
+
+		Beat.RESOLUTION:
+			# Off-screen resolution — no fight shown.
+			_show(
+				"Wonder Light: \"David walked out to the valley. And when it was over, the whole camp was cheering his name.\"\n(The giant stays a distant silhouette on the far ridge — no fight is shown.)",
+				"Press Space to continue"
+			)
+			_advance_ready = true
+
+		Beat.REFLECT:
+			_show(
+				"Wonder Light: \"Being brave doesn't mean you're not scared. It means you go anyway.\"",
+				"Press Space to continue"
+			)
+			_advance_ready = true
+
+		Beat.VERSE_REWARD:
+			_show(
+				"Joshua 1:9 (WEB):\n\"Haven't I commanded you? Be strong and of good courage; don't be afraid, neither be dismayed: for Yahweh your God is with you wherever you go.\"\n\nWonder Light: \"This verse has three special words. Can you say them with me?\nDon't. Be. Afraid.\"\n\n[Courage charm stub → Virtue Bracelet]",
+				"Press Space to finish"
+			)
+			_advance_ready = true
+
+		Beat.DONE:
+			_set_player_move(true)
+			_show(
+				"Chapter complete — courage over fear.\n(Wonder-Walker was a guest. David remains David.)",
+				"Thanks for playing this P0.2 slice"
+			)
+			_advance_ready = false
+
+func _on_advance() -> void:
+	match beat:
+		Beat.ARRIVE:
+			_enter_beat(Beat.EXPLORE)
+		Beat.MEET_DAVID_A:
+			_enter_beat(Beat.MEET_DAVID_B)
+		Beat.MEET_DAVID_B:
+			_enter_beat(Beat.STEADY_INTRO)
+		Beat.STEADY_INTRO:
+			_enter_beat(Beat.STEADY_PLAY)
+		Beat.STEADY_DONE:
+			_enter_beat(Beat.RESOLUTION)
+		Beat.RESOLUTION:
+			_enter_beat(Beat.REFLECT)
+		Beat.REFLECT:
+			_enter_beat(Beat.VERSE_REWARD)
+		Beat.VERSE_REWARD:
+			_enter_beat(Beat.DONE)
+		_:
+			pass
+
+func _on_minigame_completed() -> void:
+	_enter_beat(Beat.STEADY_DONE)
+
+func _on_wonder_item_entered(body: Node3D, area: Area3D) -> void:
+	if body != player:
+		return
+	if _items_collected.has(area.name):
+		return
+	_near_item = area
+	if beat == Beat.EXPLORE:
+		prompt_label.text = "Press E to collect  (%d / %d)" % [wonder_items_found, WONDER_ITEMS_NEEDED]
+
+func _on_wonder_item_exited(body: Node3D, area: Area3D) -> void:
+	if body != player:
+		return
+	if _near_item == area:
+		_near_item = null
+	if beat == Beat.EXPLORE:
+		prompt_label.text = "Walk near an item and press E  (%d / %d)" % [wonder_items_found, WONDER_ITEMS_NEEDED]
+
+func _try_collect_near_item() -> void:
+	if beat != Beat.EXPLORE:
+		return
+	if _near_item == null:
+		return
+	if _items_collected.has(_near_item.name):
+		return
+	_items_collected[_near_item.name] = true
+	wonder_items_found += 1
+	var flavor: String = ITEM_FLAVOR.get(_near_item.name, "A Wonder Item!")
+	dialogue_label.text = flavor
+	# Hide placeholder marker + matching mesh inside wonder_items.glb
+	var mesh := _near_item.get_node_or_null("Marker")
+	if mesh:
+		mesh.visible = false
+	var visuals := get_node_or_null("../WonderItems/WonderItemsVisual")
+	if visuals:
+		var visual_mesh := visuals.find_child(_near_item.name, true, false)
+		if visual_mesh:
+			visual_mesh.visible = false
+		var outline := visuals.find_child(_near_item.name + "_Outline", true, false)
+		if outline:
+			outline.visible = false
+	_near_item = null
+	prompt_label.text = "Collected!  (%d / %d)" % [wonder_items_found, WONDER_ITEMS_NEEDED]
+	if wonder_items_found >= WONDER_ITEMS_NEEDED:
+		# Brief pause then meet David.
+		await get_tree().create_timer(0.8).timeout
+		_enter_beat(Beat.MEET_DAVID_A)
+
+func _show(dialogue: String, prompt: String) -> void:
+	dialogue_label.text = dialogue
+	prompt_label.text = prompt
+
+func _set_player_move(enabled: bool) -> void:
+	if player and "can_move" in player:
+		player.can_move = enabled
