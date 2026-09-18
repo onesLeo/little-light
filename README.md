@@ -8,7 +8,7 @@ Vertical slice: Wonder-Walker explores a Bethlehem valley diorama, finds three W
 
 1. Install / open **Godot 4.3** (or newer 4.x).
 2. **Import** → choose this folder (`godot-david-slice/`).
-3. Wait for `.glb` imports (`assets/wonder_walker_v3.glb`, `assets/bethlehem_valley_placeholder.glb`, `assets/david_mentor_placeholder.glb`, `assets/wonder_items.glb`).
+3. Wait for `.glb` imports (`assets/wonder_walker_v3.glb`, `assets/bethlehem_valley_v3.glb`, `assets/david_mentor_v2.glb`, `assets/wonder_items_v2.glb`).
 4. Press **F5** (main scene: `res://scenes/main.tscn`).
 
 ## Controls
@@ -40,9 +40,9 @@ godot-david-slice/
     chapter_director.gd
   assets/
     wonder_walker_v3.glb
-    bethlehem_valley_placeholder.glb
-    david_mentor_placeholder.glb
-    wonder_items.glb
+    bethlehem_valley_v3.glb
+    david_mentor_v2.glb
+    wonder_items_v2.glb
 ```
 
 ## Notes / placeholders
@@ -67,3 +67,9 @@ Target: soft **paper-warm** diorama (not harsh studio). Lower sun, strong warm a
 
 ## Collision
 Valley + David meshes bake **trimesh StaticBody** colliders at runtime so the walker cannot pass through solids.
+
+
+## Valley polish (v3)
+- Paper-craft cypress + olive trees, shrubs, and rocks on the Judean hills silhouette.
+- Flat matte materials + inverted-hull outlines (same paper-diorama look).
+- Center play space kept mostly clear for roaming.
