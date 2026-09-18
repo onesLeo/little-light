@@ -272,6 +272,8 @@ def build():
         ((0.02, -0.04, head_r * 0.35), (head_r * 1.05, head_r * 0.95, head_r * 0.55)),
         ((-0.06, 0.02, head_r * 0.25), (head_r * 0.55, head_r * 0.5, head_r * 0.4)),
         ((0.08, 0.0, head_r * 0.2), (head_r * 0.45, head_r * 0.4, head_r * 0.35)),
+        # Back/side coverage so the head is not bald when seen from behind
+        ((0.0, -head_r * 0.3, head_r * 0.14), (head_r * 1.02, head_r * 0.72, head_r * 0.95)),
     ]):
         parts.append(make_soft_blob(f"Hair_{i}", (off[0], off[1], head_z + off[2]), sc, hair, 3, 0.003))
 

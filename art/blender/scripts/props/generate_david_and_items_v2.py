@@ -316,6 +316,7 @@ def build_david():
     parts.append(soft_blob("Head", (0, 0, head_z), (0.13, 0.12, 0.14), skin, 3, 0.004))
     parts.append(soft_blob("Hair0", (0.02, -0.03, head_z + 0.08), (0.14, 0.12, 0.08), hair, 3, 0.003))
     parts.append(soft_blob("Hair1", (-0.05, 0.02, head_z + 0.05), (0.07, 0.06, 0.05), hair, 3, 0.003))
+    parts.append(soft_blob("Hair2", (0.0, -0.035, head_z + 0.02), (0.135, 0.085, 0.13), hair, 3, 0.003))
     for side, xs in (("L", -1), ("R", 1)):
         parts.append(soft_blob(f"Cheek_{side}", (xs * 0.09, 0.04, head_z - 0.02), (0.04,) * 3, skin, 2, 0.002))
         parts.append(blob(f"Eye_{side}", (xs * 0.045, 0.11, head_z + 0.01), (0.018,) * 3, eye, 1, 0.001))

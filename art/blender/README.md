@@ -138,3 +138,9 @@ Wonder-Walker's and David's `Head`, `Hair*` and `Cheek_*` are now built with
 the flat-shaded `blob()`, so heads and hair read as smooth and rounded rather
 than faceted. Eyes stay flat. Regenerate with the usual chain: generator →
 `recolor_characters_v3.py` → `fix_outlines_v6.py`.
+
+## Hair back coverage
+
+`Hair_3` (walker) and `Hair2` (David) are extra soft blobs over the back and
+sides of the head. Before, hair only sat on top, so the camera behind the
+player showed a bald back of the head. The nape stays bare on purpose.
