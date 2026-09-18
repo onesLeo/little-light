@@ -105,3 +105,7 @@ then run under a virtual display (`xvfb-run -a -s "-screen 0 1280x720x24" godot
 enough). `HIDE_NODE`, `CAM_POS`, `CAM_LOOK` and `SHOT_FRAME` steer the capture
 — `HIDE_NODE` in particular is how you find out what is actually drawing at a
 pixel. Remove the autoload again before committing.
+
+## Alive stream pack
+
+`assets/bethlehem_stream_fish_alive.glb` — papercraft brook + waterfall foam + 3 fish (12fps STEP loops). Instanced as `StreamFishAlive` on the west stream bank; static valley water/fish meshes are hidden at runtime. Water meshes skip collision via `mesh_collision_baker.gd`.
