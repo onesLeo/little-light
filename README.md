@@ -8,7 +8,7 @@ Vertical slice: Wonder-Walker explores a Bethlehem valley diorama, finds three W
 
 1. Install / open **Godot 4.3** (or newer 4.x).
 2. **Import** → choose this folder (`godot-david-slice/`).
-3. Wait for `.glb` imports (`assets/wonder_walker_v3.glb`, `assets/bethlehem_valley_v3.glb`, `assets/david_mentor_v2.glb`, `assets/wonder_items_v2.glb`).
+3. Wait for `.glb` imports (`assets/wonder_walker_v6.glb`, `assets/bethlehem_valley_v6.glb`, `assets/david_mentor_v6.glb`, `assets/wonder_items_v6.glb`).
 4. Press **F5** (main scene: `res://scenes/main.tscn`).
 
 ## Controls
@@ -40,7 +40,7 @@ godot-david-slice/
     chapter_director.gd
   assets/
     wonder_walker_v3.glb
-    bethlehem_valley_v3.glb
+    bethlehem_valley_v6.glb
     david_mentor_v2.glb
     wonder_items_v2.glb
 ```
@@ -73,3 +73,35 @@ Valley + David meshes bake **trimesh StaticBody** colliders at runtime so the wa
 - Paper-craft cypress + olive trees, shrubs, and rocks on the Judean hills silhouette.
 - Flat matte materials + inverted-hull outlines (same paper-diorama look).
 - Center play space kept mostly clear for roaming.
+
+
+## Art version note (v6)
+
+The scene uses the **v6** assets. `bethlehem_valley_v6.glb` is sculpted terrain
+(valley floor, walls, back ridge, a cliff shelf) with the river carved into it
+— an upper reach, a waterfall, a plunge pool and a lower reach — rather than
+props laid on a flat slab. The character/prop `_v6` files are the v4/v5 models
+with their outline hulls rebuilt: the old Solidify hulls rendered in Godot as
+an opaque shell that made every character a black silhouette. Both are
+generated from `art/blender/scripts/` — see that folder's README.
+
+`SafetyFloor` sits at y=-2.5 because the riverbed is carved below y=0; at its
+old y=-0.5 its top face capped the channel.
+
+### Offscreen screenshots (no display needed)
+
+`tests/screenshot_autoload.gd` saves the real Forward+ frame to
+`/tmp/godot_screenshot.png`. Register it temporarily as an autoload in
+`project.godot`:
+
+```
+[autoload]
+
+ScreenshotHelper="*res://tests/screenshot_autoload.gd"
+```
+
+then run under a virtual display (`xvfb-run -a -s "-screen 0 1280x720x24" godot
+--path . scenes/main.tscn`; software Vulkan via `mesa-vulkan-drivers` is
+enough). `HIDE_NODE`, `CAM_POS`, `CAM_LOOK` and `SHOT_FRAME` steer the capture
+— `HIDE_NODE` in particular is how you find out what is actually drawing at a
+pixel. Remove the autoload again before committing.

@@ -22,6 +22,9 @@ enum Beat {
 @onready var prompt_label: Label = %PromptLabel
 @onready var player: CharacterBody3D = %Player
 @onready var steady_hands: Node = %SteadyHands
+@onready var camera_director: Node = %CameraDirector
+@onready var wonder_light: Node3D = %WonderLight
+@onready var david_mentor: Node3D = get_node_or_null("../DavidMentor") as Node3D
 
 var beat: Beat = Beat.ARRIVE
 var wonder_items_found: int = 0
@@ -64,6 +67,8 @@ func _enter_beat(next: Beat) -> void:
 	match beat:
 		Beat.ARRIVE:
 			_set_player_move(false)
+			_cut_tabletop()
+			_point_light(null)
 			_show(
 				"Wonder Light: \"Ooh, look at that! A little valley, all made of paper and light.\"",
 				"Press Space to continue"
@@ -72,6 +77,8 @@ func _enter_beat(next: Beat) -> void:
 
 		Beat.EXPLORE:
 			_set_player_move(true)
+			_cut_tabletop()
+			_point_light(null)
 			_show(
 				"Wonder Light: \"Three Wonder Items are hidden on the hillside. Find them!\"",
 				"Walk near an item and press E  (%d / %d)" % [wonder_items_found, WONDER_ITEMS_NEEDED]
@@ -80,6 +87,8 @@ func _enter_beat(next: Beat) -> void:
 
 		Beat.MEET_DAVID_A:
 			_set_player_move(false)
+			_cut_closeup(david_mentor)
+			_point_light(david_mentor)
 			_show(
 				"David: \"Oh! Hello there. Are you lost too?\"\nDavid: \"Everyone's scared of the big giant. But someone has to be brave.\"",
 				"Press Space to continue"
@@ -88,6 +97,8 @@ func _enter_beat(next: Beat) -> void:
 
 		Beat.MEET_DAVID_B:
 			# Band A: Wonder Light speaks for the child — no reply choices.
+			_cut_closeup(david_mentor)
+			_point_light(david_mentor)
 			_show(
 				"Wonder Light: \"David is scared too. But he's still going to try.\"\nDavid: \"Thanks. Will you stay close while I get ready?\"",
 				"Press Space to continue"
@@ -96,6 +107,8 @@ func _enter_beat(next: Beat) -> void:
 
 		Beat.STEADY_INTRO:
 			_set_player_move(false)
+			_cut_closeup(david_mentor)
+			_point_light(david_mentor)
 			_show(
 				"Wonder Light: \"Let's help David get calm and steady. Breathe in... and out.\"\nDavid: \"In... and out. Just like counting sheep.\"",
 				"Press Space to begin Steady Hands"
@@ -103,6 +116,7 @@ func _enter_beat(next: Beat) -> void:
 			_advance_ready = true
 
 		Beat.STEADY_PLAY:
+			_cut_closeup(david_mentor)
 			_show(
 				"Wonder Light: \"Breathe with David...\"",
 				"Press Space once  (Steady Hands — always succeeds)"
@@ -112,6 +126,8 @@ func _enter_beat(next: Beat) -> void:
 				steady_hands.start_minigame()
 
 		Beat.STEADY_DONE:
+			_cut_closeup(david_mentor)
+			_celebrate_light()
 			_show(
 				"David: \"I feel steady now. Thank you for staying with me.\"",
 				"Press Space to continue"
@@ -119,7 +135,10 @@ func _enter_beat(next: Beat) -> void:
 			_advance_ready = true
 
 		Beat.RESOLUTION:
-			# Off-screen resolution — no fight shown.
+			# Off-screen resolution — no fight shown. Script doc calls for the
+			# camera staying on David's determined face here.
+			_cut_closeup(david_mentor)
+			_point_light(david_mentor)
 			_show(
 				"Wonder Light: \"David walked out to the valley. And when it was over, the whole camp was cheering his name.\"\n(The giant stays a distant silhouette on the far ridge — no fight is shown.)",
 				"Press Space to continue"
@@ -127,6 +146,8 @@ func _enter_beat(next: Beat) -> void:
 			_advance_ready = true
 
 		Beat.REFLECT:
+			_cut_tabletop()
+			_point_light(null)
 			_show(
 				"Wonder Light: \"Being brave doesn't mean you're not scared. It means you go anyway.\"",
 				"Press Space to continue"
@@ -134,6 +155,8 @@ func _enter_beat(next: Beat) -> void:
 			_advance_ready = true
 
 		Beat.VERSE_REWARD:
+			_cut_tabletop()
+			_celebrate_light()
 			_show(
 				"Joshua 1:9 (WEB):\n\"Haven't I commanded you? Be strong and of good courage; don't be afraid, neither be dismayed: for Yahweh your God is with you wherever you go.\"\n\nWonder Light: \"This verse has three special words. Can you say them with me?\nDon't. Be. Afraid.\"\n\n[Courage charm stub → Virtue Bracelet]",
 				"Press Space to finish"
@@ -142,6 +165,8 @@ func _enter_beat(next: Beat) -> void:
 
 		Beat.DONE:
 			_set_player_move(true)
+			_cut_tabletop()
+			_point_light(null)
 			_show(
 				"Chapter complete — courage over fear.\n(Wonder-Walker was a guest. David remains David.)",
 				"Thanks for playing this P0.2 slice"
@@ -214,6 +239,7 @@ func _try_collect_near_item() -> void:
 			outline.visible = false
 	_near_item = null
 	prompt_label.text = "Collected!  (%d / %d)" % [wonder_items_found, WONDER_ITEMS_NEEDED]
+	_celebrate_light()
 	if wonder_items_found >= WONDER_ITEMS_NEEDED:
 		# Brief pause then meet David.
 		await get_tree().create_timer(0.8).timeout
@@ -226,3 +252,23 @@ func _show(dialogue: String, prompt: String) -> void:
 func _set_player_move(enabled: bool) -> void:
 	if player and "can_move" in player:
 		player.can_move = enabled
+
+## -- CameraDirector / WonderLight helpers -----------------------------
+## Guarded with has_method() rather than a static type so this still works
+## if either companion node is left out of a future scene variant.
+
+func _cut_tabletop() -> void:
+	if camera_director and camera_director.has_method("cut_to_tabletop"):
+		camera_director.cut_to_tabletop()
+
+func _cut_closeup(look_target: Node3D) -> void:
+	if camera_director and camera_director.has_method("cut_to_closeup"):
+		camera_director.cut_to_closeup(look_target)
+
+func _point_light(target: Node3D) -> void:
+	if wonder_light and wonder_light.has_method("point_at"):
+		wonder_light.point_at(target)
+
+func _celebrate_light() -> void:
+	if wonder_light and wonder_light.has_method("celebrate"):
+		wonder_light.celebrate()

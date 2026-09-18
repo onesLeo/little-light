@@ -10,6 +10,11 @@ extends CharacterBody3D
 ## When false, chapter director freezes walk during dialogue.
 var can_move: bool = true
 
+## Movement is always relative to this camera's framing, even while a
+## cinematic/close-up camera (see camera_director.gd) is the active
+## rendering camera — the tabletop gameplay view is the movement reference.
+@export var movement_camera_path: NodePath = ^"../TabletopCamera"
+
 var _anim: AnimationPlayer
 var _model: Node3D
 var _camera: Camera3D
@@ -17,10 +22,10 @@ var _camera: Camera3D
 
 func _ready() -> void:
 	_model = get_node_or_null("Model") as Node3D
-	# Prefer the active tabletop camera (sibling), fall back to child.
-	_camera = get_viewport().get_camera_3d()
+	_camera = get_node_or_null(movement_camera_path) as Camera3D
 	if _camera == null:
-		_camera = get_node_or_null("Camera3D") as Camera3D
+		# Fall back to whatever's active, in case the path doesn't resolve.
+		_camera = get_viewport().get_camera_3d()
 	add_to_group("player")
 	if _model:
 		_anim = _model.find_child("AnimationPlayer", true, false) as AnimationPlayer
@@ -45,7 +50,9 @@ func _physics_process(delta: float) -> void:
 	# WASD / arrows → camera-relative flat direction (tabletop feel).
 	var input_dir := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 	if _camera == null or not is_instance_valid(_camera):
-		_camera = get_viewport().get_camera_3d()
+		_camera = get_node_or_null(movement_camera_path) as Camera3D
+		if _camera == null:
+			_camera = get_viewport().get_camera_3d()
 	var basis := _camera.global_transform.basis if _camera else global_transform.basis
 	var cam_forward := -basis.z
 	cam_forward.y = 0.0
