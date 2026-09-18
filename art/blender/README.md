@@ -59,6 +59,49 @@ Older generators may still embed an absolute Windows path — prefer setting `LI
 
 See `docs/little-light-art-tech-pipeline.md`.
 
+## Valley v6 (current)
+
+`scripts/polish_valley_v6.py` replaces the v3–v5 "dress a flat slab" approach.
+It builds the ground itself as a displaced heightfield — flat meadow for the
+play area, valley walls, a back ridge, and a shelf whose steep front edge is
+the waterfall cliff — and **carves the river into it**, so water sits between
+banks instead of on top of them. Ground material is picked per face from a
+smoothed slope/height field (grass, scrub, bare rock, sandy riverbed,
+terracotta path); stones are noise-displaced icospheres; trees, rocks and
+shrubs are planted at the terrain height under them.
+
+```bash
+blender --background --python art/blender/scripts/polish_valley_v6.py
+blender --background --python art/blender/scripts/render_valley_preview_v6.py
+```
+
+### Two glTF gotchas worth knowing before you touch outlines
+
+1. **Solidify makes a lid, not an outline.** `add_outline()` in v3–v5 used a
+   Solidify modifier, which produces a *two-layer* shell — the grown skin plus
+   a copy of the original surface. Blender never showed it because the preview
+   scripts hide `*_Outline`, but in Godot it renders as an opaque shell that
+   encases the model: the Wonder-Walker, David and the lambs all came out as
+   flat black silhouettes. v6 builds a **single-skin** hull instead (push each
+   vertex along its normal, flip the winding).
+2. **Materials must be single-sided for an inverted hull to work.** Blender's
+   default material exports as glTF `doubleSided: true`, which Godot imports as
+   `cull_mode = Disabled` — and an unculled inverted hull is a lid again. v6
+   sets `use_backface_culling = True`.
+
+`scripts/fix_outlines_v6.py` applies both fixes to an already-exported GLB, so
+a character does not have to be regenerated:
+
+```bash
+LL_FIX_IN=assets/wonder_walker_v5.glb LL_FIX_OUT=assets/wonder_walker_v6.glb \
+  blender --background --python art/blender/scripts/fix_outlines_v6.py
+```
+
+It keeps armature modifiers and vertex groups, so the walk cycle still drives
+the outline, and leaves body materials double-sided (some of these meshes have
+winding that disagrees with their normals — culling them would make the
+visible side of a character vanish).
+
 ## Latest character
 
 Prefer **`generate_wonder_walker_v3.py`** (handmade silhouette jitter, creases, layered hair, grain, 12fps walk).
