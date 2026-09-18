@@ -116,3 +116,7 @@ Player mesh uses `assets/wonder_walker_v8.glb` (solid hair crown for top-down re
 ## Courage charm award
 
 After Joshua 1:9 / "Don't. Be. Afraid.", beat `CHARM_AWARD` plays a placeholder bracelet+charm float-snap ceremony (`scripts/charm_award.gd`). Swap meshes later with authored art.
+
+## Stream fish alive v2
+
+`StreamFishAlive/Art` uses `assets/bethlehem_stream_fish_alive_v2.glb` — taller cascade, stronger hop/splash/fish wiggle @ 12fps STEP. Transform stays (-6.5, 0.05, -4.0) scale 1.15.
