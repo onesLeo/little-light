@@ -1,7 +1,7 @@
 [gd_scene load_steps=18 format=3]
 
 [ext_resource type="PackedScene" path="res://assets/wonder_walker_v3.glb" id="1_ww"]
-[ext_resource type="PackedScene" path="res://assets/bethlehem_valley_placeholder.glb" id="2_valley"]
+[ext_resource type="PackedScene" path="res://assets/bethlehem_valley_v2.glb" id="2_valley"]
 [ext_resource type="Script" path="res://scripts/wonder_walker.gd" id="3_ww_script"]
 [ext_resource type="Script" path="res://scripts/steady_hands_minigame.gd" id="4_sh"]
 [ext_resource type="Script" path="res://scripts/chapter_director.gd" id="5_dir"]
