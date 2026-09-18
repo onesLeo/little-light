@@ -3,7 +3,7 @@ extends Node3D
 ## Use on imported GLB roots (valley, props) that ship without physics.
 
 @export var collision_layer: int = 1
-@export var skip_name_contains: PackedStringArray = ["Outline", "Shadow"]
+@export var skip_name_contains: PackedStringArray = ["Outline", "Shadow", "Stream", "Waterfall", "Foam"]
 
 
 func _ready() -> void:
