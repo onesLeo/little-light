@@ -56,8 +56,21 @@ func _ready() -> void:
 				child.body_exited.connect(_on_wonder_item_exited.bind(child))
 	_enter_beat(Beat.ARRIVE)
 
-func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_accept") and _advance_ready:
+func _is_continue_pressed(event: InputEvent) -> bool:
+	# ui_accept (Space/Enter) plus raw key fallback — unhandled path can miss Space
+	# when a Control has focus or InputMap keycode matching is flaky.
+	if event.is_action_pressed("ui_accept"):
+		return true
+	if event is InputEventKey and event.pressed and not event.echo:
+		var k: int = event.keycode
+		var pk: int = event.physical_keycode
+		return k == KEY_SPACE or pk == KEY_SPACE or k == KEY_ENTER or pk == KEY_ENTER
+	return false
+
+
+func _input(event: InputEvent) -> void:
+	# Prefer _input over _unhandled_input so dialogue UI cannot swallow Space.
+	if _advance_ready and _is_continue_pressed(event):
 		_advance_ready = false
 		_on_advance()
 		get_viewport().set_input_as_handled()

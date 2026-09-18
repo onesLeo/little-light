@@ -1,6 +1,6 @@
 [gd_scene load_steps=29 format=3]
 
-[ext_resource type="PackedScene" path="res://assets/wonder_walker_v8.glb" id="1_ww"]
+[ext_resource type="PackedScene" path="res://assets/wonder_walker_v9.glb" id="1_ww"]
 [ext_resource type="PackedScene" path="res://assets/bethlehem_valley_v6.glb" id="2_valley"]
 [ext_resource type="Script" path="res://scripts/wonder_walker.gd" id="3_ww_script"]
 [ext_resource type="Script" path="res://scripts/steady_hands_minigame.gd" id="4_sh"]
@@ -268,6 +268,8 @@ shadow_enabled = false
 [node name="UI" type="CanvasLayer" parent="."]
 
 [node name="Panel" type="PanelContainer" parent="UI"]
+mouse_filter = 2
+focus_mode = 0
 anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
@@ -292,6 +294,8 @@ theme_override_constants/separation = 8
 
 [node name="DialogueLabel" type="Label" parent="UI/Panel/Margin/VBox"]
 unique_name_in_owner = true
+focus_mode = 0
+mouse_filter = 2
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "..."
@@ -299,6 +303,8 @@ autowrap_mode = 3
 
 [node name="PromptLabel" type="Label" parent="UI/Panel/Margin/VBox"]
 unique_name_in_owner = true
+focus_mode = 0
+mouse_filter = 2
 layout_mode = 2
 theme_override_colors/font_color = Color(0.85, 0.75, 0.35, 1)
 theme_override_font_sizes/font_size = 15
