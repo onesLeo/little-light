@@ -109,3 +109,7 @@ pixel. Remove the autoload again before committing.
 ## Alive stream pack
 
 `assets/bethlehem_stream_fish_alive.glb` — papercraft brook + waterfall foam + 3 fish (12fps STEP loops). Instanced as `StreamFishAlive` on the west stream bank; static valley water/fish meshes are hidden at runtime. Water meshes skip collision via `mesh_collision_baker.gd`.
+
+## Courage charm award
+
+After Joshua 1:9 / "Don't. Be. Afraid.", beat `CHARM_AWARD` plays a placeholder bracelet+charm float-snap ceremony (`scripts/charm_award.gd`). Swap meshes later with authored art.

@@ -1,7 +1,7 @@
 extends Node
 ## Beat walker for David & Goliath P0.2 vertical slice.
 ## Arrive → Explore (3 Wonder Items) → Meet David (Band A) → Steady Hands
-## → Off-screen resolution → Reflect → Joshua 1:9 + "Don't. Be. Afraid." + Courage charm.
+## → Off-screen resolution → Reflect → Joshua 1:9 + "Don't. Be. Afraid." → Courage charm award.
 ## No violence shown. Wonder-Walker is a guest, not David.
 
 enum Beat {
@@ -15,6 +15,7 @@ enum Beat {
 	RESOLUTION,
 	REFLECT,
 	VERSE_REWARD,
+	CHARM_AWARD,  # Courage charm → Virtue Bracelet ceremony
 	DONE,
 }
 
@@ -26,6 +27,7 @@ enum Beat {
 @onready var wonder_light: Node3D = %WonderLight
 @onready var audio_director: Node = get_node_or_null("%AudioDirector")
 @onready var david_mentor: Node3D = get_node_or_null("../DavidMentor") as Node3D
+@onready var charm_award: Node3D = get_node_or_null("%CharmAward") as Node3D
 
 var beat: Beat = Beat.ARRIVE
 var wonder_items_found: int = 0
@@ -161,10 +163,36 @@ func _enter_beat(next: Beat) -> void:
 			_cut_tabletop()
 			_celebrate_light()
 			_show(
-				"Joshua 1:9 (WEB):\n\"Haven't I commanded you? Be strong and of good courage; don't be afraid, neither be dismayed: for Yahweh your God is with you wherever you go.\"\n\nWonder Light: \"This verse has three special words. Can you say them with me?\nDon't. Be. Afraid.\"\n\n[Courage charm stub → Virtue Bracelet]",
-				"Press Space to finish"
+				"Joshua 1:9 (WEB):\n\"Haven't I commanded you? Be strong and of good courage; don't be afraid, neither be dismayed: for Yahweh your God is with you wherever you go.\"\n\nWonder Light: \"This verse has three special words. Can you say them with me?\nDon't. Be. Afraid.\"",
+				"Press Space for your Courage charm"
 			)
 			_advance_ready = true
+
+		Beat.CHARM_AWARD:
+			_set_player_move(false)
+			_advance_ready = false
+			_celebrate_light()
+			_show(
+				"Wonder Light: \"A Courage charm — for staying with David when he was scared.\"\n(Virtue Bracelet receives the charm.)",
+				"…"
+			)
+			if charm_award and camera_director and camera_director.has_method("cut_to_charm"):
+				camera_director.cut_to_charm(charm_award)
+			elif charm_award:
+				_cut_closeup(charm_award)
+			if audio_director and audio_director.has_method("play_success"):
+				audio_director.play_success()
+			if charm_award and charm_award.has_method("play_ceremony"):
+				if not charm_award.ceremony_finished.is_connected(_on_charm_ceremony_finished):
+					charm_award.ceremony_finished.connect(_on_charm_ceremony_finished, CONNECT_ONE_SHOT)
+				charm_award.play_ceremony()
+			else:
+				# Fallback if node missing — still allow advance.
+				_show(
+					"Wonder Light: \"A Courage charm — for staying with David when he was scared.\"",
+					"Press Space to keep your charm"
+				)
+				_advance_ready = true
 
 		Beat.DONE:
 			_set_player_move(true)
@@ -193,6 +221,8 @@ func _on_advance() -> void:
 		Beat.REFLECT:
 			_enter_beat(Beat.VERSE_REWARD)
 		Beat.VERSE_REWARD:
+			_enter_beat(Beat.CHARM_AWARD)
+		Beat.CHARM_AWARD:
 			_enter_beat(Beat.DONE)
 		_:
 			pass
@@ -277,3 +307,11 @@ func _point_light(target: Node3D) -> void:
 func _celebrate_light() -> void:
 	if wonder_light and wonder_light.has_method("celebrate"):
 		wonder_light.celebrate()
+
+
+func _on_charm_ceremony_finished() -> void:
+	_show(
+		"Wonder Light: \"Keep this close. Courage is yours to carry.\"\n(Courage charm sealed on the Virtue Bracelet.)",
+		"Press Space to keep your charm"
+	)
+	_advance_ready = true
