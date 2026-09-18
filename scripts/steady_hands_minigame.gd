@@ -17,6 +17,7 @@ var taps_done: int = 0
 var active: bool = false
 
 @onready var _breath: Control = get_node_or_null("%BreathIndicator") as Control
+@onready var _audio: Node = get_node_or_null("%AudioDirector")
 var _tween: Tween
 
 func _ready() -> void:
@@ -46,6 +47,8 @@ func _on_tap() -> void:
 	if not active:
 		return
 	taps_done += 1
+	if _audio and _audio.has_method("play_tap"):
+		_audio.play_tap()
 	_pulse_breath()
 	if taps_done >= taps_required:
 		active = false
@@ -80,6 +83,8 @@ func _pulse_breath() -> void:
 
 ## Success: one warm bloom-out, then hide and tell the director we're done.
 func _finish_breath() -> void:
+	if _audio and _audio.has_method("play_success"):
+		_audio.play_success()
 	if _breath == null:
 		minigame_completed.emit()
 		return

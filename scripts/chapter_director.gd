@@ -24,6 +24,7 @@ enum Beat {
 @onready var steady_hands: Node = %SteadyHands
 @onready var camera_director: Node = %CameraDirector
 @onready var wonder_light: Node3D = %WonderLight
+@onready var audio_director: Node = get_node_or_null("%AudioDirector")
 @onready var david_mentor: Node3D = get_node_or_null("../DavidMentor") as Node3D
 
 var beat: Beat = Beat.ARRIVE
@@ -64,6 +65,8 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _enter_beat(next: Beat) -> void:
 	beat = next
+	if audio_director and audio_director.has_method("play_vo"):
+		audio_director.play_vo(Beat.keys()[next])
 	match beat:
 		Beat.ARRIVE:
 			_set_player_move(false)
@@ -223,6 +226,8 @@ func _try_collect_near_item() -> void:
 		return
 	_items_collected[_near_item.name] = true
 	wonder_items_found += 1
+	if audio_director and audio_director.has_method("play_pickup"):
+		audio_director.play_pickup()
 	var flavor: String = ITEM_FLAVOR.get(_near_item.name, "A Wonder Item!")
 	dialogue_label.text = flavor
 	# Hide placeholder marker + matching mesh inside wonder_items.glb
