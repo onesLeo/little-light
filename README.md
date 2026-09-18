@@ -109,3 +109,7 @@ pixel. Remove the autoload again before committing.
 ## Alive stream pack
 
 `assets/bethlehem_stream_fish_alive.glb` — papercraft brook + waterfall foam + 3 fish (12fps STEP loops). Instanced as `StreamFishAlive` on the west stream bank; static valley water/fish meshes are hidden at runtime. Water meshes skip collision via `mesh_collision_baker.gd`.
+
+## Wonder-Walker v8
+
+Player mesh uses `assets/wonder_walker_v8.glb` (solid hair crown for top-down read). `WW_Walk` @ 12fps STEP; import keeps `remove_immutable_tracks=false`.
