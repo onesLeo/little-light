@@ -266,17 +266,17 @@ def build():
 
     # Head cluster
     head_z = shoulder_y + head_r * 0.95
-    parts.append(make_blob("Head", (0, 0, head_z), (head_r, head_r * 0.92, head_r * 1.05), skin, 2))
+    parts.append(make_soft_blob("Head", (0, 0, head_z), (head_r, head_r * 0.92, head_r * 1.05), skin, 3, 0.003))
     # Asymmetric hair clumps (papercraft layered paper)
     for i, (off, sc) in enumerate([
         ((0.02, -0.04, head_r * 0.35), (head_r * 1.05, head_r * 0.95, head_r * 0.55)),
         ((-0.06, 0.02, head_r * 0.25), (head_r * 0.55, head_r * 0.5, head_r * 0.4)),
         ((0.08, 0.0, head_r * 0.2), (head_r * 0.45, head_r * 0.4, head_r * 0.35)),
     ]):
-        parts.append(make_blob(f"Hair_{i}", (off[0], off[1], head_z + off[2]), sc, hair, 1))
+        parts.append(make_soft_blob(f"Hair_{i}", (off[0], off[1], head_z + off[2]), sc, hair, 3, 0.003))
 
     for side, xs in (("L", -1), ("R", 1)):
-        parts.append(make_blob(f"Cheek_{side}", (xs * head_r * 0.7, head_r * 0.2, head_z - head_r * 0.15), (head_r * 0.28,) * 3, skin, 1))
+        parts.append(make_soft_blob(f"Cheek_{side}", (xs * head_r * 0.7, head_r * 0.2, head_z - head_r * 0.15), (head_r * 0.28,) * 3, skin, 2, 0.002))
         parts.append(make_blob(f"Eye_{side}", (xs * head_r * 0.32, head_r * 0.75, head_z + head_r * 0.02), (head_r * 0.11,) * 3, eye, 1))
 
     body = join(parts, "WonderWalker_Body")
