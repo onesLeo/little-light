@@ -330,8 +330,13 @@ def build_david():
     parts.append(make_torso("Sash", (0, 0, hip_z + 0.045), 0.09, 0.168, 0.175, sash, sides=10, bevel_w=0.012))
     # A short neck instead of the head sitting flush on the torso — visibly
     # narrower than both, so head and shoulders read as separate forms.
+    # Base radius tapers down from most of the torso-top width (0.185), not
+    # from a thin post — a sharp step from a wide flat torso top straight
+    # down to a narrow cylinder reads as a separate part stacked on top
+    # rather than a natural shoulder-to-neck taper. `make_torso()`
+    # (beveled) instead of `limb()` (sharp-edged) softens the rim too.
     neck_h = 0.07
-    parts.append(limb("Neck", (0, 0, torso_top + neck_h / 2), neck_h, 0.075, 0.085, skin, 10))
+    parts.append(make_torso("Neck", (0, 0, torso_top + neck_h / 2), neck_h, 0.115, 0.095, skin, sides=10, bevel_w=0.008))
 
     for side, xs in (("L", -1), ("R", 1)):
         x = xs * 0.20
@@ -350,7 +355,13 @@ def build_david():
     for side, xs in (("L", -1), ("R", 1)):
         parts.append(soft_blob(f"Cheek_{side}", (xs * 0.09, 0.04, head_z - 0.02), (0.04,) * 3, skin, 2, 0.002))
         parts.append(blob(f"Eye_{side}", (xs * 0.045, 0.115, head_z + 0.005), (0.020,) * 3, eye, 1, 0.001))
-    parts.append(soft_blob("Mouth", (0, 0.12, head_z - 0.055), (0.03, 0.012, 0.016), mouth, 2, 0.0))
+    mouth_y = 0.12
+    mouth_z = head_z - 0.055
+    parts.append(soft_blob("Mouth", (0, mouth_y, mouth_z), (0.026, 0.012, 0.013), mouth, 2, 0.0))
+    # Small raised corners turn the flat resting mouth into a gentle default
+    # smile — see the matching note in generate_wonder_walker_v4.py.
+    for side, xs in (("L", -1), ("R", 1)):
+        parts.append(soft_blob(f"MouthCorner_{side}", (xs * 0.022, mouth_y * 0.97, mouth_z + 0.004), (0.008,) * 3, mouth, 2, 0.0))
 
     # Companion sheep — shared lamb rig. Not a ram: David's flock companion
     # stays hornless here.

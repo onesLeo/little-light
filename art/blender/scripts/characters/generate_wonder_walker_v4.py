@@ -279,12 +279,17 @@ def build():
         # at the shoulder — the single biggest "Roblox" tell.
         parts.append(make_soft_blob(f"Elbow_{side}", (x, 0.02 * xs, shoulder_y - arm_len * 0.5), (h * 0.046,) * 3, skin, 3, 0.003))
 
-    # A short neck instead of the head sitting flush on the torso — visibly
-    # narrower than both, so head and shoulders read as separate forms.
+    # A short neck instead of the head sitting flush on the torso. The base
+    # radius tapers down from most of the shoulder width, not from a thin
+    # post a third of it — a sharp step from a wide flat torso top straight
+    # down to a narrow cylinder is what reads as a separate part stacked on
+    # top rather than a natural shoulder-to-neck taper. `make_torso()`
+    # (beveled) instead of `make_limb()` (sharp-edged) softens the rim at
+    # both ends too, for the same reason.
     neck_h = head_r * 0.34
-    neck_r0 = head_r * 0.40
-    neck_r1 = head_r * 0.46
-    parts.append(make_limb("Neck", (0, 0, shoulder_y + neck_h / 2), neck_h, neck_r0, neck_r1, skin, 10))
+    neck_r0 = shoulder_r * 0.62
+    neck_r1 = head_r * 0.5
+    parts.append(make_torso("Neck", (0, 0, shoulder_y + neck_h / 2), neck_h, neck_r0, neck_r1, skin, sides=10, bevel_w=head_r * 0.05))
 
     head_z = shoulder_y + neck_h + head_r * 0.95
     parts.append(make_soft_blob("Head", (0, 0, head_z), (head_r, head_r * 0.92, head_r * 1.05), skin, 3, 0.003))
@@ -311,7 +316,15 @@ def build():
     for side, xs in (("L", -1), ("R", 1)):
         parts.append(make_soft_blob(f"Cheek_{side}", (xs * head_r * 0.7, head_r * 0.2, head_z - head_r * 0.15), (head_r * 0.26,) * 3, skin, 2, 0.002))
         parts.append(make_blob(f"Eye_{side}", (xs * head_r * 0.34, head_r * 0.80, head_z - head_r * 0.02), (head_r * 0.135,) * 3, eye, 1))
-    parts.append(make_soft_blob("Mouth", (0, head_r * 0.82, head_z - head_r * 0.32), (head_r * 0.20, head_r * 0.06, head_r * 0.10), mouth, 2, 0.0))
+    mouth_y = head_r * 0.82
+    mouth_z = head_z - head_r * 0.32
+    parts.append(make_soft_blob("Mouth", (0, mouth_y, mouth_z), (head_r * 0.17, head_r * 0.06, head_r * 0.08), mouth, 2, 0.0))
+    # Small raised corners turn the flat resting mouth into a gentle default
+    # smile (a plain oval reads as a blank stare) — cheaper and safer than
+    # trimming a torus into a true arc, using the same soft_blob technique
+    # already proven everywhere else on the face.
+    for side, xs in (("L", -1), ("R", 1)):
+        parts.append(make_soft_blob(f"MouthCorner_{side}", (xs * head_r * 0.15, mouth_y * 0.97, mouth_z + head_r * 0.025), (head_r * 0.045,) * 3, mouth, 2, 0.0))
 
     body = join(parts, "WonderWalker_Body")
     bpy.ops.object.select_all(action="DESELECT")
