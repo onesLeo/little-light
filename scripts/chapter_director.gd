@@ -107,6 +107,7 @@ func _enter_beat(next: Beat) -> void:
 
 		Beat.MEET_DAVID_A:
 			_set_player_move(false)
+			await _face_player(david_mentor)
 			_cut_closeup(david_mentor)
 			_point_light(david_mentor)
 			_show(
@@ -319,6 +320,32 @@ func _cut_closeup(look_target: Node3D) -> void:
 func _point_light(target: Node3D) -> void:
 	if wonder_light and wonder_light.has_method("point_at"):
 		wonder_light.point_at(target)
+
+## Turns `target` to face the player on the spot, closest-direction first,
+## so David greets the Wonder-Walker face to face instead of the close-up
+## camera composing around whatever direction he was originally authored
+## facing. Yaw only — no head tilt, so he stays upright. Awaiting this
+## before cutting to the close-up matters: `_place_closeup()` reads the
+## target's *current* facing to compose the shot, so cutting mid-turn (or
+## before it starts) frames the wrong spot. The turn plays out on the wide
+## tabletop shot first, then the close-up cuts in already correctly framed.
+func _face_player(target: Node3D) -> void:
+	if not target or not player:
+		return
+	var to_player := player.global_position - target.global_position
+	to_player.y = 0.0
+	if to_player.length() < 0.01:
+		return
+	var start_rot := target.rotation
+	target.look_at(target.global_position + to_player, Vector3.UP)
+	var target_yaw := target.rotation.y
+	target.rotation = start_rot
+	var delta := wrapf(target_yaw - start_rot.y, -PI, PI)
+	if absf(delta) < 0.01:
+		return
+	var tw := create_tween()
+	tw.tween_property(target, "rotation:y", start_rot.y + delta, 0.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	await tw.finished
 
 ## The chapter-complete moment: applause, a big confetti pop over the
 ## Wonder-Walker, the light celebrating, and a banner that pops in.

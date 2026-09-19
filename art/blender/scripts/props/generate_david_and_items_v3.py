@@ -325,15 +325,20 @@ def build_david():
     hip_z = 0.42
     # Tapered rounded torso instead of a beveled cube — narrower at the
     # waist, broader at the chest/shoulders (mentor build, sturdier than WW).
+    torso_top = hip_z + 0.34
     parts.append(make_torso("Torso", (0, 0, hip_z + 0.17), 0.34, 0.155, 0.185, tunic, sides=10, bevel_w=0.022))
     parts.append(make_torso("Sash", (0, 0, hip_z + 0.045), 0.09, 0.168, 0.175, sash, sides=10, bevel_w=0.012))
+    # A short neck instead of the head sitting flush on the torso — visibly
+    # narrower than both, so head and shoulders read as separate forms.
+    neck_h = 0.07
+    parts.append(limb("Neck", (0, 0, torso_top + neck_h / 2), neck_h, 0.075, 0.085, skin, 10))
 
     for side, xs in (("L", -1), ("R", 1)):
         x = xs * 0.20
         parts.append(limb(f"Arm_{side}", (x, 0.05 if xs > 0 else 0.0, hip_z + 0.16), 0.26, 0.045, 0.035, skin, 9))
         parts.append(soft_blob(f"Hand_{side}", (x, 0.12 if xs > 0 else -0.02, hip_z + 0.04), (0.055,) * 3, skin))
 
-    head_z = hip_z + 0.40
+    head_z = torso_top + neck_h - 0.015 + 0.14
     parts.append(soft_blob("Head", (0, 0, head_z), (0.13, 0.12, 0.14), skin, 3, 0.004))
     parts.append(soft_blob("Hair0", (0.02, -0.03, head_z + 0.08), (0.14, 0.12, 0.08), hair, 3, 0.003))
     parts.append(soft_blob("Hair1", (-0.05, 0.02, head_z + 0.05), (0.07, 0.06, 0.05), hair, 3, 0.003))

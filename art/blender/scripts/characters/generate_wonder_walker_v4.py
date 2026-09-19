@@ -269,7 +269,14 @@ def build():
         parts.append(make_limb(f"Arm_{side}", (x, 0.02 * xs, shoulder_y - arm_len / 2), arm_len, h * 0.050, h * 0.038, skin))
         parts.append(make_soft_blob(f"Hand_{side}", (x, 0.02 * xs, shoulder_y - arm_len), (h * 0.06, h * 0.058, h * 0.06), skin))
 
-    head_z = shoulder_y + head_r * 0.95
+    # A short neck instead of the head sitting flush on the torso — visibly
+    # narrower than both, so head and shoulders read as separate forms.
+    neck_h = head_r * 0.34
+    neck_r0 = head_r * 0.40
+    neck_r1 = head_r * 0.46
+    parts.append(make_limb("Neck", (0, 0, shoulder_y + neck_h / 2), neck_h, neck_r0, neck_r1, skin, 10))
+
+    head_z = shoulder_y + neck_h + head_r * 0.95
     parts.append(make_soft_blob("Head", (0, 0, head_z), (head_r, head_r * 0.92, head_r * 1.05), skin, 3, 0.003))
     # One large "solid crown" (per the earlier hand-tweaked v8's approach —
     # see art/blender/README.md) instead of several small separate clumps:
@@ -303,10 +310,10 @@ def build():
     bpy.context.scene.cursor.location = (0, 0, 0)
     bpy.ops.object.origin_set(type="ORIGIN_CURSOR")
     ol = single_skin_outline(body, CFG["outline_thick"], CFG["outline"])
-    return body, ol, hip_y, shoulder_y, h, arm_len, leg_len, hip_r * 2, head_r
+    return body, ol, hip_y, shoulder_y, h, arm_len, leg_len, hip_r * 2, head_r, neck_h
 
 
-def build_rig(h, hip_y, shoulder_y, torso_w, arm_len, leg_len):
+def build_rig(h, hip_y, shoulder_y, torso_w, arm_len, leg_len, neck_h):
     data = bpy.data.armatures.new("WW_Armature")
     arm = bpy.data.objects.new("WW_Armature", data)
     bpy.context.collection.objects.link(arm)
@@ -325,9 +332,9 @@ def build_rig(h, hip_y, shoulder_y, torso_w, arm_len, leg_len):
     root = bone("Root", (0, 0, 0), (0, 0, 0.08))
     hips = bone("Hips", (0, 0, hip_y), (0, 0, hip_y + 0.06), root)
     spine = bone("Spine", (0, 0, hip_y + 0.06), (0, 0, shoulder_y - 0.05), hips)
-    chest = bone("Chest", (0, 0, shoulder_y - 0.05), (0, 0, shoulder_y + 0.04), spine)
-    neck = bone("Neck", (0, 0, shoulder_y + 0.04), (0, 0, shoulder_y + 0.12), chest)
-    bone("Head", (0, 0, shoulder_y + 0.12), (0, 0, h), neck)
+    chest = bone("Chest", (0, 0, shoulder_y - 0.05), (0, 0, shoulder_y), spine)
+    neck = bone("Neck", (0, 0, shoulder_y), (0, 0, shoulder_y + neck_h), chest)
+    bone("Head", (0, 0, shoulder_y + neck_h), (0, 0, h), neck)
     for side, xs in (("L", -1), ("R", 1)):
         sx = xs * (torso_w / 2 + 0.02)
         ua = bone(f"UpperArm_{side}", (sx, 0, shoulder_y), (sx, 0, shoulder_y - arm_len * 0.5), chest)
@@ -483,8 +490,8 @@ def preview(path):
 
 def main():
     clear()
-    body, ol, hip_y, shoulder_y, h, arm_len, leg_len, torso_w, head_r = build()
-    arm = build_rig(h, hip_y, shoulder_y, torso_w, arm_len, leg_len)
+    body, ol, hip_y, shoulder_y, h, arm_len, leg_len, torso_w, head_r, neck_h = build()
+    arm = build_rig(h, hip_y, shoulder_y, torso_w, arm_len, leg_len, neck_h)
     parent_auto(body, arm)
     parent_auto(ol, arm)
     # Comfortably above the torso top (== shoulder_y) and the arms' shoulder
