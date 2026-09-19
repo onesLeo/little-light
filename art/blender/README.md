@@ -155,7 +155,7 @@ LITTLE_LIGHT_ART_OUT=$PWD/art/blender/output \
 Both characters' heads used to sit flush on (and slightly sink into) the
 torso top with no transition — a `soft_blob` head practically touching a
 flat torso top reads as "glued on", not "attached by a neck". Both
-generators now insert a short, visibly-narrower `limb()` cylinder between
+generators now insert a short, visibly-narrower cylinder between
 `shoulder_y`/`torso_top` and the head, then raise `head_z` to sit just
 above it (a couple % overlap, not a hard seam). For the rigged
 Wonder-Walker, `neck_h` is threaded through into `build_rig()` so the
@@ -166,6 +166,33 @@ the neck's own weighting too — its lower half stays on `ARMATURE_AUTO`
 (blends toward Chest, which is correct for a real neck), its upper half
 gets pinned to Head. David has no armature, so it's pure static geometry
 for him.
+
+**First pass still read as "stacked", not attached.** The neck's base
+radius was only ~35-40% of the torso-top's width, so there was a sharp
+step straight down from a wide flat torso top to a narrow post — that
+step is what reads as a separate part stacked on top, independent of how
+smooth the neck's own surface is. Fixed by widening the base to ~60% of
+the shoulder/torso-top radius (a gradual taper, not a step) and switching
+from `limb()`/`make_limb()` (sharp-edged) to `make_torso()`'s beveled
+construction for both rims. Lesson: a visible-part-boundary problem like
+this is about the **radius jump at the seam**, not the part's own
+geometry quality — smoothing the wrong thing doesn't fix it.
+
+## A resting smile, not a blank stare
+
+Both characters' mouths were a single flat oval `soft_blob` — reads as a
+neutral-to-blank stare at rest, unlike a reference like DOGWALK where the
+default face reads warm/pleasant even when idle. Added two small
+`MouthCorner_L/R` blobs, slightly smaller than the main mouth shape and
+offset a touch upward and outward, in the same mouth material. This is a
+deliberately cheap technique — three overlapping soft blobs reading as a
+curved smile via silhouette — chosen over trimming a torus into a true
+arc, which would need bmesh angle-math tuned by eye in the Blender
+viewport to get right; not something to get right blind from a script.
+**This is a static default expression, not a dynamic system** — there's
+no per-context (talking / neutral / smiling) expression swapping yet.
+That would need multiple mouth/eye variants plus a swap trigger wired into
+`chapter_director.gd`'s beats, which is a separate, larger feature.
 
 ## Character liveliness pass
 

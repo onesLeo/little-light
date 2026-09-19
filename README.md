@@ -156,15 +156,30 @@ volume bulges centered on the joint so they read as actual hinges. Legs
 already had two animated bones (hip+knee) since v3 and just needed the
 same volume treatment.
 
-**David turns to face the player.** His orientation used to be static
-(whatever `main.tscn` happened to bake in), so the close-up camera
-composed around whatever direction he was originally facing rather than
-toward you. `chapter_director.gd`'s `_face_player()` now smoothly turns
-him to face the player when `Beat.MEET_DAVID_A` begins, **awaited before**
-the camera cuts to the close-up — `CameraDirector._place_closeup()` reads
-the target's *current* facing to compose the shot, so cutting mid-turn (or
-before it starts) frames the wrong spot. The turn plays out on the wide
-tabletop shot first, then the close-up cuts in already correctly framed.
+**David and the Wonder-Walker turn to face each other.** David's
+orientation used to be static (whatever `main.tscn` happened to bake in),
+so the close-up camera composed around whatever direction he was
+originally facing rather than toward you. `chapter_director.gd`'s
+`_face_player()` now smoothly turns him to face the player when
+`Beat.MEET_DAVID_A` begins, **awaited before** the camera cuts to the
+close-up — `CameraDirector._place_closeup()` reads the target's *current*
+facing to compose the shot, so cutting mid-turn (or before it starts)
+frames the wrong spot. The turn plays out on the wide tabletop shot
+first, then the close-up cuts in already correctly framed. `_face_david()`
+turns the Wonder-Walker toward David at the same time (fired without
+awaiting it — nothing downstream reads *his* facing, unlike David's), so
+it's genuinely face to face on both sides, not just David turning.
+
+**Neck geometry fixed again — the first pass still looked stacked.** A
+visibly-narrower neck cylinder wasn't enough on its own: the base radius
+was only ~35-40% of the torso-top width, so there was a sharp step from a
+wide flat torso top straight down to a narrow post, which reads as a
+separate part stacked on top regardless of how smooth the neck's own
+surface is. Now tapers from ~60% of the shoulder width instead. Both
+characters also got a gentle default smile (small raised mouth corners)
+instead of a flat oval that read as a blank stare — see
+`art/blender/README.md` for both, including why the smile is a static
+default and not a per-context expression system yet.
 
 ## Courage charm award
 
