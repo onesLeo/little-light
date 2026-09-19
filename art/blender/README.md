@@ -150,6 +150,23 @@ LITTLE_LIGHT_ART_OUT=$PWD/art/blender/output \
   blender --background --python art/blender/scripts/props/generate_david_and_items_v3.py
 ```
 
+## Visible neck
+
+Both characters' heads used to sit flush on (and slightly sink into) the
+torso top with no transition — a `soft_blob` head practically touching a
+flat torso top reads as "glued on", not "attached by a neck". Both
+generators now insert a short, visibly-narrower `limb()` cylinder between
+`shoulder_y`/`torso_top` and the head, then raise `head_z` to sit just
+above it (a couple % overlap, not a hard seam). For the rigged
+Wonder-Walker, `neck_h` is threaded through into `build_rig()` so the
+`Neck` bone's edit-bone span actually matches the new geometry instead of
+the old fixed `shoulder_y + 0.04` to `shoulder_y + 0.12` guess; the
+`pin_head_vertices()` z-threshold from the hair fix above naturally splits
+the neck's own weighting too — its lower half stays on `ARMATURE_AUTO`
+(blends toward Chest, which is correct for a real neck), its upper half
+gets pinned to Head. David has no armature, so it's pure static geometry
+for him.
+
 ## Character liveliness pass
 
 Wonder-Walker's and David's `Hand_*`/`Foot_*` blobs, and the lamb/sheep
@@ -184,3 +201,96 @@ than faceted. Eyes stay flat. Regenerate with the usual chain: generator →
 `Hair_3` (walker) and `Hair2` (David) are extra soft blobs over the back and
 sides of the head. Before, hair only sat on top, so the camera behind the
 player showed a bald back of the head. The nape stays bare on purpose.
+
+## Hair detaching during the walk animation — a third glTF/rig gotcha
+
+Wonder-Walker's hair looked correct in **every static shot** — Blender's
+own render, and a Godot render with no animation playing — but went almost
+fully bald in Godot specifically while `WW_Walk` was running. Comparing a
+rest-pose Godot render (fine) against an animated one (bald) of the exact
+same GLB is what isolated it: this is a runtime skinning issue, not a
+geometry or material one, so a static preview screenshot can pass clean
+and still ship a broken walk animation.
+
+**Root cause:** `ARMATURE_AUTO`'s automatic bone weights are a proximity
+heuristic, not a guarantee. The v3→v4 torso swap (beveled cube → wider
+tapered cylinder) was enough to flip some hair vertices from "closest to
+Head" to "closest to Chest". In the bind pose that's invisible; during the
+walk cycle (legs/arms/chest all rotating) that hair gets dragged along
+with the chest instead of the head and collapses into the torso.
+
+**Fix, two parts:**
+1. `pin_head_vertices()` forces every vertex at/above a z threshold
+   (head/hair/cheeks/eyes/mouth — comfortably above the torso top and the
+   arms' shoulder attachment, which both sit at `shoulder_y`) onto the
+   `Head` bone with full weight, overriding `ARMATURE_AUTO`'s guess. Call
+   it on **both** the body and its outline hull — they get independent
+   `ARMATURE_AUTO` passes and can end up with different weights.
+2. Consolidated hair from several small separate clumps into fewer,
+   larger, generously-overlapping ones (`Hair_Crown`, `Hair_Back`,
+   `Hair_Side_L/R`, `Hair_Fringe`). Several small islands are individually
+   fragile — each only needs its own weights to be slightly off to leave a
+   visible gap. One big overlapping mass tolerates that: a partially-off
+   clump stays hidden under its neighbors instead of leaving a bald patch.
+   This mirrors what this repo's own history already found necessary (see
+   the "Wonder-Walker v8 ... solid hair crown for top-down read" note in
+   the main README) — it just wasn't understood as a weighting problem
+   until now.
+
+**Verify any future hair/rig change against the actual animation, not just
+a static pose**, e.g. in Godot:
+
+```gdscript
+anim_player.play("WW_Walk")
+anim_player.speed_scale = 0.0
+anim_player.seek(0.2 * anim_player.current_animation_length, true)  # then screenshot
+```
+
+**Clearance margins matter, not just position.** Two follow-up bugs came
+from hair/fringe geometry sitting *too close* to a boundary rather than in
+the wrong place outright:
+- `Hair_Fringe` on David dipped low enough to overlap the eyes' top edge,
+  reading as a thick uni-brow instead of forehead hair.
+- `Hair_Crown` on the Wonder-Walker was a hair's-width shorter than the
+  Head blob's own apex, so skin poked through right at the crown — most
+  visible from the tabletop camera's above-and-behind angle.
+
+Both were fixed by adding real margin (not just flipping a sign), and
+both were caught only by looking at the actual in-engine angle the bug
+showed up from (close-up front for the brow, tabletop-camera-angle from
+above for the crown) — a generic front-on render didn't reveal either.
+
+## The "Roblox rigid" fix — animate the elbow, add joint volume
+
+A side-by-side with a reference (DOGWALK) surfaced why the walk read as
+stiff/segmented rather than smooth: `UpperArm_*` and `LowerArm_*` bones
+both existed in the rig since v3, but `walk()` only ever keyframed
+`UpperArm` — the elbow was never animated, so the whole arm swung as one
+rigid rod pivoting only at the shoulder. That is *exactly* the classic
+"Roblox" look: separate rigid parts that pivot at a joint instead of a
+mesh that actually bends through it.
+
+Fix:
+- `LowerArm_L/R` now get a rotation keyframe at every walk-cycle pose — a
+  resting bend that's never fully straight, plus a fraction of the
+  shoulder swing (`al * 0.35 + 14` degrees) so the elbow visibly moves
+  with the stride instead of tagging along rigidly.
+- Added small `soft_blob` "Elbow"/"Knee" bulges centered exactly on each
+  bone-pair's shared boundary (`shoulder_y - arm_len * 0.5` for the elbow,
+  `leg_len * 0.5` for the knee — the latter already matches the leg
+  cone's own geometric center). This adds volume so the joint reads as an
+  actual hinge instead of a cone quietly bending partway along its length.
+  Unlike the hair case, this does *not* need explicit vertex pinning:
+  `ARMATURE_AUTO` blends a small blob centered on a joint boundary
+  reasonably well on its own — pinning is for when the automatic guess
+  gets it *wrong*, not a default to reach for everywhere.
+- Legs already had two animated bones (`Thigh`/`Shin`) since v3, so the
+  knee was already bending — it only lacked the same volume/readability
+  treatment as the elbow.
+
+Still open, in rough priority order if picking this up again: more joints
+per limb / secondary motion (follow-through, hip-spine counter-rotation);
+the 12fps STEP/CONSTANT interpolation is a **locked, intentional**
+stop-motion style choice (see "Art constraints" above), not a bug — don't
+"fix" it into smooth interpolation without checking with the project owner
+first.
