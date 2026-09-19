@@ -104,11 +104,51 @@ visible side of a character vanish).
 
 ## Latest character
 
-Prefer **`generate_wonder_walker_v3.py`** (handmade silhouette jitter, creases, layered hair, grain, 12fps walk).
+Prefer **`generate_wonder_walker_v4.py`** — same rig/walk-cycle/head layout as v3,
+but the torso is a tapered, beveled cylinder instead of a beveled cube, so
+the body reads as a soft rounded human shape ("DOGWALK-style") instead of
+blocks stacked together. Also bakes materials and builds the outline hull
+inline (see "One-shot generation" below) instead of needing the separate
+recolor + fix-outline passes v3 needed.
 
 ## Latest props
 
-Prefer **`scripts/props/generate_david_and_items_v2.py`** for David mentor + Wonder Items (stone/staff/lamb).
+Prefer **`scripts/props/generate_david_and_items_v3.py`** for David mentor +
+Wonder Items (stone/staff/lamb). Same rounded-torso treatment as WW v4, and
+a substantially reworked `build_lamb()`: an elongated capsule body instead
+of a near-sphere, legs splayed to the four corners so the body visibly
+clears the ground, smoother/smaller overlapping wool blobs instead of a
+handful of large jittery lumps (which read as a pile of rocks), floppier
+ears, and a short tail — reads as an actual lamb rather than a wool
+cushion. Shared by David's companion sheep and the collectible
+`WonderItem_Lamb` (`is_ram=True` adds horns to the latter).
+
+## One-shot generation (v4 / v3 props and later)
+
+`generate_wonder_walker_v4.py` and `generate_david_and_items_v3.py` fold the
+three-stage pipeline (generate → `recolor_characters_v3.py` → `fix_outlines_v6.py`)
+into a single script:
+
+- **Materials bake color+grain into a texture directly** instead of an
+  RGB+MixRGB node graph. Blender's glTF exporter does not export that node
+  graph faithfully — it keeps only the (near-white) grain texture and drops
+  the color, so the model comes out bleached in Godot. See
+  `_tinted_grain_image()` / `_bake_tinted_grain()`. Any new `paper()`-style
+  material function should bake, not multiply-in-the-graph.
+- **Outline hulls are single-skin from the start** (`single_skin_outline()`:
+  grow each vertex along its normal, flip the winding, cull the outline
+  material's backface) instead of a Solidify shell that needs a later fix
+  pass — see the "Two glTF gotchas" section above for why Solidify alone
+  renders as a black shell in Godot.
+
+Run the same way as any other generator:
+
+```bash
+LITTLE_LIGHT_ART_OUT=$PWD/art/blender/output \
+  blender --background --python art/blender/scripts/characters/generate_wonder_walker_v4.py
+LITTLE_LIGHT_ART_OUT=$PWD/art/blender/output \
+  blender --background --python art/blender/scripts/props/generate_david_and_items_v3.py
+```
 
 ## Character liveliness pass
 

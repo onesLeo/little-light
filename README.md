@@ -113,6 +113,21 @@ pixel. Remove the autoload again before committing.
 ## Wonder-Walker v8
 
 Player mesh uses `assets/wonder_walker_v8.glb` (solid hair crown for top-down read). `WW_Walk` @ 12fps STEP; import keeps `remove_immutable_tracks=false`.
+
+## Wonder-Walker v12 + David mentor v9 (rounder, human silhouette)
+
+Player mesh is now `assets/wonder_walker_v12.glb`; `DavidMentor` is
+`assets/david_mentor_v9.glb`; Wonder Items (stone/staff/lamb) are
+`assets/wonder_items_v7.glb`. Both characters' torsos are now a tapered,
+beveled cylinder instead of a beveled cube, so the body reads as a soft
+rounded human shape rather than "blocks stacked together"; both also got a
+low front hair fringe + side hair so the face reads as framed instead of a
+bald dome. The lamb (David's companion sheep and the collectible
+`WonderItem_Lamb`) was rebuilt with an elongated body, properly-splayed
+legs, smoother overlapping wool, and a tail — see
+`art/blender/scripts/characters/generate_wonder_walker_v4.py` and
+`art/blender/scripts/props/generate_david_and_items_v3.py`.
+
 ## Courage charm award
 
 After Joshua 1:9 / "Don't. Be. Afraid.", beat `CHARM_AWARD` plays a placeholder bracelet+charm float-snap ceremony (`scripts/charm_award.gd`). Swap meshes later with authored art.
