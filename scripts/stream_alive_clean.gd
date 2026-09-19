@@ -1,8 +1,7 @@
 extends Node3D
-## Belt-and-suspenders for alive brook packs.
-## v6 welds cascade+join+pool into one Stream_Water mesh (no coplanar split).
-## Keep hiding any leftover Stream_/Waterfall_/Foam_ *_Outline and lifting
-## Ripple_/Waterfall_Sheet_ if an older pack is temporarily re-pointed.
+## Belt-and-suspenders for alive brook packs (v6+).
+## Hide leftover outline slabs (water/bank/rock) that read as black side blocks,
+## and lift any old Ripple_/Waterfall_Sheet_ overlays if present.
 
 @export var lift_overlay_y: float = 0.05
 
@@ -25,10 +24,14 @@ func _clean(node: Node) -> void:
 		return
 	var n3 := node as Node3D
 	var n := String(node.name)
+	# Black paper outlines on water/banks/rocks show as thick side blocks.
 	if n.ends_with("_Outline") and (
 		n.begins_with("Stream_")
 		or n.begins_with("Waterfall_")
 		or n.begins_with("Foam_")
+		or n.begins_with("Bank_")
+		or n.begins_with("Rock_")
+		or n.begins_with("WF_Rock_")
 	):
 		n3.visible = false
 		return
