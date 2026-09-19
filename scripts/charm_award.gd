@@ -1,9 +1,12 @@
 extends Node3D
-## Courage charm ceremony (placeholder paper meshes).
+## Courage charm ceremony.
 ## Float-in → snap onto Virtue Bracelet → gold pulse → tiny walker hop / David nod.
-## Models Creations Bot can later swap Bracelet/Charm for authored GLBs.
+## Bracelet/charm art comes from assets/courage_charm_v1.glb
+## (art/blender/scripts/props/generate_courage_charm.py).
 
 signal ceremony_finished
+
+const CHARM_ART: PackedScene = preload("res://assets/courage_charm_v1.glb")
 
 @export var player_path: NodePath = ^"../Player"
 @export var david_path: NodePath = ^"../DavidMentor"
@@ -26,47 +29,37 @@ func _ready() -> void:
 	_david = get_node_or_null(david_path) as Node3D
 	_audio = get_node_or_null("%AudioDirector")
 	_confetti = get_node_or_null("%ConfettiBurst")
-	_build_placeholders()
+	_build_art()
 	visible = false
 
 
-func _build_placeholders() -> void:
-	# Virtue Bracelet — soft paper gold ring (placeholder).
-	_bracelet = MeshInstance3D.new()
-	_bracelet.name = "VirtueBraceletPlaceholder"
-	var torus := TorusMesh.new()
-	torus.inner_radius = 0.12
-	torus.outer_radius = 0.18
-	torus.rings = 12
-	torus.ring_segments = 16
-	_bracelet.mesh = torus
-	var bmat := StandardMaterial3D.new()
-	bmat.albedo_color = Color(0.82, 0.62, 0.28)
-	bmat.roughness = 0.85
-	bmat.metallic = 0.15
-	_bracelet.set_surface_override_material(0, bmat)
-	_bracelet.position = Vector3(0.0, 0.0, 0.0)
-	_bracelet.rotation_degrees = Vector3(70.0, 0.0, 0.0)
-	add_child(_bracelet)
+func _build_art() -> void:
+	var art := CHARM_ART.instantiate()
+	add_child(art)
+	_bracelet = art.find_child("VirtueBracelet", true, false) as MeshInstance3D
+	_charm = art.find_child("CourageCharm", true, false) as MeshInstance3D
 
-	# Courage charm — small warm disc (placeholder).
-	_charm = MeshInstance3D.new()
-	_charm.name = "CourageCharmPlaceholder"
-	var disc := CylinderMesh.new()
-	disc.top_radius = 0.07
-	disc.bottom_radius = 0.07
-	disc.height = 0.03
-	disc.radial_segments = 12
-	_charm.mesh = disc
-	_charm_mat = StandardMaterial3D.new()
-	_charm_mat.albedo_color = Color(0.95, 0.78, 0.35)
-	_charm_mat.roughness = 0.7
-	_charm_mat.emission_enabled = true
-	_charm_mat.emission = Color(1.0, 0.85, 0.4)
-	_charm_mat.emission_energy_multiplier = 0.0
-	_charm.set_surface_override_material(0, _charm_mat)
-	_charm.position = _rest_charm_pos
-	add_child(_charm)
+	# The outline hulls are separate root nodes in the GLB (matching the rest
+	# of the papercraft pipeline's single-skin-hull convention); reparent the
+	# charm's hull onto the charm itself so it rides along with the ceremony
+	# tween instead of staying behind at its rest transform.
+	var charm_outline := art.find_child("CourageCharm_Outline", true, false) as Node3D
+	if charm_outline and _charm:
+		charm_outline.reparent(_charm, true)
+
+	if _charm:
+		var mat := _charm.get_active_material(0)
+		if mat is StandardMaterial3D:
+			_charm_mat = mat
+		else:
+			# Fallback if a re-export ever yields a non-StandardMaterial3D.
+			_charm_mat = StandardMaterial3D.new()
+			_charm_mat.albedo_color = Color(0.92, 0.70, 0.20)
+			_charm.set_surface_override_material(0, _charm_mat)
+		_charm_mat.emission_enabled = true
+		_charm_mat.emission = Color(1.0, 0.85, 0.4)
+		_charm_mat.emission_energy_multiplier = 0.0
+		_charm.position = _rest_charm_pos
 
 
 ## Play the award ceremony. Safe to call once per chapter end.

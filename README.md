@@ -50,7 +50,7 @@ godot-david-slice/
 - Valley, WW, David mentor, and wonder-item meshes are placeholder GLBs.
 - Safety floor under the diorama so the player cannot fall forever.
 - Tabletop camera is a `Camera3D` child of the player (~behind/above).
-- Courage charm / Faith Journal are text stubs only in this slice.
+- Faith Journal is a text stub only in this slice. Courage charm ceremony now has authored bracelet/charm art (see "Courage charm award" below).
 
 
 ## Band notes
@@ -115,7 +115,7 @@ pixel. Remove the autoload again before committing.
 Player mesh uses `assets/wonder_walker_v8.glb` (solid hair crown for top-down read). `WW_Walk` @ 12fps STEP; import keeps `remove_immutable_tracks=false`.
 ## Courage charm award
 
-After Joshua 1:9 / "Don't. Be. Afraid.", beat `CHARM_AWARD` plays a placeholder bracelet+charm float-snap ceremony (`scripts/charm_award.gd`). Swap meshes later with authored art.
+After Joshua 1:9 / "Don't. Be. Afraid.", beat `CHARM_AWARD` plays a bracelet+charm float-snap ceremony (`scripts/charm_award.gd`). The Virtue Bracelet (beaded cord) and Courage charm (gold medallion) are authored art from `assets/courage_charm_v1.glb` — see `art/blender/scripts/props/generate_courage_charm.py`. Faith Journal is still a text stub only.
 
 ## Stream fish alive v2
 

@@ -139,6 +139,30 @@ the flat-shaded `blob()`, so heads and hair read as smooth and rounded rather
 than faceted. Eyes stay flat. Regenerate with the usual chain: generator →
 `recolor_characters_v3.py` → `fix_outlines_v6.py`.
 
+## Courage charm + Virtue Bracelet
+
+`scripts/props/generate_courage_charm.py` builds the CHARM_AWARD ceremony art
+(`assets/courage_charm_v1.glb`): a beaded-cord Virtue Bracelet and a gold
+medallion Courage charm with a raised flame/light emblem, replacing the
+runtime-primitive placeholder that used to be built in
+`scripts/charm_award.gd`. It builds its own single-skin outline hulls inline
+(see `single_skin_outline()`) rather than needing a `fix_outlines_v6.py`
+pass afterward.
+
+**Color note:** this generator bakes color + grain into an actual texture
+per material (`_tinted_grain_image()`, ported from
+`recolor_characters_v3.py`'s `_bake_tinted_grain`) instead of using an
+RGB-node + MixRGB-multiply node graph for Base Color. Blender's glTF
+exporter does not faithfully export that node graph — it drops the RGB
+multiply and keeps only the (near-white) grain texture, so the model comes
+out bleached in Godot with no hint of the intended color. Any new
+`paper()`-style material function should bake, not multiply-in-the-graph.
+
+```bash
+LITTLE_LIGHT_ART_OUT=$PWD/art/blender/output \
+  blender --background --python art/blender/scripts/props/generate_courage_charm.py
+```
+
 ## Hair back coverage
 
 `Hair_3` (walker) and `Hair2` (David) are extra soft blobs over the back and
