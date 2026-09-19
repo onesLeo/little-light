@@ -1,4 +1,4 @@
-[gd_scene load_steps=29 format=3]
+[gd_scene load_steps=31 format=3]
 
 [ext_resource type="PackedScene" path="res://assets/wonder_walker_v9.glb" id="1_ww"]
 [ext_resource type="PackedScene" path="res://assets/bethlehem_valley_v6.glb" id="2_valley"]
@@ -13,10 +13,13 @@
 [ext_resource type="Script" path="res://scripts/camera_director.gd" id="11_camdir"]
 [ext_resource type="Script" path="res://scripts/wonder_item_glow.gd" id="12_glow"]
 [ext_resource type="Script" path="res://scripts/audio_director.gd" id="13_audio"]
-[ext_resource type="PackedScene" path="res://assets/bethlehem_stream_fish_alive_v2.glb" id="14_stream"]
+[ext_resource type="PackedScene" path="res://assets/bethlehem_stream_fish_alive_v7.glb" id="14_stream"]
 [ext_resource type="Script" path="res://scripts/play_all_animation_loops.gd" id="15_loops"]
 [ext_resource type="Script" path="res://scripts/hide_static_valley_water.gd" id="16_hidewater"]
 [ext_resource type="Script" path="res://scripts/charm_award.gd" id="17_charm"]
+[ext_resource type="Script" path="res://scripts/stream_alive_clean.gd" id="17_streamclean"]
+[ext_resource type="Script" path="res://scripts/stream_placement.gd" id="19_place"]
+[ext_resource type="Script" path="res://scripts/stream_fish_swim.gd" id="20_fish"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
 radius = 0.35
@@ -146,11 +149,20 @@ script = ExtResource("9_bake")
 script = ExtResource("16_hidewater")
 
 [node name="StreamFishAlive" type="Node3D" parent="."]
-transform = Transform3D(1.15, 0, 0, 0, 1.15, 0, 0, 0, 1.15, -6.5, 0.05, -4.0)
+transform = Transform3D(1.1, 0, 0, 0, 1.1, 0, 0, 0, 1.1, -6.2, 0.28, -3.8)
 script = ExtResource("9_bake")
 
 [node name="Art" parent="StreamFishAlive" instance=ExtResource("14_stream")]
 script = ExtResource("15_loops")
+
+[node name="StreamAliveClean" type="Node3D" parent="StreamFishAlive"]
+script = ExtResource("17_streamclean")
+
+[node name="StreamPlacement" type="Node3D" parent="StreamFishAlive"]
+script = ExtResource("19_place")
+
+[node name="StreamFish" type="Node3D" parent="."]
+script = ExtResource("20_fish")
 
 
 [node name="DavidMentor" parent="." instance=ExtResource("6_david")]
