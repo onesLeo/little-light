@@ -31,6 +31,9 @@ enum Beat {
 @onready var david_mentor: Node3D = get_node_or_null("../DavidMentor") as Node3D
 @onready var charm_award: Node3D = get_node_or_null("%CharmAward") as Node3D
 
+signal explore_started
+signal wonder_item_collected(item_name: String)
+
 var beat: Beat = Beat.ARRIVE
 var wonder_items_found: int = 0
 const WONDER_ITEMS_NEEDED: int = 3
@@ -104,6 +107,7 @@ func _enter_beat(next: Beat) -> void:
 				"Walk near an item and press E  (%d / %d)" % [wonder_items_found, WONDER_ITEMS_NEEDED]
 			)
 			_advance_ready = false
+			explore_started.emit()
 
 		Beat.MEET_DAVID_A:
 			_set_player_move(false)
@@ -276,6 +280,7 @@ func _try_collect_near_item() -> void:
 		return
 	_items_collected[_near_item.name] = true
 	wonder_items_found += 1
+	wonder_item_collected.emit(String(_near_item.name))
 	if audio_director and audio_director.has_method("play_pickup"):
 		audio_director.play_pickup()
 	var flavor: String = ITEM_FLAVOR.get(_near_item.name, "A Wonder Item!")
