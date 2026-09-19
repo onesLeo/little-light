@@ -339,7 +339,9 @@ def build_david():
     parts.append(soft_blob("Hair1", (-0.05, 0.02, head_z + 0.05), (0.07, 0.06, 0.05), hair, 3, 0.003))
     parts.append(soft_blob("Hair2", (0.0, -0.05, head_z + 0.02), (0.145, 0.115, 0.13), hair, 3, 0.003))
     # Fringe over the forehead so the face reads as framed, not a bald dome.
-    parts.append(soft_blob("HairFringe", (0.0, 0.075, head_z + 0.025), (0.105, 0.05, 0.045), hair, 3, 0.003))
+    # Bottom must clear the eyes (Eye_* top ≈ head_z+0.025) with real margin,
+    # or this reads as a thick uni-brow slab instead of forehead hair.
+    parts.append(soft_blob("HairFringe", (0.0, 0.085, head_z + 0.105), (0.105, 0.05, 0.045), hair, 3, 0.003))
     for side, xs in (("L", -1), ("R", 1)):
         parts.append(soft_blob(f"Cheek_{side}", (xs * 0.09, 0.04, head_z - 0.02), (0.04,) * 3, skin, 2, 0.002))
         parts.append(blob(f"Eye_{side}", (xs * 0.045, 0.115, head_z + 0.005), (0.020,) * 3, eye, 1, 0.001))

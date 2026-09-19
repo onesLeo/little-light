@@ -280,7 +280,10 @@ def build():
     # walk cycle even though everything sits correctly in the bind pose.
     # One big overlapping mass tolerates that: even a partially-off clump
     # stays hidden under its neighbors' overlap instead of leaving a bald gap.
-    parts.append(make_soft_blob("Hair_Crown", (0.0, -0.02, head_z + head_r * 0.18), (head_r * 1.12, head_r * 1.04, head_r * 0.86), hair, 3, 0.004))
+    # Top must clear the Head blob's own apex (head_z + head_r*1.05) with
+    # real margin, or skin pokes through right at the crown — exactly where
+    # the tabletop camera, looking down at the player, sees it most.
+    parts.append(make_soft_blob("Hair_Crown", (0.0, -0.02, head_z + head_r * 0.22), (head_r * 1.12, head_r * 1.04, head_r * 0.95), hair, 3, 0.004))
     parts.append(make_soft_blob("Hair_Back", (0.0, -head_r * 0.42, head_z + head_r * 0.08), (head_r * 1.05, head_r * 0.78, head_r * 0.70), hair, 3, 0.004))
     for side, xs in (("L", -1), ("R", 1)):
         parts.append(make_soft_blob(f"Hair_Side_{side}", (xs * head_r * 0.72, head_r * 0.15, head_z - head_r * 0.05), (head_r * 0.42, head_r * 0.5, head_r * 0.55), hair, 3, 0.004))
