@@ -395,10 +395,6 @@ def walk(arm, fps=12, frames=12):
     scene.render.fps = fps
     scene.frame_start = 1
     scene.frame_end = frames
-    try:
-        bpy.context.preferences.edit.keyframe_new_interpolation_type = "CONSTANT"
-    except Exception:
-        pass
     arm.animation_data_create()
     action = bpy.data.actions.new("WW_Walk")
     arm.animation_data.action = action
@@ -421,25 +417,64 @@ def walk(arm, fps=12, frames=12):
         b.location = l
         b.keyframe_insert("location", frame=f)
 
-    keys = [
-        (1, (28, 0, 0), (8, 0, 0), (-22, 0, 0), (18, 0, 0), (-18, 0, 0), (20, 0, 0), 0.0),
-        (4, (8, 0, 0), (2, 0, 0), (-8, 0, 0), (6, 0, 0), (-6, 0, 0), (8, 0, 0), 0.025),
-        (7, (-22, 0, 0), (18, 0, 0), (28, 0, 0), (8, 0, 0), (20, 0, 0), (-18, 0, 0), 0.0),
-        (10, (-8, 0, 0), (6, 0, 0), (8, 0, 0), (2, 0, 0), (8, 0, 0), (-6, 0, 0), 0.025),
-    ]
-    for fr, tl, sl, tr, sr, al, ar, bob in keys:
-        rot("Thigh_L", fr, tl); rot("Shin_L", fr, sl)
-        rot("Thigh_R", fr, tr); rot("Shin_R", fr, sr)
-        rot("UpperArm_L", fr, al); rot("UpperArm_R", fr, ar)
+    # The four cardinal poses (2 contacts + 2 passing positions, mirrored)
+    # — unchanged from v3/v4 and already proven to read well. `chest` folds
+    # in the old "4 at contact frames, else -3" special case as a plain
+    # component so it interpolates the same way as everything else.
+    cardinal = {
+        1: dict(tl=28, sl=8, tr=-22, sr=18, al=-18, ar=20, bob=0.0, chest=4),
+        4: dict(tl=8, sl=2, tr=-8, sr=6, al=-6, ar=8, bob=0.025, chest=-3),
+        7: dict(tl=-22, sl=18, tr=28, sr=8, al=20, ar=-18, bob=0.0, chest=4),
+        10: dict(tl=-8, sl=6, tr=8, sr=2, al=8, ar=-6, bob=0.025, chest=-3),
+    }
+    key_frames = sorted(cardinal.keys())
+
+    def smoothstep(t):
+        return t * t * (3.0 - 2.0 * t)
+
+    def pose_at(f):
+        """Ease between the two cardinal poses bracketing frame `f` (cyclic
+        over the `frames`-long loop). This is what actually delivers the
+        "~12fps step poses" this project's art constraints call for — only
+        4 of the 12 frames were ever keyed before, so despite the 12fps
+        label the walk only ever held 4 distinct poses a second. Filling in
+        every frame (still CONSTANT/STEP-held, per the locked stop-motion
+        style — this doesn't smooth the *hold*, just adds more held poses)
+        is a deliberate choice made with the project owner, not a default
+        to reach for on any stepped animation.
+        """
+        for i, kf in enumerate(key_frames):
+            nkf = key_frames[(i + 1) % len(key_frames)]
+            span = (nkf - kf) if nkf > kf else (nkf + frames - kf)
+            if kf <= f < kf + span or (nkf < kf and f >= kf):
+                t = smoothstep((f - kf) / span)
+                a, b = cardinal[kf], cardinal[nkf]
+                return {k: a[k] + (b[k] - a[k]) * t for k in a}
+        return dict(cardinal[key_frames[0]])
+
+    for fr in range(1, frames + 1):
+        p = pose_at(fr)
+        rot("Thigh_L", fr, (p["tl"], 0, 0)); rot("Shin_L", fr, (p["sl"], 0, 0))
+        rot("Thigh_R", fr, (p["tr"], 0, 0)); rot("Shin_R", fr, (p["sr"], 0, 0))
+        rot("UpperArm_L", fr, (p["al"], 0, 0)); rot("UpperArm_R", fr, (p["ar"], 0, 0))
         # Elbow bend — rigged since v3 but never animated, so the whole arm
         # swung as one rigid rod from the shoulder (the single biggest
         # "Roblox" tell). A resting bend that's never fully straight, plus
         # a fraction of the shoulder swing so it visibly moves with the
         # stride instead of just tagging along rigidly.
-        rot("LowerArm_L", fr, (al[0] * 0.35 + 14, 0, 0))
-        rot("LowerArm_R", fr, (ar[0] * 0.35 + 14, 0, 0))
-        loc("Hips", fr, (0, 0, bob))
-        rot("Chest", fr, (0, 0, 4 if fr in (1, 7) else -3))
+        rot("LowerArm_L", fr, (p["al"] * 0.35 + 14, 0, 0))
+        rot("LowerArm_R", fr, (p["ar"] * 0.35 + 14, 0, 0))
+        loc("Hips", fr, (0, 0, p["bob"]))
+        rot("Chest", fr, (0, 0, p["chest"]))
+    # Force every keyframe point to CONSTANT (glTF STEP) directly on the
+    # fcurve. `bpy.context.preferences.edit.keyframe_new_interpolation_type`
+    # looks like the right knob but is a UI preference, not a guarantee for
+    # script-driven keyframe_insert() calls (silently no-ops in headless
+    # mode) — this is what actually delivers the locked stop-motion "step
+    # poses" style instead of Blender's default smooth Bezier interpolation.
+    for fcurve in action.fcurves:
+        for kp in fcurve.keyframe_points:
+            kp.interpolation = "CONSTANT"
     bpy.ops.object.mode_set(mode="OBJECT")
 
 
