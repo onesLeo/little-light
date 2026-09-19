@@ -379,7 +379,7 @@ func _play_finale() -> void:
 	if audio_director and audio_director.has_method("play_cheer"):
 		audio_director.play_cheer()
 	if confetti and confetti.has_method("burst") and player:
-		confetti.burst(player.global_position + Vector3(0.0, 2.8, 0.0), 160, 1.6, 6.5, 1.5)
+		confetti.burst(player.global_position + Vector3(0.0, 2.8, 0.0), 220, 1.4, 6.5, 0.95)
 	_celebrate_light()
 	if complete_banner:
 		complete_banner.visible = true
