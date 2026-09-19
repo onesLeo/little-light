@@ -1,4 +1,4 @@
-[gd_scene load_steps=32 format=3]
+[gd_scene load_steps=34 format=3]
 
 [ext_resource type="PackedScene" path="res://assets/wonder_walker_v13.glb" id="1_ww"]
 [ext_resource type="PackedScene" path="res://assets/bethlehem_valley_v6.glb" id="2_valley"]
@@ -21,6 +21,8 @@
 [ext_resource type="Script" path="res://scripts/stream_alive_clean.gd" id="17_streamclean"]
 [ext_resource type="Script" path="res://scripts/stream_placement.gd" id="19_place"]
 [ext_resource type="Script" path="res://scripts/stream_fish_swim.gd" id="20_fish"]
+[ext_resource type="Script" path="res://scripts/wonder_item_scatter.gd" id="21_scatter"]
+[ext_resource type="Script" path="res://scripts/wonder_item_hints.gd" id="22_hints"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
 radius = 0.35
@@ -195,6 +197,12 @@ script = ExtResource("12_glow")
 
 [node name="WonderItemsVisual" parent="WonderItems" instance=ExtResource("7_items")]
 transform = Transform3D(1.35, 0, 0, 0, 1.35, 0, 0, 0, 1.35, 0, 0, 0)
+
+[node name="Scatter" type="Node" parent="WonderItems"]
+script = ExtResource("21_scatter")
+
+[node name="Hints" type="Node3D" parent="WonderItems"]
+script = ExtResource("22_hints")
 
 [node name="WonderItem_Stone" type="Area3D" parent="WonderItems"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
