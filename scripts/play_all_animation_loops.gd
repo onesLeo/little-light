@@ -1,8 +1,10 @@
 extends Node3D
 ## Autoplays every AnimationPlayer clip under this node on loop.
 ## Fans out multi-clip players so stream / foam / fish STEP loops run together.
-## Keeps held STEP keys (no runtime stripping). Import Optimizer should stay off
-## via .import: animation/remove_immutable_tracks=false + animation/fps=12.
+## Import Optimizer stays off (animation/remove_immutable_tracks=false + fps=12),
+## which makes every clip carry a constant rest-pose track for every animated
+## node in the file. Played together, those tracks overwrite the one clip that
+## really moves a node, so constant tracks are stripped before playing.
 
 func _ready() -> void:
 	# Defer one frame so imported GLB children exist.
@@ -31,6 +33,7 @@ func _play_all_clips(player: AnimationPlayer) -> void:
 		var anim := player.get_animation(anim_name)
 		if anim:
 			anim.loop_mode = Animation.LOOP_LINEAR
+			_strip_constant_tracks(anim)
 	if names.size() == 1:
 		player.play(names[0])
 		return
@@ -63,3 +66,20 @@ func _play_all_clips(player: AnimationPlayer) -> void:
 
 func _safe(text: String) -> String:
 	return text.validate_node_name()
+
+
+func _strip_constant_tracks(anim: Animation) -> void:
+	for i in range(anim.get_track_count() - 1, -1, -1):
+		if _is_constant(anim, i):
+			anim.remove_track(i)
+
+
+func _is_constant(anim: Animation, track: int) -> bool:
+	var count := anim.track_get_key_count(track)
+	if count <= 1:
+		return true
+	var first = anim.track_get_key_value(track, 0)
+	for k in range(1, count):
+		if anim.track_get_key_value(track, k) != first:
+			return false
+	return true
