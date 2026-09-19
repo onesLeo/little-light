@@ -288,9 +288,44 @@ Fix:
   knee was already bending — it only lacked the same volume/readability
   treatment as the elbow.
 
-Still open, in rough priority order if picking this up again: more joints
-per limb / secondary motion (follow-through, hip-spine counter-rotation);
-the 12fps STEP/CONSTANT interpolation is a **locked, intentional**
-stop-motion style choice (see "Art constraints" above), not a bug — don't
-"fix" it into smooth interpolation without checking with the project owner
-first.
+Still open if picking this up again: more joints per limb / secondary
+motion (follow-through, hip-spine counter-rotation). The 12fps STEP
+cadence itself is done — see below.
+
+## The 12fps STEP cadence, actually completed
+
+The art constraints call for "~12fps step poses", but `walk()` only ever
+keyed 4 of the 12 frames (1, 4, 7, 10), each held 3 frames — the shipped
+cadence was really **~4 poses/sec**, not 12. Checked with the project
+owner before touching this (the alternative was dropping the stop-motion
+style for smooth interpolation entirely — declined; this keeps the snap,
+just completes the pose density the constraint already called for).
+
+A second, independent bug was hiding underneath: the line meant to make
+poses snap instead of blend,
+`bpy.context.preferences.edit.keyframe_new_interpolation_type = "CONSTANT"`,
+is a **UI preference** — it doesn't reliably govern script-driven
+`keyframe_insert()` calls, and was wrapped in a bare `try/except` that
+silently swallowed the failure. The exported glTF animation had been
+**LINEAR**-interpolated all along, not STEP. Caught by inspecting the
+exported GLB's animation samplers directly rather than trusting the
+Blender-side setting:
+
+```python
+import struct, json
+with open("wonder_walker_v12.glb", "rb") as f:
+    data = f.read()
+# ...parse the glTF JSON chunk, then for each animation sampler:
+print(sampler["interpolation"])  # was "LINEAR", should be "STEP"
+```
+
+Fix:
+- `walk()` now keys every one of the 12 frames, each pose eased
+  (`smoothstep`) between the same 4 proven cardinal poses (contact/passing,
+  mirrored) rather than inventing new pose data — same motion, denser
+  sampling of it.
+- Interpolation is now forced directly on every fcurve's keyframe points
+  (`kp.interpolation = "CONSTANT"`) right before export, which is what a
+  glTF exporter actually reads — not the preferences dialog. If you ever
+  need STEP-interpolated keyframes from a script again, this is the
+  reliable way to get them; don't reach for the preferences property.
