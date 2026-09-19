@@ -271,18 +271,22 @@ def build():
 
     head_z = shoulder_y + head_r * 0.95
     parts.append(make_soft_blob("Head", (0, 0, head_z), (head_r, head_r * 0.92, head_r * 1.05), skin, 3, 0.003))
-    for i, (off, sc) in enumerate([
-        ((0.02, -0.04, head_r * 0.35), (head_r * 1.02, head_r * 0.92, head_r * 0.5)),
-        ((-0.06, 0.02, head_r * 0.25), (head_r * 0.52, head_r * 0.48, head_r * 0.38)),
-        ((0.08, 0.0, head_r * 0.2), (head_r * 0.42, head_r * 0.38, head_r * 0.33)),
-        ((0.0, -head_r * 0.3, head_r * 0.14), (head_r * 0.98, head_r * 0.70, head_r * 0.9)),
-    ]):
-        parts.append(make_soft_blob(f"Hair_{i}", (off[0], off[1], head_z + off[2]), sc, hair, 3, 0.003))
+    # One large "solid crown" (per the earlier hand-tweaked v8's approach —
+    # see art/blender/README.md) instead of several small separate clumps:
+    # a big, generously-oversized dome covering the whole top/side/back of
+    # the head with heavy overlap. Several small islands are individually
+    # fragile — if any one of them picks up a slightly different bone
+    # weight than its neighbors, that one clump visibly detaches during the
+    # walk cycle even though everything sits correctly in the bind pose.
+    # One big overlapping mass tolerates that: even a partially-off clump
+    # stays hidden under its neighbors' overlap instead of leaving a bald gap.
+    parts.append(make_soft_blob("Hair_Crown", (0.0, -0.02, head_z + head_r * 0.18), (head_r * 1.12, head_r * 1.04, head_r * 0.86), hair, 3, 0.004))
+    parts.append(make_soft_blob("Hair_Back", (0.0, -head_r * 0.42, head_z + head_r * 0.08), (head_r * 1.05, head_r * 0.78, head_r * 0.70), hair, 3, 0.004))
+    for side, xs in (("L", -1), ("R", 1)):
+        parts.append(make_soft_blob(f"Hair_Side_{side}", (xs * head_r * 0.72, head_r * 0.15, head_z - head_r * 0.05), (head_r * 0.42, head_r * 0.5, head_r * 0.55), hair, 3, 0.004))
     # Fringe — a low front clump so the face reads as framed by hair
     # instead of a bald dome; sits above eye height so it doesn't hide them.
-    parts.append(make_soft_blob("Hair_Fringe", (0.0, head_r * 0.52, head_z + head_r * 0.38), (head_r * 0.76, head_r * 0.34, head_r * 0.22), hair, 3, 0.003))
-    for side, xs in (("L", -1), ("R", 1)):
-        parts.append(make_soft_blob(f"HairSide_{side}", (xs * head_r * 0.62, head_r * 0.30, head_z + head_r * 0.02), (head_r * 0.30, head_r * 0.34, head_r * 0.42), hair, 3, 0.003))
+    parts.append(make_soft_blob("Hair_Fringe", (0.0, head_r * 0.55, head_z + head_r * 0.30), (head_r * 0.80, head_r * 0.38, head_r * 0.30), hair, 3, 0.004))
 
     for side, xs in (("L", -1), ("R", 1)):
         parts.append(make_soft_blob(f"Cheek_{side}", (xs * head_r * 0.7, head_r * 0.2, head_z - head_r * 0.15), (head_r * 0.26,) * 3, skin, 2, 0.002))
@@ -296,7 +300,7 @@ def build():
     bpy.context.scene.cursor.location = (0, 0, 0)
     bpy.ops.object.origin_set(type="ORIGIN_CURSOR")
     ol = single_skin_outline(body, CFG["outline_thick"], CFG["outline"])
-    return body, ol, hip_y, shoulder_y, h, arm_len, leg_len, hip_r * 2
+    return body, ol, hip_y, shoulder_y, h, arm_len, leg_len, hip_r * 2, head_r
 
 
 def build_rig(h, hip_y, shoulder_y, torso_w, arm_len, leg_len):
@@ -338,6 +342,32 @@ def parent_auto(mesh, arm):
     arm.select_set(True)
     bpy.context.view_layer.objects.active = arm
     bpy.ops.object.parent_set(type="ARMATURE_AUTO")
+
+
+def pin_head_vertices(obj, z_min, bone_name="Head"):
+    """Force every vertex at/above `z_min` (head, hair, cheeks, eyes, mouth)
+    onto the Head bone with full weight, overriding ARMATURE_AUTO's envelope
+    guess.
+
+    ARMATURE_AUTO's automatic weights are a proximity heuristic, not a
+    guarantee — enlarging or reshaping nearby geometry (e.g. the v3->v4
+    torso swap from a beveled cube to a wider tapered cylinder) can flip
+    some hair vertices from "closest to Head" to "closest to Chest", so the
+    hair visibly detaches from the head and hides inside the torso during
+    the walk cycle, even though it sits correctly in the bind pose. Pinning
+    removes the guesswork for the one bone where "rigidly follows the head"
+    is exactly the desired behavior anyway.
+    """
+    vg = obj.vertex_groups.get(bone_name)
+    if vg is None:
+        vg = obj.vertex_groups.new(name=bone_name)
+    other_groups = [g for g in obj.vertex_groups if g.name != bone_name]
+    idx = [v.index for v in obj.data.vertices if v.co.z >= z_min]
+    print(f"PIN {obj.name}: {len(idx)}/{len(obj.data.vertices)} verts >= z={z_min:.4f} -> {bone_name}")
+    for g in other_groups:
+        g.remove(idx)
+    if idx:
+        vg.add(idx, 1.0, "REPLACE")
 
 
 def walk(arm, fps=12, frames=12):
@@ -450,10 +480,16 @@ def preview(path):
 
 def main():
     clear()
-    body, ol, hip_y, shoulder_y, h, arm_len, leg_len, torso_w = build()
+    body, ol, hip_y, shoulder_y, h, arm_len, leg_len, torso_w, head_r = build()
     arm = build_rig(h, hip_y, shoulder_y, torso_w, arm_len, leg_len)
     parent_auto(body, arm)
     parent_auto(ol, arm)
+    # Comfortably above the torso top (== shoulder_y) and the arms' shoulder
+    # attachment (which also sits at shoulder_y), so only head/hair/face
+    # vertices get pinned — see pin_head_vertices()'s docstring.
+    head_pin_z = shoulder_y + head_r * 0.15
+    pin_head_vertices(body, head_pin_z)
+    pin_head_vertices(ol, head_pin_z)
     walk(arm)
     bpy.ops.wm.save_as_mainfile(filepath=BLEND)
     export(arm, GLB)
