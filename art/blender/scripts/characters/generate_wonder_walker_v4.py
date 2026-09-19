@@ -257,6 +257,11 @@ def build():
     for side, x in (("L", -hip_r * 0.62), ("R", hip_r * 0.62)):
         parts.append(make_limb(f"Leg_{side}", (x, 0, leg_len / 2), leg_len, h * 0.070, h * 0.050, tunic))
         parts.append(make_soft_blob(f"Foot_{side}", (x, h * 0.06, h * 0.05), (h * 0.10, h * 0.14, h * 0.05), shoe))
+        # Knee bulge — sits right at the Thigh/Shin bone boundary, adding
+        # volume so the leg reads as two jointed segments instead of one
+        # straight cone quietly bending in the middle. ARMATURE_AUTO blends
+        # it naturally since it's centered on the joint itself.
+        parts.append(make_soft_blob(f"Knee_{side}", (x, 0, leg_len * 0.5), (h * 0.062,) * 3, tunic, 3, 0.003))
 
     # Tapered rounded torso — narrow at the hips, broad at the shoulders.
     parts.append(make_torso("Torso", (0, 0, hip_y + torso_h / 2), torso_h, hip_r, shoulder_r, tunic))
@@ -268,6 +273,11 @@ def build():
         x = xs * (shoulder_r * 0.92)
         parts.append(make_limb(f"Arm_{side}", (x, 0.02 * xs, shoulder_y - arm_len / 2), arm_len, h * 0.050, h * 0.038, skin))
         parts.append(make_soft_blob(f"Hand_{side}", (x, 0.02 * xs, shoulder_y - arm_len), (h * 0.06, h * 0.058, h * 0.06), skin))
+        # Elbow bulge — same reasoning as the knee: volume right at the
+        # UpperArm/LowerArm boundary so the now-animated elbow (see walk())
+        # reads as an actual joint bending, not a rigid rod pivoting once
+        # at the shoulder — the single biggest "Roblox" tell.
+        parts.append(make_soft_blob(f"Elbow_{side}", (x, 0.02 * xs, shoulder_y - arm_len * 0.5), (h * 0.046,) * 3, skin, 3, 0.003))
 
     # A short neck instead of the head sitting flush on the torso — visibly
     # narrower than both, so head and shoulders read as separate forms.
@@ -421,6 +431,13 @@ def walk(arm, fps=12, frames=12):
         rot("Thigh_L", fr, tl); rot("Shin_L", fr, sl)
         rot("Thigh_R", fr, tr); rot("Shin_R", fr, sr)
         rot("UpperArm_L", fr, al); rot("UpperArm_R", fr, ar)
+        # Elbow bend — rigged since v3 but never animated, so the whole arm
+        # swung as one rigid rod from the shoulder (the single biggest
+        # "Roblox" tell). A resting bend that's never fully straight, plus
+        # a fraction of the shoulder swing so it visibly moves with the
+        # stride instead of just tagging along rigidly.
+        rot("LowerArm_L", fr, (al[0] * 0.35 + 14, 0, 0))
+        rot("LowerArm_R", fr, (ar[0] * 0.35 + 14, 0, 0))
         loc("Hips", fr, (0, 0, bob))
         rot("Chest", fr, (0, 0, 4 if fr in (1, 7) else -3))
     bpy.ops.object.mode_set(mode="OBJECT")
