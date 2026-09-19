@@ -5,6 +5,8 @@ extends CharacterBody3D
 @export var move_speed: float = 4.0
 @export var gravity: float = 9.8
 @export var walk_anim: StringName = &"WW_Walk"
+## Optional idle/RESET clip. If missing (v13 only has WW_Walk), bones snap to bind rest.
+@export var idle_anim: StringName = &"RESET"
 @export var turn_speed: float = 12.0
 
 ## When false, chapter director freezes walk during dialogue.
@@ -18,6 +20,8 @@ var can_move: bool = true
 var _anim: AnimationPlayer
 var _model: Node3D
 var _camera: Camera3D
+var _skeleton: Skeleton3D
+var _was_walking: bool = false
 
 
 func _ready() -> void:
@@ -29,10 +33,13 @@ func _ready() -> void:
 	add_to_group("player")
 	if _model:
 		_anim = _model.find_child("AnimationPlayer", true, false) as AnimationPlayer
+		_skeleton = _model.find_child("Skeleton3D", true, false) as Skeleton3D
 	if _anim and _anim.has_animation(walk_anim):
 		var anim := _anim.get_animation(walk_anim)
 		if anim:
 			anim.loop_mode = Animation.LOOP_LINEAR
+	# Start standing at rest (not mid-stride).
+	_set_walking(false)
 
 
 func _physics_process(delta: float) -> void:
@@ -100,6 +107,23 @@ func _set_walking(walking: bool) -> void:
 	if walking:
 		if _anim.current_animation != walk_anim or not _anim.is_playing():
 			_anim.play(walk_anim)
-	else:
-		if _anim.is_playing():
-			_anim.stop()
+		_was_walking = true
+		return
+	# Leaving walk (or first boot): don't freeze on walk frame 0 (feet still apart).
+	if _was_walking or _anim.is_playing() or _anim.current_animation == walk_anim:
+		_go_idle()
+	_was_walking = false
+
+
+func _go_idle() -> void:
+	# Prefer a real idle/RESET clip when the model ships one.
+	if idle_anim != &"" and _anim.has_animation(idle_anim):
+		_anim.play(idle_anim)
+		_anim.seek(0.0, true)
+		_anim.pause()
+		return
+	# v13 only has WW_Walk. stop() seeks to walk frame 0 (still a stride),
+	# so clear the clip and snap bones to the skeleton bind/rest pose.
+	_anim.stop()
+	if _skeleton:
+		_skeleton.reset_bone_poses()
