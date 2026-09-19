@@ -295,6 +295,8 @@ func _try_collect_near_item() -> void:
 
 func _show(dialogue: String, prompt: String) -> void:
 	dialogue_label.text = dialogue
+	if camera_director and camera_director.has_method("is_orbiting") and camera_director.is_orbiting():
+		prompt += "   [A / D: look around]"
 	prompt_label.text = prompt
 
 func _set_player_move(enabled: bool) -> void:
