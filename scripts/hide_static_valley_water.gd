@@ -1,14 +1,15 @@
 extends Node3D
-## Hides non-animated valley water / foam / fish meshes when the alive
-## stream pack is present, so we don't double-draw paper water.
+## Hides only the static valley pieces the animated brook replaces (pool,
+## splash foam, static fish). The cliff waterfall and the upstream/downstream
+## river stay so the water still reads as one continuous river.
 
 @export var name_prefixes: PackedStringArray = [
-	"Stream_", "Waterfall_", "Foam_", "Fish_"
+	"Stream_Pool", "Foam_Splash", "Foam_Spray", "Fish_"
 ]
 
 
 func _ready() -> void:
-	call_deferred("_hide_matches", self)
+	call_deferred("_hide_matches", get_parent())
 
 
 func _hide_matches(node: Node) -> void:
