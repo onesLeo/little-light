@@ -17,6 +17,7 @@
 [ext_resource type="Script" path="res://scripts/play_all_animation_loops.gd" id="15_loops"]
 [ext_resource type="Script" path="res://scripts/hide_static_valley_water.gd" id="16_hidewater"]
 [ext_resource type="Script" path="res://scripts/charm_award.gd" id="17_charm"]
+[ext_resource type="Script" path="res://scripts/stream_alive_clean.gd" id="17_streamclean"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
 radius = 0.35
@@ -151,6 +152,9 @@ script = ExtResource("9_bake")
 
 [node name="Art" parent="StreamFishAlive" instance=ExtResource("14_stream")]
 script = ExtResource("15_loops")
+
+[node name="StreamAliveClean" type="Node3D" parent="StreamFishAlive"]
+script = ExtResource("17_streamclean")
 
 
 [node name="DavidMentor" parent="." instance=ExtResource("6_david")]
