@@ -1,7 +1,8 @@
 extends Node3D
-## Belt-and-suspenders for alive brook packs (v6+).
-## Hide leftover outline slabs (water/bank/rock) that read as black side blocks,
-## and lift any old Ripple_/Waterfall_Sheet_ overlays if present.
+## Placement helpers for the alive brook pack.
+## - Hide outline slabs and duplicate Bank_* meshes (valley owns the banks;
+##   pack banks clip trees and read as dark side walls).
+## - Lift any leftover Ripple_/Waterfall_Sheet_ overlays.
 
 @export var lift_overlay_y: float = 0.05
 
@@ -24,12 +25,14 @@ func _clean(node: Node) -> void:
 		return
 	var n3 := node as Node3D
 	var n := String(node.name)
-	# Black paper outlines on water/banks/rocks show as thick side blocks.
+	# Duplicate banks from the stream pack fight valley trees/land.
+	if n.begins_with("Bank_"):
+		n3.visible = false
+		return
 	if n.ends_with("_Outline") and (
 		n.begins_with("Stream_")
 		or n.begins_with("Waterfall_")
 		or n.begins_with("Foam_")
-		or n.begins_with("Bank_")
 		or n.begins_with("Rock_")
 		or n.begins_with("WF_Rock_")
 	):
