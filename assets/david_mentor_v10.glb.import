@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://bstreamfishalivev601"
-path="res://.godot/imported/bethlehem_stream_fish_alive_v6.glb-v6-pending.scn"
+uid="uid://bdavidmentorv10rnd01"
+path="res://.godot/imported/david_mentor_v10.glb-0000000000000000000000000000000.scn"
 
 [deps]
 
-source_file="res://assets/bethlehem_stream_fish_alive_v6.glb"
-dest_files=["res://.godot/imported/bethlehem_stream_fish_alive_v6.glb-v6-pending.scn"]
+source_file="res://assets/david_mentor_v10.glb"
+dest_files=["res://.godot/imported/david_mentor_v10.glb-0000000000000000000000000000000.scn"]
 
 [params]
 
@@ -18,17 +18,17 @@ nodes/root_name=""
 nodes/apply_root_scale=true
 nodes/root_scale=1.0
 nodes/import_as_skeleton_bones=false
-meshes/ensure_tangents=true
-meshes/generate_lods=true
-meshes/create_shadow_meshes=true
-meshes/light_baking=1
+meshes/ensure_tangents=false
+meshes/generate_lods=false
+meshes/create_shadow_meshes=false
+meshes/light_baking=0
 meshes/lightmap_texel_size=0.2
 meshes/force_disable_compression=false
 skins/use_named_skins=true
 animation/import=true
-animation/fps=12
+animation/fps=30
 animation/trimming=false
-animation/remove_immutable_tracks=false
+animation/remove_immutable_tracks=true
 animation/import_rest_as_RESET=false
 import_script/path=""
 _subresources={}

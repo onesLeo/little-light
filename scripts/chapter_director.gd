@@ -107,6 +107,12 @@ func _enter_beat(next: Beat) -> void:
 
 		Beat.MEET_DAVID_A:
 			_set_player_move(false)
+			# Both turn to face each other — fire the Walker's turn without
+			# awaiting it (nothing downstream depends on his facing, unlike
+			# David's, which _place_closeup() reads), so they turn at the
+			# same time instead of one after the other.
+			_face_david(david_mentor)
+			await _face_player(david_mentor)
 			_cut_closeup(david_mentor)
 			_point_light(david_mentor)
 			_show(
@@ -319,6 +325,53 @@ func _cut_closeup(look_target: Node3D) -> void:
 func _point_light(target: Node3D) -> void:
 	if wonder_light and wonder_light.has_method("point_at"):
 		wonder_light.point_at(target)
+
+## Turns `mover` to face `target_pos` on the spot, closest-direction first.
+## Yaw only — no head/body tilt, so it stays upright.
+func _turn_to_face(mover: Node3D, target_pos: Vector3, duration: float = 0.6) -> void:
+	if not mover:
+		return
+	var to_target := target_pos - mover.global_position
+	to_target.y = 0.0
+	if to_target.length() < 0.01:
+		return
+	var start_rot := mover.rotation
+	mover.look_at(mover.global_position + to_target, Vector3.UP)
+	var target_yaw := mover.rotation.y
+	mover.rotation = start_rot
+	var delta := wrapf(target_yaw - start_rot.y, -PI, PI)
+	if absf(delta) < 0.01:
+		return
+	var tw := create_tween()
+	tw.tween_property(mover, "rotation:y", start_rot.y + delta, duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	await tw.finished
+
+## Turns David to face the player, so he greets the Wonder-Walker face to
+## face instead of the close-up camera composing around whatever direction
+## he was originally authored facing. Awaiting this before cutting to the
+## close-up matters: `_place_closeup()` reads the target's *current* facing
+## to compose the shot, so cutting mid-turn (or before it starts) frames
+## the wrong spot. The turn plays out on the wide tabletop shot first, then
+## the close-up cuts in already correctly framed.
+func _face_player(target: Node3D) -> void:
+	if not player:
+		return
+	await _turn_to_face(target, player.global_position)
+
+## Turns the Wonder-Walker to face David — the other half of "face to
+## face". Rotates `Player/Model` specifically, not the `Player`
+## CharacterBody3D root: that's the same node wonder_walker.gd yaws while
+## moving, and it only does so while `can_move` is true (see its early
+## return in `_physics_process`), so this never fights player input as
+## long as movement is disabled first — true throughout Meet David (see
+## `_set_player_move(false)` in Beat.MEET_DAVID_A).
+func _face_david(target: Node3D) -> void:
+	if not player:
+		return
+	var model := player.get_node_or_null("Model") as Node3D
+	if not model or not target:
+		return
+	await _turn_to_face(model, target.global_position)
 
 ## The chapter-complete moment: applause, a big confetti pop over the
 ## Wonder-Walker, the light celebrating, and a banner that pops in.
