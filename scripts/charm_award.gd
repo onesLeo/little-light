@@ -16,12 +16,16 @@ var _charm: MeshInstance3D
 var _charm_mat: StandardMaterial3D
 var _player: Node3D
 var _david: Node3D
+var _audio: Node
+var _confetti: Node
 var _running: bool = false
 var _rest_charm_pos: Vector3 = Vector3(0.0, 0.08, 0.12)
 
 func _ready() -> void:
 	_player = get_node_or_null(player_path) as Node3D
 	_david = get_node_or_null(david_path) as Node3D
+	_audio = get_node_or_null("%AudioDirector")
+	_confetti = get_node_or_null("%ConfettiBurst")
 	_build_placeholders()
 	visible = false
 
@@ -83,12 +87,20 @@ func play_ceremony() -> void:
 	# Snap squash.
 	tw.tween_property(_charm, "scale", Vector3(1.15, 0.85, 1.15), 0.08)
 	tw.tween_property(_charm, "scale", Vector3.ONE, 0.12)
+	tw.tween_callback(_celebrate_snap)
 	# Gold pulse.
 	tw.tween_property(_charm_mat, "emission_energy_multiplier", 2.2, pulse_duration * 0.45).set_trans(Tween.TRANS_SINE)
 	tw.tween_property(_charm_mat, "emission_energy_multiplier", 0.35, pulse_duration * 0.55)
 	tw.tween_callback(_play_reactions)
 	tw.tween_interval(0.55)
 	tw.tween_callback(_finish)
+
+
+func _celebrate_snap() -> void:
+	if _audio and _audio.has_method("play_fanfare"):
+		_audio.play_fanfare()
+	if _confetti and _confetti.has_method("burst"):
+		_confetti.burst(_charm.global_position + Vector3(0.0, 0.1, 0.0), 70, 0.12, 2.6, 0.32)
 
 
 func _play_reactions() -> void:

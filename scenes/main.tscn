@@ -1,4 +1,4 @@
-[gd_scene load_steps=31 format=3]
+[gd_scene load_steps=32 format=3]
 
 [ext_resource type="PackedScene" path="res://assets/wonder_walker_v9.glb" id="1_ww"]
 [ext_resource type="PackedScene" path="res://assets/bethlehem_valley_v6.glb" id="2_valley"]
@@ -17,6 +17,7 @@
 [ext_resource type="Script" path="res://scripts/play_all_animation_loops.gd" id="15_loops"]
 [ext_resource type="Script" path="res://scripts/hide_static_valley_water.gd" id="16_hidewater"]
 [ext_resource type="Script" path="res://scripts/charm_award.gd" id="17_charm"]
+[ext_resource type="Script" path="res://scripts/confetti_burst.gd" id="18_confetti"]
 [ext_resource type="Script" path="res://scripts/stream_alive_clean.gd" id="17_streamclean"]
 [ext_resource type="Script" path="res://scripts/stream_placement.gd" id="19_place"]
 [ext_resource type="Script" path="res://scripts/stream_fish_swim.gd" id="20_fish"]
@@ -260,7 +261,13 @@ script = ExtResource("13_audio")
 
 [node name="SfxB" type="AudioStreamPlayer" parent="AudioDirector"]
 
+[node name="SfxC" type="AudioStreamPlayer" parent="AudioDirector"]
+
 [node name="Vo" type="AudioStreamPlayer" parent="AudioDirector"]
+
+[node name="ConfettiBurst" type="CPUParticles3D" parent="."]
+unique_name_in_owner = true
+script = ExtResource("18_confetti")
 
 [node name="WonderLight" type="Node3D" parent="."]
 unique_name_in_owner = true
@@ -340,3 +347,25 @@ grow_horizontal = 2
 grow_vertical = 2
 pivot_offset = Vector2(60, 60)
 theme_override_styles/panel = SubResource("StyleBoxFlat_breath")
+
+[node name="CompleteBanner" type="Label" parent="UI"]
+unique_name_in_owner = true
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.3
+anchor_right = 0.5
+anchor_bottom = 0.3
+offset_left = -320.0
+offset_top = -50.0
+offset_right = 320.0
+offset_bottom = 50.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 0.86, 0.35, 1)
+theme_override_colors/font_outline_color = Color(0.35, 0.2, 0.08, 1)
+theme_override_constants/outline_size = 14
+theme_override_font_sizes/font_size = 64
+text = "Chapter Complete!"
+horizontal_alignment = 1
+vertical_alignment = 1

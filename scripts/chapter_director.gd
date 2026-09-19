@@ -26,6 +26,8 @@ enum Beat {
 @onready var camera_director: Node = %CameraDirector
 @onready var wonder_light: Node3D = %WonderLight
 @onready var audio_director: Node = get_node_or_null("%AudioDirector")
+@onready var confetti: Node = get_node_or_null("%ConfettiBurst")
+@onready var complete_banner: Label = get_node_or_null("%CompleteBanner") as Label
 @onready var david_mentor: Node3D = get_node_or_null("../DavidMentor") as Node3D
 @onready var charm_award: Node3D = get_node_or_null("%CharmAward") as Node3D
 
@@ -193,8 +195,6 @@ func _enter_beat(next: Beat) -> void:
 				camera_director.cut_to_charm(charm_award)
 			elif charm_award:
 				_cut_closeup(charm_award)
-			if audio_director and audio_director.has_method("play_success"):
-				audio_director.play_success()
 			if charm_award and charm_award.has_method("play_ceremony"):
 				if not charm_award.ceremony_finished.is_connected(_on_charm_ceremony_finished):
 					charm_award.ceremony_finished.connect(_on_charm_ceremony_finished, CONNECT_ONE_SHOT)
@@ -216,6 +216,7 @@ func _enter_beat(next: Beat) -> void:
 				"Thanks for playing this P0.2 slice"
 			)
 			_advance_ready = false
+			_play_finale()
 
 func _on_advance() -> void:
 	match beat:
@@ -316,6 +317,24 @@ func _cut_closeup(look_target: Node3D) -> void:
 func _point_light(target: Node3D) -> void:
 	if wonder_light and wonder_light.has_method("point_at"):
 		wonder_light.point_at(target)
+
+## The chapter-complete moment: applause, a big confetti pop over the
+## Wonder-Walker, the light celebrating, and a banner that pops in.
+func _play_finale() -> void:
+	if audio_director and audio_director.has_method("play_cheer"):
+		audio_director.play_cheer()
+	if confetti and confetti.has_method("burst") and player:
+		confetti.burst(player.global_position + Vector3(0.0, 2.8, 0.0), 160, 1.6, 6.5, 1.5)
+	_celebrate_light()
+	if complete_banner:
+		complete_banner.visible = true
+		complete_banner.modulate.a = 0.0
+		complete_banner.pivot_offset = complete_banner.size * 0.5
+		complete_banner.scale = Vector2(0.4, 0.4)
+		var tw := create_tween().set_parallel(true)
+		tw.tween_property(complete_banner, "modulate:a", 1.0, 0.25)
+		tw.tween_property(complete_banner, "scale", Vector2.ONE, 0.55).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
 
 func _celebrate_light() -> void:
 	if wonder_light and wonder_light.has_method("celebrate"):

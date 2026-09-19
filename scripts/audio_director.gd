@@ -16,18 +16,22 @@ const ChimeSynth := preload("res://scripts/chime_synth.gd")
 
 @export var vo_clips: Dictionary = {}
 
-@onready var _sfx_players: Array[AudioStreamPlayer] = [$SfxA, $SfxB]
+@onready var _sfx_players: Array[AudioStreamPlayer] = [$SfxA, $SfxB, $SfxC]
 @onready var _vo_player: AudioStreamPlayer = $Vo
 
 var _stream_pickup: AudioStreamWAV
 var _stream_tap: AudioStreamWAV
 var _stream_success: AudioStreamWAV
+var _stream_fanfare: AudioStreamWAV
+var _stream_cheer: AudioStreamWAV
 var _next_player: int = 0
 
 func _ready() -> void:
 	_stream_pickup = ChimeSynth.build_chime([880.0, 1318.5], 0.16)
 	_stream_tap = ChimeSynth.build_chime([440.0], 0.08)
 	_stream_success = ChimeSynth.build_chime([523.25, 659.25, 783.99], 0.4)
+	_stream_fanfare = ChimeSynth.build_fanfare()
+	_stream_cheer = ChimeSynth.build_cheer()
 
 func play_pickup() -> void:
 	_play_sfx(_stream_pickup)
@@ -37,6 +41,12 @@ func play_tap() -> void:
 
 func play_success() -> void:
 	_play_sfx(_stream_success)
+
+func play_fanfare() -> void:
+	_play_sfx(_stream_fanfare)
+
+func play_cheer() -> void:
+	_play_sfx(_stream_cheer)
 
 ## No-op until vo_clips[beat_name] is assigned a real recorded/imported clip.
 func play_vo(beat_name: String) -> void:
