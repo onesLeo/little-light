@@ -1,10 +1,14 @@
 extends Node3D
-## Hides only the static valley pieces the animated brook replaces (pool,
-## splash foam, static fish). The cliff waterfall and the upstream/downstream
-## river stay so the water still reads as one continuous river.
+## Hides valley water / foam / fish the animated brook pack replaces.
+## Alive pack draws Stream_Main + Waterfall_Main + join/pool; leaving the
+## valley Stream_*/Waterfall_* visible causes z-fighting (black flicker)
+## and color mismatch with WaterPaper.
 
 @export var name_prefixes: PackedStringArray = [
-	"Stream_Pool", "Foam_Splash", "Foam_Spray", "Fish_"
+	"Stream_",
+	"Waterfall_",
+	"Foam_",
+	"Fish_",
 ]
 
 
