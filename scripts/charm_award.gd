@@ -100,7 +100,7 @@ func _celebrate_snap() -> void:
 	if _audio and _audio.has_method("play_fanfare"):
 		_audio.play_fanfare()
 	if _confetti and _confetti.has_method("burst"):
-		_confetti.burst(_charm.global_position + Vector3(0.0, 0.1, 0.0), 70, 0.12, 2.6, 0.32)
+		_confetti.burst(_charm.global_position + Vector3(0.0, 0.1, 0.0), 70, 0.12, 2.6, 0.45)
 
 
 func _play_reactions() -> void:
