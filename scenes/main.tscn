@@ -1,4 +1,4 @@
-[gd_scene load_steps=29 format=3]
+[gd_scene load_steps=31 format=3]
 
 [ext_resource type="PackedScene" path="res://assets/wonder_walker_v9.glb" id="1_ww"]
 [ext_resource type="PackedScene" path="res://assets/bethlehem_valley_v6.glb" id="2_valley"]
@@ -18,6 +18,8 @@
 [ext_resource type="Script" path="res://scripts/hide_static_valley_water.gd" id="16_hidewater"]
 [ext_resource type="Script" path="res://scripts/charm_award.gd" id="17_charm"]
 [ext_resource type="Script" path="res://scripts/stream_alive_clean.gd" id="17_streamclean"]
+[ext_resource type="Script" path="res://scripts/stream_placement.gd" id="19_place"]
+[ext_resource type="Script" path="res://scripts/stream_fish_swim.gd" id="20_fish"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
 radius = 0.35
@@ -155,6 +157,12 @@ script = ExtResource("15_loops")
 
 [node name="StreamAliveClean" type="Node3D" parent="StreamFishAlive"]
 script = ExtResource("17_streamclean")
+
+[node name="StreamPlacement" type="Node3D" parent="StreamFishAlive"]
+script = ExtResource("19_place")
+
+[node name="StreamFish" type="Node3D" parent="."]
+script = ExtResource("20_fish")
 
 
 [node name="DavidMentor" parent="." instance=ExtResource("6_david")]
