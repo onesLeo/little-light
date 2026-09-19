@@ -40,7 +40,8 @@ func _initialize() -> void:
 	_check(closeup_cam.current == false, "close-up camera is inactive on ARRIVE")
 
 	print("-- meeting David cuts to close-up + points Wonder Light --")
-	director._enter_beat(director.Beat.MEET_DAVID_A)
+	# The characters finish turning before the dialogue camera cuts.
+	await director._enter_beat(director.Beat.MEET_DAVID_A)
 	_check(closeup_cam.current == true, "MEET_DAVID_A cuts to close-up")
 	_check(tabletop_cam.current == false, "tabletop stops being current after cut")
 	_check(wonder_light._look_target == david, "Wonder Light looks at David during MEET_DAVID_A")

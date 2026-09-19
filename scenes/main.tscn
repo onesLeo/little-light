@@ -1,11 +1,11 @@
 [gd_scene load_steps=32 format=3]
 
-[ext_resource type="PackedScene" path="res://assets/wonder_walker_v12.glb" id="1_ww"]
+[ext_resource type="PackedScene" path="res://assets/wonder_walker_v13.glb" id="1_ww"]
 [ext_resource type="PackedScene" path="res://assets/bethlehem_valley_v6.glb" id="2_valley"]
 [ext_resource type="Script" path="res://scripts/wonder_walker.gd" id="3_ww_script"]
 [ext_resource type="Script" path="res://scripts/steady_hands_minigame.gd" id="4_sh"]
 [ext_resource type="Script" path="res://scripts/chapter_director.gd" id="5_dir"]
-[ext_resource type="PackedScene" path="res://assets/david_mentor_v10.glb" id="6_david"]
+[ext_resource type="PackedScene" path="res://assets/david_mentor_v12.glb" id="6_david"]
 [ext_resource type="PackedScene" path="res://assets/wonder_items_v7.glb" id="7_items"]
 [ext_resource type="Script" path="res://scripts/tabletop_camera.gd" id="8_cam"]
 [ext_resource type="Script" path="res://scripts/mesh_collision_baker.gd" id="9_bake"]
@@ -129,6 +129,8 @@ far = 60.0
 [node name="CameraDirector" type="Node" parent="."]
 unique_name_in_owner = true
 script = ExtResource("11_camdir")
+closeup_look_height = 0.8
+closeup_height = 1.25
 
 [node name="SafetyFloor" type="StaticBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2.5, 0)
@@ -169,6 +171,7 @@ script = ExtResource("20_fish")
 [node name="DavidMentor" parent="." instance=ExtResource("6_david")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -3)
 script = ExtResource("9_bake")
+
 
 [node name="Player" type="CharacterBody3D" parent="."]
 unique_name_in_owner = true

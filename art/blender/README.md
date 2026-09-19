@@ -9,8 +9,8 @@ These are **script-generated** meshes (often run headless). Hand polish in the B
 ```
 art/blender/
   assets/textures/paper_grain.png
-  scripts/characters/   # Wonder-Walker v1–v3
-  scripts/props/        # David mentor + Wonder Items
+  scripts/characters/   # Wonder-Walker v1–v5 and current David generator
+  scripts/props/        # Wonder Items and historical David generators
   scripts/environments/ # Bethlehem valley placeholder
   scripts/_paths.py     # LITTLE_LIGHT_ART_OUT helper
   docs/                 # art-tech pipeline notes
@@ -35,20 +35,33 @@ art/blender/
 # Optional: where .glb / .blend land
 export LITTLE_LIGHT_ART_OUT="$PWD/art/blender/output"
 
-blender --background --python art/blender/scripts/characters/generate_wonder_walker_v3.py
+blender --background --python art/blender/scripts/characters/generate_wonder_walker_v5.py
 ```
 
 Windows (PowerShell) example:
 
 ```powershell
-$env:LITTLE_LIGHT_ART_OUT = "C:\Users\onesa\wonder-walker"   # example only
-& "C:\Program Files\Blender Foundation\Blender 5.2\blender.exe" --background --python art\blender\scripts\characters\generate_wonder_walker_v3.py
+$env:LITTLE_LIGHT_ART_OUT = Join-Path (Get-Location) "art\blender\output"
+& "C:\Program Files\Blender Foundation\Blender 5.2\blender.exe" --background --python art\blender\scripts\characters\generate_wonder_walker_v5.py
 ```
 
 ## Output
 
 By default scripts should write under `art/blender/output/` when using `_paths.py`.  
 Older generators may still embed an absolute Windows path — prefer setting `LITTLE_LIGHT_ART_OUT` until all scripts are fully migrated.
+
+### Generator outputs versus scene assets
+
+Run the examples from the repository root. The current character/props generators write:
+
+| Generator | GLB outputs |
+|-----------|-------------|
+| `scripts/characters/generate_wonder_walker_v5.py` | `wonder_walker_v13.glb` |
+| `scripts/characters/generate_wonder_walker_v4.py` | `wonder_walker_v12.glb` |
+| `scripts/characters/generate_david_mentor_v4.py` | `david_mentor_v12.glb` |
+| `scripts/props/generate_david_and_items_v3.py` | `david_mentor_v9.glb`, `wonder_items_v7.glb` |
+
+The main scene loads **Walker v13, David v12, and items v7**. Use the separate David character generator for the current mentor; the older props generator still outputs David v9. Outputs stay in the output directory until explicitly copied into the project's `assets/` folder; generating a GLB does not change `scenes/main.tscn`. See the [project README](../../README.md#current-scene-assets) for all active scene assets. The technical notes below include earlier iterations as development history.
 
 ## Art constraints (locked for Little Light)
 
@@ -104,17 +117,89 @@ visible side of a character vanish).
 
 ## Latest character
 
-Prefer **`generate_wonder_walker_v4.py`** — same rig/walk-cycle/head layout as v3,
+Use **`scripts/characters/generate_wonder_walker_v5.py`**, which produces
+**Walker v13** and an editable `wonder_walker_v13.blend`. It imports the v4
+generator's material/export helpers, so keep both scripts together.
+
+V12 joined separate cylinders and spheres without welding their surfaces.
+V13 builds continuous profiles for the limbs, palms, clothing and head;
+voxel-remeshes the shoulder/sleeve junctions, thumbs and face/neck forms;
+then assigns explicit, normalized weights. Knees and elbows no longer use
+separate joint balls. The outline copies the body's weights exactly.
+The blue tunic, coral sash and dark hair remain, with a thinner contour and
+12fps stepped animation. [DOGWALK concept art](https://studio.blender.org/projects/dogwalk/3db3f971fec36a/)
+is a style reference; the Walker mesh is generated locally.
+
+After generation, copy `output/wonder_walker_v13.glb` to `assets/` at the
+repository root and let Godot reimport it. Preserve `animation/fps=12` and
+`animation/remove_immutable_tracks=false` in its `.import` settings. The
+generator creates `.gdignore` in its output directory so intermediate Blender
+files and review images are not imported as game assets.
+
+From the repository root, validate the exported skeleton, STEP animation,
+movement and active scene wiring:
+
+```sh
+godot --headless --path . --script tests/walker_visual_review.gd
+godot --headless --path . --script tests/smoke_test.gd
+```
+
+Omit `--headless` from the Walker review to render before/after views and
+four walk poses in Godot, plus the Walker in the valley. Images are saved to
+`art/blender/output/review/`. On Windows, `--rendering-driver d3d12` can be
+used to run the review with Forward+ on Direct3D 12. The separate Blender
+helper `scripts/render_walker_review.py` also imports exported GLBs for
+inspection; its `WW_REVIEW_ASSET` environment variable selects a path relative
+to the repository root. Blender reviews hide outline hulls; Godot reviews
+include them.
+
+### Historical v4 generator (Walker v12)
+
+The earlier **`generate_wonder_walker_v4.py`** uses the same rig/walk-cycle/head layout as v3,
 but the torso is a tapered, beveled cylinder instead of a beveled cube, so
 the body reads as a soft rounded human shape ("DOGWALK-style") instead of
 blocks stacked together. Also bakes materials and builds the outline hull
 inline (see "One-shot generation" below) instead of needing the separate
 recolor + fix-outline passes v3 needed.
 
-## Latest props
+## Current David mentor
 
-Prefer **`scripts/props/generate_david_and_items_v3.py`** for David mentor +
-Wonder Items (stone/staff/lamb). Same rounded-torso treatment as WW v4, and
+Use **`scripts/characters/generate_david_mentor_v4.py`** for **David v12**:
+
+```sh
+blender --background --python art/blender/scripts/characters/generate_david_mentor_v4.py
+```
+
+This imports Walker v5's geometry helpers and v4's material helpers, so keep
+those scripts together. It writes `output/david_mentor_v12.glb` and the editable
+`output/david_mentor_v12.blend`; copy the GLB into the repository's `assets/`
+directory to update the game. It does not regenerate the Walker or collectibles.
+
+The body has welded shoulder/sleeve transitions, tapered arms and wrists,
+integrated thumbs, a shaped face and a closed smile. David is slightly taller
+than the Walker, with a longer golden tunic, green sash, leather pouch, sandals,
+and a distinct wavy scalp cap. His lamb uses a fused wool surface. All geometry
+is static, with the root origin at his feet for the chapter's existing turn
+and nod tweens. Body and outline meshes remain separate so the collision baker
+can skip outlines. Hull thickness is 2.6 mm; outline materials cull back faces.
+
+V11's mouth interiors and overlapping shells are not reused. The scene no
+longer needs its old `FixDavidMentorVisuals` node, which pointed to the wrong
+relative path and could not hide mouth surfaces merged into a larger mesh.
+
+```sh
+godot --headless --path . --script tests/david_visual_review.gd
+```
+
+Omit `--headless` to save front/rear/three-quarter comparisons and real dialogue
+views under `output/review/`. On Windows, `--rendering-driver d3d12` selects
+Forward+ on Direct3D 12. Review the exported GLB in Godot with its outlines
+visible; a Blender render with hidden outlines cannot verify this fix.
+
+## Wonder Items and historical David props
+
+Use **`scripts/props/generate_david_and_items_v3.py`** for Wonder Items v7
+(stone/staff/lamb). Its David v9 output is historical. That David used the same rounded-torso treatment as WW v4, and
 a substantially reworked `build_lamb()`: an elongated capsule body instead
 of a near-sphere, legs splayed to the four corners so the body visibly
 clears the ground, smoother/smaller overlapping wool blobs instead of a
