@@ -83,6 +83,7 @@ terrain, river, trees and layout are unchanged:
   green rock. Runtime colliders for `Shrub*` are a convex hull, see
   `scripts/mesh_collision_baker.gd`.
 - **Trees**: olives (`Olive_N`) get a leaning trunk that forks into three limbs carrying clumps of narrow, silver-backed leaves; cypresses (`Cypress_N`) are a slim flame-shaped column of overlapping fronds down to the ground. `Cypress*` colliders are a convex hull like shrubs.
+- **Ground**: the terrain is one mesh with one painted 1024 px ground map (`paint_ground()`; grass, scrub, bare rock with strata and cracks, terracotta path, sandy riverbed), mapped top-down. This replaced v6's one-material-per-triangle assignment, whose borders were sawtooth steps.
 - **Rocks** (`Rock_N`) keep v6's angular shape but use a baked stone texture
   (granular lumps, flecks, hairline cracks) in four variants: grey, limestone,
   slate and mossy grey with green patches. Per-face UV projection, linear
