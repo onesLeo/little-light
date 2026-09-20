@@ -20,7 +20,7 @@ Screenshots and measurements were taken at 1152x648 / 1280x720 on Windows with G
 | # | Problem | Status | Notes |
 |---|---------|--------|-------|
 | 2.1 | Keyboard only: tablets and gamepads could not play | **Done** | Gamepad: left stick / D-pad, A to continue and collect, X also collects, Start to pause (`input_setup.gd`). Touch: floating thumb stick on the left half plus one big gold button whose label follows the story (**NEXT / GRAB / BREATHE**) and which sends both "continue" and "interact" (`touch_controls.gd`). Prompts reword themselves per device. Verified with injected touch events and the smoke test; **still needs a check on a real tablet**. |
-| 2.2 | "No-reading mode" for ages 6-8 was promised, but everything was read text | **Partly done** | All dialogue, the Joshua verse and item descriptions are now read aloud with the system's text-to-speech; Wonder Light and David use different voices/pitch when two English voices exist (`audio_director.gd`). Dialogue text is larger (18 to 22 pt). **Open:** recorded voiceover (drop clips into `AudioDirector.vo_clips`, keyed by beat name; they take priority over TTS), and shorter, simpler wording for Band A. System voices vary by OS and may be absent (the speaker button is then hidden). |
+| 2.2 | "No-reading mode" for ages 6-8 was promised, but everything was read text | **Partly done** | All dialogue, the Joshua verse, item descriptions and the edge nudges are read aloud with recorded voice clips: Wonder Light is Juno, David is Cody, 23 clips in `assets/audio/vo` (see `docs/voice-over.md`). Fast skipping cuts the old line cleanly. Lines without a clip fall back to system text-to-speech, which is flat. Dialogue text is larger (18 to 22 pt). **Open:** listen through the whole set in the running game, a human voice actor for more emotion, and shorter, simpler wording for Band A. |
 | 2.3 | Dead-end ending: no replay, menu, pause or volume | **Done** | After the confetti a **Play again / Keep exploring** panel appears. Pause menu (Esc / P / Start / round button): Resume, read-aloud on/off, volume, Play again from the start. Settings persist (`game_menu.gd`, `game_settings.gd`). |
 
 ## 3. Game feel
@@ -59,7 +59,7 @@ Screenshots and measurements were taken at 1152x648 / 1280x720 on Windows with G
 
 ## Suggested order
 
-1. Try touch and gamepad on real hardware, and get recorded voiceover for the Band A lines (2.1, 2.2).
+1. Try touch and gamepad on real hardware, and listen through the recorded voiceover in the running game (2.1, 2.2).
 2. Move the trees off the cliff wall and retexture the stream-pack rocks (4.3, 4.8); add cliff ledges (4.4).
 3. Steady Hands depth and sound (3.1, 3.2).
 4. Performance profile before any tablet build (5.1), and the repo housekeeping in 5.2 to 5.4.

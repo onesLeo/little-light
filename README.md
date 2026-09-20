@@ -60,7 +60,8 @@ little-light-godot/
     camera_director.gd
     tabletop_camera.gd
     charm_award.gd
-    audio_director.gd       # procedural SFX + read-aloud (system text-to-speech)
+    audio_director.gd       # procedural SFX + read-aloud (recorded clips, system speech as fallback)
+    vo_library.gd           # spoken line -> recorded voice clip (assets/audio/vo)
     input_setup.gd          # gamepad bindings, pause action, last-used-device tracking
     touch_controls.gd       # floating thumb stick + big NEXT/GRAB/BREATHE button
     game_menu.gd            # pause menu, speaker button, Play again panel
@@ -86,7 +87,7 @@ little-light-godot/
 - Safety floor under the diorama so the player cannot fall forever.
 - Tabletop camera is a `Camera3D` sibling of the player under `Main`. It follows from above/behind without inheriting the player's rotation; `CameraDirector` switches to a separate close-up camera for dialogue and the charm ceremony.
 - Courage charm uses procedural placeholder 3D meshes with a float/snap animation. A persistent Faith Journal is not implemented.
-- Dialogue and narration are displayed as text **and read aloud** with the operating system's text-to-speech voices (Wonder Light and David get different voices/pitches when two English voices exist). `AudioDirector` also generates procedural sound effects; recorded voiceover plays instead of TTS only when clips are assigned to its currently empty `vo_clips` dictionary. TTS availability depends on the OS; when there are no voices the speaker button is hidden.
+- Dialogue and narration are displayed as text **and read aloud** with recorded voice clips: Wonder Light is Juno, David is Cody (`assets/audio/vo`, see [docs/voice-over.md](docs/voice-over.md)). A line with no clip falls back to the operating system's text-to-speech voice, so its availability depends on the OS; with neither, the speaker button is hidden. `AudioDirector` also generates procedural sound effects.
 - Touch controls and gamepad bindings are verified with injected input events and the headless smoke test, not yet on a real tablet or controller.
 
 ## What to improve next
