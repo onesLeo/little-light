@@ -3,7 +3,9 @@ extends Node3D
 ## - Waterfall: the pack's fall is a ramp that runs back into the cliff, so its
 ##   right side is buried in rock. Squeeze the fall vertices onto the valley's
 ##   own notch (Waterfall_Sheet), which is where the cliff was carved for it.
-## - Trees/bushes/rocks from the valley that stand in the water get nudged out.
+## - Trees/bushes/rocks from the valley that stand in the water get nudged out, and are
+##   lowered or raised to the ground where they now stand (they used to keep their old
+##   height, so on a bank a moved tree was buried up to a metre or floated).
 ## Runs in _enter_tree (before any _ready) so the valley collision baker sees
 ## the moved meshes.
 
@@ -14,6 +16,9 @@ extends Node3D
 @export var face_offset: float = 0.10
 @export var side_inset: float = 0.05
 @export var grid_cell: float = 0.12
+
+## Size of the buckets the terrain triangles are sorted into when looking up ground height.
+const TERRAIN_CELL := 1.0
 
 var _mask: Dictionary = {}
 var _cells_min := Vector2.ZERO
@@ -173,6 +178,7 @@ func _nearest(p: Vector2, want_water: bool, max_r: float) -> Vector2:
 func _move_trees_out(valley: Node3D, water: MeshInstance3D) -> void:
 	var wb := water.global_transform * water.get_aabb()
 	var moved: Dictionary = {}
+	var centers: Dictionary = {}
 	for mi in valley.find_children("*", "MeshInstance3D", true, false):
 		var n := String(mi.name)
 		if n.ends_with("_Outline"):
@@ -208,7 +214,89 @@ func _move_trees_out(valley: Node3D, water: MeshInstance3D) -> void:
 		var delta := pos - center
 		if delta.length() > 0.01:
 			moved[n] = Vector3(delta.x, 0.0, delta.y)
+			# Trees have their origin at the trunk base; a bush's origin is not where it grows, so use its middle.
+			var base := m.global_position if (n.begins_with("Cypress") or n.begins_with("Olive")) else b.get_center()
+			centers[n] = Vector2(base.x, base.z)
+	_settle_on_ground(valley, moved, centers)
 	for mi in valley.find_children("*", "MeshInstance3D", true, false):
 		var base := String(mi.name).trim_suffix("_Outline")
 		if moved.has(base):
 			(mi as Node3D).global_position += moved[base]
+
+
+## Sets each moved object's height change to the difference in ground height between where it
+## stood and where it now stands, read from the valley terrain mesh (there is no collision yet
+## this early).
+func _settle_on_ground(valley: Node3D, moved: Dictionary, centers: Dictionary) -> void:
+	var terrain := valley.find_child("Valley_Terrain", true, false) as MeshInstance3D
+	if terrain == null or moved.is_empty():
+		return
+	var wanted := {}
+	for n in moved:
+		var c: Vector2 = centers[n]
+		var d: Vector3 = moved[n]
+		for p in [c, c + Vector2(d.x, d.z)]:
+			var cell := _terrain_cell(p)
+			for dx in range(-1, 2):
+				for dz in range(-1, 2):
+					wanted[Vector2i(cell.x + dx, cell.y + dz)] = true
+	var buckets := _terrain_triangles(terrain, wanted)
+	for n in moved:
+		var c: Vector2 = centers[n]
+		var d: Vector3 = moved[n]
+		var before := _ground_y(buckets, c)
+		var after := _ground_y(buckets, c + Vector2(d.x, d.z))
+		if not is_nan(before) and not is_nan(after):
+			d.y = after - before
+			moved[n] = d
+
+
+func _terrain_cell(p: Vector2) -> Vector2i:
+	return Vector2i(int(floor(p.x / TERRAIN_CELL)), int(floor(p.y / TERRAIN_CELL)))
+
+
+## Terrain triangles in world space, sorted into buckets by the cell their centre is in. Only
+## the wanted cells are kept, so the lookup stays cheap.
+func _terrain_triangles(terrain: MeshInstance3D, wanted: Dictionary) -> Dictionary:
+	var xf := terrain.global_transform
+	var arrays := terrain.mesh.surface_get_arrays(0)
+	var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	var idx = arrays[Mesh.ARRAY_INDEX]
+	var tri_count: int = (idx.size() if idx != null else verts.size()) / 3
+	var buckets := {}
+	for t in tri_count:
+		var tri := PackedVector3Array()
+		for c in 3:
+			var vi: int = idx[t * 3 + c] if idx != null else t * 3 + c
+			tri.append(xf * verts[vi])
+		var centre := Vector2((tri[0].x + tri[1].x + tri[2].x) / 3.0, (tri[0].z + tri[1].z + tri[2].z) / 3.0)
+		var cell := _terrain_cell(centre)
+		if not wanted.has(cell):
+			continue
+		if not buckets.has(cell):
+			buckets[cell] = []
+		buckets[cell].append(tri)
+	return buckets
+
+
+## Ground height at a point, or NAN when no triangle covers it.
+func _ground_y(buckets: Dictionary, p: Vector2) -> float:
+	var cell := _terrain_cell(p)
+	for dx in range(-1, 2):
+		for dz in range(-1, 2):
+			var list = buckets.get(Vector2i(cell.x + dx, cell.y + dz))
+			if list == null:
+				continue
+			for tri in list:
+				var a := Vector2(tri[0].x, tri[0].z)
+				var b := Vector2(tri[1].x, tri[1].z)
+				var c := Vector2(tri[2].x, tri[2].z)
+				var den := (b.y - c.y) * (a.x - c.x) + (c.x - b.x) * (a.y - c.y)
+				if absf(den) < 0.000001:
+					continue
+				var u := ((b.y - c.y) * (p.x - c.x) + (c.x - b.x) * (p.y - c.y)) / den
+				var v := ((c.y - a.y) * (p.x - c.x) + (a.x - c.x) * (p.y - c.y)) / den
+				var w := 1.0 - u - v
+				if u >= -0.0001 and v >= -0.0001 and w >= -0.0001:
+					return u * tri[0].y + v * tri[1].y + w * tri[2].y
+	return NAN

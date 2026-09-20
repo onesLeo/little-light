@@ -128,7 +128,8 @@ Valley + David meshes bake **trimesh StaticBody** colliders at runtime so the wa
 ## Valley v6 and historical outline fixes
 
 The scene now uses **valley v7**, which is v6 with new trees, bushes and rocks (leafy olives and cypress columns; leafy shrubs; stone-textured rocks in four
-variants, one mossy) — see `art/blender/scripts/polish_valley_v7.py`. Character and prop versions are listed above.
+variants, one mossy) — see `art/blender/scripts/polish_valley_v7.py`. Trees stand only on grass: ten that v6 put on the bare back wall or on the lip of
+the shelf are moved by `TREE_MOVES` in that script. Character and prop versions are listed above.
 `bethlehem_valley_v6.glb` (now in `art/archive/models/`) is sculpted terrain
 (valley floor, walls, back ridge, a cliff shelf) with the river carved into it
 — an upper reach, a waterfall, a plunge pool and a lower reach — rather than
@@ -170,7 +171,7 @@ pixel. Remove the autoload again before committing.
 
 ## Alive stream pack
 
-`assets/bethlehem_stream_fish_alive_v7.glb` is instanced as `StreamFishAlive/Art` on the west stream bank. The `StreamFishAlive` parent is positioned at `(-6.2, 0.28, -3.8)` with uniform scale `1.1`. Runtime scripts fit the waterfall, hide static valley water/fish meshes, and animate procedural fish along the stream. Water meshes skip collision via `mesh_collision_baker.gd`.
+`assets/bethlehem_stream_fish_alive_v7.glb` is instanced as `StreamFishAlive/Art` on the west stream bank. The `StreamFishAlive` parent is positioned at `(-6.2, 0.28, -3.8)` with uniform scale `1.1`. Runtime scripts fit the waterfall, hide static valley water/fish meshes, and animate procedural fish along the stream. Water meshes skip collision via `mesh_collision_baker.gd`. The pack's own rocks are tan 20-sided lumps, so `stream_rocks.gd` replaces them with the valley's stone meshes at start-up, and `stream_placement.gd` puts any tree it nudges out of the water back on the ground.
 
 **Import gotcha (fixed):** `bethlehem_stream_fish_alive_v6.glb.import` (archived) and
 `_v7.glb.import` were missing the closing quote on their `uid=` line. A

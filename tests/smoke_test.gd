@@ -21,6 +21,33 @@ func _check(cond: bool, label: String) -> void:
 		_failures += 1
 		print("  FAIL ", label)
 
+## The terrain's surface at (x, z): casts straight down, ignoring trees, rocks and anything else on top.
+func _terrain_hit(space: PhysicsDirectSpaceState3D, x: float, z: float) -> Dictionary:
+	var query := PhysicsRayQueryParameters3D.create(Vector3(x, 40.0, z), Vector3(x, -10.0, z))
+	var skip: Array[RID] = []
+	for _i in 12:
+		query.exclude = skip
+		var hit: Dictionary = space.intersect_ray(query)
+		if hit.is_empty():
+			return {}
+		if str((hit["collider"] as Node).get_path()).contains("Valley_Terrain"):
+			return hit
+		skip.append(hit["rid"])
+	return {}
+
+## Triangles in every mesh under a node (one copy of each; shadows and outlines are not counted twice).
+func _triangles_under(node: Node) -> int:
+	var total: int = 0
+	for found in node.find_children("*", "MeshInstance3D", true, false):
+		var mesh: Mesh = (found as MeshInstance3D).mesh
+		if mesh == null:
+			continue
+		for surface in mesh.get_surface_count():
+			var arrays: Array = mesh.surface_get_arrays(surface)
+			var indices = arrays[Mesh.ARRAY_INDEX]
+			total += (indices.size() if indices != null else (arrays[Mesh.ARRAY_VERTEX] as PackedVector3Array).size()) / 3
+	return total
+
 func _initialize() -> void:
 	var main: Node = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
@@ -87,6 +114,72 @@ func _initialize() -> void:
 		if bank.get_node_or_null("BakedCollision") != null:
 			walls += 1
 	_check(walls == 0, "hidden stream banks have no collision (no invisible walls)")
+
+	print("-- scenery: trees stand on grass, the brook's rocks are the valley's stone --")
+	await physics_frame
+	await physics_frame
+	var space: PhysicsDirectSpaceState3D = main.get_world_3d().direct_space_state
+	var tree_count: int = 0
+	var steepest: float = 0.0
+	var worst_gap: float = 0.0
+	var lost: Array = []
+	for tree in main.get_node("BethlehemValley").find_children("*", "MeshInstance3D", true, false):
+		var tree_name: String = String(tree.name)
+		if tree_name.ends_with("_Outline") or not (tree_name.begins_with("Cypress_") or tree_name.begins_with("Olive_")):
+			continue
+		tree_count += 1
+		var base: Vector3 = (tree as Node3D).global_position
+		var ground: Dictionary = _terrain_hit(space, base.x, base.z)
+		if ground.is_empty():
+			lost.append(tree_name)
+			continue
+		steepest = maxf(steepest, rad_to_deg(acos(clampf((ground["normal"] as Vector3).y, -1.0, 1.0))))
+		worst_gap = maxf(worst_gap, absf(base.y - (ground["position"] as Vector3).y))
+	_check(tree_count == 22 and lost.is_empty(), "all 22 trees have ground under them %s" % [lost])
+	_check(steepest <= 42.0, "no tree stands on the bare cliff wall (steepest ground %.0f degrees)" % steepest)
+	_check(worst_gap <= 0.35, "no tree floats or is buried, even after the stream nudges it (worst %.2f m)" % worst_gap)
+	var brook_rocks: int = 0
+	var not_stone: Array = []
+	var no_outline: Array = []
+	var brook_art: Node = main.get_node("StreamFishAlive/Art")
+	for rock in brook_art.find_children("Rock_*", "MeshInstance3D", true, false):
+		var rock_name: String = String(rock.name)
+		if rock_name.ends_with("_Outline"):
+			continue
+		brook_rocks += 1
+		var stone_material: Material = (rock as MeshInstance3D).mesh.surface_get_material(0)
+		if stone_material == null or not (stone_material.resource_name in ["RockGrey", "RockSlate", "RockMossy"]):
+			not_stone.append(rock_name)
+		var outline: Node3D = brook_art.get_node_or_null(rock_name + "_Outline") as Node3D
+		if outline == null or not outline.visible:
+			no_outline.append(rock_name)
+	_check(brook_rocks == 11 and not_stone.is_empty(), "all %d brook rocks have the valley's stone, not the tan pack material %s" % [brook_rocks, not_stone])
+	_check(no_outline.is_empty(), "and they keep an outline like every other stone %s" % [no_outline])
+
+	print("-- performance: light enough for a tablet --")
+	var outline_count: int = 0
+	var casting: Array = []
+	for hull in main.find_children("*_Outline", "MeshInstance3D", true, false):
+		outline_count += 1
+		if (hull as MeshInstance3D).cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF:
+			casting.append(String(hull.name))
+	_check(outline_count > 60 and casting.is_empty(), "none of the %d outline hulls casts a shadow %s" % [outline_count, casting])
+	var perf: Node = main.get_node("PerformanceTuning")
+	_check(perf.render_scale_for(1280.0, 1600.0) == 1.0 and perf.render_scale_for(1600.0, 1600.0) == 1.0, "a window no wider than the cap is drawn at full size")
+	_check(is_equal_approx(perf.render_scale_for(2400.0, 1600.0), 2.0 / 3.0), "a 2400 px wide tablet draws the 3D picture at 1600 px")
+	_check(perf.render_scale_for(9000.0, 1600.0) == 0.5, "a huge screen never drops below half size")
+	_check(main.get_viewport().scaling_3d_scale == 1.0, "on a computer the picture is still drawn at full size")
+	perf.cap_on_computers = true
+	perf.max_render_width = 40   # a headless window is only 100 px wide
+	perf._update_render_scale()
+	var capped: float = main.get_viewport().scaling_3d_scale
+	_check(capped < 1.0 and is_equal_approx(capped, perf.render_scale_for(float(main.get_window().size.x), 40.0)), "the cap shrinks the 3D picture when it is on (%.2f)" % capped)
+	perf.cap_on_computers = false
+	main.get_viewport().scaling_3d_scale = 1.0
+	var character_triangles: int = _triangles_under(david) + _triangles_under(main.get_node("Player"))
+	var scene_triangles: int = _triangles_under(main)
+	_check(character_triangles <= 120000, "the two characters and their outlines stay light (%d triangles, budget 120000)" % character_triangles)
+	_check(scene_triangles <= 290000, "and so does the whole scene (%d triangles, budget 290000)" % scene_triangles)
 
 	print("-- meeting David cuts to close-up + points Wonder Light --")
 	# The characters finish turning before the dialogue camera cuts.

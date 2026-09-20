@@ -1,4 +1,4 @@
-[gd_scene load_steps=49 format=3]
+[gd_scene load_steps=51 format=3]
 
 [ext_resource type="PackedScene" path="res://assets/wonder_walker_v13.glb" id="1_ww"]
 [ext_resource type="PackedScene" path="res://assets/bethlehem_valley_v7.glb" id="2_valley"]
@@ -20,6 +20,8 @@
 [ext_resource type="Script" path="res://scripts/confetti_burst.gd" id="18_confetti"]
 [ext_resource type="Script" path="res://scripts/stream_alive_clean.gd" id="17_streamclean"]
 [ext_resource type="Script" path="res://scripts/stream_placement.gd" id="19_place"]
+[ext_resource type="Script" path="res://scripts/stream_rocks.gd" id="30_streamrocks"]
+[ext_resource type="Script" path="res://scripts/performance_tuning.gd" id="31_perf"]
 [ext_resource type="Script" path="res://scripts/stream_fish_swim.gd" id="20_fish"]
 [ext_resource type="Script" path="res://scripts/wonder_item_scatter.gd" id="21_scatter"]
 [ext_resource type="Script" path="res://scripts/wonder_item_hints.gd" id="22_hints"]
@@ -219,6 +221,9 @@ script = ExtResource("17_streamclean")
 
 [node name="StreamPlacement" type="Node3D" parent="StreamFishAlive"]
 script = ExtResource("19_place")
+
+[node name="StreamRocks" type="Node3D" parent="StreamFishAlive"]
+script = ExtResource("30_streamrocks")
 
 [node name="WaterFx" type="Node3D" parent="StreamFishAlive"]
 script = ExtResource("26_water")
@@ -459,3 +464,6 @@ theme_override_font_sizes/font_size = 64
 text = "Chapter Complete!"
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="PerformanceTuning" type="Node" parent="."]
+script = ExtResource("31_perf")

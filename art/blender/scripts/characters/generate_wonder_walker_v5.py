@@ -19,6 +19,12 @@ old = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(old)
 OUT = Path(old.OUT)
 PARTS = []
+# How much of the fused surfaces is kept after the voxel remesh. Lower is lighter for the game;
+# David (generate_david_mentor_v4.py) uses the same fuse(), so this sets his weight too.
+# 0.32 (the old value) left about 30k triangles of skin per character, which at the game camera is
+# a figure roughly 100 px tall. 0.06 looks the same in the tabletop view, the dialogue close-up and
+# mid-stride (compared side by side) and roughly halves both characters and their outline hulls.
+GAME_MESH_RATIO = float(os.environ.get("LL_GAME_MESH_RATIO", "0.06"))
 HIP, KNEE, SHOULDER, ELBOW, WRIST = 0.465, 0.265, 0.766, 0.623, 0.495
 
 
@@ -94,7 +100,7 @@ def fuse(name, objects, material, voxel=0.004):
     smooth.factor, smooth.iterations = 0.65, 4
     bpy.ops.object.modifier_apply(modifier=smooth.name)
     decimate = obj.modifiers.new("Game mesh", "DECIMATE")
-    decimate.ratio = 0.32
+    decimate.ratio = GAME_MESH_RATIO
     bpy.ops.object.modifier_apply(modifier=decimate.name)
     obj.data.materials.clear()
     obj.data.materials.append(material)
