@@ -29,6 +29,8 @@ func _clean(node: Node) -> void:
 	if n.begins_with("Bank_"):
 		n3.visible = false
 		return
+	if node.has_meta("stone_restyled"):
+		return   # a rock outline stream_rocks.gd gave the valley's stone outline to
 	if n.ends_with("_Outline") and (
 		n.begins_with("Stream_")
 		or n.begins_with("Waterfall_")
