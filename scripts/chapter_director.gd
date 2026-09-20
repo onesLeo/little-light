@@ -155,7 +155,7 @@ func _enter_beat(next: Beat) -> void:
 			_cut_closeup(david_mentor)
 			_show(
 				"Wonder Light: \"Breathe with David...\"",
-				"Press Space once"
+				"Hold Space to breathe in, let go to breathe out"
 			)
 			_advance_ready = false
 			if steady_hands and steady_hands.has_method("start_minigame"):
@@ -357,11 +357,11 @@ func _localize_prompt(raw: String) -> String:
 	var mode: String = input_setup.mode if input_setup else "keyboard"
 	match mode:
 		"touch":
-			return raw.replace("Press Space once", "Tap BREATHE once") \
+			return raw.replace("Hold Space", "Hold BREATHE") \
 				.replace("Press Space", "Tap NEXT").replace("Press E", "Tap GRAB") \
 				.replace("press E", "tap GRAB").replace("[A / D: look around]", "[stick: look around]")
 		"gamepad":
-			return raw.replace("Press Space once", "Press A once") \
+			return raw.replace("Hold Space", "Hold A") \
 				.replace("Press Space", "Press A").replace("Press E", "Press A") \
 				.replace("press E", "press A").replace("[A / D: look around]", "[stick: look around]")
 	return raw

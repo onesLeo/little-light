@@ -3,7 +3,8 @@ extends CanvasLayer
 ## stick anywhere on the left side of the screen, and one big action button on
 ## the right. The button's label follows the story (NEXT / GRAB / BREATHE) and
 ## it sends both `ui_accept` and `interact`, which the game already handles, so
-## a child never has to pick the right button.
+## a child never has to pick the right button. The actions stay pressed for as
+## long as the finger is down, which is what lets BREATHE be "hold to breathe in".
 ## Shown only while the player is using touch (see input_setup.gd).
 
 @export var stick_radius: float = 90.0
@@ -59,6 +60,8 @@ func _apply_mode(mode: String) -> void:
 	visible = mode == "touch"
 	if not visible:
 		_release_stick()
+		if _button_id != -1:
+			_set_button(false)
 		_button_id = -1
 
 
@@ -76,7 +79,7 @@ func _input(event: InputEvent) -> void:
 		if event.pressed:
 			if _button_id == -1 and p.distance_to(button_center) <= button_radius * 1.35:
 				_button_id = event.index
-				_tap_button()
+				_set_button(true)
 			elif _stick_id == -1 and p.x < _view_size().x * 0.55:
 				_stick_id = event.index
 				_stick_center = p
@@ -85,6 +88,7 @@ func _input(event: InputEvent) -> void:
 		elif event.index == _stick_id:
 			_release_stick()
 		elif event.index == _button_id:
+			_set_button(false)
 			_button_id = -1
 	elif event is InputEventScreenDrag and event.index == _stick_id:
 		_stick_pos = event.position
@@ -121,16 +125,13 @@ func _release_stick() -> void:
 		Input.action_release(action)
 
 
-func _tap_button() -> void:
+## Presses (or lets go of) both actions the button stands for.
+func _set_button(down: bool) -> void:
 	for action in ["ui_accept", "interact"]:
-		var down := InputEventAction.new()
-		down.action = action
-		down.pressed = true
-		Input.parse_input_event(down)
-		var up := InputEventAction.new()
-		up.action = action
-		up.pressed = false
-		Input.parse_input_event(up)
+		var ev := InputEventAction.new()
+		ev.action = action
+		ev.pressed = down
+		Input.parse_input_event(ev)
 
 
 func _hint() -> String:

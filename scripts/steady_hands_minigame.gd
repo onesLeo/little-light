@@ -1,34 +1,103 @@
 extends Node
 ## Steady Hands breathing mini-game — David & Goliath chapter.
-## No fail state: always succeeds after taps_required gentle Space taps.
-## No aiming, no target, no violence. Band A: 1 tap auto-succeed (locked design). Band B can raise taps_required later.
 ##
-## Visual feedback: a soft circle (see main.tscn UI/BreathIndicator) breathes
-## in and out on its own while waiting, pulses on each tap, and blooms +
-## fades on success — so the "breathe in... and out" line has something
-## for a 6-12 year old to actually watch, not just a console print.
+## Hold Space (A on a gamepad, the BREATHE button on touch) to breathe in and the
+## ring grows; let go to breathe out and it shrinks. Three slow breaths and it is
+## done. There is no fail state, no aiming and no target.
+##
+## The breathing is deliberately slow and calm, and the ring cannot be rushed:
+## - it fills over about 4 s and empties over about 4.5 s, whatever the button does
+## - it changes direction gradually (over about 1.4 s), never with a snap, so
+##   tapping the button quickly hardly moves it
+## - a breath counts only after the ring has filled and then emptied again
+## And nobody can get stuck:
+## - hold at full for 2 s and the ring lets go by itself
+## - wait 7 s at empty and the ring breathes in by itself, and that breath counts
+##
+## Wonder Light glows and David rises a little as the ring grows, and a soft hush
+## of air follows it.
 
 signal minigame_completed
+## Emitted after each finished breath, with how many are done.
+signal breath_completed(count: int)
 
-@export var taps_required: int = 1
-@export var breath_cycle_seconds: float = 1.6
+const SoundBus := preload("res://scripts/sound_bus.gd")
+const SoundLibrary := preload("res://scripts/sound_library.gd")
 
-var taps_done: int = 0
+@export var breaths_required: int = 3
+@export var inhale_seconds: float = 4.0
+@export var exhale_seconds: float = 4.5
+## Seconds to go from breathing in at full pace to breathing out at full pace.
+@export var turn_seconds: float = 1.4
+@export var hold_at_full_seconds: float = 2.0
+@export var idle_help_seconds: float = 7.0
+@export var empty_scale: float = 0.62
+@export var full_scale: float = 1.32
+## Volume of the air sound when the ring is still and at full breathing speed, in dB.
+@export var air_db_still: float = -26.0
+@export var air_db_breathing: float = -8.0
+
+## How full the ring counts as full, and how empty as empty.
+const FULL := 0.9
+const EMPTY := 0.15
+
 var active: bool = false
+## Ring fullness, 0 (empty) to 1 (full), and how fast it is changing per second.
+var level: float = 0.0
+var velocity: float = 0.0
+var breaths_done: int = 0
+
+var _armed: bool = false
+var _reached_full: bool = false
+var _assist: bool = false
+var _locked_out: bool = false
+var _full_time: float = 0.0
+var _idle_time: float = 0.0
+var _label_text: String = ""
 
 @onready var _breath: Control = get_node_or_null("%BreathIndicator") as Control
 @onready var _audio: Node = get_node_or_null("%AudioDirector")
-var _tween: Tween
 var _breath_label: Label
+var _dots: BreathDots
+var _air: AudioStreamPlayer
+var _wonder_light: Node
+var _david: Node3D
+var _david_base_scale: Vector3 = Vector3.ONE
+var _tween: Tween
+var _air_tween: Tween
+
+
+## Little dots under the ring: one for each breath, filled as they are done.
+class BreathDots extends Control:
+	var total: int = 3
+	var done: int = 0
+
+	func _draw() -> void:
+		var radius := 9.0
+		var gap := 30.0
+		var x0 := size.x * 0.5 - gap * (total - 1) * 0.5
+		for i in total:
+			var c := Vector2(x0 + gap * i, size.y * 0.5)
+			draw_circle(c, radius, Color(0.98, 0.78, 0.25, 1.0 if i < done else 0.25))
+			draw_arc(c, radius, 0.0, TAU, 24, Color(0.35, 0.2, 0.08, 0.85), 2.0)
+
 
 func _ready() -> void:
-	taps_done = 0
 	active = false
-	set_process_unhandled_input(false)
+	set_process(false)
+	_wonder_light = get_node_or_null("../WonderLight")
+	_david = get_node_or_null("../DavidMentor") as Node3D
+	if _david:
+		_david_base_scale = _david.scale
+	_air = AudioStreamPlayer.new()
+	_air.stream = SoundLibrary.load_stream(SoundLibrary.BREATH, true)
+	_air.bus = SoundBus.EFFECTS
+	_air.volume_db = -80.0
+	add_child(_air)
 	if _breath:
 		_breath.visible = false
 		_breath.modulate.a = 1.0
-		_breath.scale = Vector2(0.7, 0.7)
+		_breath.scale = Vector2.ONE * empty_scale
 		# "In..." / "Out..." so a child who cannot read the story still knows what to do.
 		_breath_label = Label.new()
 		_breath_label.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -38,88 +107,183 @@ func _ready() -> void:
 		_breath_label.add_theme_font_size_override("font_size", 30)
 		_breath_label.add_theme_color_override("font_color", Color(0.35, 0.2, 0.08))
 		_breath.add_child(_breath_label)
+		_dots = BreathDots.new()
+		_dots.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_dots.anchor_left = 0.8
+		_dots.anchor_right = 0.8
+		_dots.anchor_top = 0.34
+		_dots.anchor_bottom = 0.34
+		_dots.offset_left = -60.0
+		_dots.offset_right = 60.0
+		_dots.offset_top = 112.0
+		_dots.offset_bottom = 142.0
+		_dots.visible = false
+		_breath.get_parent().add_child(_dots)
+
 
 func start_minigame() -> void:
-	taps_done = 0
+	breaths_done = 0
+	level = 0.0
+	velocity = 0.0
+	_armed = false
+	_reached_full = false
+	_assist = false
+	_locked_out = false
+	_full_time = 0.0
+	_idle_time = 0.0
+	_label_text = ""
 	active = true
-	set_process_unhandled_input(true)
-	_start_ambient_breath()
+	set_process(true)
+	_kill_tween(_tween)
+	_kill_tween(_air_tween)
+	if _breath:
+		_breath.visible = true
+		_breath.modulate.a = 1.0
+	if _dots:
+		_dots.total = breaths_required
+		_dots.done = 0
+		_dots.visible = true
+		_dots.queue_redraw()
+	_air.volume_db = air_db_still
+	_air.play()
+	_update_visuals()
 
-func _unhandled_input(event: InputEvent) -> void:
+
+func _process(delta: float) -> void:
+	_advance(delta, _is_holding())
+
+
+## Space, Enter, gamepad A, or the touch button held down.
+func _is_holding() -> bool:
+	return Input.is_action_pressed("ui_accept") or Input.is_key_pressed(KEY_SPACE) or Input.is_key_pressed(KEY_ENTER)
+
+
+## One step of the breathing, kept apart from real input so it can be tested.
+func _advance(delta: float, holding: bool) -> void:
 	if not active:
 		return
-	# ui_accept = Space / Enter / gamepad A. Also accept raw Space if InputMap misses.
-	var space := event.is_action_pressed("ui_accept")
-	if not space and event is InputEventKey and event.pressed and not event.echo:
-		var k: int = event.keycode
-		var pk: int = event.physical_keycode
-		space = k == KEY_SPACE or pk == KEY_SPACE or k == KEY_ENTER or pk == KEY_ENTER
-	if space:
-		_on_tap()
-		get_viewport().set_input_as_handled()
+	# The press that started this step must be let go of before it counts.
+	if not _armed:
+		if holding:
+			holding = false
+		else:
+			_armed = true
+	if _locked_out:
+		if not holding:
+			_locked_out = false
+		holding = false
+	if holding and _assist:
+		_assist = false  # the child has taken over
+	var breathe_in := holding or _assist
+	if _assist and level >= 0.95:
+		_assist = false
+		breathe_in = holding
+	# Stuck at full: the ring lets go by itself, even if the button is still down.
+	if level >= 0.97 and breathe_in:
+		_full_time += delta
+		if _full_time >= hold_at_full_seconds:
+			_assist = false
+			if holding:
+				_locked_out = true
+			breathe_in = false
+	else:
+		_full_time = 0.0
+	# Nothing pressed for a while at empty: the ring breathes in on its own.
+	if not breathe_in and level < 0.08 and not _reached_full:
+		_idle_time += delta
+		if _idle_time >= idle_help_seconds:
+			_assist = true
+			_idle_time = 0.0
+	else:
+		_idle_time = 0.0
 
-func _on_tap() -> void:
-	if not active:
-		return
-	taps_done += 1
+	# Move at a fixed, gentle pace and change direction gradually.
+	var target := 1.0 / inhale_seconds if breathe_in else -1.0 / exhale_seconds
+	var accel := (1.0 / inhale_seconds + 1.0 / exhale_seconds) / maxf(turn_seconds, 0.1)
+	velocity = move_toward(velocity, target, accel * delta)
+	level = clampf(level + velocity * delta, 0.0, 1.0)
+	if (level <= 0.0 and velocity < 0.0) or (level >= 1.0 and velocity > 0.0):
+		velocity = 0.0
+
+	if level >= FULL:
+		_reached_full = true
+	if _reached_full and level <= EMPTY:
+		_reached_full = false
+		_complete_breath()
+	if active:
+		_update_visuals()
+
+
+func _complete_breath() -> void:
+	breaths_done += 1
+	if _dots:
+		_dots.done = breaths_done
+		_dots.queue_redraw()
 	if _audio and _audio.has_method("play_tap"):
 		_audio.play_tap()
-	_pulse_breath()
-	if taps_done >= taps_required:
-		active = false
-		set_process_unhandled_input(false)
+	breath_completed.emit(breaths_done)
+	if breaths_done >= breaths_required:
 		_finish_breath()
 
-## Slow, continuous scale breathing while we wait for the next tap.
-func _start_ambient_breath() -> void:
-	if _breath == null:
-		return
-	_breath.visible = true
-	_breath.modulate.a = 1.0
-	_kill_tween()
-	_tween = create_tween().set_loops()
-	_tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	_tween.tween_callback(_set_breath_text.bind("In..."))
-	_tween.tween_property(_breath, "scale", Vector2.ONE * 1.15, breath_cycle_seconds * 0.5)
-	_tween.tween_callback(_set_breath_text.bind("Out..."))
-	_tween.tween_property(_breath, "scale", Vector2.ONE * 0.7, breath_cycle_seconds * 0.5)
 
-## A quick, satisfying bump on every tap, then back to ambient breathing.
-func _pulse_breath() -> void:
-	if _breath == null:
-		return
-	_kill_tween()
-	_tween = create_tween()
-	_tween.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	_tween.tween_property(_breath, "scale", Vector2.ONE * 1.35, 0.15)
-	_tween.tween_property(_breath, "scale", Vector2.ONE * 0.95, 0.25)
-	_tween.finished.connect(func():
-		if active:
-			_start_ambient_breath()
-	)
+func _update_visuals() -> void:
+	var eased := level * level * (3.0 - 2.0 * level)
+	if _breath:
+		_breath.scale = Vector2.ONE * lerpf(empty_scale, full_scale, eased)
+		_breath.modulate.a = lerpf(0.75, 1.0, eased)
+	# "In..." while it grows, "Out..." while it shrinks or waits at full, "Hold" when empty.
+	if velocity > 0.04:
+		_set_breath_text("In...")
+	elif velocity < -0.04 or level >= 0.97:
+		_set_breath_text("Out...")
+	elif level < 0.1:
+		_set_breath_text("Hold")
+	if _wonder_light and _wonder_light.has_method("set_breath"):
+		_wonder_light.set_breath(eased)
+	if _david:
+		_david.scale = _david_base_scale * Vector3(1.0 + 0.008 * eased, 1.0 + 0.02 * eased, 1.0 + 0.008 * eased)
+	var pace := clampf(absf(velocity) * inhale_seconds, 0.0, 1.0)
+	_air.volume_db = lerpf(air_db_still, air_db_breathing, pace)
+	_air.pitch_scale = lerpf(0.85, 1.15, eased)
+
 
 ## Success: one warm bloom-out, then hide and tell the director we're done.
 func _finish_breath() -> void:
+	active = false
+	set_process(false)
+	if _wonder_light and _wonder_light.has_method("set_breath"):
+		_wonder_light.set_breath(0.0)
+	if _david:
+		_david.scale = _david_base_scale
+	_kill_tween(_air_tween)
+	_air_tween = create_tween()
+	_air_tween.tween_property(_air, "volume_db", -60.0, 0.8)
+	_air_tween.tween_callback(_air.stop)
 	if _audio and _audio.has_method("play_success"):
 		_audio.play_success()
 	if _breath == null:
 		minigame_completed.emit()
 		return
-	_kill_tween()
+	_kill_tween(_tween)
 	_tween = create_tween()
 	_tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	_tween.tween_property(_breath, "scale", Vector2.ONE * 1.5, 0.35)
 	_tween.parallel().tween_property(_breath, "modulate:a", 0.0, 0.55)
 	_tween.tween_callback(func():
 		_breath.visible = false
+		if _dots:
+			_dots.visible = false
 		_set_breath_text("")
 		minigame_completed.emit()
 	)
 
+
 func _set_breath_text(text: String) -> void:
-	if _breath_label:
+	if _breath_label and text != _label_text:
+		_label_text = text
 		_breath_label.text = text
 
-func _kill_tween() -> void:
-	if _tween and _tween.is_valid():
-		_tween.kill()
+
+func _kill_tween(t: Tween) -> void:
+	if t and t.is_valid():
+		t.kill()

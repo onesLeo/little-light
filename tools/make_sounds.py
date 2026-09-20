@@ -15,6 +15,7 @@ identically and tuned here instead of being edited by hand. Output is mono, 16-b
   sfx/bleat_1.wav              the lamb: a real sheep recording (CC0, see assets/audio/CREDITS.md),
                                pitched up, dried out and cleaned so it sounds small and close
   sfx/flutter.wav              butterflies taking off
+  sfx/breath_loop.wav          a soft hush of air for Steady Hands; the game follows the breathing ring with its volume
 """
 import math
 import os
@@ -407,6 +408,17 @@ def process_sheep(pitch, start, end, presence=0.25, gate_db=-30.0):
     return out
 
 
+def render_breath():
+    """A soft, steady hush of air (8 s loop). Its level is not in the file: the game raises and lowers
+    the volume with the breathing ring, so the sound swells as the child breathes in and fades as they let go."""
+    n = 8 * SR
+    fade = SR
+    lead = SR // 2
+    raw = noise(n + fade + lead)
+    air = biquad(biquad(biquad(raw, "bp", 1100.0, 0.5), "lp", 2800.0), "lp", 2800.0)
+    return make_loop(air[lead:], n, fade)
+
+
 def render_flutter():
     n = int(0.42 * SR)
     src = biquad(biquad(noise(n), "bp", 3600.0, 0.9), "hp", 1500.0)
@@ -440,6 +452,7 @@ def main():
     lamb = [v * 10 ** ((-14.0 - active_rms_db(lamb)) / 20.0) for v in lamb]
     save("sfx/bleat_1.wav", lamb, min(peak_of(lamb), 0.90))
     save("sfx/flutter.wav", render_flutter(), 0.40)
+    save("sfx/breath_loop.wav", render_breath(), 0.50, loop=True)
 
 
 if __name__ == "__main__":

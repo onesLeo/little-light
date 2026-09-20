@@ -17,11 +17,11 @@ Vertical slice: Wonder-Walker explores a Bethlehem valley diorama, finds three W
 |----------|---------------|-----------------|--------------------------------|-------|
 | Move     | WASD / arrows | Left stick / D-pad | Drag a thumb on the left half of the screen | Camera-relative; avatar faces move direction |
 | Continue | Space / Enter | A               | Big gold button (says **NEXT**) | Advance dialogue |
-| Breathe  | Space / Enter | A               | Big gold button (says **BREATHE**) | Complete Steady Hands with one tap |
+| Breathe  | Hold Space / Enter | Hold A     | Hold the big gold button (says **BREATHE**) | Hold to breathe in, let go to breathe out; three slow breaths finish Steady Hands |
 | Interact | E             | A or X          | Big gold button (says **GRAB**) | Collect a Wonder Item when near it |
 | Pause    | Esc / P       | Start           | Round pause button, top right  | Resume, read-aloud, volume, music / sounds / voices, play again |
 
-On-screen prompts reword themselves for whichever device you used last ("Press Space" / "Press A" / "Tap NEXT").
+On-screen prompts reword themselves for whichever device you used last ("Press Space" / "Press A" / "Tap NEXT", "Hold Space" / "Hold A" / "Hold BREATHE").
 The big touch button is only shown while touch is in use, and it sends both "continue" and "interact", so a child never has to choose.
 The speaker button (top right) turns **read-aloud** on or off; settings are saved to `user://settings.cfg`.
 
@@ -30,7 +30,7 @@ The speaker button (top right) turns **read-aloud** on or off; settings are save
 1. **Arrive** — Wonder Light dialogue text (Space or Enter to continue)
 2. **Explore** — find 3 Wonder Items (stone / staff / lamb), placed at random spots in the meadow each run; press **E** (or tap GRAB). If nothing is found for ~18 s, a bobbing arrow (and an edge-of-screen arrow) points to the nearest missing item
 3. **Meet David** — Band A auto line (no reply choices)
-4. **Steady Hands** — press **Space** once (Band A; always succeeds)
+4. **Steady Hands** — hold **Space** to breathe in and let go to breathe out, three slow breaths (Band A; cannot be failed, see [docs/steady-hands.md](docs/steady-hands.md))
 5. **Resolution** — narrated off-screen; no fight
 6. **Reflect** + **Joshua 1:9** + “Don't. Be. Afraid.”
 7. **Courage charm** — animated placeholder bracelet/charm ceremony, followed by chapter completion, then a **Play again / Keep exploring** panel
@@ -99,8 +99,8 @@ See [docs/improvement-backlog.md](docs/improvement-backlog.md) for the full revi
 
 
 ## Band notes
-- **Band A Steady Hands:** 1 Space tap (locked design — auto-succeed).
-- Band B multi-tap can raise `taps_required` later.
+- **Band A Steady Hands:** three slow breaths (hold to breathe in, let go to breathe out); it cannot be failed and cannot be rushed. This replaced the old one-tap design.
+- Band B can raise `breaths_required` later.
 
 - Historical Wonder-Walker **v3** introduced paper-grain material and a 12fps step walk animation; the scene now loads **v13**.
 
