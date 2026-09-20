@@ -4,7 +4,7 @@ extends RefCounted
 ## res://assets/audio/vo/<id>.wav. A line with no entry, or whose file is
 ## missing, falls back to the system text-to-speech voice.
 ##
-## Wonder Light is voiced by "Juno" and David by "Cody" (see docs/voice-over.md).
+## Wonder Light is voiced by "Juno" and David by "Bram" (see docs/voice-over.md).
 
 const DIR := "res://assets/audio/vo/"
 

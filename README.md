@@ -87,7 +87,7 @@ little-light-godot/
 - Safety floor under the diorama so the player cannot fall forever.
 - Tabletop camera is a `Camera3D` sibling of the player under `Main`. It follows from above/behind without inheriting the player's rotation; `CameraDirector` switches to a separate close-up camera for dialogue and the charm ceremony.
 - Courage charm uses procedural placeholder 3D meshes with a float/snap animation. A persistent Faith Journal is not implemented.
-- Dialogue and narration are displayed as text **and read aloud** with recorded voice clips: Wonder Light is Juno, David is Cody (`assets/audio/vo`, see [docs/voice-over.md](docs/voice-over.md)). A line with no clip falls back to the operating system's text-to-speech voice, so its availability depends on the OS; with neither, the speaker button is hidden. `AudioDirector` also generates procedural sound effects.
+- Dialogue and narration are displayed as text **and read aloud** with recorded voice clips: Wonder Light is Juno, David is Bram (`assets/audio/vo`, see [docs/voice-over.md](docs/voice-over.md)). A line with no clip falls back to the operating system's text-to-speech voice, so its availability depends on the OS; with neither, the speaker button is hidden. `AudioDirector` also generates procedural sound effects.
 - Touch controls and gamepad bindings are verified with injected input events and the headless smoke test, not yet on a real tablet or controller.
 
 ## What to improve next
