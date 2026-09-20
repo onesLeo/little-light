@@ -4,8 +4,9 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://dkm4dxbw8juud"
 path.s3tc="res://.godot/imported/wonder_walker_v13_Tint_WW_Shoe.png-0b3e815cf9702228b599049b9e5ed9d7.s3tc.ctex"
+path.etc2="res://.godot/imported/wonder_walker_v13_Tint_WW_Shoe.png-0b3e815cf9702228b599049b9e5ed9d7.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 generator_parameters={
@@ -15,7 +16,7 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/wonder_walker_v13_Tint_WW_Shoe.png"
-dest_files=["res://.godot/imported/wonder_walker_v13_Tint_WW_Shoe.png-0b3e815cf9702228b599049b9e5ed9d7.s3tc.ctex"]
+dest_files=["res://.godot/imported/wonder_walker_v13_Tint_WW_Shoe.png-0b3e815cf9702228b599049b9e5ed9d7.s3tc.ctex", "res://.godot/imported/wonder_walker_v13_Tint_WW_Shoe.png-0b3e815cf9702228b599049b9e5ed9d7.etc2.ctex"]
 
 [params]
 

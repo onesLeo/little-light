@@ -4,8 +4,9 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://1j1buxcyya3j"
 path.s3tc="res://.godot/imported/wonder_walker_v13_Tint_WW_Skin.png-e0ceae1503f5dd3819266577ded270f0.s3tc.ctex"
+path.etc2="res://.godot/imported/wonder_walker_v13_Tint_WW_Skin.png-e0ceae1503f5dd3819266577ded270f0.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 generator_parameters={
@@ -15,7 +16,7 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/wonder_walker_v13_Tint_WW_Skin.png"
-dest_files=["res://.godot/imported/wonder_walker_v13_Tint_WW_Skin.png-e0ceae1503f5dd3819266577ded270f0.s3tc.ctex"]
+dest_files=["res://.godot/imported/wonder_walker_v13_Tint_WW_Skin.png-e0ceae1503f5dd3819266577ded270f0.s3tc.ctex", "res://.godot/imported/wonder_walker_v13_Tint_WW_Skin.png-e0ceae1503f5dd3819266577ded270f0.etc2.ctex"]
 
 [params]
 
