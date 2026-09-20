@@ -3,21 +3,26 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://bstreamfishalivev301"
-path="res://.godot/imported/bethlehem_stream_fish_alive_v3.glb-v3-pending.scn"
+uid="uid://dso8h5wdtpsxg"
+path="res://.godot/imported/bethlehem_stream_fish_alive_v3.glb-0d7b183d49f7f3192a2a9744da2df325.scn"
 
 [deps]
 
 source_file="res://assets/bethlehem_stream_fish_alive_v3.glb"
-dest_files=["res://.godot/imported/bethlehem_stream_fish_alive_v3.glb-v3-pending.scn"]
+dest_files=["res://.godot/imported/bethlehem_stream_fish_alive_v3.glb-0d7b183d49f7f3192a2a9744da2df325.scn"]
 
 [params]
 
 nodes/root_type=""
 nodes/root_name=""
+nodes/root_script=null
+mesh_library/use_node_names_as_mesh_names=false
+array_mesh/deduplicate_surfaces=true
 nodes/apply_root_scale=true
 nodes/root_scale=1.0
 nodes/import_as_skeleton_bones=false
+nodes/use_name_suffixes=true
+nodes/use_node_type_suffixes=true
 meshes/ensure_tangents=true
 meshes/generate_lods=true
 meshes/create_shadow_meshes=true
@@ -31,6 +36,10 @@ animation/trimming=false
 animation/remove_immutable_tracks=false
 animation/import_rest_as_RESET=false
 import_script/path=""
+materials/extract=0
+materials/extract_format=0
+materials/extract_path=""
 _subresources={}
 gltf/naming_version=1
 gltf/embedded_image_handling=3
+gltf/texture_map_mode=0
