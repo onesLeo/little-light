@@ -2,8 +2,8 @@
 
 The valley has a soundscape: a slow music-box lullaby, wind, a stream, birds, footsteps, a lamb that
 says "baa", and butterflies that rustle as they take off. Everything is synthesized by
-`tools/make_sounds.py` and can be rebuilt and retuned, except the lamb, which is a real sheep
-recording (see `assets/audio/CREDITS.md`).
+`tools/make_sounds.py` and can be rebuilt and retuned, except the lamb and the footsteps, which are
+real recordings (see `assets/audio/CREDITS.md`).
 
 ## What you hear
 
@@ -13,7 +13,7 @@ recording (see `assets/audio/CREDITS.md`).
 | Wind, 16 s loop | always, very quiet; eases in over 6 s | `Soundscape` |
 | Stream, 12 s loop | always, eases in over 6 s; louder and panned toward the water as you walk near it | `Soundscape` |
 | Seven bird calls | every 4-11 s from somewhere around you; sometimes a second bird answers | `Soundscape` |
-| Footsteps (four variations) | while the Wonder-Walker walks, two per walk cycle | `wonder_walker.gd` |
+| Footsteps (four real steps) | while the Wonder-Walker walks, two per walk cycle | `wonder_walker.gd` |
 | Lamb "baa" (a real recording, pitch varied a little each time) | when the lamb notices you, then every 6-11 s while you stay close | `lamb_life.gd` |
 | Wing rustle | when butterflies take off; at most one every 0.4 s | `butterflies.gd` |
 | Chimes, fanfare, cheer | pickups, Steady Hands, the finale (unchanged, made at startup by `chime_synth.gd`) | `audio_director.gd` |
@@ -77,6 +77,9 @@ Where to change what:
   into a small, close lamb. `pitch` (1.3 = 30 % higher) also makes the animal sound smaller; `presence`
   adds brightness; `start` / `end` crop the recording. `main()` uses +30 %, which was picked by ear
   over a higher and shorter version.
+- Footsteps: `STEP_LENGTH`, `STEP_FADE`, `STEP_DECAY` and `STEP_LOWPASS` decide how long and how
+  swishy each step is. The four steps themselves are in `tools/source/steps_grass_slow_excerpt.wav`
+  (each takes 0.5 s of the file, starting 20 ms before the foot lands).
 - Overall balance: `BASE_DB` and `DUCK_DB` in `scripts/sound_bus.gd`, and the exported values on the
   `Soundscape` node (bird interval and distance, music fade-in, pause ducking).
 
@@ -96,10 +99,12 @@ removed, and a falling bird whistle really falls (3.9 kHz to 3.0 kHz).
 **Checked by ear (by the game's owner, on a headset):** the lullaby is pleasant; the voice is clear
 over everything; the stream was too loud when the game started (now eased in and lower). A first
 synthesized lamb sounded like a growl, and three more synthesized versions were nothing like a
-lamb, which is why the lamb is now a real recording.
+lamb, which is why the lamb is now a real recording. The synthesized footsteps sounded like tapping
+on metal, and three redesigned synthesized styles were nothing like real steps, so the footsteps are
+real recordings too; the first cut was still too swishy, so the steps were shortened and dried.
 
-**Not yet heard:** the current lamb (the recording pitched up and dried out), the footsteps at their
-new level, and the stream after the change. The levels above are the first thing to tune.
+**Not yet heard in the running game:** the lamb (chosen from a preview file), the shorter footsteps,
+and the stream after the change. The levels above are the first thing to tune.
 
 ## Not done
 

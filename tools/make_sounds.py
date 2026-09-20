@@ -10,7 +10,8 @@ identically and tuned here instead of being edited by hand. Output is mono, 16-b
   ambience/wind.wav            16 s seamless loop
   ambience/stream.wav          12 s seamless loop
   ambience/bird_1..7.wav       short bird calls, played at random by the game
-  sfx/step_1..4.wav            soft footsteps on grass
+  sfx/step_1..4.wav            real footsteps in grass (a CC0 recording, see assets/audio/CREDITS.md),
+                               cut to the landing and shortened so they thud, not swish
   sfx/bleat_1.wav              the lamb: a real sheep recording (CC0, see assets/audio/CREDITS.md),
                                pitched up, dried out and cleaned so it sounds small and close
   sfx/flutter.wav              butterflies taking off
@@ -286,16 +287,39 @@ BIRDS = [
 
 # -- Effects -------------------------------------------------------------------------------------
 
-def render_step(cut, thump):
-    n = int(0.17 * SR)
-    src = biquad(biquad(noise(n), "hp", 500.0), "lp", cut)
-    out = [0.0] * n
-    for i in range(n):
-        t = i / SR
-        env = (1.0 - math.exp(-t * 900.0)) * math.exp(-t / 0.032)
-        low = math.sin(TAU * thump * t * (1.0 - 2.0 * t)) * math.exp(-t / 0.028) * 0.55
-        out[i] = src[i] * env + low
-    return out
+STEPS_SOURCE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "source", "steps_grass_slow_excerpt.wav")
+STEP_SEGMENT = 0.5      # seconds each step occupies in the excerpt: 20 ms before the foot lands, then 0.48 s
+STEP_LENGTH = 0.26      # how much of each step to keep
+STEP_FADE = 0.09        # fade-out at the end, so no rustle drags on
+STEP_DECAY = 0.10       # extra decay (time constant, s) after the landing: shortens the sustained "swish"
+STEP_LOWPASS = 4500.0   # gentle high cut that takes the hiss out of the rustle
+
+
+def render_steps():
+    """Four real footsteps in grass, cut from the recording (see STEPS_SOURCE).
+
+    The rustle that follows each landing sounded "swishy", so each step is kept short, decays faster
+    than it did, and loses some of its highest frequencies.
+    """
+    x, rate = read_wav_24(STEPS_SOURCE)
+    seg = int(STEP_SEGMENT * rate)
+    steps = []
+    for k in range(len(x) // seg):
+        s = x[k * seg:(k + 1) * seg]
+        s = biquad(biquad(s, "hp", 90.0, sr=rate), "hp", 90.0, sr=rate)
+        s = biquad(s, "lp", STEP_LOWPASS, sr=rate)
+        out = resample(s[:int(STEP_LENGTH * rate)], rate)
+        lead = int(0.020 * SR)
+        for i in range(len(out)):
+            out[i] *= math.exp(-max(0.0, (i - lead) / SR) / STEP_DECAY)
+        fade_in = int(0.004 * SR)
+        for i in range(fade_in):
+            out[i] *= i / fade_in
+        fade_out = int(STEP_FADE * SR)
+        for i in range(fade_out):
+            out[-1 - i] *= (i / fade_out) ** 1.5
+        steps.append(out)
+    return steps
 
 
 SHEEP_SOURCE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "source", "sheep_2_bigsoundbank.wav")
@@ -328,6 +352,22 @@ def active_rms_db(x):
     return 20 * math.log10(math.sqrt(sum(e * e for e in live) / len(live)))
 
 
+def resample(x, rate, pitch=1.0):
+    """Converts a recording to the game's sample rate, reading it `pitch` times faster
+    (1.0 keeps the pitch), with a filter against aliasing."""
+    ratio = pitch * rate / SR
+    cut = min(10000.0, 0.9 * (SR / 2.0) / pitch)  # stay under the output's Nyquist once sped up
+    x = biquad(biquad(x, "lp", cut, sr=rate), "lp", cut, sr=rate)
+    out = []
+    n = int((len(x) - 2) / ratio)
+    for i in range(n):
+        pos = i * ratio
+        j = int(pos)
+        frac = pos - j
+        out.append(x[j] * (1.0 - frac) + x[j + 1] * frac)
+    return out
+
+
 def process_sheep(pitch, start, end, presence=0.25, gate_db=-30.0):
     """Turns the recorded sheep into a small, close lamb.
 
@@ -354,16 +394,7 @@ def process_sheep(pitch, start, end, presence=0.25, gate_db=-30.0):
         gain += (target - gain) * (up if target > gain else down)
         gated.append(v * gain)
     # Read it `pitch` times faster, at the game's sample rate, with a filter against aliasing.
-    ratio = pitch * rate / SR
-    cut = min(10000.0, 0.9 * (SR / 2.0) / pitch)  # stay under the output's Nyquist once sped up
-    gated = biquad(biquad(gated, "lp", cut, sr=rate), "lp", cut, sr=rate)
-    out = []
-    n = int((len(gated) - 2) / ratio)
-    for i in range(n):
-        pos = i * ratio
-        j = int(pos)
-        frac = pos - j
-        out.append(gated[j] * (1.0 - frac) + gated[j + 1] * frac)
+    out = resample(gated, rate, pitch)
     if presence > 0.0:
         pres = biquad(out, "bp", 3000.0, 0.8)
         out = [a + presence * b for a, b in zip(out, pres)]
@@ -397,8 +428,13 @@ def main():
     save("ambience/stream.wav", render_stream(), 0.50, loop=True)
     for i, segs in enumerate(BIRDS, 1):
         save("ambience/bird_%d.wav" % i, chirp(segs), 0.60)
-    for i, (cut, thump) in enumerate(((3000, 110), (3500, 96), (3900, 120), (2600, 104)), 1):
-        save("sfx/step_%d.wav" % i, render_step(cut, thump), 0.50)
+    for i, step in enumerate(render_steps(), 1):
+        # Matched by how loud the body of the step is (its first 120 ms), not by its peak, so a step with
+        # a sharper landing does not end up quieter than the others.
+        body = step[:int(0.12 * SR)]
+        gain = 10 ** (-19.0 / 20.0) / math.sqrt(sum(v * v for v in body) / len(body))
+        step = [v * gain for v in step]
+        save("sfx/step_%d.wav" % i, step, min(peak_of(step), 0.90))
     # Normalised by how loud the bleat is while it sounds, not by its peak, so both lambs match.
     lamb = process_sheep(pitch=1.30, start=0.06, end=0.80, presence=0.25)
     lamb = [v * 10 ** ((-14.0 - active_rms_db(lamb)) / 20.0) for v in lamb]
