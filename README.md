@@ -275,9 +275,10 @@ workaround is unnecessary. Thin, single-sided outline hulls are included in
 the new GLB, with no mouth-interior, teeth, or tongue surfaces. The close-up
 camera has slightly more headroom for the taller model.
 
-Run `godot --headless --path . --script tests/david_visual_review.gd` to check
-materials, active asset, collisions, turning and dialogue camera transitions.
-Omit `--headless` for before/after renders and actual dialogue screenshots.
+The smoke test (`tests/smoke_test.gd`) checks that meeting David cuts to his close-up camera. How David
+looks is not tested automatically: use the screenshot helper (`tests/screenshot_autoload.gd`, described
+under **Verification helpers**) for renders. (Earlier notes mentioned a `tests/david_visual_review.gd`;
+it was never committed.)
 
 ![David v11 and v12 compared in Godot Forward+](art/previews/david_mentor_v12_comparison.png)
 
