@@ -127,6 +127,58 @@ func _initialize() -> void:
 	director._enter_beat(director.Beat.REFLECT)
 	_check(tabletop_cam.current == true, "REFLECT is a tabletop (wide) shot")
 
+	print("-- voice-over: every spoken line has a recorded clip --")
+	var audio: Node = main.get_node("AudioDirector")
+	var vo_lib := load("res://scripts/vo_library.gd")
+	var missing_files: Array = []
+	for text in vo_lib.LINES:
+		if vo_lib.clip_for(text) == null:
+			missing_files.append(vo_lib.LINES[text])
+	_check(missing_files.is_empty(), "all %d clips in the voice-over library load %s" % [vo_lib.LINES.size(), missing_files])
+	var unrecorded: Array = []
+	var spoken_texts: Array = []
+	await director._enter_beat(director.Beat.MEET_DAVID_A)
+	spoken_texts.append(director.dialogue_label.text)
+	for b in [director.Beat.ARRIVE, director.Beat.EXPLORE, director.Beat.MEET_DAVID_B, director.Beat.STEADY_INTRO,
+			director.Beat.STEADY_DONE, director.Beat.RESOLUTION, director.Beat.REFLECT, director.Beat.VERSE_REWARD]:
+		director._enter_beat(b)
+		spoken_texts.append(director.dialogue_label.text)
+	spoken_texts.append("Wonder Light: \"Breathe with David...\"")
+	spoken_texts.append("Wonder Light: \"Keep this close. Courage is yours to carry.\"")
+	spoken_texts.append("Wonder Light: \"A Courage charm — for staying with David when he was scared.\"")
+	for flavor in director.ITEM_FLAVOR.values():
+		spoken_texts.append(flavor)
+	for nudge in main.get_node("PlayBounds").NUDGE_LINES:
+		spoken_texts.append(nudge)
+	for block in spoken_texts:
+		for line in audio._spoken_lines(block):
+			if vo_lib.clip_for(line["text"]) == null:
+				unrecorded.append(line["text"])
+	_check(unrecorded.is_empty(), "no spoken line in the game is missing from the library %s" % [unrecorded])
+
+	print("-- voice-over: playback, chaining and fast skipping --")
+	var settings := load("res://scripts/game_settings.gd")
+	settings.read_aloud = true
+	var vo_player: AudioStreamPlayer = audio.get_node("Vo")
+	audio.stop_speech()
+	audio.speak_dialogue("David: \"Oh! Hello there. Are you lost too?\"\nDavid: \"Everyone's scared of the big giant. But someone has to be brave.\"")
+	_check(vo_player.playing and vo_player.stream == vo_lib.clip_for("Oh! Hello there. Are you lost too?"), "the first line of a block plays its recorded clip")
+	_check(audio._clip_queue.size() == 1, "the second line waits in the queue")
+	vo_player.finished.emit()
+	audio.speak_dialogue("Wonder Light: \"Breathe with David...\"")
+	await create_timer(0.5).timeout
+	_check(vo_player.stream == vo_lib.clip_for("Breathe with David...") and audio._clip_queue.is_empty(),
+			"skipping ahead cuts the old line and a stale queued line never plays")
+	audio.speak_dialogue("Wonder Light: \"Three Wonder Items are hidden on the hillside. Find them!\"\nDavid: \"Thanks. Will you stay close while I get ready?\"")
+	vo_player.finished.emit()
+	await create_timer(0.5).timeout
+	_check(vo_player.stream == vo_lib.clip_for("Thanks. Will you stay close while I get ready?"), "clips of one block play one after another")
+	audio.stop_speech()
+	_check(not vo_player.playing and not audio._speaking_clips, "stop_speech silences the clip")
+	audio.speak_dialogue("Wonder Light: \"A line nobody has recorded yet.\"")
+	_check(not vo_player.playing and not audio._speaking_clips, "a line with no clip falls back to system speech, not a wrong clip")
+	audio.stop_speech()
+
 	print("-- full beat traversal reaches DONE without throwing --")
 	for b in [director.Beat.MEET_DAVID_B, director.Beat.STEADY_INTRO, director.Beat.STEADY_DONE,
 			director.Beat.RESOLUTION, director.Beat.REFLECT, director.Beat.VERSE_REWARD, director.Beat.DONE]:
