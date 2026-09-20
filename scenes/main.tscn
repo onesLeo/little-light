@@ -1,4 +1,4 @@
-[gd_scene load_steps=44 format=3]
+[gd_scene load_steps=48 format=3]
 
 [ext_resource type="PackedScene" path="res://assets/wonder_walker_v13.glb" id="1_ww"]
 [ext_resource type="PackedScene" path="res://assets/bethlehem_valley_v7.glb" id="2_valley"]
@@ -29,6 +29,9 @@
 [ext_resource type="Script" path="res://scripts/stream_water_fx.gd" id="26_water"]
 [ext_resource type="Script" path="res://scripts/horizon_backdrop.gd" id="27_horizon"]
 [ext_resource type="Script" path="res://scripts/meadow_dressing.gd" id="28_meadow"]
+[ext_resource type="Script" path="res://scripts/play_bounds.gd" id="29_bounds"]
+[ext_resource type="Script" path="res://scripts/lamb_life.gd" id="30_lamb"]
+[ext_resource type="Script" path="res://scripts/butterflies.gd" id="31_fly"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
 radius = 0.35
@@ -249,6 +252,9 @@ transform = Transform3D(1.35, 0, 0, 0, 1.35, 0, 0, 0, 1.35, 0, 0, 0)
 [node name="Scatter" type="Node" parent="WonderItems"]
 script = ExtResource("21_scatter")
 
+[node name="LambLife" type="Node" parent="WonderItems"]
+script = ExtResource("30_lamb")
+
 [node name="Hints" type="Node3D" parent="WonderItems"]
 script = ExtResource("22_hints")
 
@@ -308,6 +314,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, 1.15, 3.4)
 script = ExtResource("17_charm")
 player_path = NodePath("../Player")
 david_path = NodePath("../DavidMentor")
+
+[node name="PlayBounds" type="Node" parent="."]
+script = ExtResource("29_bounds")
+
+[node name="Butterflies" type="Node3D" parent="."]
+script = ExtResource("31_fly")
 
 [node name="ChapterDirector" type="Node" parent="."]
 script = ExtResource("5_dir")

@@ -3,7 +3,8 @@ extends Node3D
 ## Use on imported GLB roots (valley, props) that ship without physics.
 
 @export var collision_layer: int = 1
-@export var skip_name_contains: PackedStringArray = ["Outline", "Shadow", "Stream", "Waterfall", "Foam", "Fish_"]
+## "Bank_" are the stream pack's duplicate banks, hidden at runtime (see stream_alive_clean.gd); baking them left an invisible wall.
+@export var skip_name_contains: PackedStringArray = ["Outline", "Shadow", "Stream", "Waterfall", "Foam", "Fish_", "Bank_"]
 
 
 func _ready() -> void:

@@ -70,6 +70,9 @@ little-light-godot/
     horizon_backdrop.gd     # layered hills and drifting clouds beyond the valley
     meadow_dressing.gd      # swaying grass tufts, flowers and pebbles
     stream_water_fx.gd      # applies assets/shaders/stream_water.gdshader to the brook
+    play_bounds.gd          # soft edge of the valley (rubber-band push + friendly nudge)
+    lamb_life.gd            # the collectible lamb turns to you and hops
+    butterflies.gd          # paper butterflies that flutter away when approached
   assets/                # GLB models, textures, and shaders
   art/blender/           # Asset generators and pipeline documentation
   art/previews/          # Saved valley renders
