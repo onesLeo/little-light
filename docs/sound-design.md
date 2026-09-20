@@ -14,7 +14,7 @@ recording (see `assets/audio/CREDITS.md`).
 | Stream, 12 s loop | always, eases in over 6 s; louder and panned toward the water as you walk near it | `Soundscape` |
 | Seven bird calls | every 4-11 s from somewhere around you; sometimes a second bird answers | `Soundscape` |
 | Footsteps (four variations) | while the Wonder-Walker walks, two per walk cycle | `wonder_walker.gd` |
-| Lamb "baa" (two variations, a real recording) | when the lamb notices you, then every 6-11 s while you stay close | `lamb_life.gd` |
+| Lamb "baa" (a real recording, pitch varied a little each time) | when the lamb notices you, then every 6-11 s while you stay close | `lamb_life.gd` |
 | Wing rustle | when butterflies take off; at most one every 0.4 s | `butterflies.gd` |
 | Chimes, fanfare, cheer | pickups, Steady Hands, the finale (unchanged, made at startup by `chime_synth.gd`) | `audio_director.gd` |
 
@@ -75,13 +75,14 @@ Where to change what:
 - Bird calls: `BIRDS` (a list of rising, falling and warbling tones).
 - The lamb: `process_sheep(pitch, start, end, presence)` turns `tools/source/sheep_2_bigsoundbank.wav`
   into a small, close lamb. `pitch` (1.3 = 30 % higher) also makes the animal sound smaller; `presence`
-  adds brightness; `start` / `end` crop the recording. Two settings give the two lambs in `main()`.
+  adds brightness; `start` / `end` crop the recording. `main()` uses +30 %, which was picked by ear
+  over a higher and shorter version.
 - Overall balance: `BASE_DB` and `DUCK_DB` in `scripts/sound_bus.gd`, and the exported values on the
   `Soundscape` node (bird interval and distance, music fade-in, pause ducking).
 
 ## What was checked, and what was not
 
-Checked by the smoke test: all 17 files load; the four buses exist and the players are routed to them;
+Checked by the smoke test: all 16 files load; the four buses exist and the players are routed to them;
 music and wind loop; the stream follows the player along the water; a footstep plays when walking
 and none when standing; the lamb says "baa" once when it notices you, then waits; a group of
 butterflies taking off makes one rustle; birds and the lamb stay quiet during speech; the master limiter

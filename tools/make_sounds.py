@@ -11,7 +11,7 @@ identically and tuned here instead of being edited by hand. Output is mono, 16-b
   ambience/stream.wav          12 s seamless loop
   ambience/bird_1..7.wav       short bird calls, played at random by the game
   sfx/step_1..4.wav            soft footsteps on grass
-  sfx/bleat_1..2.wav           the lamb: a real sheep recording (CC0, see assets/audio/CREDITS.md),
+  sfx/bleat_1.wav              the lamb: a real sheep recording (CC0, see assets/audio/CREDITS.md),
                                pitched up, dried out and cleaned so it sounds small and close
   sfx/flutter.wav              butterflies taking off
 """
@@ -400,11 +400,9 @@ def main():
     for i, (cut, thump) in enumerate(((3000, 110), (3500, 96), (3900, 120), (2600, 104)), 1):
         save("sfx/step_%d.wav" % i, render_step(cut, thump), 0.50)
     # Normalised by how loud the bleat is while it sounds, not by its peak, so both lambs match.
-    for name, pitch, start, end, presence in (("bleat_1", 1.30, 0.06, 0.80, 0.25), ("bleat_2", 1.45, 0.10, 0.62, 0.18)):
-        x = process_sheep(pitch, start, end, presence)
-        gain = 10 ** ((-14.0 - active_rms_db(x)) / 20.0)
-        x = [v * gain for v in x]
-        save("sfx/%s.wav" % name, x, min(peak_of(x), 0.90))
+    lamb = process_sheep(pitch=1.30, start=0.06, end=0.80, presence=0.25)
+    lamb = [v * 10 ** ((-14.0 - active_rms_db(lamb)) / 20.0) for v in lamb]
+    save("sfx/bleat_1.wav", lamb, min(peak_of(lamb), 0.90))
     save("sfx/flutter.wav", render_flutter(), 0.40)
 
 

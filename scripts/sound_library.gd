@@ -10,7 +10,7 @@ const STREAM := DIR + "ambience/stream.wav"
 const FLUTTER := DIR + "sfx/flutter.wav"
 const BIRD_COUNT := 7
 const STEP_COUNT := 4
-const BLEAT_COUNT := 2
+const BLEAT_COUNT := 1
 
 static var _cache: Dictionary = {}
 
