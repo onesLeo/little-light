@@ -58,7 +58,7 @@ func _capture() -> void:
 	_bleat = AudioStreamPlayer3D.new()
 	_bleat.top_level = true
 	_bleat.bus = SoundBus.EFFECTS
-	_bleat.volume_db = -2.0
+	_bleat.volume_db = 2.0
 	_bleat.unit_size = 6.0
 	_bleat.max_distance = 25.0
 	add_child(_bleat)

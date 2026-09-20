@@ -11,12 +11,14 @@ identically and tuned here instead of being edited by hand. Output is mono, 16-b
   ambience/stream.wav          12 s seamless loop
   ambience/bird_1..7.wav       short bird calls, played at random by the game
   sfx/step_1..4.wav            soft footsteps on grass
-  sfx/bleat_1..2.wav           the lamb
+  sfx/bleat_1..2.wav           the lamb: a real sheep recording (CC0, see assets/audio/CREDITS.md),
+                               pitched up, dried out and cleaned so it sounds small and close
   sfx/flutter.wav              butterflies taking off
 """
 import math
 import os
 import random
+import struct
 import wave
 
 SR = 22050
@@ -38,9 +40,9 @@ def noise(n):
     return [rng.uniform(-1.0, 1.0) for _ in range(n)]
 
 
-def biquad(x, kind, f, q=0.707):
+def biquad(x, kind, f, q=0.707, sr=SR):
     """RBJ biquad filter: 'lp', 'hp' or 'bp'."""
-    w0 = TAU * f / SR
+    w0 = TAU * f / sr
     cw, sw = math.cos(w0), math.sin(w0)
     alpha = sw / (2.0 * q)
     if kind == "lp":
@@ -296,30 +298,81 @@ def render_step(cut, thump):
     return out
 
 
-def render_bleat(dur, f_start, f_end, f1, f2, seed):
-    """A lamb's "baa": a rough, fast-vibrato voice shaped by two vowel formants."""
-    r = random.Random(seed)
-    n = int(dur * SR)
-    out = [0.0] * n
-    phase = 0.0
-    breath = biquad(noise(n), "bp", 2200.0, 0.8)
+SHEEP_SOURCE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "source", "sheep_2_bigsoundbank.wav")
+
+
+def read_wav_24(path):
+    """Reads a plain PCM WAV (16 or 24 bit, mono) without numpy; returns (samples, rate)."""
+    d = open(path, "rb").read()
+    fmt = d.index(b"fmt ")
+    _, channels, rate, _, _, bits = struct.unpack("<HHIIHH", d[fmt + 8:fmt + 24])
+    assert channels == 1 and bits in (16, 24), (channels, bits)
+    i = d.index(b"data")
+    size = struct.unpack("<I", d[i + 4:i + 8])[0]
+    raw = d[i + 8:i + 8 + size]
+    step = bits // 8
+    full = 1 << (bits - 1)
+    out = []
+    for k in range(0, len(raw) - step + 1, step):
+        v = int.from_bytes(raw[k:k + step], "little", signed=True)
+        out.append(v / full)
+    return out, rate
+
+
+def active_rms_db(x):
+    """Loudness of the parts that are actually sounding (windows within 40 dB of the loudest)."""
+    win = 512
+    levels = [math.sqrt(sum(v * v for v in x[i:i + win]) / len(x[i:i + win])) for i in range(0, len(x), win)]
+    top = max(levels)
+    live = [e for e in levels if e > top * 0.01]
+    return 20 * math.log10(math.sqrt(sum(e * e for e in live) / len(live)))
+
+
+def process_sheep(pitch, start, end, presence=0.25, gate_db=-30.0):
+    """Turns the recorded sheep into a small, close lamb.
+
+    - a high-pass takes out the boom of the room it was recorded in
+    - a gate closes on the quiet echo after the bleat
+    - reading it faster raises the pitch and, like a smaller body, moves the vowel sounds up too
+    - a little 3 kHz keeps it clear and close
+    """
+    x, rate = read_wav_24(SHEEP_SOURCE)
+    x = biquad(biquad(x, "hp", 220.0, sr=rate), "hp", 220.0, sr=rate)
+    x = x[int(start * rate):int(end * rate)]
+    # Gate: follow the loudness, close smoothly below the threshold.
+    peak = peak_of(x)
+    thr = peak * 10 ** (gate_db / 20.0)
+    env = 0.0
+    gain = 0.0
+    hold = math.exp(-1.0 / (0.020 * rate))
+    up = 1.0 - math.exp(-1.0 / (0.004 * rate))
+    down = 1.0 - math.exp(-1.0 / (0.040 * rate))
+    gated = []
+    for v in x:
+        env = max(abs(v), env * hold)
+        target = 1.0 if env >= thr else (env / thr) ** 2
+        gain += (target - gain) * (up if target > gain else down)
+        gated.append(v * gain)
+    # Read it `pitch` times faster, at the game's sample rate, with a filter against aliasing.
+    ratio = pitch * rate / SR
+    cut = min(10000.0, 0.9 * (SR / 2.0) / pitch)  # stay under the output's Nyquist once sped up
+    gated = biquad(biquad(gated, "lp", cut, sr=rate), "lp", cut, sr=rate)
+    out = []
+    n = int((len(gated) - 2) / ratio)
     for i in range(n):
-        t = i / SR
-        x = t / dur
-        contour = f_start + (f_end - f_start) * x + 30.0 * math.exp(-t * 20.0)
-        vib = 1.0 + 0.055 * math.sin(TAU * 27.0 * t) + 0.012 * math.sin(TAU * 5.0 * t)
-        f0 = contour * vib
-        phase += TAU * f0 / SR
-        v = 0.0
-        h = 1
-        while h * f0 < 4500.0:
-            fh = h * f0
-            w = math.exp(-((fh - f1) / 260.0) ** 2) + 0.7 * math.exp(-((fh - f2) / 340.0) ** 2) + 0.05
-            v += math.sin(h * phase) * w / (h ** 0.6)
-            h += 1
-        rough = 0.72 + 0.28 * math.sin(TAU * 29.0 * t + r.uniform(0, 0.3))
-        env = min(1.0, t / 0.05) * min(1.0, (dur - t) / 0.16)
-        out[i] = (v * rough + breath[i] * 0.05) * env
+        pos = i * ratio
+        j = int(pos)
+        frac = pos - j
+        out.append(gated[j] * (1.0 - frac) + gated[j + 1] * frac)
+    if presence > 0.0:
+        pres = biquad(out, "bp", 3000.0, 0.8)
+        out = [a + presence * b for a, b in zip(out, pres)]
+    fade_in = int(0.004 * SR)
+    for i in range(fade_in):
+        out[i] *= i / fade_in
+    fade_out = int(0.05 * SR)
+    for i in range(fade_out):
+        out[-1 - i] *= i / fade_out
     return out
 
 
@@ -346,8 +399,12 @@ def main():
         save("ambience/bird_%d.wav" % i, chirp(segs), 0.60)
     for i, (cut, thump) in enumerate(((3000, 110), (3500, 96), (3900, 120), (2600, 104)), 1):
         save("sfx/step_%d.wav" % i, render_step(cut, thump), 0.50)
-    save("sfx/bleat_1.wav", render_bleat(0.78, 470, 380, 850, 1500, 1), 0.60)
-    save("sfx/bleat_2.wav", render_bleat(0.38, 520, 430, 800, 1650, 2), 0.60)
+    # Normalised by how loud the bleat is while it sounds, not by its peak, so both lambs match.
+    for name, pitch, start, end, presence in (("bleat_1", 1.30, 0.06, 0.80, 0.25), ("bleat_2", 1.45, 0.10, 0.62, 0.18)):
+        x = process_sheep(pitch, start, end, presence)
+        gain = 10 ** ((-14.0 - active_rms_db(x)) / 20.0)
+        x = [v * gain for v in x]
+        save("sfx/%s.wav" % name, x, min(peak_of(x), 0.90))
     save("sfx/flutter.wav", render_flutter(), 0.40)
 
 

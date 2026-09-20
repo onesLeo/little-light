@@ -1,8 +1,9 @@
 # Sound design
 
 The valley has a soundscape: a slow music-box lullaby, wind, a stream, birds, footsteps, a lamb that
-says "baa", and butterflies that rustle as they take off. All of it is synthesized by code, so there
-are no third-party recordings, and every file can be rebuilt and retuned.
+says "baa", and butterflies that rustle as they take off. Everything is synthesized by
+`tools/make_sounds.py` and can be rebuilt and retuned, except the lamb, which is a real sheep
+recording (see `assets/audio/CREDITS.md`).
 
 ## What you hear
 
@@ -13,7 +14,7 @@ are no third-party recordings, and every file can be rebuilt and retuned.
 | Stream, 12 s loop | always, eases in over 6 s; louder and panned toward the water as you walk near it | `Soundscape` |
 | Seven bird calls | every 4-11 s from somewhere around you; sometimes a second bird answers | `Soundscape` |
 | Footsteps (four variations) | while the Wonder-Walker walks, two per walk cycle | `wonder_walker.gd` |
-| Lamb "baa" (two variations) | when the lamb notices you, then every 6-11 s while you stay close | `lamb_life.gd` |
+| Lamb "baa" (two variations, a real recording) | when the lamb notices you, then every 6-11 s while you stay close | `lamb_life.gd` |
 | Wing rustle | when butterflies take off; at most one every 0.4 s | `butterflies.gd` |
 | Chimes, fanfare, cheer | pickups, Steady Hands, the finale (unchanged, made at startup by `chime_synth.gd`) | `audio_director.gd` |
 
@@ -38,7 +39,7 @@ of everything else, in dBFS (RMS, before distance), so you can see what competes
 | Stream (right at the water) | -39 | -49 |
 | Wind | -37 | -47 |
 | Footsteps | -27 to -24 | |
-| Lamb "baa" (3 m away) | about -21 | waits until the voice has finished |
+| Lamb "baa" (3 m away) | about -18 | waits until the voice has finished |
 
 Speech is easiest to follow when it is 15 dB or more above the background, so the ambience is kept
 well below it. A limiter on the Master bus (ceiling -1 dB) means the louder voice plus a sound effect
@@ -72,7 +73,9 @@ Where to change what:
 
 - Notes, tempo and chords: `MELODY`, `CHORDS`, `BASS`, `BPM` in the music section.
 - Bird calls: `BIRDS` (a list of rising, falling and warbling tones).
-- The lamb: `render_bleat(dur, f_start, f_end, formant1, formant2, seed)`; the formants make the vowel.
+- The lamb: `process_sheep(pitch, start, end, presence)` turns `tools/source/sheep_2_bigsoundbank.wav`
+  into a small, close lamb. `pitch` (1.3 = 30 % higher) also makes the animal sound smaller; `presence`
+  adds brightness; `start` / `end` crop the recording. Two settings give the two lambs in `main()`.
 - Overall balance: `BASE_DB` and `DUCK_DB` in `scripts/sound_bus.gd`, and the exported values on the
   `Soundscape` node (bird interval and distance, music fade-in, pause ducking).
 
@@ -86,13 +89,16 @@ is in place; the music ducks while speaking and while paused and comes
 back; the sliders set the bus levels.
 
 Checked by measuring the rendered files: no clipping, loops join without a click, the music's notes
-are at the intended pitches, the lamb has energy at its two vowel formants (about 850 and 1500 Hz),
-and a falling bird whistle really falls (3.9 kHz to 3.0 kHz).
+are at the intended pitches, the lamb recording's energy moved up by about the pitch ratio with the room boom and most of the echo
+removed, and a falling bird whistle really falls (3.9 kHz to 3.0 kHz).
 
-**Not checked: how it sounds.** Nobody has listened to this in the running game yet. Please check
-the loudness balance against the voice, whether the lullaby is pleasant or grating after a few
-minutes, whether the lamb sounds like a lamb, and whether the stream is too loud beside the water.
-The levels above are the first thing to tune.
+**Checked by ear (by the game's owner, on a headset):** the lullaby is pleasant; the voice is clear
+over everything; the stream was too loud when the game started (now eased in and lower). A first
+synthesized lamb sounded like a growl, and three more synthesized versions were nothing like a
+lamb, which is why the lamb is now a real recording.
+
+**Not yet heard:** the current lamb (the recording pitched up and dried out), the footsteps at their
+new level, and the stream after the change. The levels above are the first thing to tune.
 
 ## Not done
 
