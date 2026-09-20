@@ -1,4 +1,4 @@
-[gd_scene load_steps=37 format=3]
+[gd_scene load_steps=44 format=3]
 
 [ext_resource type="PackedScene" path="res://assets/wonder_walker_v13.glb" id="1_ww"]
 [ext_resource type="PackedScene" path="res://assets/bethlehem_valley_v7.glb" id="2_valley"]
@@ -26,6 +26,9 @@
 [ext_resource type="Script" path="res://scripts/input_setup.gd" id="23_input"]
 [ext_resource type="Script" path="res://scripts/touch_controls.gd" id="24_touch"]
 [ext_resource type="Script" path="res://scripts/game_menu.gd" id="25_menu"]
+[ext_resource type="Script" path="res://scripts/stream_water_fx.gd" id="26_water"]
+[ext_resource type="Script" path="res://scripts/horizon_backdrop.gd" id="27_horizon"]
+[ext_resource type="Script" path="res://scripts/meadow_dressing.gd" id="28_meadow"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
 radius = 0.35
@@ -65,6 +68,20 @@ emission = Color(1.0, 0.9, 0.55, 1)
 emission_energy_multiplier = 1.0
 shading_mode = 0
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dialogue"]
+bg_color = Color(0.98, 0.94, 0.83, 0.93)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.35, 0.2, 0.08, 1)
+corner_radius_top_left = 22
+corner_radius_top_right = 22
+corner_radius_bottom_right = 22
+corner_radius_bottom_left = 22
+shadow_color = Color(0, 0, 0, 0.2)
+shadow_size = 8
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_breath"]
 bg_color = Color(0.95, 0.8, 0.4, 0.85)
 shadow_color = Color(0.95, 0.78, 0.35, 0.4)
@@ -74,9 +91,26 @@ corner_radius_top_right = 60
 corner_radius_bottom_right = 60
 corner_radius_bottom_left = 60
 
+[sub_resource type="ProceduralSkyMaterial" id="SkyMat_main"]
+sky_top_color = Color(0.5, 0.72, 0.92, 1)
+sky_horizon_color = Color(0.98, 0.91, 0.78, 1)
+sky_curve = 0.2
+ground_bottom_color = Color(0.7, 0.8, 0.6, 1)
+ground_horizon_color = Color(0.98, 0.91, 0.78, 1)
+ground_curve = 0.05
+use_debanding = true
+
+[sub_resource type="Sky" id="Sky_main"]
+sky_material = SubResource("SkyMat_main")
+
 [sub_resource type="Environment" id="Environment_main"]
-background_mode = 1
-background_color = Color(0.93, 0.86, 0.72, 1)
+background_mode = 2
+sky = SubResource("Sky_main")
+reflected_light_source = 1
+fog_enabled = true
+fog_light_color = Color(0.96, 0.9, 0.78, 1)
+fog_density = 0.003
+fog_sky_affect = 0.0
 ambient_light_source = 2
 ambient_light_color = Color(1.0, 0.92, 0.78, 1)
 ambient_light_energy = 1.15
@@ -97,7 +131,14 @@ glow_hdr_threshold = 0.9
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_main")
 
+[node name="HorizonBackdrop" type="Node3D" parent="."]
+script = ExtResource("27_horizon")
+
+[node name="MeadowDressing" type="Node3D" parent="."]
+script = ExtResource("28_meadow")
+
 [node name="Sun" type="DirectionalLight3D" parent="."]
+sky_mode = 1
 transform = Transform3D(0.866, -0.354, 0.354, 0, 0.707, 0.707, -0.5, -0.612, 0.612, 4, 12, 6)
 light_color = Color(1.0, 0.93, 0.78, 1)
 light_energy = 1.1
@@ -106,6 +147,7 @@ shadow_blur = 2.5
 directional_shadow_mode = 1
 
 [node name="FillLight" type="DirectionalLight3D" parent="."]
+sky_mode = 1
 transform = Transform3D(-0.707, 0.5, -0.5, 0, 0.707, 0.707, 0.707, 0.5, -0.5, -4, 8, -3)
 light_color = Color(0.75, 0.85, 1.0, 1)
 light_energy = 0.55
@@ -168,6 +210,9 @@ script = ExtResource("17_streamclean")
 
 [node name="StreamPlacement" type="Node3D" parent="StreamFishAlive"]
 script = ExtResource("19_place")
+
+[node name="WaterFx" type="Node3D" parent="StreamFishAlive"]
+script = ExtResource("26_water")
 
 [node name="StreamFish" type="Node3D" parent="."]
 script = ExtResource("20_fish")
@@ -310,6 +355,7 @@ script = ExtResource("25_menu")
 [node name="UI" type="CanvasLayer" parent="."]
 
 [node name="Panel" type="PanelContainer" parent="UI"]
+theme_override_styles/panel = SubResource("StyleBoxFlat_dialogue")
 mouse_filter = 2
 focus_mode = 0
 anchors_preset = 12
@@ -339,6 +385,7 @@ unique_name_in_owner = true
 focus_mode = 0
 mouse_filter = 2
 layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.17, 0.06, 1)
 theme_override_font_sizes/font_size = 22
 text = "..."
 autowrap_mode = 3
@@ -348,7 +395,7 @@ unique_name_in_owner = true
 focus_mode = 0
 mouse_filter = 2
 layout_mode = 2
-theme_override_colors/font_color = Color(0.85, 0.75, 0.35, 1)
+theme_override_colors/font_color = Color(0.62, 0.4, 0.05, 1)
 theme_override_font_sizes/font_size = 18
 text = ""
 horizontal_alignment = 1

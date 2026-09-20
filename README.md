@@ -67,6 +67,9 @@ little-light-godot/
     game_settings.gd        # read-aloud + volume, saved to user://settings.cfg
     wonder_item_scatter.gd  # random item placement
     wonder_item_hints.gd    # idle hint arrows
+    horizon_backdrop.gd     # layered hills and drifting clouds beyond the valley
+    meadow_dressing.gd      # swaying grass tufts, flowers and pebbles
+    stream_water_fx.gd      # applies assets/shaders/stream_water.gdshader to the brook
   assets/                # GLB models, textures, and shaders
   art/blender/           # Asset generators and pipeline documentation
   art/previews/          # Saved valley renders

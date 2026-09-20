@@ -33,24 +33,24 @@ Screenshots and measurements were taken at 1152x648 / 1280x720 on Windows with G
 | 3.4 | Keep the player in the play area | Open | Nothing stops walking up the ridge or wandering far from the diorama. Add a soft boundary (invisible wall, or the Wonder Light gently turning the player back). |
 | 3.5 | Restart hygiene | Partly done | "Play again" reloads the scene. A persistent Faith Journal / progress save is still not implemented. |
 
-## 4. Visual polish (open)
+## 4. Visual polish
 
-| # | Idea | Why |
-|---|------|-----|
-| 4.1 | Sky and horizon | The far edge of the terrain shows a flat beige void. Add a sky gradient, distant hills and clouds. |
-| 4.2 | Ground edges | Boundaries between grass, path and cliff have sawtooth steps, and the path is a hard zigzag. Blend ground materials smoothly (vertex colours) instead of assigning one per face. |
-| 4.3 | Trees on the cliff wall | Several cypresses and olives stand on the bare grey cliff at the back. Move them onto grass or add vegetation to the wall. |
-| 4.4 | Cliffs | The walls are one flat beige-grey. Add rock texture, ledges and a few bushes. |
-| 4.5 | Water | The stream and waterfall are flat cyan. Add shimmer, foam at the banks and a visible falling-water effect. |
-| 4.6 | Meadow | Empty pale green. Add grass tufts, small flowers and pebbles. |
-| 4.7 | Dialogue box | A big dark box covers the bottom of the screen and hides what is behind it. A lighter paper-style panel, with speaker names in colour, would suit the storybook look. |
-| 4.8 | Stone by the stream | The flat tan rocks by the water come from the separate stream pack and were not retextured with the v7 stone. |
+| # | Idea | Status | Notes |
+|---|------|--------|-------|
+| 4.1 | Sky and horizon | **Done** | Gradient sky, soft distance fog, four layers of paper-cut hills fading into haze, and slow-drifting paper clouds (`horizon_backdrop.gd`, `Environment` in `main.tscn`). The beige void is gone. |
+| 4.2 | Ground edges | **Done** | The ground is now one painted 1024 px map (`paint_ground()` in `polish_valley_v7.py`) instead of one material per triangle, so the path, riverbank and cliff foot have smooth, wavy borders instead of sawtooth steps. |
+| 4.3 | Trees on the cliff wall | Open | Several cypresses and olives still stand on the bare cliff at the back. Move them onto grass in the Blender scatter lists, or add vegetation to the wall. |
+| 4.4 | Cliffs | **Partly done** | The painted map gives the walls subtle strata, hairline cracks and a grassy rim. Still no real ledges or geometry detail. |
+| 4.5 | Water | **Done** | New water shader (`stream_water.gdshader`, applied by `stream_water_fx.gd`): depth tint, ripples that flow downstream, a foam rim where water meets the bank, streaks pouring down the waterfall, and sparkle. |
+| 4.6 | Meadow | **Done** | About 700 swaying grass tufts, 120 tiny flowers and 60 pebbles on open ground only (`meadow_dressing.gd`), as three MultiMeshes, so three draw calls. Different every run. |
+| 4.7 | Dialogue box | **Done** | Paper-style panel (cream, ink border, rounded) with dark text, matching the pause menu. |
+| 4.8 | Stone by the stream | Open | The flat tan rocks by the water come from the separate stream pack and were not retextured with the v7 stone. |
 
 ## 5. Technical and repository health (open)
 
 | # | Item | Details |
 |---|------|---------|
-| 5.1 | Performance | About **375k triangles and 254 draw calls per frame** in the game view on the v7 valley. The v6 valley measured 316k / 172, so the leafy trees, bushes and rocks added roughly 60k triangles (+19%). The baseline was already heavy for tablets: profile what dominates (terrain, shadows, stream pack, characters) and add LODs / fewer leaves before a mobile release. |
+| 5.1 | Performance | About **375k triangles and 254 draw calls per frame** in the game view on the v7 valley. The v6 valley measured 316k / 172, so the leafy trees, bushes and rocks added roughly 60k triangles (+19%). The visual-polish pass (sky, water, meadow) added about 10k triangles and 5 draw calls on top (386k / 259). The baseline was already heavy for tablets: profile what dominates (terrain, shadows, stream pack, characters) and add LODs / fewer leaves before a mobile release. |
 | 5.2 | `.import` churn | Godot keeps rewriting every tracked `.import` file, so the working tree is always dirty. The committed files use placeholder cache hashes that differ from what the editor generates. Regenerate and commit them once, or stop tracking them. |
 | 5.3 | Line endings | No `.gitattributes`, so every edit produces CRLF/LF warnings. Add one (`* text=auto eol=lf`, keeping binaries as binary). |
 | 5.4 | Repository size | `assets/` is about 73 MB, mostly old model versions (Wonder-Walker v2-v13, valley v2-v7, David v2-v12, items v2-v7). Keep the current ones, archive the rest. The v7 valley alone is about 11.7 MB because leaves are real geometry. |
@@ -60,6 +60,6 @@ Screenshots and measurements were taken at 1152x648 / 1280x720 on Windows with G
 ## Suggested order
 
 1. Try touch and gamepad on real hardware, and get recorded voiceover for the Band A lines (2.1, 2.2).
-2. Sky/horizon, ground blending and water (4.1, 4.2, 4.5): the biggest visual gains for the least work.
+2. Move the trees off the cliff wall and retexture the stream-pack rocks (4.3, 4.8); add cliff ledges (4.4).
 3. Steady Hands depth and sound (3.1, 3.2).
 4. Performance profile before any tablet build (5.1), and the repo housekeeping in 5.2 to 5.4.

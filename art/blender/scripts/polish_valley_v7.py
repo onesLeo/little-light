@@ -502,9 +502,188 @@ def make_cypress(x, y, h=6.5, seed=0):
     return _finish_tree(bm, f"Cypress_{seed}", slots, x, y, z0, 0.035)
 
 
+# -- Terrain: painted ground map ---------------------------------------------
+# v6 gave every terrain triangle one of five materials, so every boundary
+# (path, riverbank, cliff foot) was a staircase of 0.6 m triangles. v7 paints
+# the ground into one 1024 px map, mapped top-down over the whole terrain, so
+# borders are smooth, wavy curves and the cliffs/path can carry real detail.
+
+GROUND_TEX_SIZE = 1024
+
+
+def _ss(a, b, x):
+    import numpy as np
+    t = np.clip((x - a) / (b - a), 0.0, 1.0)
+    return t * t * (3.0 - 2.0 * t)
+
+
+def _resample(grid, size):
+    """Bilinear-resize a square grid to size x size."""
+    import numpy as np
+    n = grid.shape[0]
+    coords = np.linspace(0, n - 1, size)
+    i0 = np.minimum(np.floor(coords).astype(int), n - 2)
+    f = (coords - i0).astype(np.float32)
+    rows = grid[i0] * (1 - f)[:, None] + grid[i0 + 1] * f[:, None]
+    return rows[:, i0] * (1 - f)[None, :] + rows[:, i0 + 1] * f[None, :]
+
+
+def _poly_dist_np(X, Y, pts):
+    import numpy as np
+    best = np.full(X.shape, 1e9, dtype=np.float32)
+    for (ax, ay), (bx, by) in zip(pts[:-1], pts[1:]):
+        abx, aby = bx - ax, by - ay
+        denom = abx * abx + aby * aby
+        t = np.clip(((X - ax) * abx + (Y - ay) * aby) / denom, 0.0, 1.0)
+        best = np.minimum(best, np.hypot(X - (ax + t * abx), Y - (ay + t * aby)))
+    return best
+
+
+def paint_ground(size=GROUND_TEX_SIZE):
+    """Returns a (size, size, 3) float array of sRGB ground colours."""
+    import numpy as np
+    E = v6.EXTENT
+    rng = np.random.default_rng(SEED + 7)
+
+    hn = 384
+    lin = np.linspace(-E, E, hn)
+    H = np.empty((hn, hn), dtype=np.float32)
+    for j, y in enumerate(lin):
+        for i, x in enumerate(lin):
+            H[j, i] = v6.height_at(x, y)
+    step = 2.0 * E / (hn - 1)
+    k = 6                                   # ~0.94 m either side, like v6's slope sample
+    Hp = np.pad(H, k, mode="edge")
+    gx = (Hp[k:-k, 2 * k:] - Hp[k:-k, :-2 * k]) / (2 * k * step)
+    gy = (Hp[2 * k:, k:-k] - Hp[:-2 * k, k:-k]) / (2 * k * step)
+    slope = _resample(np.degrees(np.arctan(np.hypot(gx, gy))).astype(np.float32), size)
+    Hs = _resample(H, size)
+
+    tex = np.linspace(-E, E, size, dtype=np.float32)
+    X, Y = np.meshgrid(tex, tex)
+    n_big = _fbm(size, 4, 4, rng)
+    n_big2 = _fbm(size, 6, 3, rng)
+    n_edge = _fbm(size, 24, 3, rng)
+    n_fine = rng.random((size, size)).astype(np.float32)
+
+    slope_n = slope + (n_edge - 0.5) * 14.0
+    rock_w = _ss(36.0, 42.0, slope_n)
+    d_up = np.where(Y > v6.CLIFF_Y, _poly_dist_np(X, Y, v6.UPPER_RIVER), 1e9)
+    d_low = _poly_dist_np(X, Y, v6.LOWER_RIVER)
+    d_pool = np.hypot(X - v6.POOL[0], Y - v6.POOL[1])
+    ch = np.minimum(np.minimum(d_up / (v6.CHANNEL_HALF * 1.5), d_low / (v6.CHANNEL_HALF * 1.7)),
+                    d_pool / (v6.POOL_R * 1.15))
+    bed_w = 1.0 - _ss(0.92, 1.0, ch + (n_edge - 0.5) * 0.10)
+    d_path = _poly_dist_np(X, Y, v6.PATH)
+    path_w = (1.0 - _ss(v6.PATH_HALF - 0.04, v6.PATH_HALF + 0.04, d_path + (n_edge - 0.5) * 0.16)) \
+        * (1.0 - _ss(15.0, 20.0, slope))
+    scrub_w = np.maximum(_ss(-0.6, 0.6, Hs - (3.4 + (n_big - 0.5) * 2.6)), _ss(21.0, 26.0, slope_n))
+
+    def c(col):
+        return np.array(col[:3], dtype=np.float32).reshape(1, 1, 3)
+
+    grain = (0.975 + 0.05 * n_fine)[:, :, None]
+    grass = c(v6.COL_HILL) * (0.95 + 0.10 * n_big)[:, :, None] * grain
+    scrub = c(v6.COL_SCRUB) * (0.95 + 0.10 * n_big2)[:, :, None] * grain
+
+    strata = 0.5 + 0.5 * np.sin(Hs * 5.0 + (n_edge - 0.5) * 6.0)
+    ridge = np.abs(_fbm(size, 7, 3, rng) - 0.5)
+    crack = np.clip(1.0 - ridge / 0.007, 0.0, 1.0)
+    rock = c(v6.COL_CLIFF) * (0.94 + 0.10 * n_big2)[:, :, None] * (0.93 + 0.09 * strata)[:, :, None]
+    rock = rock * (1.0 - 0.08 * crack)[:, :, None] * grain
+    # Grassy rim where the wall is not quite vertical.
+    rim = (rock_w * (1.0 - _ss(46.0, 62.0, slope)) * _ss(0.45, 0.6, n_big2) * 0.55)[:, :, None]
+    rock = rock * (1.0 - rim) + scrub * rim
+
+    path = c(v6.COL_PATH) * (0.96 + 0.08 * n_big)[:, :, None]
+    path = path * (1.0 - 0.08 * _ss(v6.PATH_HALF - 0.22, v6.PATH_HALF, d_path))[:, :, None]
+    path = np.where((n_fine > 0.9955)[:, :, None], path * 1.12, path)
+    path = np.where((n_fine < 0.003)[:, :, None], path * 0.82, path) * grain
+
+    wet = (1.0 - _ss(0.55, 0.95, ch))[:, :, None]
+    bed = c(v6.COL_BED) * (0.95 + 0.10 * n_big)[:, :, None] * (1.0 - 0.14 * wet) * grain
+
+    def mix(a, b, w):
+        return a * (1.0 - w[:, :, None]) + b * w[:, :, None]
+
+    col = grass
+    col = mix(col, scrub, scrub_w)
+    col = mix(col, path, path_w)
+    col = mix(col, bed, bed_w)
+    col = mix(col, rock, rock_w)
+    return np.clip(col, 0.0, 1.0)
+
+
+def build_terrain():
+    """v6's heightfield mesh, one material, top-down UVs, painted ground map."""
+    import numpy as np
+    E = v6.EXTENT
+    n = int((E * 2.0) / v6.CELL)
+    verts, faces = [], []
+    for j in range(n + 1):
+        for i in range(n + 1):
+            x = -E + i * v6.CELL
+            y = -E + j * v6.CELL
+            verts.append((x, y, v6.height_at(x, y)))
+    for j in range(n):
+        for i in range(n):
+            a = j * (n + 1) + i
+            b, cc = a + 1, a + (n + 1)
+            d = cc + 1
+            if (i + j) % 2 == 0:
+                faces += [(a, b, d), (a, d, cc)]
+            else:
+                faces += [(a, b, cc), (b, d, cc)]
+    mesh = bpy.data.meshes.new("Valley_TerrainMesh")
+    mesh.from_pydata(verts, [], faces)
+    mesh.update()
+    for poly in mesh.polygons:
+        poly.use_smooth = False
+
+    uv_layer = mesh.uv_layers.new(name="UVMap")
+    co = np.empty(len(mesh.vertices) * 3, dtype=np.float32)
+    mesh.vertices.foreach_get("co", co)
+    co = co.reshape(-1, 3)
+    loop_vi = np.empty(len(mesh.loops), dtype=np.int32)
+    mesh.loops.foreach_get("vertex_index", loop_vi)
+    uv = np.stack([(co[loop_vi, 0] + E) / (2 * E), (co[loop_vi, 1] + E) / (2 * E)], axis=1).astype(np.float32)
+    uv_layer.data.foreach_set("uv", uv.ravel())
+
+    size = GROUND_TEX_SIZE
+    rgb = paint_ground(size)
+    pix = np.concatenate([rgb, np.ones((size, size, 1), dtype=np.float32)], axis=2).reshape(-1)
+    img = bpy.data.images.new("Ground_Painted", width=size, height=size, alpha=True)
+    img.pixels.foreach_set(pix)
+    img.pack()
+
+    mat = bpy.data.materials.new("V_Ground")
+    mat.use_nodes = True
+    nt = mat.node_tree
+    for nd in list(nt.nodes):
+        nt.nodes.remove(nd)
+    out = nt.nodes.new("ShaderNodeOutputMaterial")
+    bsdf = nt.nodes.new("ShaderNodeBsdfPrincipled")
+    bsdf.inputs["Roughness"].default_value = 0.95
+    if "Specular IOR Level" in bsdf.inputs:
+        bsdf.inputs["Specular IOR Level"].default_value = 0.05
+    tex = nt.nodes.new("ShaderNodeTexImage")
+    tex.image = img
+    tex.interpolation = "Linear"
+    tex.extension = "EXTEND"
+    nt.links.new(tex.outputs["Color"], bsdf.inputs["Base Color"])
+    nt.links.new(bsdf.outputs["BSDF"], out.inputs["Surface"])
+    mat.use_backface_culling = True
+    mesh.materials.append(mat)
+
+    obj = bpy.data.objects.new("Valley_Terrain", mesh)
+    bpy.context.collection.objects.link(obj)
+    return obj
+
+
 # -- Swap into v6 and run ----------------------------------------------------
 
 v6.make_boulder = make_rock
+v6.build_terrain = build_terrain
 v6.make_shrub = make_shrub
 v6.make_olive = make_olive
 v6.make_cypress = make_cypress
