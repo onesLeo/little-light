@@ -203,6 +203,17 @@ func _initialize() -> void:
 	_check(near_water < 2.5 and far_water > 8.0, "the stream sounds like it is at the water (%.1f m near, %.1f m far)" % [near_water, far_water])
 	soundscape._call_bird(0.0)
 	_check(soundscape._birds.any(func(b): return b.playing), "a bird calls")
+	for b in soundscape._birds:
+		b.stop()
+	audio.speak_dialogue("Wonder Light: \"Breathe with David...\"")
+	soundscape._call_bird(0.0)
+	_check(not soundscape._birds.any(func(b): return b.playing), "birds stay quiet while somebody is speaking")
+	audio.stop_speech()
+	var has_limiter := false
+	for i in AudioServer.get_bus_effect_count(0):
+		has_limiter = has_limiter or AudioServer.get_bus_effect(0, i) is AudioEffectLimiter
+	_check(has_limiter, "the master output has a limiter, so a loud moment cannot clip")
+	_check(sound_bus.BASE_DB["Voice"] > sound_bus.BASE_DB["Ambience"] + 8.0, "the voice is set well above the ambience")
 
 	print("-- sound: footsteps, lamb, butterflies --")
 	for p in audio._step_players:
@@ -223,6 +234,14 @@ func _initialize() -> void:
 	lamb_node._excite = 1.0
 	lamb_node._update_bleat(0.1, 0.0)
 	_check(lamb_node._bleat.playing and lamb_node._bleat_wait > 5.0, "the lamb says baa when it notices the Wonder-Walker, then waits")
+	lamb_node._bleat.stop()
+	lamb_node._bleat_wait = 0.0
+	audio.speak_dialogue("Wonder Light: \"Breathe with David...\"")
+	lamb_node._update_bleat(0.1, 1.0)
+	_check(not lamb_node._bleat.playing, "the lamb does not bleat over a voice")
+	audio.stop_speech()
+	lamb_node._update_bleat(0.1, 1.0)
+	_check(lamb_node._bleat.playing, "and bleats as soon as the voice has finished")
 	var flies: Node = main.get_node("Butterflies")
 	flies._flutter_cool = 0.0
 	walker.global_position = (flies._flies[0]["root"] as Node3D).global_position

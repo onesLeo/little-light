@@ -26,13 +26,28 @@ Everything plays on one of four buses under Master (`scripts/sound_bus.gd`):
 | Music | the lullaby | -11 dB |
 | Ambience | wind, stream, birds | -7 dB |
 | Effects | chimes, footsteps, lamb, butterflies | -2 dB |
-| Voice | Wonder Light and David | 0 dB |
+| Voice | Wonder Light and David | +3 dB |
 
-The voice clips speak at about -23 dBFS, so at these levels the music sits well under a speaking voice.
+The voice clips speak at about -23 dBFS, which the Voice bus lifts to about -20 dBFS. Rough levels
+of everything else, in dBFS (RMS, before distance), so you can see what competes with the voice:
+
+| Sound | Level | While somebody is speaking |
+|-------|-------|----------------------------|
+| Voice | -20 | |
+| Music | -29 | -38 |
+| Stream (right at the water) | -35 | -45 |
+| Wind | -37 | -47 |
+| Footsteps | -27 to -24 | |
+| Lamb "baa" (3 m away) | about -21 | waits until the voice has finished |
+
+Speech is easiest to follow when it is 15 dB or more above the background, so the ambience is kept
+well below it. A limiter on the Master bus (ceiling -1 dB) means the louder voice plus a sound effect
+can never clip.
 
 **Ducking.** While anybody is speaking (a recorded clip, the gap between two clips, or system speech)
-the Music bus drops 9 dB and Ambience 6 dB; it dips in a quarter of a second and comes back over a
-second. While the game is paused they drop about 60 % of that, and the music keeps playing behind the
+the Music bus drops 9 dB and Ambience 10 dB; it dips in a quarter of a second and comes back over a
+second. Birds also stay silent while somebody is speaking, and the lamb waits to bleat until the
+voice has finished. While the game is paused they drop about 60 % of that, and the music keeps playing behind the
 menu.
 
 **Volume sliders.** The pause menu has Volume (master), Music, Sounds (ambience and effects) and
@@ -66,7 +81,8 @@ Where to change what:
 Checked by the smoke test: all 17 files load; the four buses exist and the players are routed to them;
 music and wind loop; the stream follows the player along the water; a footstep plays when walking
 and none when standing; the lamb says "baa" once when it notices you, then waits; a group of
-butterflies taking off makes one rustle; the music ducks while speaking and while paused and comes
+butterflies taking off makes one rustle; birds and the lamb stay quiet during speech; the master limiter
+is in place; the music ducks while speaking and while paused and comes
 back; the sliders set the bus levels.
 
 Checked by measuring the rendered files: no clipping, loops join without a click, the music's notes

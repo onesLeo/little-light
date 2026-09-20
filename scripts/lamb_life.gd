@@ -26,6 +26,7 @@ var _time: float = 0.0
 var _player: Node3D
 var _ready_to_animate: bool = false
 var _bleat: AudioStreamPlayer3D
+var _audio: Node
 var _bleat_wait: float = 0.0
 var _rng := RandomNumberGenerator.new()
 
@@ -33,6 +34,7 @@ var _rng := RandomNumberGenerator.new()
 func _ready() -> void:
 	_rng.randomize()
 	var items := get_parent()
+	_audio = items.get_parent().get_node_or_null("AudioDirector")
 	_player = items.get_parent().get_node_or_null("Player") as Node3D
 	var scatter := items.get_node_or_null("Scatter")
 	if scatter and scatter.has_signal("scattered"):
@@ -56,8 +58,8 @@ func _capture() -> void:
 	_bleat = AudioStreamPlayer3D.new()
 	_bleat.top_level = true
 	_bleat.bus = SoundBus.EFFECTS
-	_bleat.volume_db = -4.0
-	_bleat.unit_size = 3.0
+	_bleat.volume_db = -2.0
+	_bleat.unit_size = 6.0
 	_bleat.max_distance = 25.0
 	add_child(_bleat)
 	_bleat.global_position = _base_pos[_meshes[0]] + Vector3(0.0, 0.3, 0.0)
@@ -110,6 +112,9 @@ func _update_bleat(delta: float, was_excited: float) -> void:
 	if _excite < 0.3:
 		_bleat_wait = minf(_bleat_wait, 2.0)
 	if _excite < 0.6 or _bleat_wait > 0.0 or _bleat.playing:
+		return
+	# Never talk over Wonder Light or David; it bleats as soon as they finish.
+	if _audio and _audio.has_method("is_speaking") and _audio.is_speaking():
 		return
 	_bleat.stream = SoundLibrary.bleat(_rng.randi())
 	_bleat.pitch_scale = _rng.randf_range(0.94, 1.08)

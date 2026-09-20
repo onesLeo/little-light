@@ -49,8 +49,8 @@ func _ready() -> void:
 	_listener.make_current()
 
 	_music = _make_player(SoundLibrary.load_stream(SoundLibrary.MUSIC, true), SoundBus.MUSIC, -80.0)
-	_wind = _make_player(SoundLibrary.load_stream(SoundLibrary.WIND, true), SoundBus.AMBIENCE, -4.0)
-	_stream = _make_player3d(SoundLibrary.load_stream(SoundLibrary.STREAM, true), SoundBus.AMBIENCE, -2.0, 3.0, 32.0)
+	_wind = _make_player(SoundLibrary.load_stream(SoundLibrary.WIND, true), SoundBus.AMBIENCE, -8.0)
+	_stream = _make_player3d(SoundLibrary.load_stream(SoundLibrary.STREAM, true), SoundBus.AMBIENCE, -10.0, 3.0, 32.0)
 	for i in 3:
 		_birds.append(_make_player3d(null, SoundBus.AMBIENCE, 0.0, 6.0, 40.0))
 	_move_stream()
@@ -122,10 +122,12 @@ func _move_stream() -> void:
 	_stream.global_position = Vector3(best.x, 0.3, best.y)
 
 
+func _is_speaking() -> bool:
+	return _audio != null and _audio.has_method("is_speaking") and _audio.is_speaking()
+
+
 func _update_ducking(delta: float) -> void:
-	var target := 0.0
-	if _audio and _audio.has_method("is_speaking") and _audio.is_speaking():
-		target = 1.0
+	var target := 1.0 if _is_speaking() else 0.0
 	if get_tree().paused:
 		target = maxf(target, pause_duck)
 	var rate := 4.0 if target > SoundBus.duck else 1.0  # dips quickly, comes back slowly
@@ -145,8 +147,9 @@ func _update_birds(delta: float) -> void:
 			_call_bird(-5.0)
 
 
+## Birds stay quiet while somebody is speaking, so they never compete with the voice.
 func _call_bird(extra_db: float) -> void:
-	if _player == null:
+	if _player == null or _is_speaking():
 		return
 	for bird in _birds:
 		if bird.playing:

@@ -12,9 +12,9 @@ const EFFECTS := "Effects"
 const VOICE := "Voice"
 
 ## Balance of each bus before the player's sliders, in dB.
-const BASE_DB := {MUSIC: -11.0, AMBIENCE: -7.0, EFFECTS: -2.0, VOICE: 0.0}
+const BASE_DB := {MUSIC: -11.0, AMBIENCE: -7.0, EFFECTS: -2.0, VOICE: 3.0}
 ## How far the music and ambience drop while a voice is speaking, in dB.
-const DUCK_DB := {MUSIC: -9.0, AMBIENCE: -6.0}
+const DUCK_DB := {MUSIC: -9.0, AMBIENCE: -10.0}
 
 ## 0 = nobody speaking, 1 = fully ducked. Driven by Soundscape.
 static var duck: float = 0.0
@@ -27,6 +27,13 @@ static func ensure_buses() -> void:
 			var idx := AudioServer.bus_count - 1
 			AudioServer.set_bus_name(idx, bus_name)
 			AudioServer.set_bus_send(idx, "Master")
+	# A limiter on Master so the louder voice plus a sound effect can never clip.
+	for i in AudioServer.get_bus_effect_count(0):
+		if AudioServer.get_bus_effect(0, i) is AudioEffectLimiter:
+			return
+	var limiter := AudioEffectLimiter.new()
+	limiter.ceiling_db = -1.0
+	AudioServer.add_bus_effect(0, limiter)
 
 
 ## Pushes the saved volumes and the current ducking onto the buses.

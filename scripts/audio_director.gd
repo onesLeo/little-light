@@ -93,7 +93,7 @@ func play_step() -> void:
 		return
 	player.stream = stream
 	player.pitch_scale = _rng.randf_range(0.92, 1.08)
-	player.volume_db = _rng.randf_range(-7.0, -4.0)
+	player.volume_db = _rng.randf_range(-3.0, 0.0)
 	player.play()
 
 ## True while any line is being spoken (a clip, the gap between two clips, or
