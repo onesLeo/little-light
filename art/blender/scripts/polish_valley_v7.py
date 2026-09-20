@@ -22,6 +22,7 @@ so nothing about them said "stone". The trees had the same problem: olives were 
 
 * Olives get a leaning, root-flared trunk that forks into three limbs, each carrying a clump of narrow leaves (silvery undersides, like real olive leaves) plus a crown clump.
 * Cypresses are a slim flame-shaped column of overlapping upward-leaning fronds reaching almost to the ground over a dark core, instead of a pine-like stack of cones.
+* Trees stand on grass. v6's list put ten of them on the steep back wall (which the ground map paints as bare rock) or on the lip of the shelf; `TREE_MOVES` gives those a spot on grass, and the generator reports any tree left on ground steeper than 34 degrees.
 
 Object names are unchanged (Shrub_N / Rock_N / Olive_N / Cypress_N and their *_Outline hulls) because
 runtime scripts match on them (stream_placement.gd nudges trees and shrubs out of the
@@ -680,13 +681,54 @@ def build_terrain():
     return obj
 
 
+# -- Where the trees stand ---------------------------------------------------
+# The ground map paints anything steeper than ~36 degrees as bare rock, and the wall along the
+# back of the valley is that steep. v6's scatter put ten trees on it (or on the lip of the
+# shelf, half over the drop), so they seemed to grow out of the cliff. Each is moved here to
+# the nearest grass: the foot of the wall, the top of the shelf, or the ridge behind the wall.
+# The tree shapes are seeded by their index, so moving one changes nothing else about it.
+# Everything else keeps the position the v6 list gives it.
+
+TREE_MOVES = {
+    ("Cypress", 4): (10.9, -2.6),
+    ("Cypress", 6): (-5.3, 8.6),
+    ("Cypress", 7): (3.4, 5.0),
+    ("Cypress", 8): (8.6, 4.8),
+    ("Cypress", 10): (11.0, 4.2),
+    ("Cypress", 11): (-12.9, 7.7),
+    ("Cypress", 12): (5.8, 14.0),
+    ("Cypress", 13): (-1.0, 14.6),
+    ("Olive", 4): (-11.0, 11.5),
+    ("Olive", 5): (5.8, 4.7),
+}
+MAX_TREE_SLOPE = 34.0       # a tree on ground steeper than this is standing on painted rock
+
+
+def _tree_spot(kind, seed, x, y):
+    x, y = TREE_MOVES.get((kind, seed), (x, y))
+    slope = v6.surface_slope_deg(x, y)
+    if slope > MAX_TREE_SLOPE:
+        print("TREE_ON_STEEP_GROUND %s_%d at (%.1f, %.1f): %.0f degrees" % (kind, seed, x, y, slope))
+    return x, y
+
+
+def place_olive(x, y, s=2.2, seed=0):
+    x, y = _tree_spot("Olive", seed, x, y)
+    return make_olive(x, y, s=s, seed=seed)
+
+
+def place_cypress(x, y, h=6.5, seed=0):
+    x, y = _tree_spot("Cypress", seed, x, y)
+    return make_cypress(x, y, h=h, seed=seed)
+
+
 # -- Swap into v6 and run ----------------------------------------------------
 
 v6.make_boulder = make_rock
 v6.build_terrain = build_terrain
 v6.make_shrub = make_shrub
-v6.make_olive = make_olive
-v6.make_cypress = make_cypress
+v6.make_olive = place_olive
+v6.make_cypress = place_cypress
 
 if __name__ == "__main__":
     v6.OUT_GLB = os.environ["LL_VALLEY_OUT"]
