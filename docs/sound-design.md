@@ -9,8 +9,8 @@ are no third-party recordings, and every file can be rebuilt and retuned.
 | Sound | When | Where it is made |
 |-------|------|------------------|
 | Lullaby (music box, soft pad, bass), 42 s loop | from the start, fading in over 4 s | `Soundscape` |
-| Wind, 16 s loop | always, very quiet | `Soundscape` |
-| Stream, 12 s loop | always; louder and panned toward the water as you walk near it | `Soundscape` |
+| Wind, 16 s loop | always, very quiet; eases in over 6 s | `Soundscape` |
+| Stream, 12 s loop | always, eases in over 6 s; louder and panned toward the water as you walk near it | `Soundscape` |
 | Seven bird calls | every 4-11 s from somewhere around you; sometimes a second bird answers | `Soundscape` |
 | Footsteps (four variations) | while the Wonder-Walker walks, two per walk cycle | `wonder_walker.gd` |
 | Lamb "baa" (two variations) | when the lamb notices you, then every 6-11 s while you stay close | `lamb_life.gd` |
@@ -35,7 +35,7 @@ of everything else, in dBFS (RMS, before distance), so you can see what competes
 |-------|-------|----------------------------|
 | Voice | -20 | |
 | Music | -29 | -38 |
-| Stream (right at the water) | -35 | -45 |
+| Stream (right at the water) | -39 | -49 |
 | Wind | -37 | -47 |
 | Footsteps | -27 to -24 | |
 | Lamb "baa" (3 m away) | about -21 | waits until the voice has finished |

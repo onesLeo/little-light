@@ -193,6 +193,12 @@ func _initialize() -> void:
 	var soundscape: Node = main.get_node("Soundscape")
 	_check(soundscape._music.playing and soundscape._wind.playing and soundscape._stream.playing, "music, wind and stream are playing")
 	_check((soundscape._music.stream as AudioStreamWAV).loop_mode == AudioStreamWAV.LOOP_FORWARD, "the music loops")
+	soundscape._ambience_gain = 0.0
+	soundscape._process(0.0)
+	var silent_start: bool = soundscape._stream.volume_db < -60.0 and soundscape._wind.volume_db < -60.0
+	soundscape._process(soundscape.ambience_fade_in + 1.0)
+	_check(silent_start and absf(soundscape._stream.volume_db - soundscape.stream_db) < 0.5,
+			"the stream and wind ease in from silence to their set level")
 	var walker: CharacterBody3D = main.get_node("Player")
 	walker.global_position = Vector3(-6.0, 1.0, -2.6)
 	soundscape._move_stream()

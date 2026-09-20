@@ -15,6 +15,11 @@ const MeadowDressing := preload("res://scripts/meadow_dressing.gd")
 ## Chance that a second bird answers the first.
 @export_range(0.0, 1.0) var bird_reply_chance: float = 0.3
 @export var music_fade_in: float = 4.0
+## Wind and stream ease in too, so the game does not start with a rush of water.
+@export var ambience_fade_in: float = 6.0
+## Level of the wind and the stream (right at the water) before the Ambience bus, in dB.
+@export var wind_db: float = -8.0
+@export var stream_db: float = -14.0
 ## Extra ducking while the game is paused (0-1).
 @export_range(0.0, 1.0) var pause_duck: float = 0.6
 
@@ -30,6 +35,7 @@ var _rng := RandomNumberGenerator.new()
 var _bird_timer: float = 3.0
 var _reply_timer: float = -1.0
 var _music_gain: float = 0.0
+var _ambience_gain: float = 0.0
 
 
 func _ready() -> void:
@@ -49,8 +55,8 @@ func _ready() -> void:
 	_listener.make_current()
 
 	_music = _make_player(SoundLibrary.load_stream(SoundLibrary.MUSIC, true), SoundBus.MUSIC, -80.0)
-	_wind = _make_player(SoundLibrary.load_stream(SoundLibrary.WIND, true), SoundBus.AMBIENCE, -8.0)
-	_stream = _make_player3d(SoundLibrary.load_stream(SoundLibrary.STREAM, true), SoundBus.AMBIENCE, -10.0, 3.0, 32.0)
+	_wind = _make_player(SoundLibrary.load_stream(SoundLibrary.WIND, true), SoundBus.AMBIENCE, -80.0)
+	_stream = _make_player3d(SoundLibrary.load_stream(SoundLibrary.STREAM, true), SoundBus.AMBIENCE, -80.0, 3.0, 32.0)
 	for i in 3:
 		_birds.append(_make_player3d(null, SoundBus.AMBIENCE, 0.0, 6.0, 40.0))
 	_move_stream()
@@ -63,6 +69,10 @@ func _process(delta: float) -> void:
 	# Music fades in gently instead of starting at full level.
 	_music_gain = move_toward(_music_gain, 1.0, delta / maxf(music_fade_in, 0.01))
 	_music.volume_db = linear_to_db(maxf(_music_gain, 0.0001))
+	_ambience_gain = move_toward(_ambience_gain, 1.0, delta / maxf(ambience_fade_in, 0.01))
+	var fade_db := linear_to_db(maxf(_ambience_gain, 0.0001))
+	_wind.volume_db = wind_db + fade_db
+	_stream.volume_db = stream_db + fade_db
 	_update_ducking(delta)
 	_update_birds(delta)
 
