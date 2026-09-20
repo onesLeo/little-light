@@ -13,22 +13,27 @@ Vertical slice: Wonder-Walker explores a Bethlehem valley diorama, finds three W
 
 ## Controls
 
-| Action        | Key   | Notes                                      |
-|---------------|-------|--------------------------------------------|
-| Move          | WASD / arrows | Camera-relative; avatar faces move direction |
-| Continue      | Space / Enter | Advance dialogue                         |
-| Breathe       | Space / Enter | Complete Steady Hands with one tap       |
-| Interact      | E     | Collect Wonder Item when near stone/staff/lamb |
+| Action   | Keyboard      | Gamepad         | Touch                          | Notes |
+|----------|---------------|-----------------|--------------------------------|-------|
+| Move     | WASD / arrows | Left stick / D-pad | Drag a thumb on the left half of the screen | Camera-relative; avatar faces move direction |
+| Continue | Space / Enter | A               | Big gold button (says **NEXT**) | Advance dialogue |
+| Breathe  | Space / Enter | A               | Big gold button (says **BREATHE**) | Complete Steady Hands with one tap |
+| Interact | E             | A or X          | Big gold button (says **GRAB**) | Collect a Wonder Item when near it |
+| Pause    | Esc / P       | Start           | Round pause button, top right  | Resume, read-aloud, volume, play again |
+
+On-screen prompts reword themselves for whichever device you used last ("Press Space" / "Press A" / "Tap NEXT").
+The big touch button is only shown while touch is in use, and it sends both "continue" and "interact", so a child never has to choose.
+The speaker button (top right) turns **read-aloud** on or off; settings are saved to `user://settings.cfg`.
 
 ## What you'll play through
 
 1. **Arrive** — Wonder Light dialogue text (Space or Enter to continue)
-2. **Explore** — find 3 Wonder Items (stone / staff / lamb meshes), press **E**
+2. **Explore** — find 3 Wonder Items (stone / staff / lamb), placed at random spots in the meadow each run; press **E** (or tap GRAB). If nothing is found for ~18 s, a bobbing arrow (and an edge-of-screen arrow) points to the nearest missing item
 3. **Meet David** — Band A auto line (no reply choices)
 4. **Steady Hands** — press **Space** once (Band A; always succeeds)
 5. **Resolution** — narrated off-screen; no fight
 6. **Reflect** + **Joshua 1:9** + “Don't. Be. Afraid.”
-7. **Courage charm** — animated placeholder bracelet/charm ceremony, followed by chapter completion and free movement
+7. **Courage charm** — animated placeholder bracelet/charm ceremony, followed by chapter completion, then a **Play again / Keep exploring** panel
 
 ## Current scene assets
 
@@ -55,11 +60,18 @@ little-light-godot/
     camera_director.gd
     tabletop_camera.gd
     charm_award.gd
-    audio_director.gd
+    audio_director.gd       # procedural SFX + read-aloud (system text-to-speech)
+    input_setup.gd          # gamepad bindings, pause action, last-used-device tracking
+    touch_controls.gd       # floating thumb stick + big NEXT/GRAB/BREATHE button
+    game_menu.gd            # pause menu, speaker button, Play again panel
+    game_settings.gd        # read-aloud + volume, saved to user://settings.cfg
+    wonder_item_scatter.gd  # random item placement
+    wonder_item_hints.gd    # idle hint arrows
   assets/                # GLB models, textures, and shaders
   art/blender/           # Asset generators and pipeline documentation
   art/previews/          # Saved valley renders
   tests/                 # Headless smoke test and screenshot helper
+  docs/                  # Improvement backlog (what to work on next)
 ```
 
 ## Notes / placeholders
@@ -68,7 +80,12 @@ little-light-godot/
 - Safety floor under the diorama so the player cannot fall forever.
 - Tabletop camera is a `Camera3D` sibling of the player under `Main`. It follows from above/behind without inheriting the player's rotation; `CameraDirector` switches to a separate close-up camera for dialogue and the charm ceremony.
 - Courage charm uses procedural placeholder 3D meshes with a float/snap animation. A persistent Faith Journal is not implemented.
-- Dialogue and narration are displayed as text. `AudioDirector` generates procedural sound effects; recorded voiceover plays only when clips are assigned to its currently empty `vo_clips` dictionary.
+- Dialogue and narration are displayed as text **and read aloud** with the operating system's text-to-speech voices (Wonder Light and David get different voices/pitches when two English voices exist). `AudioDirector` also generates procedural sound effects; recorded voiceover plays instead of TTS only when clips are assigned to its currently empty `vo_clips` dictionary. TTS availability depends on the OS; when there are no voices the speaker button is hidden.
+- Touch controls and gamepad bindings are verified with injected input events and the headless smoke test, not yet on a real tablet or controller.
+
+## What to improve next
+
+See [docs/improvement-backlog.md](docs/improvement-backlog.md) for the full review (done and still open): game feel, visual polish, performance and repo hygiene.
 
 
 ## Band notes

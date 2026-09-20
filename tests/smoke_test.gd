@@ -33,11 +33,35 @@ func _initialize() -> void:
 	var closeup_cam: Camera3D = main.get_node("CloseUpCamera")
 	var tabletop_cam: Camera3D = main.get_node("TabletopCamera")
 	var david: Node3D = main.get_node("DavidMentor")
+	var input_setup: Node = main.get_node("InputSetup")
+	var touch_controls: CanvasLayer = main.get_node("TouchControls")
+	var game_menu: CanvasLayer = main.get_node("GameMenu")
+	game_menu.end_panel_delay = 0.05
 
 	print("-- boot --")
 	_check(director.beat == director.Beat.ARRIVE, "ChapterDirector auto-enters ARRIVE on ready")
 	_check(tabletop_cam.current == true, "tabletop camera is active on ARRIVE")
 	_check(closeup_cam.current == false, "close-up camera is inactive on ARRIVE")
+
+	print("-- input devices: gamepad, touch, keyboard --")
+	_check(InputMap.has_action("pause"), "pause action is registered")
+	_check(InputMap.action_get_events("ui_accept").any(func(e): return e is InputEventJoypadButton), "gamepad A is bound to ui_accept")
+	_check(InputMap.action_get_events("move_left").any(func(e): return e is InputEventJoypadMotion), "left stick is bound to movement")
+	input_setup.set_mode("touch")
+	_check(touch_controls.visible, "touch controls show in touch mode")
+	_check(director._localize_prompt("Press Space to continue") == "Tap NEXT to continue", "prompts are reworded for touch")
+	_check(director.get_action_hint() == "NEXT", "action button says NEXT while dialogue waits")
+	input_setup.set_mode("gamepad")
+	_check(director._localize_prompt("Press E to collect") == "Press A to collect", "prompts are reworded for gamepad")
+	input_setup.set_mode("keyboard")
+	_check(not touch_controls.visible, "touch controls hide in keyboard mode")
+	_check(director._localize_prompt("Press Space to continue") == "Press Space to continue", "keyboard prompts are unchanged")
+
+	print("-- pause menu --")
+	game_menu.set_paused(true)
+	_check(paused, "pause action pauses the tree")
+	game_menu.set_paused(false)
+	_check(not paused, "resuming unpauses the tree")
 
 	print("-- meeting David cuts to close-up + points Wonder Light --")
 	# The characters finish turning before the dialogue camera cuts.
@@ -83,6 +107,10 @@ func _initialize() -> void:
 			director.Beat.RESOLUTION, director.Beat.REFLECT, director.Beat.VERSE_REWARD, director.Beat.DONE]:
 		director._enter_beat(b)
 	_check(director.beat == director.Beat.DONE, "beat machine reaches DONE cleanly")
+
+	print("-- end of chapter offers Play again --")
+	await create_timer(0.3).timeout
+	_check(game_menu._end_panel.visible, "end panel appears after the chapter finishes")
 
 	print("")
 	if _failures == 0:
