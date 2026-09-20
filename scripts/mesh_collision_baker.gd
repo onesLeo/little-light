@@ -27,7 +27,12 @@ func _bake(node: Node) -> void:
 			return
 
 	# Shape3D so trimesh (concave) or convex fallback both type-check.
-	var shape: Shape3D = mi.mesh.create_trimesh_shape()
+	# Bushes and cypress columns are many small spiky leaves: a trimesh would snag the walker, so use a solid hull.
+	var shape: Shape3D = null
+	if String(mi.name).begins_with("Shrub") or String(mi.name).begins_with("Cypress"):
+		shape = mi.mesh.create_convex_shape(true, true)
+	if shape == null:
+		shape = mi.mesh.create_trimesh_shape()
 	if shape == null:
 		shape = mi.mesh.create_convex_shape(true, true)
 	if shape == null:

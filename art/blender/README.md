@@ -72,7 +72,30 @@ The main scene loads **Walker v13, David v12, and items v7**. Use the separate D
 
 See `docs/little-light-art-tech-pipeline.md`.
 
-## Valley v6 (current)
+## Valley v7 (current)
+
+`scripts/polish_valley_v7.py` imports v6 and swaps only two builders, so
+terrain, river, trees and layout are unchanged:
+
+- **Bushes** (`Shrub_N`) are ~140 individual folded diamond leaves laid over a
+  dome like shingles (two green families, upper faces in two greens so the fold
+  reads as a midrib), instead of v6's squashed green sphere that read as a
+  green rock. Runtime colliders for `Shrub*` are a convex hull, see
+  `scripts/mesh_collision_baker.gd`.
+- **Trees**: olives (`Olive_N`) get a leaning trunk that forks into three limbs carrying clumps of narrow, silver-backed leaves; cypresses (`Cypress_N`) are a slim flame-shaped column of overlapping fronds down to the ground. `Cypress*` colliders are a convex hull like shrubs.
+- **Rocks** (`Rock_N`) keep v6's angular shape but use a baked stone texture
+  (granular lumps, flecks, hairline cracks) in four variants: grey, limestone,
+  slate and mossy grey with green patches. Per-face UV projection, linear
+  filtering.
+
+```bash
+blender --background --python art/blender/scripts/polish_valley_v7.py
+```
+
+Import the GLB with `gltf/embedded_image_handling=3` (as v6 does), otherwise
+Godot extracts every embedded texture into loose PNGs next to it.
+
+## Valley v6
 
 `scripts/polish_valley_v6.py` replaces the v3–v5 "dress a flat slab" approach.
 It builds the ground itself as a displaced heightfield — flat meadow for the

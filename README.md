@@ -37,7 +37,7 @@ Vertical slice: Wonder-Walker explores a Bethlehem valley diorama, finds three W
 | Scene role | Asset |
 |------------|-------|
 | Wonder-Walker | `assets/wonder_walker_v13.glb` |
-| Bethlehem valley | `assets/bethlehem_valley_v6.glb` |
+| Bethlehem valley | `assets/bethlehem_valley_v7.glb` |
 | David mentor | `assets/david_mentor_v12.glb` |
 | Wonder Items | `assets/wonder_items_v7.glb` |
 | Animated stream | `assets/bethlehem_stream_fish_alive_v7.glb` |
@@ -95,7 +95,9 @@ Valley + David meshes bake **trimesh StaticBody** colliders at runtime so the wa
 
 ## Valley v6 and historical outline fixes
 
-The scene still uses **valley v6**; character and prop versions are listed above. `bethlehem_valley_v6.glb` is sculpted terrain
+The scene now uses **valley v7**, which is v6 with new trees, bushes and rocks (leafy olives and cypress columns; leafy shrubs; stone-textured rocks in four
+variants, one mossy) — see `art/blender/scripts/polish_valley_v7.py`. Character and prop versions are listed above.
+`bethlehem_valley_v6.glb` is sculpted terrain
 (valley floor, walls, back ridge, a cliff shelf) with the river carved into it
 — an upper reach, a waterfall, a plunge pool and a lower reach — rather than
 props laid on a flat slab. The character/prop `_v6` files are the v4/v5 models
