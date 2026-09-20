@@ -1,4 +1,4 @@
-[gd_scene load_steps=34 format=3]
+[gd_scene load_steps=37 format=3]
 
 [ext_resource type="PackedScene" path="res://assets/wonder_walker_v13.glb" id="1_ww"]
 [ext_resource type="PackedScene" path="res://assets/bethlehem_valley_v7.glb" id="2_valley"]
@@ -23,6 +23,9 @@
 [ext_resource type="Script" path="res://scripts/stream_fish_swim.gd" id="20_fish"]
 [ext_resource type="Script" path="res://scripts/wonder_item_scatter.gd" id="21_scatter"]
 [ext_resource type="Script" path="res://scripts/wonder_item_hints.gd" id="22_hints"]
+[ext_resource type="Script" path="res://scripts/input_setup.gd" id="23_input"]
+[ext_resource type="Script" path="res://scripts/touch_controls.gd" id="24_touch"]
+[ext_resource type="Script" path="res://scripts/game_menu.gd" id="25_menu"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
 radius = 0.35
@@ -295,6 +298,15 @@ light_energy = 0.6
 omni_range = 2.5
 shadow_enabled = false
 
+[node name="InputSetup" type="Node" parent="."]
+script = ExtResource("23_input")
+
+[node name="TouchControls" type="CanvasLayer" parent="."]
+script = ExtResource("24_touch")
+
+[node name="GameMenu" type="CanvasLayer" parent="."]
+script = ExtResource("25_menu")
+
 [node name="UI" type="CanvasLayer" parent="."]
 
 [node name="Panel" type="PanelContainer" parent="UI"]
@@ -327,7 +339,7 @@ unique_name_in_owner = true
 focus_mode = 0
 mouse_filter = 2
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 22
 text = "..."
 autowrap_mode = 3
 
@@ -337,7 +349,7 @@ focus_mode = 0
 mouse_filter = 2
 layout_mode = 2
 theme_override_colors/font_color = Color(0.85, 0.75, 0.35, 1)
-theme_override_font_sizes/font_size = 15
+theme_override_font_sizes/font_size = 18
 text = ""
 horizontal_alignment = 1
 
@@ -346,10 +358,10 @@ unique_name_in_owner = true
 visible = false
 mouse_filter = 2
 anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.4
-anchor_right = 0.5
-anchor_bottom = 0.4
+anchor_left = 0.8
+anchor_top = 0.34
+anchor_right = 0.8
+anchor_bottom = 0.34
 offset_left = -60.0
 offset_top = -60.0
 offset_right = 60.0

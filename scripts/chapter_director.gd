@@ -33,6 +33,7 @@ enum Beat {
 
 signal explore_started
 signal wonder_item_collected(item_name: String)
+signal chapter_finished
 
 var beat: Beat = Beat.ARRIVE
 var wonder_items_found: int = 0
@@ -45,12 +46,16 @@ const ITEM_FLAVOR := {
 }
 
 var _advance_ready: bool = false
+var _prompt_raw: String = ""
 var _near_item: Area3D = null
 var _items_collected: Dictionary = {}
 
 func _ready() -> void:
 	dialogue_label.text = ""
-	prompt_label.text = ""
+	_set_prompt("")
+	var input_setup := get_node_or_null("../InputSetup")
+	if input_setup and input_setup.has_signal("device_changed"):
+		input_setup.device_changed.connect(_on_device_changed)
 	if steady_hands and steady_hands.has_signal("minigame_completed"):
 		steady_hands.minigame_completed.connect(_on_minigame_completed)
 	var items_root := get_node_or_null("../WonderItems")
@@ -149,7 +154,7 @@ func _enter_beat(next: Beat) -> void:
 			_cut_closeup(david_mentor)
 			_show(
 				"Wonder Light: \"Breathe with David...\"",
-				"Press Space once  (Steady Hands — always succeeds)"
+				"Press Space once"
 			)
 			_advance_ready = false
 			if steady_hands and steady_hands.has_method("start_minigame"):
@@ -170,7 +175,7 @@ func _enter_beat(next: Beat) -> void:
 			_cut_closeup(david_mentor)
 			_point_light(david_mentor)
 			_show(
-				"Wonder Light: \"David walked out to the valley. And when it was over, the whole camp was cheering his name.\"\n(The giant stays a distant silhouette on the far ridge — no fight is shown.)",
+				"Wonder Light: \"David walked out to the valley. And when it was over, the whole camp was cheering his name.\"",
 				"Press Space to continue"
 			)
 			_advance_ready = true
@@ -222,11 +227,12 @@ func _enter_beat(next: Beat) -> void:
 			_cut_tabletop()
 			_point_light(null)
 			_show(
-				"Chapter complete — courage over fear.\n(Wonder-Walker was a guest. David remains David.)",
-				"Thanks for playing this P0.2 slice"
+				"Chapter complete — courage over fear.",
+				"Well done, Wonder-Walker!"
 			)
 			_advance_ready = false
 			_play_finale()
+			chapter_finished.emit()
 
 func _on_advance() -> void:
 	match beat:
@@ -261,7 +267,7 @@ func _on_wonder_item_entered(body: Node3D, area: Area3D) -> void:
 		return
 	_near_item = area
 	if beat == Beat.EXPLORE:
-		prompt_label.text = "Press E to collect  (%d / %d)" % [wonder_items_found, WONDER_ITEMS_NEEDED]
+		_set_prompt("Press E to collect  (%d / %d)" % [wonder_items_found, WONDER_ITEMS_NEEDED])
 
 func _on_wonder_item_exited(body: Node3D, area: Area3D) -> void:
 	if body != player:
@@ -269,7 +275,7 @@ func _on_wonder_item_exited(body: Node3D, area: Area3D) -> void:
 	if _near_item == area:
 		_near_item = null
 	if beat == Beat.EXPLORE:
-		prompt_label.text = "Walk near an item and press E  (%d / %d)" % [wonder_items_found, WONDER_ITEMS_NEEDED]
+		_set_prompt("Walk near an item and press E  (%d / %d)" % [wonder_items_found, WONDER_ITEMS_NEEDED])
 
 func _try_collect_near_item() -> void:
 	if beat != Beat.EXPLORE:
@@ -284,7 +290,7 @@ func _try_collect_near_item() -> void:
 	if audio_director and audio_director.has_method("play_pickup"):
 		audio_director.play_pickup()
 	var flavor: String = ITEM_FLAVOR.get(_near_item.name, "A Wonder Item!")
-	dialogue_label.text = flavor
+	_say(flavor)
 	# Hide placeholder marker + matching mesh inside wonder_items.glb
 	var mesh := _near_item.get_node_or_null("Marker")
 	if mesh:
@@ -298,7 +304,7 @@ func _try_collect_near_item() -> void:
 		if outline:
 			outline.visible = false
 	_near_item = null
-	prompt_label.text = "Collected!  (%d / %d)" % [wonder_items_found, WONDER_ITEMS_NEEDED]
+	_set_prompt("Collected!  (%d / %d)" % [wonder_items_found, WONDER_ITEMS_NEEDED])
 	_celebrate_light()
 	if wonder_items_found >= WONDER_ITEMS_NEEDED:
 		# Brief pause then meet David.
@@ -306,10 +312,49 @@ func _try_collect_near_item() -> void:
 		_enter_beat(Beat.MEET_DAVID_A)
 
 func _show(dialogue: String, prompt: String) -> void:
-	dialogue_label.text = dialogue
+	_say(dialogue)
 	if camera_director and camera_director.has_method("is_orbiting") and camera_director.is_orbiting():
 		prompt += "   [A / D: look around]"
-	prompt_label.text = prompt
+	_set_prompt(prompt)
+
+## Shows a line of story text and reads it aloud (if the player has read-aloud on).
+func _say(text: String) -> void:
+	dialogue_label.text = text
+	if audio_director and audio_director.has_method("speak_dialogue"):
+		audio_director.speak_dialogue(text)
+
+## Prompts are authored with keyboard wording ("Press Space", "press E") and
+## rewritten for whichever device the player last used.
+func _set_prompt(raw: String) -> void:
+	_prompt_raw = raw
+	prompt_label.text = _localize_prompt(raw)
+
+func _on_device_changed(_mode: String) -> void:
+	prompt_label.text = _localize_prompt(_prompt_raw)
+
+func _localize_prompt(raw: String) -> String:
+	var input_setup := get_node_or_null("../InputSetup")
+	var mode: String = input_setup.mode if input_setup else "keyboard"
+	match mode:
+		"touch":
+			return raw.replace("Press Space once", "Tap BREATHE once") \
+				.replace("Press Space", "Tap NEXT").replace("Press E", "Tap GRAB") \
+				.replace("press E", "tap GRAB").replace("[A / D: look around]", "[stick: look around]")
+		"gamepad":
+			return raw.replace("Press Space once", "Press A once") \
+				.replace("Press Space", "Press A").replace("Press E", "Press A") \
+				.replace("press E", "press A").replace("[A / D: look around]", "[stick: look around]")
+	return raw
+
+## What the on-screen action button should say right now ("" = nothing to do).
+func get_action_hint() -> String:
+	if beat == Beat.EXPLORE:
+		return "GRAB" if _near_item != null else ""
+	if steady_hands and "active" in steady_hands and steady_hands.active:
+		return "BREATHE"
+	if _advance_ready:
+		return "NEXT"
+	return ""
 
 func _set_player_move(enabled: bool) -> void:
 	if player and "can_move" in player:
