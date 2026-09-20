@@ -9,6 +9,7 @@ extends CanvasLayer
 ## Built entirely in code so it needs no scene edits beyond adding this node.
 
 const GameSettings := preload("res://scripts/game_settings.gd")
+const SoundBus := preload("res://scripts/sound_bus.gd")
 
 const PAPER := Color(0.98, 0.94, 0.83)
 const INK := Color(0.35, 0.2, 0.08)
@@ -27,6 +28,9 @@ var _play_again_button: Button
 var _resume_button: Button
 var _read_check: CheckButton
 var _volume: HSlider
+var _music_slider: HSlider
+var _sounds_slider: HSlider
+var _voice_slider: HSlider
 
 
 class IconButton extends Control:
@@ -230,22 +234,33 @@ func _build_pause_panel() -> void:
 	_read_check.toggled.connect(_on_read_check_toggled)
 	vbox.add_child(_read_check)
 
-	var vol_row := HBoxContainer.new()
-	vol_row.add_theme_constant_override("separation", 14)
-	vol_row.add_child(_label("Volume", 24))
-	_volume = HSlider.new()
-	_volume.min_value = 0.0
-	_volume.max_value = 1.0
-	_volume.step = 0.05
-	_volume.custom_minimum_size = Vector2(220.0, 32.0)
-	_volume.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_volume.value_changed.connect(_on_volume_changed)
-	vol_row.add_child(_volume)
-	vbox.add_child(vol_row)
+	_volume = _add_slider_row(vbox, "Volume", _on_volume_changed)
+	_music_slider = _add_slider_row(vbox, "Music", _on_music_changed)
+	_sounds_slider = _add_slider_row(vbox, "Sounds", _on_sounds_changed)
+	_voice_slider = _add_slider_row(vbox, "Voices", _on_voice_changed)
 
 	var restart := _make_button("Play again from the start")
 	restart.pressed.connect(_restart)
 	vbox.add_child(restart)
+
+
+func _add_slider_row(parent: Control, text: String, on_change: Callable) -> HSlider:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 14)
+	var label := _label(text, 24)
+	label.custom_minimum_size.x = 110.0
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	row.add_child(label)
+	var slider := HSlider.new()
+	slider.min_value = 0.0
+	slider.max_value = 1.0
+	slider.step = 0.05
+	slider.custom_minimum_size = Vector2(220.0, 32.0)
+	slider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	slider.value_changed.connect(on_change)
+	row.add_child(slider)
+	parent.add_child(row)
+	return slider
 
 
 func _build_end_panel() -> void:
@@ -282,6 +297,9 @@ func _sync_pause_controls() -> void:
 	_read_check.visible = _audio != null and _audio.has_method("is_read_aloud_available") and _audio.is_read_aloud_available()
 	_read_check.set_pressed_no_signal(GameSettings.read_aloud)
 	_volume.set_value_no_signal(GameSettings.master_volume)
+	_music_slider.set_value_no_signal(GameSettings.music_volume)
+	_sounds_slider.set_value_no_signal(GameSettings.sounds_volume)
+	_voice_slider.set_value_no_signal(GameSettings.voice_volume)
 
 
 func _refresh_speaker() -> void:
@@ -305,5 +323,24 @@ func _on_read_check_toggled(pressed: bool) -> void:
 
 func _on_volume_changed(value: float) -> void:
 	GameSettings.master_volume = value
-	GameSettings.apply_volume()
+	_commit_mix()
+
+
+func _on_music_changed(value: float) -> void:
+	GameSettings.music_volume = value
+	_commit_mix()
+
+
+func _on_sounds_changed(value: float) -> void:
+	GameSettings.sounds_volume = value
+	_commit_mix()
+
+
+func _on_voice_changed(value: float) -> void:
+	GameSettings.voice_volume = value
+	_commit_mix()
+
+
+func _commit_mix() -> void:
+	SoundBus.apply_mix()
 	GameSettings.save_settings()

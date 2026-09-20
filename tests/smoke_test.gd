@@ -179,6 +179,120 @@ func _initialize() -> void:
 	_check(not vo_player.playing and not audio._speaking_clips, "a line with no clip falls back to system speech, not a wrong clip")
 	audio.stop_speech()
 
+	print("-- sound: files, buses and the soundscape --")
+	var sound_bus := load("res://scripts/sound_bus.gd")
+	var sound_lib := load("res://scripts/sound_library.gd")
+	var missing_sounds: Array = []
+	for path in sound_lib.all_paths():
+		if sound_lib.load_stream(path) == null:
+			missing_sounds.append(path)
+	_check(missing_sounds.is_empty(), "all %d sound files load %s" % [sound_lib.all_paths().size(), missing_sounds])
+	for bus_name in ["Music", "Ambience", "Effects", "Voice"]:
+		_check(AudioServer.get_bus_index(bus_name) != -1, "the %s bus exists" % bus_name)
+	_check(vo_player.bus == &"Voice" and audio.get_node("SfxA").bus == &"Effects", "voice and effects play on their own buses")
+	var soundscape: Node = main.get_node("Soundscape")
+	_check(soundscape._music.playing and soundscape._wind.playing and soundscape._stream.playing, "music, wind and stream are playing")
+	_check((soundscape._music.stream as AudioStreamWAV).loop_mode == AudioStreamWAV.LOOP_FORWARD, "the music loops")
+	soundscape._ambience_gain = 0.0
+	soundscape._process(0.0)
+	var silent_start: bool = soundscape._stream.volume_db < -60.0 and soundscape._wind.volume_db < -60.0
+	soundscape._process(soundscape.ambience_fade_in + 1.0)
+	_check(silent_start and absf(soundscape._stream.volume_db - soundscape.stream_db) < 0.5,
+			"the stream and wind ease in from silence to their set level")
+	var walker: CharacterBody3D = main.get_node("Player")
+	walker.global_position = Vector3(-6.0, 1.0, -2.6)
+	soundscape._move_stream()
+	var near_water: float = soundscape._stream.global_position.distance_to(walker.global_position)
+	walker.global_position = Vector3(5.0, 1.0, 5.0)
+	soundscape._move_stream()
+	var far_water: float = soundscape._stream.global_position.distance_to(walker.global_position)
+	_check(near_water < 2.5 and far_water > 8.0, "the stream sounds like it is at the water (%.1f m near, %.1f m far)" % [near_water, far_water])
+	soundscape._call_bird(0.0)
+	_check(soundscape._birds.any(func(b): return b.playing), "a bird calls")
+	for b in soundscape._birds:
+		b.stop()
+	audio.speak_dialogue("Wonder Light: \"Breathe with David...\"")
+	soundscape._call_bird(0.0)
+	_check(not soundscape._birds.any(func(b): return b.playing), "birds stay quiet while somebody is speaking")
+	audio.stop_speech()
+	var has_limiter := false
+	for i in AudioServer.get_bus_effect_count(0):
+		has_limiter = has_limiter or AudioServer.get_bus_effect(0, i) is AudioEffectLimiter
+	_check(has_limiter, "the master output has a limiter, so a loud moment cannot clip")
+	_check(sound_bus.BASE_DB["Voice"] > sound_bus.BASE_DB["Ambience"] + 8.0, "the voice is set well above the ambience")
+
+	print("-- sound: footsteps, lamb, butterflies --")
+	for p in audio._step_players:
+		p.stop()
+	walker._update_footsteps(true, 0.5)
+	_check(audio._step_players.any(func(p): return p.playing), "walking makes a footstep")
+	for p in audio._step_players:
+		p.stop()
+	walker._update_footsteps(false, 0.5)
+	walker._update_footsteps(true, 0.01)
+	_check(not audio._step_players.any(func(p): return p.playing), "standing still makes none, and the first step waits a moment")
+	var lamb_node: Node = main.get_node("WonderItems/LambLife")
+	_check(lamb_node._bleat != null, "the lamb has a voice")
+	lamb_node._excite = 0.0
+	lamb_node._bleat_wait = 0.0
+	lamb_node._update_bleat(0.1, 0.0)
+	_check(not lamb_node._bleat.playing, "a lamb that has not noticed anyone stays quiet")
+	lamb_node._excite = 1.0
+	lamb_node._update_bleat(0.1, 0.0)
+	_check(lamb_node._bleat.playing and lamb_node._bleat_wait > 5.0, "the lamb says baa when it notices the Wonder-Walker, then waits")
+	lamb_node._bleat.stop()
+	lamb_node._bleat_wait = 0.0
+	audio.speak_dialogue("Wonder Light: \"Breathe with David...\"")
+	lamb_node._update_bleat(0.1, 1.0)
+	_check(not lamb_node._bleat.playing, "the lamb does not bleat over a voice")
+	audio.stop_speech()
+	lamb_node._update_bleat(0.1, 1.0)
+	_check(lamb_node._bleat.playing, "and bleats as soon as the voice has finished")
+	var flies: Node = main.get_node("Butterflies")
+	flies._flutter_cool = 0.0
+	walker.global_position = (flies._flies[0]["root"] as Node3D).global_position
+	await process_frame
+	await process_frame
+	_check(flies._flutter_players.any(func(p): return p.playing), "butterflies rustle as they take off")
+	for p in flies._flutter_players:
+		p.stop()
+	flies._flutter_cool = 0.0
+	flies._flutter(Vector3.ZERO)
+	flies._flutter(Vector3.ZERO)
+	_check(flies._flutter_players.filter(func(p): return p.playing).size() == 1, "a group taking off in one moment makes one rustle, not a roar")
+
+	print("-- sound: the music ducks under speech and while paused --")
+	walker.global_position = Vector3(0.0, 1.0, 4.0)
+	settings.read_aloud = true
+	audio.speak_dialogue("Wonder Light: \"Being brave doesn't mean you're not scared. It means you go anyway.\"")
+	await create_timer(0.8).timeout
+	var music_idx := AudioServer.get_bus_index("Music")
+	_check(audio.is_speaking() and sound_bus.duck > 0.5, "the music ducks while somebody is speaking")
+	_check(AudioServer.get_bus_volume_db(music_idx) < sound_bus.BASE_DB["Music"] - 3.0, "the music bus is quieter while speaking")
+	audio.stop_speech()
+	await create_timer(1.6).timeout
+	_check(sound_bus.duck < 0.05, "the music comes back after the voice stops")
+	paused = true
+	await create_timer(0.6).timeout
+	_check(sound_bus.duck > 0.4 and soundscape._music.playing, "the music keeps playing, quieter, behind the pause menu")
+	paused = false
+	await create_timer(1.6).timeout
+	_check(sound_bus.duck < 0.05, "and returns when the game resumes")
+
+	print("-- sound: volume sliders --")
+	var full_db: float = sound_bus.bus_db("Music", 1.0)
+	var half_db: float = sound_bus.bus_db("Music", 0.5)
+	_check(absf((full_db - half_db) - 6.02) < 0.1, "half volume is 6 dB quieter")
+	settings.music_volume = 0.5
+	sound_bus.apply_mix()
+	_check(absf(AudioServer.get_bus_volume_db(music_idx) - half_db) < 0.1, "the music slider sets the Music bus")
+	settings.music_volume = 1.0
+	sound_bus.apply_mix()
+	game_menu._sync_pause_controls()
+	_check(is_equal_approx(game_menu._music_slider.value, 1.0) and game_menu._voice_slider.value_changed.is_connected(game_menu._on_voice_changed),
+			"the pause menu has music, sounds and voice sliders")
+	walker.global_position = Vector3(0.0, 1.0, 4.0)
+
 	print("-- full beat traversal reaches DONE without throwing --")
 	for b in [director.Beat.MEET_DAVID_B, director.Beat.STEADY_INTRO, director.Beat.STEADY_DONE,
 			director.Beat.RESOLUTION, director.Beat.REFLECT, director.Beat.VERSE_REWARD, director.Beat.DONE]:
@@ -189,6 +303,8 @@ func _initialize() -> void:
 	await create_timer(0.3).timeout
 	_check(game_menu._end_panel.visible, "end panel appears after the chapter finishes")
 
+	sound_lib._cache.clear()  # the shared streams would otherwise be reported as leaked at exit
+	vo_lib._cache.clear()
 	print("")
 	if _failures == 0:
 		print("SMOKE TEST PASSED")
