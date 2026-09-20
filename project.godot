@@ -21,6 +21,7 @@ config/icon="res://icon.svg"
 window/size/viewport_width=1280
 window/size/viewport_height=720
 window/stretch/mode="canvas_items"
+window/handheld/orientation=4
 
 [input]
 
@@ -65,3 +66,7 @@ interact={
 3d_physics/layer_1="world"
 3d_physics/layer_2="player"
 3d_physics/layer_3="interact"
+
+[rendering]
+
+textures/vram_compression/import_etc2_astc=true

@@ -39,6 +39,27 @@ A few things learned the hard way when writing tests:
   before checking `Input.is_action_pressed`.
 - Use explicit types in test scripts (`var x: bool = ...`); `:=` fails on values Godot cannot infer.
 
+## Running on an Android tablet
+
+The project is set up for it: landscape orientation, ETC2/ASTC texture compression on, and the Mobile
+renderer (Godot's default on Android). The export preset (`export_presets.cfg`) is not committed, because
+Godot's `.gitignore` template excludes it; recreate it in *Project > Export > Add > Android* (arm64 only,
+Gradle build off, package `com.oneleo.littlelight`) or copy it from a colleague.
+
+1. **Once per computer:** *Editor > Manage Export Templates > Download and Install* (about 1 GB), and check that
+   *Editor Settings > Export > Android* has the Android SDK, the JDK (17) and a debug keystore.
+2. **On the tablet:** Settings > About > tap *Build number* 7 times, then turn on *USB debugging* in Developer
+   options. Connect by USB and accept the prompt. `adb devices` should list it.
+3. **Run it:** click the Android icon at the top right of the Godot editor, or from a terminal:
+
+```bash
+godot --headless --path . --export-debug "Android tablet (debug)" build/little-light-debug.apk
+adb install -r build/little-light-debug.apk
+```
+
+Godot's *Debugger > Monitors* shows FPS and draw calls while it runs. For the same table as on a computer,
+see `tools/profile_frame.gd` and `docs/performance.md`. `build/` is ignored by git.
+
 ## Files Godot generates
 
 - **`.import` and `.uid` files are committed, exactly as Godot writes them.** A clean checkout should
