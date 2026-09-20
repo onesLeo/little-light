@@ -1,0 +1,69 @@
+name: Smoke test
+
+# Runs the headless smoke test (tests/smoke_test.gd) on every pull request and on
+# every push to main, so a change that breaks the game is caught before it is merged.
+# The test starts the real main scene without a window and checks the story, input
+# devices, the play area, the living world, the voice-over, the soundscape and
+# Steady Hands. It takes about a minute.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  GODOT_VERSION: "4.7.2"
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GODOT_BIN: ${{ github.workspace }}/godot/Godot_v4.7.2-stable_linux.x86_64
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Godot
+        id: cache-godot
+        uses: actions/cache@v4
+        with:
+          path: godot
+          key: godot-${{ env.GODOT_VERSION }}-linux-x86_64
+
+      - name: Download Godot
+        if: steps.cache-godot.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p godot
+          curl -fsSL -o godot.zip "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip -d godot
+          rm godot.zip
+          chmod +x "$GODOT_BIN"
+
+      - name: Import assets
+        # Godot occasionally crashes when it exits after an import, so run it twice; the
+        # smoke test below is what decides whether the project works.
+        run: |
+          "$GODOT_BIN" --headless --path . --import || true
+          "$GODOT_BIN" --headless --path . --import || true
+
+      - name: Run the smoke test
+        run: |
+          set -o pipefail
+          "$GODOT_BIN" --headless --path . --script tests/smoke_test.gd 2>&1 | tee smoke.log
+          grep -q "SMOKE TEST PASSED" smoke.log
+
+      - name: Show the failed checks
+        if: failure()
+        run: grep -E "FAIL|SCRIPT ERROR|ERROR" smoke.log || true
+
+      - name: Keep the log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-log
+          path: smoke.log
+          if-no-files-found: ignore
