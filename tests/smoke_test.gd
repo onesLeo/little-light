@@ -35,6 +35,19 @@ func _terrain_hit(space: PhysicsDirectSpaceState3D, x: float, z: float) -> Dicti
 		skip.append(hit["rid"])
 	return {}
 
+## Triangles in every mesh under a node (one copy of each; shadows and outlines are not counted twice).
+func _triangles_under(node: Node) -> int:
+	var total: int = 0
+	for found in node.find_children("*", "MeshInstance3D", true, false):
+		var mesh: Mesh = (found as MeshInstance3D).mesh
+		if mesh == null:
+			continue
+		for surface in mesh.get_surface_count():
+			var arrays: Array = mesh.surface_get_arrays(surface)
+			var indices = arrays[Mesh.ARRAY_INDEX]
+			total += (indices.size() if indices != null else (arrays[Mesh.ARRAY_VERTEX] as PackedVector3Array).size()) / 3
+	return total
+
 func _initialize() -> void:
 	var main: Node = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
@@ -142,6 +155,31 @@ func _initialize() -> void:
 			no_outline.append(rock_name)
 	_check(brook_rocks == 11 and not_stone.is_empty(), "all %d brook rocks have the valley's stone, not the tan pack material %s" % [brook_rocks, not_stone])
 	_check(no_outline.is_empty(), "and they keep an outline like every other stone %s" % [no_outline])
+
+	print("-- performance: light enough for a tablet --")
+	var outline_count: int = 0
+	var casting: Array = []
+	for hull in main.find_children("*_Outline", "MeshInstance3D", true, false):
+		outline_count += 1
+		if (hull as MeshInstance3D).cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF:
+			casting.append(String(hull.name))
+	_check(outline_count > 60 and casting.is_empty(), "none of the %d outline hulls casts a shadow %s" % [outline_count, casting])
+	var perf: Node = main.get_node("PerformanceTuning")
+	_check(perf.render_scale_for(1280.0, 1600.0) == 1.0 and perf.render_scale_for(1600.0, 1600.0) == 1.0, "a window no wider than the cap is drawn at full size")
+	_check(is_equal_approx(perf.render_scale_for(2400.0, 1600.0), 2.0 / 3.0), "a 2400 px wide tablet draws the 3D picture at 1600 px")
+	_check(perf.render_scale_for(9000.0, 1600.0) == 0.5, "a huge screen never drops below half size")
+	_check(main.get_viewport().scaling_3d_scale == 1.0, "on a computer the picture is still drawn at full size")
+	perf.cap_on_computers = true
+	perf.max_render_width = 40   # a headless window is only 100 px wide
+	perf._update_render_scale()
+	var capped: float = main.get_viewport().scaling_3d_scale
+	_check(capped < 1.0 and is_equal_approx(capped, perf.render_scale_for(float(main.get_window().size.x), 40.0)), "the cap shrinks the 3D picture when it is on (%.2f)" % capped)
+	perf.cap_on_computers = false
+	main.get_viewport().scaling_3d_scale = 1.0
+	var character_triangles: int = _triangles_under(david) + _triangles_under(main.get_node("Player"))
+	var scene_triangles: int = _triangles_under(main)
+	_check(character_triangles <= 120000, "the two characters and their outlines stay light (%d triangles, budget 120000)" % character_triangles)
+	_check(scene_triangles <= 290000, "and so does the whole scene (%d triangles, budget 290000)" % scene_triangles)
 
 	print("-- meeting David cuts to close-up + points Wonder Light --")
 	# The characters finish turning before the dialogue camera cuts.
