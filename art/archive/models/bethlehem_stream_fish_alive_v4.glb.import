@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://dso8h5wdtpwxg"
-path="res://.godot/imported/bethlehem_stream_fish_alive_v7.glb-44ae1fdf4a380b8f2493d97b970e39f8.scn"
+uid="uid://dso8h5wdtptxg"
+path="res://.godot/imported/bethlehem_stream_fish_alive_v4.glb-51d57631dc96f2a8e52e3a813619e268.scn"
 
 [deps]
 
-source_file="res://assets/bethlehem_stream_fish_alive_v7.glb"
-dest_files=["res://.godot/imported/bethlehem_stream_fish_alive_v7.glb-44ae1fdf4a380b8f2493d97b970e39f8.scn"]
+source_file="res://assets/bethlehem_stream_fish_alive_v4.glb"
+dest_files=["res://.godot/imported/bethlehem_stream_fish_alive_v4.glb-51d57631dc96f2a8e52e3a813619e268.scn"]
 
 [params]
 

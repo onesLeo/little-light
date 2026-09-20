@@ -1,5 +1,9 @@
 # Little Light — David & Goliath P0.2 (Godot slice)
 
+[![Smoke test](https://github.com/onesLeo/little-light/actions/workflows/smoke-test.yml/badge.svg)](https://github.com/onesLeo/little-light/actions/workflows/smoke-test.yml)
+
+Working on the game? See the [development guide](docs/development.md): setup, tests, CI, and what is committed.
+
 Vertical slice: Wonder-Walker explores a Bethlehem valley diorama, finds three Wonder Items, meets David (Band A), plays **Steady Hands**, then reflects with Joshua 1:9 (WEB). No violence is shown. Wonder-Walker is a **guest**, not David.
 
 **Engine:** project configuration declares Godot **4.7** (Forward+). Compatibility with older 4.x versions has not been verified.
@@ -37,7 +41,7 @@ The speaker button (top right) turns **read-aloud** on or off; settings are save
 
 ## Current scene assets
 
-`scenes/main.tscn` loads these assets; older versions remain in `assets/` for reference.
+`scenes/main.tscn` loads these assets; older versions were moved to `art/archive/models/` (see its README).
 
 | Scene role | Asset |
 |------------|-------|
@@ -80,6 +84,7 @@ little-light-godot/
   assets/                # GLB models, textures, and shaders
   art/blender/           # Asset generators and pipeline documentation
   art/previews/          # Saved valley renders
+  art/archive/models/    # earlier model versions, ignored by Godot
   tests/                 # Headless smoke test and screenshot helper
   docs/                  # Improvement backlog (what to work on next)
 ```
@@ -124,7 +129,7 @@ Valley + David meshes bake **trimesh StaticBody** colliders at runtime so the wa
 
 The scene now uses **valley v7**, which is v6 with new trees, bushes and rocks (leafy olives and cypress columns; leafy shrubs; stone-textured rocks in four
 variants, one mossy) — see `art/blender/scripts/polish_valley_v7.py`. Character and prop versions are listed above.
-`bethlehem_valley_v6.glb` is sculpted terrain
+`bethlehem_valley_v6.glb` (now in `art/archive/models/`) is sculpted terrain
 (valley floor, walls, back ridge, a cliff shelf) with the river carved into it
 — an upper reach, a waterfall, a plunge pool and a lower reach — rather than
 props laid on a flat slab. The character/prop `_v6` files are the v4/v5 models
@@ -167,7 +172,7 @@ pixel. Remove the autoload again before committing.
 
 `assets/bethlehem_stream_fish_alive_v7.glb` is instanced as `StreamFishAlive/Art` on the west stream bank. The `StreamFishAlive` parent is positioned at `(-6.2, 0.28, -3.8)` with uniform scale `1.1`. Runtime scripts fit the waterfall, hide static valley water/fish meshes, and animate procedural fish along the stream. Water meshes skip collision via `mesh_collision_baker.gd`.
 
-**Import gotcha (fixed):** `bethlehem_stream_fish_alive_v6.glb.import` and
+**Import gotcha (fixed):** `bethlehem_stream_fish_alive_v6.glb.import` (archived) and
 `_v7.glb.import` were missing the closing quote on their `uid=` line. A
 malformed `.import` file like this sends Godot's editor filesystem scan
 into a reimport-retry loop that never finishes on project open — it looks
@@ -177,7 +182,7 @@ this is the first thing to check.
 
 ## Historical art notes: Wonder-Walker v8
 
-The v8 iteration used `assets/wonder_walker_v8.glb` (solid hair crown for top-down read), with `WW_Walk` at 12fps STEP and `remove_immutable_tracks=false`. It has since been superseded by v13 in the main scene.
+The v8 iteration used `art/archive/models/wonder_walker_v8.glb` (solid hair crown for top-down read), with `WW_Walk` at 12fps STEP and `remove_immutable_tracks=false`. It has since been superseded by v13 in the main scene.
 
 ## Wonder-Walker v13: connected body and natural proportions
 
@@ -200,7 +205,7 @@ for regeneration and review commands.
 ## Historical character generation: Wonder-Walker v12 + David mentor v9
 
 The earlier v4 Walker and v3 props generators output `wonder_walker_v12.glb`,
-`david_mentor_v9.glb`, and `wonder_items_v7.glb`. The main scene now uses Walker v13, David v12, and items v7. Use the newer character generators for the active Walker and David assets. These earlier generated versions replaced `wonder_walker_v10/v11.glb`
+`david_mentor_v9.glb`, and `wonder_items_v7.glb`. The main scene now uses Walker v13, David v12, and items v7 (`wonder_walker_v12.glb` and `david_mentor_v9.glb` are archived in `art/archive/models/`). Use the newer character generators for the active Walker and David assets. These earlier generated versions replaced `wonder_walker_v10/v11.glb`
 and `david_mentor_v7/v8.glb` (PR #23's original bot-generated swap, which
 had no committed generator script and regressed badly — see below).
 
@@ -270,9 +275,10 @@ workaround is unnecessary. Thin, single-sided outline hulls are included in
 the new GLB, with no mouth-interior, teeth, or tongue surfaces. The close-up
 camera has slightly more headroom for the taller model.
 
-Run `godot --headless --path . --script tests/david_visual_review.gd` to check
-materials, active asset, collisions, turning and dialogue camera transitions.
-Omit `--headless` for before/after renders and actual dialogue screenshots.
+The smoke test (`tests/smoke_test.gd`) checks that meeting David cuts to his close-up camera. How David
+looks is not tested automatically: use the screenshot helper (`tests/screenshot_autoload.gd`, described
+under **Verification helpers**) for renders. (Earlier notes mentioned a `tests/david_visual_review.gd`;
+it was never committed.)
 
 ![David v11 and v12 compared in Godot Forward+](art/previews/david_mentor_v12_comparison.png)
 
@@ -282,4 +288,4 @@ After Joshua 1:9 / "Don't. Be. Afraid.", beat `CHARM_AWARD` plays a placeholder 
 
 ## Historical art notes: stream fish alive v2
 
-The v2 iteration used `assets/bethlehem_stream_fish_alive_v2.glb` with a taller cascade and stronger hop/splash/fish wiggle at 12fps STEP. Its parent transform was `(-6.5, 0.05, -4.0)` with scale `1.15`. The current v7 asset and placement are documented under **Alive stream pack** above.
+The v2 iteration used `art/archive/models/bethlehem_stream_fish_alive_v2.glb` with a taller cascade and stronger hop/splash/fish wiggle at 12fps STEP. Its parent transform was `(-6.5, 0.05, -4.0)` with scale `1.15`. The current v7 asset and placement are documented under **Alive stream pack** above.

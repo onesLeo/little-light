@@ -61,6 +61,9 @@ Run the examples from the repository root. The current character/props generator
 | `scripts/characters/generate_david_mentor_v4.py` | `david_mentor_v12.glb` |
 | `scripts/props/generate_david_and_items_v3.py` | `david_mentor_v9.glb`, `wonder_items_v7.glb` |
 
+`wonder_walker_v12.glb` and `david_mentor_v9.glb` are no longer in `assets/`: they were moved to
+`art/archive/models/` (see its README). Running those generators writes them into `assets/` again.
+
 The main scene loads **Walker v13, David v12, and items v7**. Use the separate David character generator for the current mentor; the older props generator still outputs David v9. Outputs stay in the output directory until explicitly copied into the project's `assets/` folder; generating a GLB does not change `scenes/main.tscn`. See the [project README](../../README.md#current-scene-assets) for all active scene assets. The technical notes below include earlier iterations as development history.
 
 ## Art constraints (locked for Little Light)

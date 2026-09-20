@@ -46,20 +46,20 @@ Screenshots and measurements were taken at 1152x648 / 1280x720 on Windows with G
 | 4.7 | Dialogue box | **Done** | Paper-style panel (cream, ink border, rounded) with dark text, matching the pause menu. |
 | 4.8 | Stone by the stream | Open | The flat tan rocks by the water come from the separate stream pack and were not retextured with the v7 stone. |
 
-## 5. Technical and repository health (open)
+## 5. Technical and repository health
 
 | # | Item | Details |
 |---|------|---------|
 | 5.1 | Performance | About **375k triangles and 254 draw calls per frame** in the game view on the v7 valley. The v6 valley measured 316k / 172, so the leafy trees, bushes and rocks added roughly 60k triangles (+19%). The visual-polish pass (sky, water, meadow) added about 10k triangles and 5 draw calls on top (386k / 259). The baseline was already heavy for tablets: profile what dominates (terrain, shadows, stream pack, characters) and add LODs / fewer leaves before a mobile release. |
-| 5.2 | `.import` churn | Godot keeps rewriting every tracked `.import` file, so the working tree is always dirty. The committed files use placeholder cache hashes that differ from what the editor generates. Regenerate and commit them once, or stop tracking them. |
-| 5.3 | Line endings | No `.gitattributes`, so every edit produces CRLF/LF warnings. Add one (`* text=auto eol=lf`, keeping binaries as binary). |
-| 5.4 | Repository size | `assets/` is about 73 MB, mostly old model versions (Wonder-Walker v2-v13, valley v2-v7, David v2-v12, items v2-v7). Keep the current ones, archive the rest. The v7 valley alone is about 11.7 MB because leaves are real geometry. |
-| 5.5 | Stale docs | Keep the README asset table in step with `main.tscn` (it listed valley v6 after v7 landed). |
-| 5.6 | Tests | One headless smoke test (now also covering input devices, touch controls, pause, the end panel, the play-area boundary, the lamb, fish, butterflies, the invisible-wall fix, voice-over and the soundscape) and no CI. Run it on every pull request. Nothing verifies appearance, so keep the screenshot helper in mind for visual checks. |
+| 5.2 | `.import` churn | **Done** | Cause found: 18 `.import` files had hand-typed identifiers (for example `uid://bq8streamfishalive01`, too long to be a valid Godot UID) and made-up cache hashes, so Godot replaced them on every import. They are now the files Godot generates; nothing referred to the old identifiers. After an import and a full test run, `git status` stays clean. Four missing `.gd.uid` files were committed too. |
+| 5.3 | Line endings | **Done** | The repository already stored LF; the CRLF was only in Windows working trees (`core.autocrlf=true`). `.gitattributes` (`* text=auto eol=lf`, binaries marked) makes every checkout LF, so the warnings are gone. Renormalizing changed no file. |
+| 5.4 | Repository size | **Done, with a limit** | `assets/` held 39 models but the game loads five. The other 34 versions (246 files with their `.import` / `.uid` files and textures, 49 MB) moved to `art/archive/models` with a `.gdignore`, so `assets/` is 33 MB (was 82 MB) and Godot no longer scans or imports them. Checked first: none is referenced, and the generators of the current models read no old model. **Note:** the files are still in the repository and its history, so a clone is not smaller; deleting them would not shrink history either without rewriting it. |
+| 5.5 | Stale docs | **Done, by hand** | The README asset table was checked against `main.tscn` (five models, all current) and the docs that named moved files now point at the archive. Nothing checks the docs automatically. |
+| 5.6 | Tests | **Partly done** | One headless smoke test (99 checks: story, input devices, touch, pause, the play area, the lamb, fish, butterflies, voice-over, the soundscape and Steady Hands) now runs on every pull request and push to `main` through GitHub Actions (`.github/workflows/smoke-test.yml`, Godot 4.7.2 on Linux). **The workflow has not run on GitHub yet**, so its first run may need a fix. Still open: nothing verifies how the game looks, so keep the screenshot helper in mind for visual checks. |
 
 ## Suggested order
 
 1. Try touch and gamepad on real hardware, and listen through the recorded voiceover in the running game (2.1, 2.2).
 2. Move the trees off the cliff wall and retexture the stream-pack rocks (4.3, 4.8); add cliff ledges (4.4).
 3. Try Steady Hands and the soundscape with a child, on a real tablet, and tune them (3.1, 3.2).
-4. Performance profile before any tablet build (5.1), and the repo housekeeping in 5.2 to 5.4.
+4. Performance profile before any tablet build (5.1). The repo housekeeping (5.2 to 5.6) is done.
