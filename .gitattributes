@@ -1,0 +1,20 @@
+# Text is stored with LF and checked out with LF on every platform. Without this,
+# a Windows checkout (core.autocrlf=true) rewrites files to CRLF and Git warns
+# "LF will be replaced by CRLF" on almost every edit.
+* text=auto eol=lf
+
+# Binary files: never convert or diff as text.
+*.glb binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.wav binary
+*.ogg binary
+*.mp3 binary
+*.blend binary
+*.ttf binary
+*.otf binary
+*.ico binary
+*.pdf binary
+*.zip binary

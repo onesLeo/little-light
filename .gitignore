@@ -6,3 +6,7 @@ export_presets.cfg
 *.translation
 .mono/
 data_*/
+
+# Python
+__pycache__/
+*.pyc
