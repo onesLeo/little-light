@@ -22,6 +22,8 @@ var _model: Node3D
 var _camera: Camera3D
 var _skeleton: Skeleton3D
 var _was_walking: bool = false
+var _audio: Node
+var _step_timer: float = 0.0
 
 
 func _ready() -> void:
@@ -31,6 +33,7 @@ func _ready() -> void:
 		# Fall back to whatever's active, in case the path doesn't resolve.
 		_camera = get_viewport().get_camera_3d()
 	add_to_group("player")
+	_audio = get_node_or_null("../AudioDirector")
 	if _model:
 		_anim = _model.find_child("AnimationPlayer", true, false) as AnimationPlayer
 		_skeleton = _model.find_child("Skeleton3D", true, false) as Skeleton3D
@@ -99,6 +102,23 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 	_set_walking(walking)
+	_update_footsteps(walking and is_on_floor(), delta)
+
+
+## One soft step per foot, timed to the walk animation (two steps per cycle).
+func _update_footsteps(walking: bool, delta: float) -> void:
+	if not walking:
+		_step_timer = 0.12  # the first step lands just after setting off
+		return
+	_step_timer -= delta
+	if _step_timer > 0.0:
+		return
+	var period := 0.32
+	if _anim and _anim.has_animation(walk_anim):
+		period = clampf(_anim.get_animation(walk_anim).length / 2.0, 0.2, 0.6)
+	_step_timer = period
+	if _audio and _audio.has_method("play_step"):
+		_audio.play_step()
 
 
 func _set_walking(walking: bool) -> void:

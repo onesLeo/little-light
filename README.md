@@ -19,7 +19,7 @@ Vertical slice: Wonder-Walker explores a Bethlehem valley diorama, finds three W
 | Continue | Space / Enter | A               | Big gold button (says **NEXT**) | Advance dialogue |
 | Breathe  | Space / Enter | A               | Big gold button (says **BREATHE**) | Complete Steady Hands with one tap |
 | Interact | E             | A or X          | Big gold button (says **GRAB**) | Collect a Wonder Item when near it |
-| Pause    | Esc / P       | Start           | Round pause button, top right  | Resume, read-aloud, volume, play again |
+| Pause    | Esc / P       | Start           | Round pause button, top right  | Resume, read-aloud, volume, music / sounds / voices, play again |
 
 On-screen prompts reword themselves for whichever device you used last ("Press Space" / "Press A" / "Tap NEXT").
 The big touch button is only shown while touch is in use, and it sends both "continue" and "interact", so a child never has to choose.
@@ -60,12 +60,15 @@ little-light-godot/
     camera_director.gd
     tabletop_camera.gd
     charm_award.gd
-    audio_director.gd       # procedural SFX + read-aloud (recorded clips, system speech as fallback)
+    audio_director.gd       # chimes, footsteps + read-aloud (recorded clips, system speech as fallback)
+    soundscape.gd           # music, wind, stream, birds; ducks under the voice
+    sound_bus.gd            # Music / Ambience / Effects / Voice buses and the volume mix
+    sound_library.gd        # where the synthesized sound files live
     vo_library.gd           # spoken line -> recorded voice clip (assets/audio/vo)
     input_setup.gd          # gamepad bindings, pause action, last-used-device tracking
     touch_controls.gd       # floating thumb stick + big NEXT/GRAB/BREATHE button
     game_menu.gd            # pause menu, speaker button, Play again panel
-    game_settings.gd        # read-aloud + volume, saved to user://settings.cfg
+    game_settings.gd        # read-aloud + volume mix, saved to user://settings.cfg
     wonder_item_scatter.gd  # random item placement
     wonder_item_hints.gd    # idle hint arrows
     horizon_backdrop.gd     # layered hills and drifting clouds beyond the valley
@@ -87,7 +90,7 @@ little-light-godot/
 - Safety floor under the diorama so the player cannot fall forever.
 - Tabletop camera is a `Camera3D` sibling of the player under `Main`. It follows from above/behind without inheriting the player's rotation; `CameraDirector` switches to a separate close-up camera for dialogue and the charm ceremony.
 - Courage charm uses procedural placeholder 3D meshes with a float/snap animation. A persistent Faith Journal is not implemented.
-- Dialogue and narration are displayed as text **and read aloud** with recorded voice clips: Wonder Light is Juno, David is Bram (`assets/audio/vo`, see [docs/voice-over.md](docs/voice-over.md)). A line with no clip falls back to the operating system's text-to-speech voice, so its availability depends on the OS; with neither, the speaker button is hidden. `AudioDirector` also generates procedural sound effects.
+- Dialogue and narration are displayed as text **and read aloud** with recorded voice clips: Wonder Light is Juno, David is Bram (`assets/audio/vo`, see [docs/voice-over.md](docs/voice-over.md)). A line with no clip falls back to the operating system's text-to-speech voice, so its availability depends on the OS; with neither, the speaker button is hidden. The valley also has music, wind, a stream, birds, footsteps, a bleating lamb and fluttering butterflies, all synthesized by `tools/make_sounds.py` (see [docs/sound-design.md](docs/sound-design.md)).
 - Touch controls and gamepad bindings are verified with injected input events and the headless smoke test, not yet on a real tablet or controller.
 
 ## What to improve next

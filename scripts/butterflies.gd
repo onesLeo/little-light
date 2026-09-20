@@ -9,6 +9,9 @@ extends Node3D
 @export var min_height: float = 0.5
 @export var max_height: float = 1.5
 
+const SoundBus := preload("res://scripts/sound_bus.gd")
+const SoundLibrary := preload("res://scripts/sound_library.gd")
+
 const COLORS := [Color(1.0, 0.86, 0.3), Color(1.0, 1.0, 0.95), Color(1.0, 0.6, 0.72),
 		Color(0.6, 0.78, 1.0), Color(1.0, 0.66, 0.3)]
 
@@ -17,12 +20,15 @@ var _rng := RandomNumberGenerator.new()
 var _player: Node3D
 var _time: float = 0.0
 var _wing_tex: ImageTexture
+var _flutter_players: Array[AudioStreamPlayer3D] = []
+var _flutter_cool: float = 0.0
 
 
 func _ready() -> void:
 	_rng.randomize()
 	_player = get_parent().get_node_or_null("Player") as Node3D
 	_wing_tex = _make_wing_texture()
+	_make_flutter_players()
 	for i in count:
 		_flies.append(_make_fly(i))
 
@@ -85,6 +91,7 @@ func _make_fly(i: int) -> Dictionary:
 
 func _process(delta: float) -> void:
 	_time += delta
+	_flutter_cool = maxf(_flutter_cool - delta, 0.0)
 	for f in _flies:
 		var root: Node3D = f["root"]
 		var pos := root.position
@@ -99,6 +106,7 @@ func _process(delta: float) -> void:
 		if scared and float(f["cool"]) <= 0.0:
 			var dir := away.normalized() if away.length() > 0.01 else Vector3.RIGHT
 			f["target"] = _clamp_spot(pos + dir * 3.5 + Vector3(0.0, _rng.randf_range(0.2, 0.6), 0.0))
+			_flutter(pos)
 			f["speed"] = 2.4
 			f["cool"] = 1.0
 			f["retarget"] = 2.0
@@ -146,3 +154,31 @@ func _make_wing_texture() -> ImageTexture:
 				continue
 			img.set_pixel(x, y, Color(shade, shade, shade, 1.0))
 	return ImageTexture.create_from_image(img)
+
+
+## A soft rustle of wings when a butterfly takes off. A few players are shared,
+## and only one rustle can start every 0.4 s, so a whole group flying up is not loud.
+func _make_flutter_players() -> void:
+	var stream := SoundLibrary.load_stream(SoundLibrary.FLUTTER)
+	for i in 3:
+		var p := AudioStreamPlayer3D.new()
+		p.stream = stream
+		p.top_level = true
+		p.bus = SoundBus.EFFECTS
+		p.volume_db = -10.0
+		p.unit_size = 2.0
+		p.max_distance = 15.0
+		add_child(p)
+		_flutter_players.append(p)
+
+
+func _flutter(at: Vector3) -> void:
+	if _flutter_cool > 0.0:
+		return
+	for p in _flutter_players:
+		if not p.playing:
+			p.global_position = at
+			p.pitch_scale = _rng.randf_range(0.9, 1.2)
+			p.play()
+			_flutter_cool = 0.4
+			return

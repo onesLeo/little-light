@@ -1,20 +1,22 @@
 extends Node
-## Central SFX + VO hookup point for the P0.2 slice.
+## Central SFX + voice hookup point.
 ##
-## SFX are tiny procedural chimes (see chime_synth.gd) so pickup / Steady
-## Hands feedback is audible right now with zero external audio files.
-## Swap _stream_* below for imported .wav/.ogg resources whenever real SFX
-## are ready — callers (play_pickup/play_tap/play_success) don't change.
+## SFX are tiny procedural chimes (see chime_synth.gd) plus soft footsteps
+## (sound files rendered by tools/make_sounds.py). Callers (play_pickup,
+## play_tap, play_success, play_step) don't care where the sound comes from.
 ##
-## VO is an intentional stub, matching this slice's existing "narration as
-## text, not audio" placeholder pattern (see Courage charm / Faith Journal
-## in chapter_director.gd): assign real clips into vo_clips keyed by
-## ChapterDirector.Beat name (e.g. "ARRIVE") and they'll play automatically;
-## beats with no clip stay silent.
+## Voice: every dialogue line is read aloud, with recorded clips (vo_library.gd)
+## or, for a line without one, the system voice. A clip in vo_clips keyed by
+## ChapterDirector.Beat name (e.g. "ARRIVE") plays automatically for that beat.
+##
+## Sounds go to the Effects bus and the voice to the Voice bus (sound_bus.gd),
+## so the pause menu can balance them and Soundscape can duck the music.
 
 const ChimeSynth := preload("res://scripts/chime_synth.gd")
 const GameSettings := preload("res://scripts/game_settings.gd")
 const VoLibrary := preload("res://scripts/vo_library.gd")
+const SoundBus := preload("res://scripts/sound_bus.gd")
+const SoundLibrary := preload("res://scripts/sound_library.gd")
 
 ## Silence between two recorded lines of one dialogue block, in seconds.
 const CLIP_GAP := 0.3
@@ -40,6 +42,9 @@ var _speaking_clips: bool = false
 var _clip_queue: Array[AudioStream] = []
 ## Bumped whenever speech is cut off, so a queued clip knows it is stale.
 var _clip_run: int = 0
+var _step_players: Array[AudioStreamPlayer] = []
+var _next_step: int = 0
+var _rng := RandomNumberGenerator.new()
 
 func _ready() -> void:
 	_stream_pickup = ChimeSynth.build_chime([880.0, 1318.5], 0.16)
@@ -47,7 +52,19 @@ func _ready() -> void:
 	_stream_success = ChimeSynth.build_chime([523.25, 659.25, 783.99], 0.4)
 	_stream_fanfare = ChimeSynth.build_fanfare()
 	_stream_cheer = ChimeSynth.build_cheer()
+	_rng.randomize()
+	SoundBus.ensure_buses()
+	for player in _sfx_players:
+		player.bus = SoundBus.EFFECTS
+	_vo_player.bus = SoundBus.VOICE
+	# Two players so quick steps overlap instead of cutting each other off.
+	for i in 2:
+		var step := AudioStreamPlayer.new()
+		step.bus = SoundBus.EFFECTS
+		add_child(step)
+		_step_players.append(step)
 	GameSettings.load_settings()
+	SoundBus.apply_mix()
 	_init_tts()
 	_has_clips = VoLibrary.has_any()
 	_vo_player.finished.connect(_on_vo_finished)
@@ -66,6 +83,25 @@ func play_fanfare() -> void:
 
 func play_cheer() -> void:
 	_play_sfx(_stream_cheer)
+
+## A soft footstep on grass, a little different every time.
+func play_step() -> void:
+	var player := _step_players[_next_step]
+	_next_step = (_next_step + 1) % _step_players.size()
+	var stream := SoundLibrary.step(_rng.randi())
+	if stream == null:
+		return
+	player.stream = stream
+	player.pitch_scale = _rng.randf_range(0.92, 1.08)
+	player.volume_db = _rng.randf_range(-7.0, -4.0)
+	player.play()
+
+## True while any line is being spoken (a clip, the gap between two clips, or
+## system speech). Soundscape ducks the music while this is true.
+func is_speaking() -> bool:
+	if _speaking_clips or _vo_player.playing:
+		return true
+	return not _voices.is_empty() and DisplayServer.tts_is_speaking()
 
 ## No-op until vo_clips[beat_name] is assigned a real recorded/imported clip.
 func play_vo(beat_name: String) -> void:
