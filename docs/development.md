@@ -43,14 +43,46 @@ A few things learned the hard way when writing tests:
 
 The project is set up for it: landscape orientation, ETC2/ASTC texture compression on, and the Mobile
 renderer (Godot's default on Android). The export preset (`export_presets.cfg`) is not committed, because
-Godot's `.gitignore` template excludes it; recreate it in *Project > Export > Add > Android* (arm64 only,
-Gradle build off, package `com.oneleo.littlelight`) or copy it from a colleague.
+Godot's `.gitignore` template excludes it. Recreate it in *Project > Export > Add > Android* (arm64 only,
+Gradle build off, package `com.oneleo.littlelight`, name it "Android tablet (debug)"), or copy it from
+another computer.
 
-1. **Once per computer:** *Editor > Manage Export Templates > Download and Install* (about 1 GB), and check that
-   *Editor Settings > Export > Android* has the Android SDK, the JDK (17) and a debug keystore.
-2. **On the tablet:** Settings > About > tap *Build number* 7 times, then turn on *USB debugging* in Developer
-   options. Connect by USB and accept the prompt. `adb devices` should list it.
-3. **Run it:** click the Android icon at the top right of the Godot editor, or from a terminal:
+### Step 1: install the export templates (once per computer)
+
+1. Open the project in the Godot editor.
+2. Choose *Editor > Manage Export Templates* and click *Download and Install*. It is about 1 GB; wait until it
+   says it is installed.
+3. Check *Editor Settings > Export > Android*: it needs the Android SDK, the JDK (17) and a debug keystore. On
+   the main development computer these are already set.
+
+### Step 2: prepare the tablet (once per tablet)
+
+1. Open *Settings > About tablet* and tap *Build number* 7 times. It says "You are now a developer".
+2. Open *Settings > System > Developer options* (on some tablets *Additional settings*) and turn on
+   *USB debugging*.
+3. Connect the tablet to the computer with a USB cable that carries data (some charging-only cables do not
+   work).
+4. A prompt appears on the tablet: "Allow USB debugging?". Tick "Always allow" and tap *Allow*.
+
+### Step 3: check that the computer sees the tablet
+
+```bash
+adb devices
+```
+
+(`adb` is in `<Android SDK>\platform-tools`; on the main development computer that is
+`C:\Users\onesa\AppData\Local\Android\Sdk\platform-tools\adb.exe`.)
+
+- The tablet is listed as `device`: it is connected.
+- It says `unauthorized`: tap *Allow* on the tablet.
+- The list is empty: try another cable or USB port, and set the tablet's USB mode to *File transfer* (in the
+  notification that appears when it is plugged in).
+
+### Step 4: run the game
+
+In the Godot editor click the small Android icon at the top right, next to the play button. It lists the
+tablet; click it. Godot builds the game, installs it and starts it. The first build takes a few minutes.
+Or from a terminal:
 
 ```bash
 godot --headless --path . --export-debug "Android tablet (debug)" build/little-light-debug.apk
@@ -59,6 +91,14 @@ adb install -r build/little-light-debug.apk
 
 Godot's *Debugger > Monitors* shows FPS and draw calls while it runs. For the same table as on a computer,
 see `tools/profile_frame.gd` and `docs/performance.md`. `build/` is ignored by git.
+
+### If something goes wrong
+
+- **"No export template found"**: step 1 was not finished for this Godot version (4.7.2).
+- **The tablet is not listed in the editor**: run `adb devices` (step 3) and fix that first.
+- **Nine `wonder_walker_v13_Tint_WW_*.png.import` files show up as changed in `git status`**: the editor was
+  open before the ETC2/ASTC setting was committed and wrote them without the tablet format. Close and reopen
+  the editor, then `git checkout -- assets/wonder_walker_v13_Tint_WW_*.png.import`.
 
 ## Files Godot generates
 
