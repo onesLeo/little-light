@@ -28,6 +28,7 @@ var _halo: MeshInstance3D
 var _halo_mat: StandardMaterial3D
 var _halo_tween: Tween
 var _sparkles: CPUParticles3D
+var _breath_level: float = 0.0
 
 const HALO_ALPHA := 0.55
 
@@ -61,6 +62,16 @@ func _process(delta: float) -> void:
 ## noticed (David, a Wonder Item). Pass null to resume following the player.
 func point_at(node: Node3D) -> void:
 	_look_target = node
+
+## Glows a little brighter and its halo swells while the child breathes in
+## (Steady Hands). 0 = normal, 1 = fully breathed in. A celebrate() in progress wins.
+func set_breath(level: float) -> void:
+	_breath_level = clampf(level, 0.0, 1.0)
+	if _glow_mat and not (_pulse_tween and _pulse_tween.is_valid() and _pulse_tween.is_running()):
+		_glow_mat.emission_energy_multiplier = _base_energy * (1.0 + 0.45 * _breath_level)
+	if _halo and not (_halo_tween and _halo_tween.is_valid() and _halo_tween.is_running()):
+		_halo.scale = Vector3.ONE * (1.0 + 0.5 * _breath_level)
+
 
 ## A brief warm brighten — used for "found something" / "well done" beats.
 ## Kept modest on purpose: the environment bloom turns big emission boosts

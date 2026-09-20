@@ -8,6 +8,7 @@ const MUSIC := DIR + "music/meadow_lullaby.wav"
 const WIND := DIR + "ambience/wind.wav"
 const STREAM := DIR + "ambience/stream.wav"
 const FLUTTER := DIR + "sfx/flutter.wav"
+const BREATH := DIR + "sfx/breath_loop.wav"
 const BIRD_COUNT := 7
 const STEP_COUNT := 4
 const BLEAT_COUNT := 1
@@ -49,7 +50,7 @@ static func bleat(index: int) -> AudioStream:
 
 ## Every file the game expects, for the smoke test.
 static func all_paths() -> PackedStringArray:
-	var paths := PackedStringArray([MUSIC, WIND, STREAM, FLUTTER])
+	var paths := PackedStringArray([MUSIC, WIND, STREAM, FLUTTER, BREATH])
 	for i in BIRD_COUNT:
 		paths.append(DIR + "ambience/bird_%d.wav" % (i + 1))
 	for i in STEP_COUNT:

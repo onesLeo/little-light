@@ -100,12 +100,76 @@ func _initialize() -> void:
 	_check(steady_hands.active == true, "minigame active after STEADY_PLAY")
 	_check(breath.visible == true, "breath indicator visible while minigame active")
 
-	print("-- tapping completes the minigame and signals the director --")
-	# NOTE: a lambda connected here would capture a local bool BY VALUE in
-	# GDScript (reassigning it inside the callback wouldn't be visible out
-	# here), so we use the instance var _minigame_signal_fired instead.
+	print("-- steady hands: slow and calm, and it cannot be rushed --")
+	_check(director.prompt_label.text.begins_with("Hold Space"), "the prompt says to hold Space to breathe in")
+	_check(director.get_action_hint() == "BREATHE", "the action button says BREATHE while breathing")
+	_check(steady_hands._air.playing, "the air sound plays while breathing")
+	# The press that started this step must be let go of before it counts.
+	steady_hands._advance(1.0, true)
+	_check(steady_hands.level == 0.0, "the press that started Steady Hands does not count until it is let go of")
+	steady_hands._advance(0.1, false)
+	_check(steady_hands._breath_label.text == "Hold", "an empty ring says Hold")
+	for i in 10:
+		steady_hands._advance(0.1, true)
+	var after_second: float = steady_hands.level
+	_check(after_second > 0.05 and after_second < 0.30, "one second of holding fills only a small part of the ring (%.2f)" % after_second)
+	_check(steady_hands._breath_label.text == "In...", "the ring says In... while it fills")
+	_check(steady_hands._air.volume_db > steady_hands.air_db_still + 6.0, "the air sound swells as the child breathes in")
+	for i in 2:
+		steady_hands._advance(0.1, false)
+	_check(steady_hands.level > after_second and steady_hands.velocity > 0.0, "letting go does not snap the ring around: it keeps rising for a moment")
+	for i in 60:
+		steady_hands._advance(0.1, false)  # six seconds: empty, but not yet long enough for the ring to breathe by itself
+	_check(steady_hands.level == 0.0, "the ring empties completely when nobody is pressing")
+	var label_changes := 0
+	var last_label: String = steady_hands._label_text
+	for i in 200:
+		steady_hands._advance(0.1, i % 2 == 0)  # pressing five times a second for 20 seconds
+		if steady_hands._label_text != last_label:
+			label_changes += 1
+			last_label = steady_hands._label_text
+	_check(steady_hands.level < 0.40 and steady_hands.breaths_done == 0,
+			"tapping quickly cannot rush it (ring at %.2f, %d breaths)" % [steady_hands.level, steady_hands.breaths_done])
+	_check(label_changes <= 4, "and the label does not flicker between In and Out (%d changes in 20 s)" % label_changes)
+
+	print("-- steady hands: nobody can get stuck --")
+	steady_hands.start_minigame()
+	steady_hands._advance(0.1, false)
+	for i in 250:
+		steady_hands._advance(0.1, false)  # never pressing anything
+	_check(steady_hands.breaths_done >= 1, "if nobody presses, the ring breathes in by itself and the breath counts (%d)" % steady_hands.breaths_done)
+	steady_hands.start_minigame()
+	steady_hands._advance(0.1, false)
+	var lowest_after_full := 1.0
+	var was_full := false
+	for i in 400:
+		steady_hands._advance(0.1, true)  # holding the button down for 40 seconds
+		was_full = was_full or steady_hands.level > 0.95
+		if was_full:
+			lowest_after_full = minf(lowest_after_full, steady_hands.level)
+	_check(lowest_after_full < 0.3 and steady_hands.breaths_done >= 1, "if the button is held at full, the ring lets go by itself (lowest %.2f)" % lowest_after_full)
+
+	print("-- steady hands: three slow breaths finish it --")
+	steady_hands.start_minigame()
+	steady_hands._advance(0.1, false)
 	steady_hands.minigame_completed.connect(_on_test_minigame_completed)
-	steady_hands._on_tap()
+	var breaths_seen: Array = []
+	steady_hands.breath_completed.connect(func(n: int) -> void: breaths_seen.append(n))
+	var glow_at_full := 0.0
+	var david_at_full := 1.0
+	for b in 3:
+		for i in 45:
+			steady_hands._advance(0.1, true)  # breathe in for 4.5 s
+		glow_at_full = maxf(glow_at_full, wonder_light._breath_level)
+		david_at_full = maxf(david_at_full, david.scale.y)
+		if b == 0:
+			_check(steady_hands._breath_label.text == "Out..." and steady_hands.level > 0.9, "a full ring tells the child to breathe out")
+		for i in 80:
+			steady_hands._advance(0.1, false)  # breathe out for 8 s
+		if b < 2:
+			_check(steady_hands._dots.done == b + 1, "a dot fills after each breath (%d of 3)" % (b + 1))
+	_check(breaths_seen == [1, 2, 3], "three breaths are counted one by one %s" % [breaths_seen])
+	_check(glow_at_full > 0.9 and david_at_full > 1.01, "Wonder Light glows and David rises as the ring fills (glow %.2f, David %.3f)" % [glow_at_full, david_at_full])
 	# The success feedback is a ~0.9s tween (bloom + fade) before the signal
 	# fires by design — give it real frames to actually finish before checking.
 	for i in range(180):
@@ -114,6 +178,33 @@ func _initialize() -> void:
 			break
 	_check(_minigame_signal_fired, "minigame_completed fires after the success tween finishes")
 	_check(steady_hands.active == false, "minigame deactivates after success")
+	_check(wonder_light._breath_level == 0.0 and david.scale.is_equal_approx(Vector3.ONE), "Wonder Light and David go back to normal")
+	for i in range(120):
+		await process_frame
+		if not steady_hands._air.playing:
+			break
+	_check(not steady_hands._air.playing, "the air sound fades out and stops")
+
+	print("-- steady hands: holding on touch and gamepad --")
+	input_setup.set_mode("touch")
+	var finger := InputEventScreenTouch.new()
+	finger.index = 0
+	finger.pressed = true
+	finger.position = touch_controls.button_center
+	touch_controls._input(finger)
+	await process_frame  # injected input is applied at the end of the frame
+	_check(Input.is_action_pressed("ui_accept") and Input.is_action_pressed("interact"), "the touch button stays pressed while a finger is on it")
+	var lifted: InputEventScreenTouch = finger.duplicate()
+	lifted.pressed = false
+	touch_controls._input(lifted)
+	await process_frame
+	_check(not Input.is_action_pressed("ui_accept") and not Input.is_action_pressed("interact"), "and lets go when the finger lifts")
+	var hold_line := "Hold Space to breathe in, let go to breathe out"
+	_check(director._localize_prompt(hold_line) == "Hold BREATHE to breathe in, let go to breathe out", "the hold prompt is reworded for touch")
+	input_setup.set_mode("gamepad")
+	_check(director._localize_prompt(hold_line) == "Hold A to breathe in, let go to breathe out", "and for a gamepad")
+	input_setup.set_mode("keyboard")
+	_check(director._localize_prompt(hold_line) == hold_line, "and left alone for the keyboard")
 
 	print("-- item collection triggers Wonder Light celebrate() without error --")
 	director._enter_beat(director.Beat.EXPLORE)

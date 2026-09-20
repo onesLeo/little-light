@@ -16,6 +16,7 @@ real recordings (see `assets/audio/CREDITS.md`).
 | Footsteps (four real steps) | while the Wonder-Walker walks, two per walk cycle | `wonder_walker.gd` |
 | Lamb "baa" (a real recording, pitch varied a little each time) | when the lamb notices you, then every 6-11 s while you stay close | `lamb_life.gd` |
 | Wing rustle | when butterflies take off; at most one every 0.4 s | `butterflies.gd` |
+| Soft hush of air | while the child breathes in Steady Hands; swells and rises in pitch with the ring | `steady_hands_minigame.gd` |
 | Chimes, fanfare, cheer | pickups, Steady Hands, the finale (unchanged, made at startup by `chime_synth.gd`) | `audio_director.gd` |
 
 ## The mix
@@ -85,7 +86,7 @@ Where to change what:
 
 ## What was checked, and what was not
 
-Checked by the smoke test: all 16 files load; the four buses exist and the players are routed to them;
+Checked by the smoke test: all 17 files load; the four buses exist and the players are routed to them;
 music and wind loop; the stream follows the player along the water; a footstep plays when walking
 and none when standing; the lamb says "baa" once when it notices you, then waits; a group of
 butterflies taking off makes one rustle; birds and the lamb stay quiet during speech; the master limiter
@@ -108,6 +109,5 @@ and the stream after the change. The levels above are the first thing to tune.
 
 ## Not done
 
-- A breathing sound for Steady Hands (goes with backlog 3.1).
 - Different footstep sounds on the path and in the water.
 - Sound for Wonder Light itself beyond the existing chimes.
