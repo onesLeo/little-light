@@ -1,5 +1,9 @@
 # Little Light — David & Goliath P0.2 (Godot slice)
 
+[![Smoke test](https://github.com/onesLeo/little-light/actions/workflows/smoke-test.yml/badge.svg)](https://github.com/onesLeo/little-light/actions/workflows/smoke-test.yml)
+
+Working on the game? See the [development guide](docs/development.md): setup, tests, CI, and what is committed.
+
 Vertical slice: Wonder-Walker explores a Bethlehem valley diorama, finds three Wonder Items, meets David (Band A), plays **Steady Hands**, then reflects with Joshua 1:9 (WEB). No violence is shown. Wonder-Walker is a **guest**, not David.
 
 **Engine:** project configuration declares Godot **4.7** (Forward+). Compatibility with older 4.x versions has not been verified.
