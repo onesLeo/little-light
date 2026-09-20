@@ -47,6 +47,7 @@ const ITEM_FLAVOR := {
 
 var _advance_ready: bool = false
 var _prompt_raw: String = ""
+var _last_nudge_ms: int = -100000
 var _near_item: Area3D = null
 var _items_collected: Dictionary = {}
 
@@ -322,6 +323,25 @@ func _say(text: String) -> void:
 	dialogue_label.text = text
 	if audio_director and audio_director.has_method("speak_dialogue"):
 		audio_director.speak_dialogue(text)
+
+## A short friendly line from Wonder Light while the player is free to roam
+## (used when they wander toward the edge of the valley). It replaces the
+## current dialogue for a few seconds, then puts it back, and is rate-limited.
+func show_nudge(text: String) -> void:
+	if beat != Beat.EXPLORE and beat != Beat.DONE:
+		return
+	var now := Time.get_ticks_msec()
+	if now - _last_nudge_ms < 12000:
+		return
+	_last_nudge_ms = now
+	var prev_dialogue := dialogue_label.text
+	var prev_prompt := _prompt_raw
+	var prev_beat := beat
+	_say(text)
+	await get_tree().create_timer(3.5).timeout
+	if beat == prev_beat and dialogue_label.text == text:
+		dialogue_label.text = prev_dialogue
+		_set_prompt(prev_prompt)
 
 ## Prompts are authored with keyboard wording ("Press Space", "press E") and
 ## rewritten for whichever device the player last used.

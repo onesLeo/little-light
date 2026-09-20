@@ -17,6 +17,9 @@ const SWAY_SHADER := preload("res://assets/shaders/meadow_sway.gdshader")
 ## 0 = different every run.
 @export var seed_override: int = 0
 
+var _mat: ShaderMaterial
+var _player: Node3D
+
 ## The walking path and the lower stream, as (x, z) polylines in world space.
 const PATH_XZ := [Vector2(0.3, 9.5), Vector2(0.2, 7.6), Vector2(0.1, 5.6), Vector2(0.25, 3.6),
 		Vector2(0.45, 1.6), Vector2(0.5, -0.2), Vector2(0.42, -1.6), Vector2(0.55, -2.4), Vector2(0.6, -3.0)]
@@ -40,6 +43,8 @@ func _ready() -> void:
 	var space := get_world_3d().direct_space_state
 	var mat := ShaderMaterial.new()
 	mat.shader = SWAY_SHADER
+	_mat = mat
+	_player = get_parent().get_node_or_null("Player") as Node3D
 
 	var tuft_spots := _pick_spots(space, rng, tuft_count)
 	var half := tuft_spots.size() / 2
@@ -47,6 +52,11 @@ func _ready() -> void:
 	_spawn("TuftsB", _tuft_mesh(rng, 5), tuft_spots.slice(half), TUFT_COLORS, mat, rng, 0.9, 1.6)
 	_spawn("Flowers", _flower_mesh(), _pick_spots(space, rng, flower_count), FLOWER_COLORS, mat, rng, 0.8, 1.3)
 	_spawn("Pebbles", _pebble_mesh(), _pick_spots(space, rng, pebble_count), PEBBLE_COLORS, mat, rng, 0.6, 1.5)
+
+
+func _process(_delta: float) -> void:
+	if _mat and _player:
+		_mat.set_shader_parameter("player_pos", _player.global_position)
 
 
 ## -- Placement ---------------------------------------------------------------

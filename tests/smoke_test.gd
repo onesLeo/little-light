@@ -63,6 +63,31 @@ func _initialize() -> void:
 	game_menu.set_paused(false)
 	_check(not paused, "resuming unpauses the tree")
 
+	print("-- living world: boundary, lamb, fish, butterflies, no invisible walls --")
+	await create_timer(0.4).timeout  # let the scatter and the deferred setups finish
+	var player: CharacterBody3D = main.get_node("Player")
+	var bounds: Node = main.get_node("PlayBounds")
+	var inside: Dictionary = bounds._edge_info(Vector2(0.0, 0.0))
+	_check(float(inside["sd"]) < -5.0, "the middle of the valley is well inside the play area")
+	var outside: Dictionary = bounds._edge_info(Vector2(bounds.half_extents.x + 3.0, 0.0))
+	_check(float(outside["sd"]) > 2.5 and (outside["normal"] as Vector2).x > 0.9, "past the edge reads as outside, with an outward normal")
+	director._enter_beat(director.Beat.EXPLORE)
+	player.global_position = Vector3(40.0, 1.0, 40.0)
+	await physics_frame
+	await physics_frame
+	var after: Dictionary = bounds._edge_info(Vector2(player.global_position.x, player.global_position.z) - bounds.center)
+	_check(float(after["sd"]) <= 0.01, "a player far outside is brought back to the edge")
+	_check(director.dialogue_label.text.contains("valley"), "Wonder Light gives a friendly nudge at the edge")
+	var lamb_life: Node = main.get_node("WonderItems/LambLife")
+	_check(lamb_life._ready_to_animate, "the lamb is set up after the items are scattered")
+	_check(main.get_node("StreamFish")._fish.size() == 3, "three shy fish are swimming")
+	_check(main.get_node("Butterflies")._flies.size() == 8, "eight butterflies are fluttering")
+	var walls := 0
+	for bank in main.get_node("StreamFishAlive/Art").find_children("Bank_*", "MeshInstance3D", true, false):
+		if bank.get_node_or_null("BakedCollision") != null:
+			walls += 1
+	_check(walls == 0, "hidden stream banks have no collision (no invisible walls)")
+
 	print("-- meeting David cuts to close-up + points Wonder Light --")
 	# The characters finish turning before the dialogue camera cuts.
 	await director._enter_beat(director.Beat.MEET_DAVID_A)

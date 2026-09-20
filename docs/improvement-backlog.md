@@ -23,14 +23,14 @@ Screenshots and measurements were taken at 1152x648 / 1280x720 on Windows with G
 | 2.2 | "No-reading mode" for ages 6-8 was promised, but everything was read text | **Partly done** | All dialogue, the Joshua verse and item descriptions are now read aloud with the system's text-to-speech; Wonder Light and David use different voices/pitch when two English voices exist (`audio_director.gd`). Dialogue text is larger (18 to 22 pt). **Open:** recorded voiceover (drop clips into `AudioDirector.vo_clips`, keyed by beat name; they take priority over TTS), and shorter, simpler wording for Band A. System voices vary by OS and may be absent (the speaker button is then hidden). |
 | 2.3 | Dead-end ending: no replay, menu, pause or volume | **Done** | After the confetti a **Play again / Keep exploring** panel appears. Pause menu (Esc / P / Start / round button): Resume, read-aloud on/off, volume, Play again from the start. Settings persist (`game_menu.gd`, `game_settings.gd`). |
 
-## 3. Game feel (open)
+## 3. Game feel
 
 | # | Idea | Status | Why |
 |---|------|--------|-----|
 | 3.1 | Make Steady Hands a real (still fail-free) activity | Open | It is one Space press. A hold-to-breathe with a growing ring that Wonder Light and David breathe along with would be more engaging. Band B could raise `taps_required`. |
 | 3.2 | Sound design | Open | Only synthesized beeps today. Add gentle background music, stream and bird ambience, footsteps, item and sheep sounds. |
-| 3.3 | A world that reacts | Open | The sheep and fish ignore the player. Let the lamb follow or bleat, fish scatter near the player, grass sway. |
-| 3.4 | Keep the player in the play area | Open | Nothing stops walking up the ridge or wandering far from the diorama. Add a soft boundary (invisible wall, or the Wonder Light gently turning the player back). |
+| 3.3 | A world that reacts | **Mostly done** | Grass and flowers lean away from the Wonder-Walker as they walk through (`meadow_sway.gdshader`, driven by `meadow_dressing.gd`). Fish get shy: within ~2.3 m they speed up, dive slightly and turn away (`stream_fish_swim.gd`). The collectible lamb breathes, then turns to face the player and hops when they come near, never leaving its spot (`lamb_life.gd`). Eight paper butterflies drift over the meadow and flutter off when approached (`butterflies.gd`). **Open:** a bleat sound for the lamb (audio not tested yet), and David's companion sheep, which is baked into David's model and cannot move on its own. |
+| 3.4 | Keep the player in the play area | **Done** | A soft boundary (`play_bounds.gd`): near the edge of a rounded-rectangle play area the walker meets a gentle push back that grows toward the edge, and cannot go past it; the first time it is felt, Wonder Light says a friendly line ("That's the edge of our little valley. Let's stay close!"). Also recovers a player who is placed far outside. Fixed a related bug: the stream pack's hidden `Bank_*` meshes still had collision, which made an invisible wall near x = -4 (`mesh_collision_baker.gd`). |
 | 3.5 | Restart hygiene | Partly done | "Play again" reloads the scene. A persistent Faith Journal / progress save is still not implemented. |
 
 ## 4. Visual polish
@@ -55,7 +55,7 @@ Screenshots and measurements were taken at 1152x648 / 1280x720 on Windows with G
 | 5.3 | Line endings | No `.gitattributes`, so every edit produces CRLF/LF warnings. Add one (`* text=auto eol=lf`, keeping binaries as binary). |
 | 5.4 | Repository size | `assets/` is about 73 MB, mostly old model versions (Wonder-Walker v2-v13, valley v2-v7, David v2-v12, items v2-v7). Keep the current ones, archive the rest. The v7 valley alone is about 11.7 MB because leaves are real geometry. |
 | 5.5 | Stale docs | Keep the README asset table in step with `main.tscn` (it listed valley v6 after v7 landed). |
-| 5.6 | Tests | One headless smoke test (now also covering input devices, touch controls, pause and the end panel) and no CI. Run it on every pull request. Nothing verifies appearance, so keep the screenshot helper in mind for visual checks. |
+| 5.6 | Tests | One headless smoke test (now also covering input devices, touch controls, pause, the end panel, the play-area boundary, the lamb, fish, butterflies and the invisible-wall fix) and no CI. Run it on every pull request. Nothing verifies appearance, so keep the screenshot helper in mind for visual checks. |
 
 ## Suggested order
 

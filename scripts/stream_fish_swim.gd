@@ -15,6 +15,12 @@ const OUTLINE := Color(0.08, 0.06, 0.05)
 @export var water_name: String = "Stream_Water"
 @export var river_z_min: float = -4.2
 @export var lift: float = 0.09
+@export var player_path: NodePath = ^"../Player"
+## A fish this close to the Wonder-Walker gets shy: it turns away and darts off.
+@export var scare_radius: float = 2.3
+@export var scare_speed_mul: float = 4.5
+
+var _player: Node3D
 
 var _path: Array[Vector3] = []
 var _widths: Array[float] = []
@@ -32,6 +38,7 @@ func _setup() -> void:
 	var art := get_node_or_null(art_path) as Node3D
 	if art == null:
 		return
+	_player = get_node_or_null(player_path) as Node3D
 	for n in art.find_children("Fish_*", "Node3D", true, false):
 		(n as Node3D).visible = false
 	var water := art.find_child(water_name, true, false) as MeshInstance3D
@@ -138,7 +145,8 @@ func _make_fish(spec: Dictionary) -> Dictionary:
 	tail.position = Vector3(0.0, 0.0, 0.25)
 	root.add_child(tail)
 	_soft_mesh(col.darkened(0.05), Vector3(0.016, 0.13, 0.11), Vector3(0.0, 0.0, 0.09), tail)
-	return {"root": root, "tail": tail, "spec": spec, "yaw": 0.0}
+	return {"root": root, "tail": tail, "spec": spec, "yaw": 0.0,
+			"t": float(spec["phase"]), "sign": 1.0, "mul": 1.0, "flip_cd": 0.0}
 
 
 func _process(delta: float) -> void:
@@ -150,22 +158,40 @@ func _process(delta: float) -> void:
 		var a: float = spec["from"] * _total
 		var b: float = spec["to"] * _total
 		var span := maxf(b - a, 0.1)
-		var travel: float = fposmod(_time * spec["speed"] + spec["phase"], span * 2.0)
+		var root: Node3D = f["root"]
+
+		# Shy: near the Wonder-Walker the fish speeds up and, if it was swimming
+		# toward them, turns around.
+		var to_player := Vector3.ZERO
+		var scared := false
+		if _player:
+			to_player = _player.global_position - root.global_position
+			to_player.y = 0.0
+			scared = to_player.length() < scare_radius
+		f["mul"] = lerpf(f["mul"], scare_speed_mul if scared else 1.0, clampf(delta * 4.0, 0.0, 1.0))
+		f["flip_cd"] = maxf(float(f["flip_cd"]) - delta, 0.0)
+		f["t"] += delta * float(spec["speed"]) * float(f["mul"]) * float(f["sign"])
+
+		var travel: float = fposmod(float(f["t"]), span * 2.0)
 		var forward: bool = travel < span
 		var s: float = a + (travel if forward else span * 2.0 - travel)
 		var info: Dictionary = _point_at(s)
 		var pos: Vector3 = info["pos"]
-		var dir: Vector3 = info["dir"]
-		if not forward:
+		var move_sign: float = (1.0 if forward else -1.0) * float(f["sign"])
+		var dir: Vector3 = info["dir"] * move_sign
+		if scared and float(f["flip_cd"]) <= 0.0 and dir.dot(to_player.normalized()) > 0.2:
+			f["sign"] = -float(f["sign"])
+			f["flip_cd"] = 1.2
 			dir = -dir
+		var dive := clampf((float(f["mul"]) - 1.0) / maxf(scare_speed_mul - 1.0, 0.01), 0.0, 1.0)
+
 		var side: Vector3 = Vector3(-dir.z, 0.0, dir.x)
 		var lane_off: float = spec["lane"] * float(info["width"]) * 0.5
 		var wobble: float = sin(_time * 1.3 + float(spec["phase"])) * 0.06
 		pos += side * (lane_off + wobble)
-		pos.y += lift + sin(_time * 2.0 + float(spec["phase"])) * 0.012
-		var root: Node3D = f["root"]
+		pos.y += lift + sin(_time * 2.0 + float(spec["phase"])) * 0.012 - 0.04 * dive
 		root.global_position = pos
 		var target_yaw: float = atan2(-dir.x, -dir.z)
-		f["yaw"] = lerp_angle(f["yaw"], target_yaw, clampf(delta * 3.0, 0.0, 1.0))
+		f["yaw"] = lerp_angle(f["yaw"], target_yaw, clampf(delta * (3.0 + 5.0 * dive), 0.0, 1.0))
 		root.rotation = Vector3(0.0, f["yaw"] + sin(_time * 5.0 + float(spec["phase"])) * 0.06, 0.0)
-		(f["tail"] as Node3D).rotation.y = sin(_time * 8.0 + float(spec["phase"])) * 0.45
+		(f["tail"] as Node3D).rotation.y = sin(_time * (8.0 + 12.0 * dive) + float(spec["phase"])) * (0.45 + 0.2 * dive)
