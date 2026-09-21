@@ -44,7 +44,6 @@ block, and the smoke test reports the line.
 
 ## Open
 
-- Nobody has listened to the whole set in the running game yet. Check the pauses between lines, the
-  breathing line ("Breathe with David...") and how David's voice sits next to Wonder Light's.
+- The set was listened to in the running game (2026-09-22) and is fine. Not yet heard on a tablet speaker.
 - Emotion is limited to what the voices and punctuation give. A human voice actor would do more.
-- A quiet ambience or music bed under the voice, with ducking, is not done (backlog 3.2).
+- A quiet ambience or music bed under the voice, with ducking, is done (backlog 3.2).
