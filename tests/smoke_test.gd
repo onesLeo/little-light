@@ -150,6 +150,18 @@ func _initialize() -> void:
 	_check(tree_count == 22 and lost.is_empty(), "all 22 trees have ground under them %s" % [lost])
 	_check(steepest <= 42.0, "no tree stands on the bare cliff wall (steepest ground %.0f degrees)" % steepest)
 	_check(worst_gap <= 0.35, "no tree floats or is buried, even after the stream nudges it (worst %.2f m)" % worst_gap)
+	var plants: int = 0
+	var white_or_split: Array = []
+	for plant in main.get_node("BethlehemValley").find_children("*", "MeshInstance3D", true, false):
+		var plant_name: String = String(plant.name)
+		if plant_name.ends_with("_Outline") or not (plant_name.begins_with("Cypress_") or plant_name.begins_with("Olive_") or plant_name.begins_with("Shrub_")):
+			continue
+		plants += 1
+		var plant_mesh: Mesh = (plant as MeshInstance3D).mesh
+		var leaf_material: BaseMaterial3D = plant_mesh.surface_get_material(0) as BaseMaterial3D
+		if plant_mesh.get_surface_count() != 1 or leaf_material == null or leaf_material.resource_name != "FoliageVertexColour" or not leaf_material.vertex_color_use_as_albedo:
+			white_or_split.append(plant_name)
+	_check(plants == 32 and white_or_split.is_empty(), "all %d trees and bushes are one painted surface (two draws with the outline) %s" % [plants, white_or_split])
 	var brook_rocks: int = 0
 	var not_stone: Array = []
 	var no_outline: Array = []
