@@ -71,10 +71,12 @@ test fails if a journal line has no recorded clip.
 ## Not done, and not tested
 
 - **More than tap-to-fill.** Four ideas were sketched (colour your charm, colour a lamb, stickers, free drawing);
-  only colouring the charm is built. Colouring works with a finger or a mouse, not yet with a gamepad or keyboard.
+  only colouring the charm is built. Colouring works with a finger, a mouse, a gamepad or a keyboard (left and right move between the parts of the charm, accept fills the one with the blue ring).
 - **On a real tablet.** The touch targets are large (at least 60 px) and there is a visible focus style for a
-  gamepad or keyboard, but the on-screen keyboard for typing a name has not been tried, nor how it covers the
-  form on a small screen.
-- **Names are not checked** for words a family would not want. They are typed by the child or a grown-up and
-  stay on the tablet.
+  gamepad or keyboard, but the on-screen keyboard for typing a name has not been tried. The form lifts itself above the
+  keyboard's height (`_fit_to_keyboard` in `profile_screen.gd`) and drops its headings to fit, but that is
+  written from the API, not seen on a device.
+- **Names are only lightly checked.** A short list of rude words (`Profiles.BLOCKED_INSIDE` and `BLOCKED_EXACT`) is
+  turned away with "Please pick a different name"; capitals, spaces and look-alike digits ("sh1t") do not get round
+  it. The list is short on purpose, because a long one turns away real names. A grown-up can still remove a child.
 - **The picker is not read aloud.** Its words are short, but a child who cannot read yet will rely on the pictures.

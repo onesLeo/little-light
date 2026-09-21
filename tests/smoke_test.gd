@@ -319,7 +319,7 @@ func _initialize() -> void:
 	var finger := InputEventScreenTouch.new()
 	finger.index = 0
 	finger.pressed = true
-	finger.position = touch_controls.button_center
+	finger.position = touch_controls.button_position()
 	touch_controls._input(finger)
 	await process_frame  # injected input is applied at the end of the frame
 	_check(Input.is_action_pressed("ui_accept") and Input.is_action_pressed("interact"), "the touch button stays pressed while a finger is on it")
@@ -631,6 +631,22 @@ func _initialize() -> void:
 	_check(Profiles.charm_colours(kid_id, courage) == [-1, -1, -1, -1, -1, -1], "Start again clears the page")
 	colour_screen.undo()
 	_check(Profiles.charm_colours(kid_id, courage)[0] == 3 and Profiles.charm_colours(kid_id, courage)[2] == 1, "and Undo brings it all back")
+	var move := InputEventAction.new()
+	move.action = "ui_right"
+	move.pressed = true
+	colour_screen._page.cursor = 4
+	colour_screen._page._gui_input(move)
+	_check(colour_screen._page.cursor == 5, "with a gamepad or keyboard, right moves to the next part of the charm")
+	colour_screen._select(6)
+	var press := InputEventAction.new()
+	press.action = "ui_accept"
+	press.pressed = true
+	colour_screen._page._gui_input(press)
+	_check(Profiles.charm_colours(kid_id, courage)[5] == 6, "and accept fills it with the chosen paint")
+	move.action = "ui_left"
+	colour_screen._page.cursor = 0
+	colour_screen._page._gui_input(move)
+	_check(colour_screen._page.cursor == 5, "left from the first part wraps round to the last")
 	Profiles.use_file(TEST_PROFILES)   # read it back from disk
 	Profiles.set_active(kid_id)
 	_check(Profiles.charm_colours(kid_id, courage)[2] == 1 and Profiles.has_coloured_charm(kid_id, courage), "the colours are still there after reading the file again")
@@ -691,6 +707,14 @@ func _initialize() -> void:
 	game_menu._input(pause_event)
 	_check(paused_now() and not game_menu._pause_layer.visible, "the pause key does nothing behind the picker")
 	_check(picker.create_profile("   ", "sun") == "" and picker._hint.text == "Type your name first", "an empty name is not accepted, and the hint says why")
+	_check(Profiles.name_allowed("Maya") and Profiles.name_allowed("Cassie") and Profiles.name_allowed("Dickson"), "ordinary names, even ones that contain short words, are welcome")
+	_check(not Profiles.name_allowed("Sh1t") and not Profiles.name_allowed("F u c k") and not Profiles.name_allowed("POOP") and not Profiles.name_allowed("  ass "), "a rude word is not accepted as a name, whatever the capitals, spaces or look-alike digits")
+	var profiles_before: int = Profiles.count()
+	_check(picker.create_profile("Sh1t", "sun") == "" and picker._hint.text == "Please pick a different name" and Profiles.count() == profiles_before, "and the hint asks for a different name without making a profile")
+	picker._fit_to_keyboard(300.0)
+	_check(is_equal_approx((picker._create_view.get_parent() as Control).offset_bottom, -300.0) and not (picker._title_labels[0] as Control).visible, "the name form lifts above the on-screen keyboard and drops its headings to fit")
+	picker._fit_to_keyboard(0.0)
+	_check(is_equal_approx((picker._create_view.get_parent() as Control).offset_bottom, 0.0) and (picker._title_labels[0] as Control).visible, "and goes back when the keyboard goes away")
 	var made: String = picker.create_profile("Maya", "sun")
 	_check(not made.is_empty() and Profiles.active_id == made and Profiles.active()["avatar"] == "sun" and chosen.back() == made, "a new child is made and chosen")
 	_check(not picker.is_open() and not paused_now() and not Profiles.picker_open, "then the game carries on")

@@ -1,4 +1,4 @@
-[gd_scene load_steps=55 format=3]
+[gd_scene load_steps=56 format=3]
 
 [ext_resource type="PackedScene" path="res://assets/wonder_walker_v13.glb" id="1_ww"]
 [ext_resource type="PackedScene" path="res://assets/bethlehem_valley_v7.glb" id="2_valley"]
@@ -23,6 +23,7 @@
 [ext_resource type="Script" path="res://scripts/stream_rocks.gd" id="30_streamrocks"]
 [ext_resource type="Script" path="res://scripts/performance_tuning.gd" id="31_perf"]
 [ext_resource type="Script" path="res://scripts/foliage_colour.gd" id="34_foliage"]
+[ext_resource type="Script" path="res://scripts/screen_shape.gd" id="36_shape"]
 [ext_resource type="Script" path="res://scripts/profile_screen.gd" id="32_profiles"]
 [ext_resource type="Script" path="res://scripts/journal_screen.gd" id="33_journal"]
 [ext_resource type="Script" path="res://scripts/colour_screen.gd" id="35_colour"]
@@ -483,3 +484,6 @@ script = ExtResource("31_perf")
 
 [node name="FoliageColour" type="Node" parent="."]
 script = ExtResource("34_foliage")
+
+[node name="ScreenShape" type="Node" parent="."]
+script = ExtResource("36_shape")

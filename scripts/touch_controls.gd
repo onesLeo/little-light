@@ -9,6 +9,9 @@ extends CanvasLayer
 
 @export var stick_radius: float = 90.0
 @export var button_radius: float = 68.0
+## Where the button and the stick's resting ring sit on the 1280 x 720 screen the game is designed at. On a
+## wider or taller screen the button keeps its distance from the right and bottom edges and the ring from the
+## left and bottom edges (see button_position() and stick_position()).
 @export var button_center: Vector2 = Vector2(1130.0, 410.0)
 @export var stick_home: Vector2 = Vector2(170.0, 420.0)
 
@@ -77,7 +80,7 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventScreenTouch:
 		var p: Vector2 = event.position
 		if event.pressed:
-			if _button_id == -1 and p.distance_to(button_center) <= button_radius * 1.35:
+			if _button_id == -1 and p.distance_to(button_position()) <= button_radius * 1.35:
 				_button_id = event.index
 				_set_button(true)
 			elif _stick_id == -1 and p.x < _view_size().x * 0.55:
@@ -97,6 +100,22 @@ func _input(event: InputEvent) -> void:
 
 func _view_size() -> Vector2:
 	return get_viewport().get_visible_rect().size
+
+
+## How much bigger the screen is than the design size (zero on a 16:9 screen).
+func _extra_size() -> Vector2:
+	var design := Vector2(float(ProjectSettings.get_setting("display/window/size/viewport_width", 1280)), float(ProjectSettings.get_setting("display/window/size/viewport_height", 720)))
+	return (_view_size() - design).max(Vector2.ZERO)
+
+
+## The action button's centre: the same distance from the right and bottom edges on any screen shape.
+func button_position() -> Vector2:
+	return button_center + _extra_size()
+
+
+## The thumb stick's resting ring: the same distance from the left and bottom edges.
+func stick_position() -> Vector2:
+	return stick_home + Vector2(0.0, _extra_size().y)
 
 
 func _update_stick() -> void:
@@ -143,8 +162,8 @@ func _hint() -> String:
 func _paint(c: Control) -> void:
 	# Stick: a faint ghost at home while idle, the real base + knob while held.
 	if _stick_id == -1:
-		c.draw_arc(stick_home, stick_radius, 0.0, TAU, 40, Color(INK, 0.25), 3.0)
-		c.draw_circle(stick_home, 34.0, Color(GOLD, 0.22))
+		c.draw_arc(stick_position(), stick_radius, 0.0, TAU, 40, Color(INK, 0.25), 3.0)
+		c.draw_circle(stick_position(), 34.0, Color(GOLD, 0.22))
 	else:
 		c.draw_circle(_stick_center, stick_radius, Color(GOLD, 0.16))
 		c.draw_arc(_stick_center, stick_radius, 0.0, TAU, 40, Color(INK, 0.5), 3.0)
@@ -159,10 +178,10 @@ func _paint(c: Control) -> void:
 	var pressed := _button_id != -1
 	var r := button_radius * pulse * (0.92 if pressed else 1.0)
 	var alpha := 0.92 if active else 0.3
-	c.draw_circle(button_center, r, Color(GOLD, alpha))
-	c.draw_arc(button_center, r, 0.0, TAU, 48, Color(INK, alpha), 4.0)
+	c.draw_circle(button_position(), r, Color(GOLD, alpha))
+	c.draw_arc(button_position(), r, 0.0, TAU, 48, Color(INK, alpha), 4.0)
 	if active:
 		var font := ThemeDB.fallback_font
 		var text_size := font.get_string_size(hint, HORIZONTAL_ALIGNMENT_CENTER, -1, 24)
-		c.draw_string(font, button_center + Vector2(-text_size.x * 0.5, 9.0), hint,
+		c.draw_string(font, button_position() + Vector2(-text_size.x * 0.5, 9.0), hint,
 				HORIZONTAL_ALIGNMENT_LEFT, -1, 24, INK)
