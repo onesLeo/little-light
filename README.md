@@ -105,6 +105,7 @@ See [docs/improvement-backlog.md](docs/improvement-backlog.md) for the full revi
 
 ## Band notes
 - **Band A Steady Hands:** three slow breaths (hold to breathe in, let go to breathe out); it cannot be failed and cannot be rushed. This replaced the old one-tap design.
+- **Who is playing and the Faith Journal:** each child on a tablet picks a name and a picture (up to 4), and has their own journal of the verses and charms they earn, read aloud when tapped (round book button, pause menu, end panel). Saved on the tablet only. A press-and-hold "For grown-ups" area can empty a journal or remove a child. See [docs/faith-journal.md](docs/faith-journal.md).
 - Band B can raise `breaths_required` later.
 
 - Historical Wonder-Walker **v3** introduced paper-grain material and a 12fps step walk animation; the scene now loads **v13**.

@@ -8,6 +8,11 @@ extends SceneTree
 ## catch null-ref / bad-node-path errors the passive idle run can't reach.
 ## Exits 0 on success, 1 if any check fails (CI-friendly).
 
+const Profiles := preload("res://scripts/profiles.gd")
+const JournalContent := preload("res://scripts/journal_content.gd")
+const GameSettings := preload("res://scripts/game_settings.gd")
+const TEST_PROFILES := "user://smoke_test_profiles.cfg"
+
 var _failures: int = 0
 var _minigame_signal_fired: bool = false
 
@@ -48,7 +53,14 @@ func _triangles_under(node: Node) -> int:
 			total += (indices.size() if indices != null else (arrays[Mesh.ARRAY_VERTEX] as PackedVector3Array).size()) / 3
 	return total
 
+func paused_now() -> bool:
+	return root.get_tree().paused
+
 func _initialize() -> void:
+	# Never touch the real saved profiles: a scratch file, with one child already playing.
+	DirAccess.remove_absolute(TEST_PROFILES)
+	Profiles.use_file(TEST_PROFILES)
+	Profiles.set_active(Profiles.create("Test", "lamb"))
 	var main: Node = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
 	await process_frame  # let _ready() propagate through the tree first
@@ -479,7 +491,7 @@ func _initialize() -> void:
 
 	print("-- full beat traversal reaches DONE without throwing --")
 	for b in [director.Beat.MEET_DAVID_B, director.Beat.STEADY_INTRO, director.Beat.STEADY_DONE,
-			director.Beat.RESOLUTION, director.Beat.REFLECT, director.Beat.VERSE_REWARD, director.Beat.DONE]:
+			director.Beat.RESOLUTION, director.Beat.REFLECT, director.Beat.VERSE_REWARD, director.Beat.CHARM_AWARD, director.Beat.DONE]:
 		director._enter_beat(b)
 	_check(director.beat == director.Beat.DONE, "beat machine reaches DONE cleanly")
 
@@ -487,6 +499,140 @@ func _initialize() -> void:
 	await create_timer(0.3).timeout
 	_check(game_menu._end_panel.visible, "end panel appears after the chapter finishes")
 
+	print("-- profiles: who is playing, and what is saved --")
+	var kid_id: String = Profiles.active_id
+	_check(Profiles.clean_name("  Maya  ") == "Maya" and Profiles.clean_name("Bartholomew the Great").length() <= Profiles.MAX_NAME_LENGTH, "names are trimmed and kept short")
+	_check(Profiles.create("   ", "sun") == "", "a name of only spaces makes no profile")
+	_check(Profiles.unlock_verse("made_up_verse") and not Profiles.unlock_verse("made_up_verse"), "a verse can be earned once")
+	var extras: Array = []
+	while Profiles.can_add():
+		extras.append(Profiles.create("Kid %d" % extras.size(), "star"))
+	_check(Profiles.count() == Profiles.MAX_PROFILES and Profiles.create("Fifth", "sun") == "", "a tablet holds up to %d children" % Profiles.MAX_PROFILES)
+	Profiles.use_file(TEST_PROFILES)   # read it back from disk
+	Profiles.set_active(kid_id)
+	_check(Profiles.count() == Profiles.MAX_PROFILES and Profiles.has_verse(kid_id, "made_up_verse") and Profiles.has_charm(kid_id, JournalContent.CHARM_COURAGE), "everything is still there after reading the file again")
+	for extra in extras:
+		Profiles.remove(extra)
+	_check(Profiles.count() == 1 and Profiles.active_id == kid_id, "removing other children leaves this one playing")
+	var settings_before: Dictionary = GameSettings.as_dictionary()
+	GameSettings.music_volume = 0.4
+	GameSettings.save_settings()
+	_check(is_equal_approx(float(Profiles.active()["settings"]["music_volume"]), 0.4), "a child's volume choices are kept for that child")
+	var second_id: String = Profiles.create("Sam", "heart")
+	var picker: CanvasLayer = main.get_node("ProfileScreen")
+	var chosen: Array = []
+	picker.profile_chosen.connect(func(id: String) -> void: chosen.append(id))
+	picker.choose(second_id)
+	GameSettings.music_volume = 0.9
+	GameSettings.save_settings()
+	picker.choose(kid_id)
+	_check(is_equal_approx(GameSettings.music_volume, 0.4), "choosing a child brings back their own volume (0.4, not Sam's 0.9)")
+	GameSettings.apply_profile(settings_before)
+	GameSettings.save_settings()
+	Profiles.remove(second_id)
+	Profiles.set_active(kid_id)
+
+	print("-- Faith Journal: the story fills it, and it reads aloud --")
+	var kid: Dictionary = Profiles.active()
+	_check(Profiles.has_verse(kid_id, JournalContent.VERSE_JOSHUA_1_9), "reaching the verse puts Joshua 1:9 in the child's journal")
+	_check(Profiles.has_charm(kid_id, JournalContent.CHARM_COURAGE), "the Courage charm is in it too")
+	_check(int(kid["chapters"]) == 1, "and the finished chapter is counted")
+	var unrecorded_journal: Array = []
+	for v in JournalContent.VERSES:
+		for line in [v["spoken_ref"], v["text"]]:
+			if not vo_lib.LINES.has(line):
+				unrecorded_journal.append(line)
+	for c in JournalContent.CHARMS:
+		if not vo_lib.LINES.has(c["spoken"]):
+			unrecorded_journal.append(c["spoken"])
+	_check(unrecorded_journal.is_empty(), "every verse and charm in the journal has a recorded clip %s" % [unrecorded_journal])
+	var journal: CanvasLayer = main.get_node("JournalScreen")
+	game_menu.set_paused(false)
+	journal.open()
+	_check(journal.is_open() and paused_now(), "opening the journal pauses the game")
+	_check(journal._title.text == "Test's Faith Journal", "the journal is titled with the child's name")
+	_check(journal._verse_box.get_child_count() == 1, "it shows the verse the child has earned")
+	_check(journal._charm_row.get_child_count() == 1 + JournalContent.MYSTERY_SLOTS and journal._charm_row.get_child(0) is Button, "it shows the Courage charm and %d empty slots" % JournalContent.MYSTERY_SLOTS)
+	_check(audio.process_mode == Node.PROCESS_MODE_ALWAYS, "the audio keeps running while the game is paused")
+	journal._hear(JournalContent.verse_dialogue(JournalContent.VERSE_JOSHUA_1_9))
+	_check(audio._speaking_clips and vo_player.stream == vo_lib.clip_for(JournalContent.VERSES[0]["spoken_ref"]), "tapping Hear it reads the verse aloud in the recorded voice")
+	journal._hear(JournalContent.CHARMS[0]["spoken"])
+	_check(vo_player.stream == vo_lib.clip_for(JournalContent.CHARMS[0]["spoken"]), "tapping the charm reads its line")
+	var pause_event := InputEventAction.new()
+	pause_event.action = "pause"
+	pause_event.pressed = true
+	game_menu._input(pause_event)
+	_check(journal.is_open() and paused_now(), "the pause key does not pause behind the journal")
+	journal.close()
+	_check(not journal.is_open() and not paused_now() and not audio._speaking_clips and audio.process_mode == Node.PROCESS_MODE_INHERIT, "closing the journal resumes the game and stops the voice")
+	game_menu.set_paused(true)
+	journal.open()
+	journal.close()
+	_check(paused_now(), "a journal opened from the pause menu goes back to the pause menu")
+	game_menu.set_paused(false)
+
+	print("-- Faith Journal: for grown-ups --")
+	journal.open()
+	journal._show_gate()
+	var hold: Button = journal._grownups_box.get_child(2)
+	hold.button_down.emit()
+	journal._process(1.0)
+	hold.button_up.emit()
+	journal._process(5.0)
+	_check(journal._grownups_box.get_child(0).text == "For grown-ups", "letting go early does not open the grown-ups options")
+	hold.button_down.emit()
+	for _i in 4:
+		journal._process(1.0)
+	_check(journal._grownups_box.get_child(0).text == "What would you like to do?", "holding for %d seconds does" % int(journal.HOLD_SECONDS))
+	journal._erase()
+	_check(Profiles.get_profile(kid_id)["verses"].is_empty() and Profiles.get_profile(kid_id)["charms"].is_empty() and Profiles.count() == 1, "emptying the journal clears the verses and charms but keeps the child")
+	_check(journal._verse_box.get_child(0) is Label and not (journal._charm_row.get_child(0) is Button), "and the journal shows it as empty")
+	var removed_signal: Array = []
+	journal.player_removed.connect(func() -> void: removed_signal.append(true))
+	journal.player_removed.disconnect(game_menu._restart)   # the test scene is not the current scene, so it cannot be reloaded
+	var leaving_id: String = Profiles.create("Leaving", "cloud")
+	Profiles.set_active(leaving_id)
+	journal._remove()
+	_check(Profiles.get_profile(leaving_id).is_empty() and Profiles.active_id == "" and removed_signal.size() == 1 and not journal.is_open(), "removing a child takes them off the tablet and asks for the picker")
+	Profiles.set_active(kid_id)
+	_check(game_menu.has_method("change_player_and_restart") and game_menu._journal == journal, "the pause menu can open the journal and change player")
+
+	print("-- Who is playing? screen --")
+	_check(not picker.is_open() and not Profiles.picker_open, "the picker stays out of the way while a child is playing")
+	Profiles.set_active("")
+	picker.open()
+	_check(picker.is_open() and paused_now() and Profiles.picker_open, "opening the picker pauses the game")
+	_check(picker._profile_row.get_child_count() == Profiles.count() + 1, "it shows one button per child, and New")
+	game_menu._input(pause_event)
+	_check(paused_now() and not game_menu._pause_layer.visible, "the pause key does nothing behind the picker")
+	_check(picker.create_profile("   ", "sun") == "" and picker._hint.text == "Type your name first", "an empty name is not accepted, and the hint says why")
+	var made: String = picker.create_profile("Maya", "sun")
+	_check(not made.is_empty() and Profiles.active_id == made and Profiles.active()["avatar"] == "sun" and chosen.back() == made, "a new child is made and chosen")
+	_check(not picker.is_open() and not paused_now() and not Profiles.picker_open, "then the game carries on")
+	Profiles.remove(made)
+	Profiles.set_active(kid_id)
+	picker.open()
+	picker.choose(kid_id)
+	_check(chosen.back() == kid_id and not picker.is_open(), "tapping a child chooses them")
+
+	print("-- the story waits for a child to be chosen --")
+	Profiles.set_active("")
+	picker.open_if_nobody_is_playing()
+	_check(picker.is_open() and paused_now(), "a fresh start shows Who is playing?")
+	director.beat = director.Beat.DONE
+	director.dialogue_label.text = ""
+	director._start_story()
+	_check(director.beat == director.Beat.DONE and director.dialogue_label.text == "", "and the story does not start yet")
+	picker.choose(kid_id)
+	_check(director.beat == director.Beat.ARRIVE and director.dialogue_label.text.contains("valley") and not paused_now(), "choosing a child starts the story")
+	Profiles.set_active(kid_id)
+	director._start_story()
+	_check(director.beat == director.Beat.ARRIVE, "with a child already playing (Play again), the story starts straight away")
+
+	audio.stop_speech()   # the story was just restarted, so its first line may be playing
+	vo_player.stream = null
+	await create_timer(0.5).timeout   # the audio server lets go of finished sounds a moment later
+	DirAccess.remove_absolute(TEST_PROFILES)
 	sound_lib._cache.clear()  # the shared streams would otherwise be reported as leaked at exit
 	vo_lib._cache.clear()
 	print("")

@@ -1,8 +1,10 @@
 extends CanvasLayer
-## Pause menu, read-aloud toggle and the end-of-chapter "Play again" panel.
+## Pause menu, read-aloud toggle, Faith Journal button and the end-of-chapter "Play again" panel.
 ##
 ## - Pause: Esc / P / gamepad Start, or the round button top-right. Offers
-##   Resume, read-aloud on/off, volume and "Play again from the start".
+##   Resume, the Faith Journal, read-aloud on/off, volume, "Play again from the start"
+##   and "Change player".
+## - Book button (top-right): opens the Faith Journal (journal_screen.gd).
 ## - Read-aloud button (speaker icon): turns text-to-speech on or off.
 ## - After the chapter finishes, a "Play again" / "Keep exploring" panel
 ##   appears once the confetti has had a moment.
@@ -10,19 +12,23 @@ extends CanvasLayer
 
 const GameSettings := preload("res://scripts/game_settings.gd")
 const SoundBus := preload("res://scripts/sound_bus.gd")
+const Profiles := preload("res://scripts/profiles.gd")
+const PaperUI := preload("res://scripts/paper_ui.gd")
 
-const PAPER := Color(0.98, 0.94, 0.83)
-const INK := Color(0.35, 0.2, 0.08)
-const GOLD := Color(0.98, 0.78, 0.25)
+const PAPER := PaperUI.PAPER
+const INK := PaperUI.INK
+const GOLD := PaperUI.GOLD
 
 @export var end_panel_delay: float = 2.6
 
 var _audio: Node
 var _director: Node
+var _journal: CanvasLayer
 var _root: Control
 var _pause_layer: Control
 var _pause_button: IconButton
 var _speaker_button: IconButton
+var _book_button: IconButton
 var _end_panel: PanelContainer
 var _play_again_button: Button
 var _resume_button: Button
@@ -57,6 +63,18 @@ class IconButton extends Control:
 		if kind == "pause":
 			draw_rect(Rect2(c + Vector2(-11.0, -12.0), Vector2(7.0, 24.0)), ink)
 			draw_rect(Rect2(c + Vector2(4.0, -12.0), Vector2(7.0, 24.0)), ink)
+		elif kind == "book":
+			# An open book: two pages meeting at the spine.
+			for side in [-1.0, 1.0]:
+				draw_colored_polygon(PackedVector2Array([
+					c + Vector2(side * 2.0, -13.0), c + Vector2(side * 18.0, -10.0),
+					c + Vector2(side * 18.0, 13.0), c + Vector2(side * 2.0, 16.0)]), Color(0.99, 0.96, 0.87))
+				draw_polyline(PackedVector2Array([
+					c + Vector2(side * 2.0, -13.0), c + Vector2(side * 18.0, -10.0),
+					c + Vector2(side * 18.0, 13.0), c + Vector2(side * 2.0, 16.0), c + Vector2(side * 2.0, -13.0)]), ink, 2.5)
+				for line in 3:
+					var y := -4.0 + line * 6.0
+					draw_line(c + Vector2(side * 6.0, y), c + Vector2(side * 14.0, y + 1.0), ink, 1.5)
 		else:
 			# Speaker body, then sound waves (or a slash when off).
 			draw_colored_polygon(PackedVector2Array([
@@ -76,6 +94,7 @@ func _ready() -> void:
 	var main := get_parent()
 	_audio = main.get_node_or_null("%AudioDirector")
 	_director = main.get_node_or_null("ChapterDirector")
+	_journal = main.get_node_or_null("JournalScreen")
 
 	_root = Control.new()
 	_root.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -90,11 +109,19 @@ func _ready() -> void:
 		_director.chapter_finished.connect(_on_chapter_finished)
 	if _audio and _audio.has_signal("read_aloud_changed"):
 		_audio.read_aloud_changed.connect(func(_on: bool) -> void: _refresh_speaker())
+	if _journal and _journal.has_signal("player_removed"):
+		_journal.player_removed.connect(_restart)
+	var picker := main.get_node_or_null("ProfileScreen")
+	if picker and picker.has_signal("profile_chosen"):
+		picker.profile_chosen.connect(func(_id: String) -> void: _refresh_speaker())
 	_refresh_speaker()
 
 
 func _input(event: InputEvent) -> void:
 	if InputMap.has_action("pause") and event.is_action_pressed("pause") and not event.is_echo():
+		# The "Who is playing?" screen and the journal handle their own way out.
+		if Profiles.picker_open or (_journal != null and _journal.is_open()):
+			return
 		set_paused(not get_tree().paused)
 		get_viewport().set_input_as_handled()
 
@@ -120,6 +147,17 @@ func _restart() -> void:
 	get_tree().reload_current_scene()
 
 
+func _open_journal() -> void:
+	if _journal and _journal.has_method("open"):
+		_journal.open()
+
+
+## Forgets who is playing and starts over, which brings back the "Who is playing?" screen.
+func change_player_and_restart() -> void:
+	Profiles.set_active("")
+	_restart()
+
+
 func _on_chapter_finished() -> void:
 	await get_tree().create_timer(end_panel_delay).timeout
 	_end_panel.visible = true
@@ -129,62 +167,31 @@ func _on_chapter_finished() -> void:
 ## -- UI construction ---------------------------------------------------------
 
 func _panel_style() -> StyleBoxFlat:
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = PAPER
-	sb.border_color = INK
-	sb.set_border_width_all(3)
-	sb.set_corner_radius_all(24)
-	sb.set_content_margin_all(22)
-	sb.shadow_color = Color(0, 0, 0, 0.25)
-	sb.shadow_size = 10
-	return sb
+	return PaperUI.panel_style()
 
 
 func _make_button(text: String) -> Button:
-	var b := Button.new()
-	b.text = text
-	b.custom_minimum_size = Vector2(320.0, 62.0)
-	b.add_theme_font_size_override("font_size", 26)
-	b.add_theme_color_override("font_color", INK)
-	b.add_theme_color_override("font_hover_color", INK)
-	b.add_theme_color_override("font_focus_color", INK)
-	b.add_theme_color_override("font_pressed_color", INK)
-	var normal := StyleBoxFlat.new()
-	normal.bg_color = GOLD
-	normal.border_color = INK
-	normal.set_border_width_all(3)
-	normal.set_corner_radius_all(18)
-	b.add_theme_stylebox_override("normal", normal)
-	var hover := normal.duplicate() as StyleBoxFlat
-	hover.bg_color = GOLD.lightened(0.18)
-	b.add_theme_stylebox_override("hover", hover)
-	b.add_theme_stylebox_override("focus", hover)
-	var press := normal.duplicate() as StyleBoxFlat
-	press.bg_color = GOLD.darkened(0.12)
-	b.add_theme_stylebox_override("pressed", press)
-	return b
+	return PaperUI.button(text)
 
 
 func _label(text: String, size: int) -> Label:
-	var l := Label.new()
-	l.text = text
-	l.add_theme_font_size_override("font_size", size)
-	l.add_theme_color_override("font_color", INK)
-	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	return l
+	return PaperUI.label(text, size)
 
 
 func _build_corner_buttons() -> void:
 	var box := HBoxContainer.new()
 	box.anchor_left = 1.0
 	box.anchor_right = 1.0
-	box.offset_left = -160.0
+	box.offset_left = -232.0
 	box.offset_right = -16.0
 	box.offset_top = 16.0
 	box.offset_bottom = 80.0
 	box.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	box.add_theme_constant_override("separation", 12)
 	_root.add_child(box)
+	_book_button = IconButton.new("book")
+	_book_button.pressed.connect(_open_journal)
+	box.add_child(_book_button)
 	_speaker_button = IconButton.new("speaker")
 	_speaker_button.pressed.connect(_on_speaker_pressed)
 	box.add_child(_speaker_button)
@@ -224,6 +231,10 @@ func _build_pause_panel() -> void:
 	_resume_button.pressed.connect(func() -> void: set_paused(false))
 	vbox.add_child(_resume_button)
 
+	var journal_button := _make_button("Faith Journal")
+	journal_button.pressed.connect(_open_journal)
+	vbox.add_child(journal_button)
+
 	_read_check = CheckButton.new()
 	_read_check.text = "Read the story aloud"
 	_read_check.add_theme_font_size_override("font_size", 24)
@@ -242,6 +253,10 @@ func _build_pause_panel() -> void:
 	var restart := _make_button("Play again from the start")
 	restart.pressed.connect(_restart)
 	vbox.add_child(restart)
+
+	var change_player := _make_button("Change player")
+	change_player.pressed.connect(change_player_and_restart)
+	vbox.add_child(change_player)
 
 
 func _add_slider_row(parent: Control, text: String, on_change: Callable) -> HSlider:
@@ -283,6 +298,10 @@ func _build_end_panel() -> void:
 	_play_again_button.custom_minimum_size = Vector2(240.0, 62.0)
 	_play_again_button.pressed.connect(_restart)
 	row.add_child(_play_again_button)
+	var journal_button := _make_button("My journal")
+	journal_button.custom_minimum_size = Vector2(240.0, 62.0)
+	journal_button.pressed.connect(_open_journal)
+	row.add_child(journal_button)
 	var keep := _make_button("Keep exploring")
 	keep.custom_minimum_size = Vector2(280.0, 62.0)
 	keep.pressed.connect(func() -> void:
