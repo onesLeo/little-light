@@ -33,6 +33,8 @@ const LINES := {
 	"A stone, just right for a sling.": "wl_item_stone",
 	"Worn smooth from long days watching sheep.": "wl_item_staff",
 	"Baa! This little one wandered off again.": "wl_item_lamb",
+	"Who is playing? Tap your picture.": "wl_who_playing",
+	"What is your name? Type it, then pick a picture.": "wl_your_name",
 }
 
 static var _cache: Dictionary = {}

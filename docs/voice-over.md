@@ -15,7 +15,7 @@ There are two layers:
 | David | Bram | preset voice, default settings; a dry, young-adult voice. Chosen over Cody, whose recording sounded like it was made in a room and was too young |
 
 The clips were generated with the Seed Audio 1.0 text-to-speech model (24 kHz), then trimmed of
-leading and trailing silence and saved as mono `.wav` (23 clips, about 2 minutes of speech, 5 MB).
+leading and trailing silence and saved as mono `.wav` (25 clips, about 2 minutes of speech, 5 MB; the last two are the "Who is playing?" prompts).
 Voices differ in how "dry" they sound; if one sounds like it was recorded in a room, try another.
 The tool only exposes speed, loudness and pitch, so any emotion comes from the voice and the wording.
 

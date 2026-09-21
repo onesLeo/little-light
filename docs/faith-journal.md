@@ -4,7 +4,8 @@ Backlog item 3.5. Each child on a tablet has their own name, picture and journal
 
 ## What a child sees
 
-1. **Who is playing?** The first screen on a fresh start. One big button per child (picture and first name)
+1. **Who is playing?** The first screen on a fresh start, read aloud in Wonder Light's voice for a child who cannot read yet.
+   One big button per child (picture and first name)
    and a dashed **New** button. A new child types a name (up to 12 letters), picks one of six paper pictures
    (lamb, star, sun, cloud, heart, olive branch) and taps **Let's go**. Up to **4 children** fit on one tablet.
 2. **The story** starts once a child is chosen. *Play again* keeps the same child; the pause menu's
@@ -79,4 +80,3 @@ test fails if a journal line has no recorded clip.
 - **Names are only lightly checked.** A short list of rude words (`Profiles.BLOCKED_INSIDE` and `BLOCKED_EXACT`) is
   turned away with "Please pick a different name"; capitals, spaces and look-alike digits ("sh1t") do not get round
   it. The list is short on purpose, because a long one turns away real names. A grown-up can still remove a child.
-- **The picker is not read aloud.** Its words are short, but a child who cannot read yet will rely on the pictures.

@@ -704,6 +704,9 @@ func _initialize() -> void:
 	picker.open()
 	_check(picker.is_open() and paused_now() and Profiles.picker_open, "opening the picker pauses the game")
 	_check(picker._profile_row.get_child_count() == Profiles.count() + 1, "it shows one button per child, and New")
+	_check(vo_lib.LINES.has(picker.PICK_LINE) and vo_lib.LINES.has(picker.CREATE_LINE) and vo_lib.clip_for(picker.PICK_LINE) != null and vo_lib.clip_for(picker.CREATE_LINE) != null, "both lines of the screen have a recorded clip")
+	await create_timer(0.8).timeout
+	_check(vo_player.stream == vo_lib.clip_for(picker.PICK_LINE) and audio.process_mode == Node.PROCESS_MODE_ALWAYS, "it reads \"Who is playing?\" aloud for a child who cannot read yet")
 	game_menu._input(pause_event)
 	_check(paused_now() and not game_menu._pause_layer.visible, "the pause key does nothing behind the picker")
 	_check(picker.create_profile("   ", "sun") == "" and picker._hint.text == "Type your name first", "an empty name is not accepted, and the hint says why")
