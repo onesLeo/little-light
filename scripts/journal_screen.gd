@@ -25,6 +25,9 @@ var _title_row: HBoxContainer
 var _verse_box: VBoxContainer
 var _charm_row: HBoxContainer
 var _note: Label
+var _colour_screen: CanvasLayer
+var _colour_button: Button
+var _picked_charm: String = ""
 var _close_button: Button
 var _grownups_button: Button
 var _grownups: Control
@@ -38,6 +41,9 @@ func _ready() -> void:
 	layer = 12
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_audio = get_parent().get_node_or_null("%AudioDirector")
+	_colour_screen = get_parent().get_node_or_null("ColourScreen")
+	if _colour_screen and _colour_screen.has_signal("closed"):
+		_colour_screen.closed.connect(_on_colouring_closed)
 	_build()
 	visible = false
 
@@ -76,6 +82,8 @@ func close() -> void:
 
 func _input(event: InputEvent) -> void:
 	if visible and InputMap.has_action("pause") and event.is_action_pressed("pause") and not event.is_echo():
+		if _colour_screen != null and _colour_screen.is_open():
+			return   # the colouring page handles its own way out
 		if _grownups.visible:
 			_close_grownups()
 		else:
@@ -140,9 +148,18 @@ func _build() -> void:
 	_charm_row = HBoxContainer.new()
 	_charm_row.add_theme_constant_override("separation", 18)
 	column.add_child(_charm_row)
+	var note_row := HBoxContainer.new()
+	note_row.add_theme_constant_override("separation", 16)
+	column.add_child(note_row)
 	_note = PaperUI.label("", 24, HORIZONTAL_ALIGNMENT_LEFT)
 	_note.custom_minimum_size.y = 34.0
-	column.add_child(_note)
+	_note.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_note.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	note_row.add_child(_note)
+	_colour_button = PaperUI.button("Colour my charm", Vector2(290.0, 60.0), 26)
+	_colour_button.pressed.connect(_colour_picked_charm)
+	note_row.add_child(_colour_button)
 
 	_grownups_button = PaperUI.button("For grown-ups", Vector2(230.0, 48.0), 22, PaperUI.PAPER_DEEP)
 	_grownups_button.size_flags_horizontal = Control.SIZE_SHRINK_END
@@ -187,6 +204,8 @@ func _refresh() -> void:
 	_title_row.move_child(picture, 0)
 	_note.text = ""
 	_grownups_button.visible = not p.is_empty()
+	if p.is_empty() or not Profiles.has_charm(p["id"], _picked_charm):
+		_picked_charm = ""
 
 	for child in _verse_box.get_children():
 		_verse_box.remove_child(child)
@@ -210,9 +229,12 @@ func _refresh() -> void:
 		if p.is_empty() or not Profiles.has_charm(p["id"], c["id"]):
 			continue
 		_charm_row.add_child(_charm_button(c))
+		if _picked_charm.is_empty():
+			_picked_charm = c["id"]
 		shown += 1
 	for _i in range(shown, slots):
 		_charm_row.add_child(_mystery_slot())
+	_colour_button.visible = _colour_screen != null and not _picked_charm.is_empty()
 
 
 func _verse_card(v: Dictionary) -> Control:
@@ -246,6 +268,8 @@ func _charm_button(c: Dictionary) -> Button:
 	column.add_theme_constant_override("separation", 6)
 	var icon = AvatarIcon.new("charm", 104.0)
 	icon.tint = c["color"]
+	icon.charm_id = c["id"]
+	icon.colours = Profiles.charm_colours(Profiles.active_id, c["id"]) if Profiles.has_coloured_charm(Profiles.active_id, c["id"]) else []
 	icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	column.add_child(icon)
 	var name_label := PaperUI.label(c["name"], 26)
@@ -253,6 +277,7 @@ func _charm_button(c: Dictionary) -> Button:
 	column.add_child(name_label)
 	b.add_child(column)
 	b.pressed.connect(func() -> void:
+		_picked_charm = c["id"]
 		_note.text = c["reason"]
 		_hear(c["spoken"]))
 	return b
@@ -270,6 +295,21 @@ func _mystery_slot() -> Control:
 	soon.add_theme_color_override("font_color", PaperUI.INK_SOFT)
 	column.add_child(soon)
 	return column
+
+
+## Opens the colouring page for the charm the child last tapped (or their first one).
+func _colour_picked_charm() -> void:
+	if _colour_screen == null or _picked_charm.is_empty():
+		return
+	if _audio:
+		_audio.stop_speech()
+	_colour_screen.open(_picked_charm)
+
+
+func _on_colouring_closed() -> void:
+	if visible:
+		_refresh()
+		_colour_button.grab_focus()
 
 
 func _hear(text: String) -> void:

@@ -94,7 +94,7 @@ little-light-godot/
 - Valley, WW, David mentor, and wonder-item meshes are placeholder GLBs.
 - Safety floor under the diorama so the player cannot fall forever.
 - Tabletop camera is a `Camera3D` sibling of the player under `Main`. It follows from above/behind without inheriting the player's rotation; `CameraDirector` switches to a separate close-up camera for dialogue and the charm ceremony.
-- Courage charm uses procedural placeholder 3D meshes with a float/snap animation. A persistent Faith Journal is not implemented.
+- Courage charm uses procedural placeholder 3D meshes with a float/snap animation. The child's own colouring of the charm (see the Faith Journal below) is put on its face.
 - Dialogue and narration are displayed as text **and read aloud** with recorded voice clips: Wonder Light is Juno, David is Bram (`assets/audio/vo`, see [docs/voice-over.md](docs/voice-over.md)). A line with no clip falls back to the operating system's text-to-speech voice, so its availability depends on the OS; with neither, the speaker button is hidden. The valley also has music, wind, a stream, birds, footsteps, a bleating lamb and fluttering butterflies, all synthesized by `tools/make_sounds.py` (see [docs/sound-design.md](docs/sound-design.md)).
 - Touch controls and gamepad bindings are verified with injected input events and the headless smoke test, not yet on a real tablet or controller.
 
@@ -105,7 +105,7 @@ See [docs/improvement-backlog.md](docs/improvement-backlog.md) for the full revi
 
 ## Band notes
 - **Band A Steady Hands:** three slow breaths (hold to breathe in, let go to breathe out); it cannot be failed and cannot be rushed. This replaced the old one-tap design.
-- **Who is playing and the Faith Journal:** each child on a tablet picks a name and a picture (up to 4), and has their own journal of the verses and charms they earn, read aloud when tapped (round book button, pause menu, end panel). Saved on the tablet only. A press-and-hold "For grown-ups" area can empty a journal or remove a child. See [docs/faith-journal.md](docs/faith-journal.md).
+- **Who is playing and the Faith Journal:** each child on a tablet picks a name and a picture (up to 4), and has their own journal of the verses and charms they earn, read aloud when tapped (round book button, pause menu, end panel). Saved on the tablet only. A press-and-hold "For grown-ups" area can empty a journal or remove a child. A child can also colour their Courage charm (tap a paint, tap a part) from the journal or the end-of-chapter panel; it shows in the journal and on the charm in the ceremony. See [docs/faith-journal.md](docs/faith-journal.md).
 - Band B can raise `breaths_required` later.
 
 - Historical Wonder-Walker **v3** introduced paper-grain material and a 12fps step walk animation; the scene now loads **v13**.

@@ -15,7 +15,13 @@ Backlog item 3.5. Each child on a tablet has their own name, picture and journal
      (the same clips as the story).
    - **Charms** the child has earned. Tapping one reads its line and shows why it was earned. The charms not
      earned yet are dashed circles with a "?" and "Not yet". There are two spare slots for chapters to come.
-4. **What is earned:** the verse (Joshua 1:9) when the story reaches it, the Courage charm when its ceremony
+4. **Colour my charm.** A charm can be coloured: **Colour my charm** in the journal (next to the note under the charms)
+   or on the end-of-chapter panel opens a paper page with the charm drawn in ink. The child taps one of eight
+   paints, then taps a part of the charm (the two ribbons, the ring, the inner disc, the star, the middle) to fill it.
+   **Undo** takes the last colour off and **Start again** clears the page (Undo brings it back). Nothing is lost by a
+   wrong tap, and there is no freehand drawing, so a finger on a tablet cannot make a mess. Each colour is saved at
+   once. The coloured charm then shows in the journal, and on the face of the 3D charm when the ceremony plays again.
+5. **What is earned:** the verse (Joshua 1:9) when the story reaches it, the Courage charm when its ceremony
    starts, and a finished-chapter count when the chapter ends.
 
 ## For grown-ups
@@ -32,7 +38,7 @@ Both ask *"This cannot be undone"* first, with **Keep it** as the first choice.
 
 `user://profiles.cfg` on the tablet (on Windows,
 `%APPDATA%\Godot\app_userdata\Little Light — David & Goliath Slice\`). Nothing leaves the tablet: no account,
-no network. Each child's read-aloud choice and volumes are kept with them (`settings.cfg` still holds the
+no network. Each child's charm colours are kept with them, and so are their read-aloud choice and volumes (`settings.cfg` still holds the
 tablet's last values and is used until a child is chosen).
 
 ## How it is built
@@ -43,12 +49,14 @@ tablet's last values and is used until a child is chosen).
 | `scripts/journal_content.gd` | The verses and charms the journal can hold, and their read-aloud text. |
 | `scripts/profile_screen.gd` | "Who is playing?" and the name and picture form. Pauses the game while open. |
 | `scripts/journal_screen.gd` | The journal and the grown-ups' area. Pauses the game and keeps the audio director running so clips can play. |
-| `scripts/avatar_icon.gd` | The little pictures (children, charm, "?", "+"), drawn in code. |
+| `scripts/avatar_icon.gd` | The little pictures (children, charm, "?", "+"), drawn in code. A charm shows the child's colours when it has them. |
+| `scripts/charm_art.gd` | The charm's parts (polygons), the eight paints, drawing, and turning the picture into an image for the 3D charm. |
+| `scripts/colour_screen.gd` | The colouring page: paints, tap-to-fill, Undo, Start again. Pauses the game while open. |
 | `scripts/paper_ui.gd` | The paper-and-ink look shared with the pause menu. |
 | `scripts/chapter_director.gd` | Waits for a child at the start, and awards the verse, charm and finished chapter. |
 | `scripts/game_menu.gd` | The book button, the pause menu's Faith Journal and Change player, and My journal on the end panel. |
 
-**Adding a verse or a charm:** add it to `journal_content.gd`, record its lines (for a verse: the spoken
+**Adding a verse or a charm:** add it to `journal_content.gd` (a new charm also needs its own regions in `charm_art.gd`; until then it shows the Courage picture), record its lines (for a verse: the spoken
 reference and the verse) and list them in `vo_library.gd`, and unlock it from `chapter_director.gd`. The smoke
 test fails if a journal line has no recorded clip.
 
@@ -62,8 +70,8 @@ test fails if a journal line has no recorded clip.
 
 ## Not done, and not tested
 
-- **Drawing.** There is no drawing or colouring yet. Four ideas were sketched (colour your charm, colour a
-  lamb, stickers, free drawing); colouring the charm would be the smallest first step.
+- **More than tap-to-fill.** Four ideas were sketched (colour your charm, colour a lamb, stickers, free drawing);
+  only colouring the charm is built. Colouring works with a finger or a mouse, not yet with a gamepad or keyboard.
 - **On a real tablet.** The touch targets are large (at least 60 px) and there is a visible focus style for a
   gamepad or keyboard, but the on-screen keyboard for typing a name has not been tried, nor how it covers the
   form on a small screen.

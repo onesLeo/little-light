@@ -5,6 +5,7 @@ extends CanvasLayer
 ##   Resume, the Faith Journal, read-aloud on/off, volume, "Play again from the start"
 ##   and "Change player".
 ## - Book button (top-right): opens the Faith Journal (journal_screen.gd).
+## - The end panel also offers "Colour my charm" (colour_screen.gd).
 ## - Read-aloud button (speaker icon): turns text-to-speech on or off.
 ## - After the chapter finishes, a "Play again" / "Keep exploring" panel
 ##   appears once the confetti has had a moment.
@@ -14,6 +15,7 @@ const GameSettings := preload("res://scripts/game_settings.gd")
 const SoundBus := preload("res://scripts/sound_bus.gd")
 const Profiles := preload("res://scripts/profiles.gd")
 const PaperUI := preload("res://scripts/paper_ui.gd")
+const JournalContent := preload("res://scripts/journal_content.gd")
 
 const PAPER := PaperUI.PAPER
 const INK := PaperUI.INK
@@ -24,6 +26,7 @@ const GOLD := PaperUI.GOLD
 var _audio: Node
 var _director: Node
 var _journal: CanvasLayer
+var _colour: CanvasLayer
 var _root: Control
 var _pause_layer: Control
 var _pause_button: IconButton
@@ -31,6 +34,7 @@ var _speaker_button: IconButton
 var _book_button: IconButton
 var _end_panel: PanelContainer
 var _play_again_button: Button
+var _colour_charm_button: Button
 var _resume_button: Button
 var _read_check: CheckButton
 var _volume: HSlider
@@ -95,6 +99,7 @@ func _ready() -> void:
 	_audio = main.get_node_or_null("%AudioDirector")
 	_director = main.get_node_or_null("ChapterDirector")
 	_journal = main.get_node_or_null("JournalScreen")
+	_colour = main.get_node_or_null("ColourScreen")
 
 	_root = Control.new()
 	_root.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -119,8 +124,8 @@ func _ready() -> void:
 
 func _input(event: InputEvent) -> void:
 	if InputMap.has_action("pause") and event.is_action_pressed("pause") and not event.is_echo():
-		# The "Who is playing?" screen and the journal handle their own way out.
-		if Profiles.picker_open or (_journal != null and _journal.is_open()):
+		# The "Who is playing?" screen, the journal and the colouring page handle their own way out.
+		if Profiles.picker_open or (_journal != null and _journal.is_open()) or (_colour != null and _colour.is_open()):
 			return
 		set_paused(not get_tree().paused)
 		get_viewport().set_input_as_handled()
@@ -147,6 +152,11 @@ func _restart() -> void:
 	get_tree().reload_current_scene()
 
 
+func _open_colouring() -> void:
+	if _colour and _colour.has_method("open"):
+		_colour.open(JournalContent.CHARM_COURAGE)
+
+
 func _open_journal() -> void:
 	if _journal and _journal.has_method("open"):
 		_journal.open()
@@ -160,6 +170,7 @@ func change_player_and_restart() -> void:
 
 func _on_chapter_finished() -> void:
 	await get_tree().create_timer(end_panel_delay).timeout
+	_colour_charm_button.visible = Profiles.has_charm(Profiles.active_id, JournalContent.CHARM_COURAGE)
 	_end_panel.visible = true
 	_play_again_button.grab_focus()
 
@@ -295,15 +306,19 @@ func _build_end_panel() -> void:
 	row.add_theme_constant_override("separation", 18)
 	_end_panel.add_child(row)
 	_play_again_button = _make_button("Play again")
-	_play_again_button.custom_minimum_size = Vector2(240.0, 62.0)
+	_play_again_button.custom_minimum_size = Vector2(200.0, 62.0)
 	_play_again_button.pressed.connect(_restart)
 	row.add_child(_play_again_button)
 	var journal_button := _make_button("My journal")
-	journal_button.custom_minimum_size = Vector2(240.0, 62.0)
+	journal_button.custom_minimum_size = Vector2(200.0, 62.0)
 	journal_button.pressed.connect(_open_journal)
 	row.add_child(journal_button)
+	_colour_charm_button = _make_button("Colour my charm")
+	_colour_charm_button.custom_minimum_size = Vector2(290.0, 62.0)
+	_colour_charm_button.pressed.connect(_open_colouring)
+	row.add_child(_colour_charm_button)
 	var keep := _make_button("Keep exploring")
-	keep.custom_minimum_size = Vector2(280.0, 62.0)
+	keep.custom_minimum_size = Vector2(240.0, 62.0)
 	keep.pressed.connect(func() -> void:
 		_end_panel.visible = false
 		get_viewport().gui_release_focus())

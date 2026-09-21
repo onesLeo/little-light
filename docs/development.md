@@ -23,7 +23,7 @@ godot --headless --path . --script tests/smoke_test.gd
 ```
 
 It starts the real main scene without a window and checks the story beats, input devices, the play
-area, the living world, where trees and rocks stand, a triangle budget, who is playing and the Faith Journal, the voice-over, the soundscape and Steady Hands. It prints `SMOKE TEST PASSED`
+area, the living world, where trees and rocks stand, a triangle budget, who is playing, the Faith Journal and colouring the charm, the voice-over, the soundscape and Steady Hands. It prints `SMOKE TEST PASSED`
 when every check is OK and exits with code 1 otherwise. It takes about a minute.
 
 **On GitHub** the same test runs on every pull request and on every push to `main`

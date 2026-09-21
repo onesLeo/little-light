@@ -6,6 +6,8 @@ extends Control
 ##
 ## Kinds: the names in Profiles.AVATAR_KINDS, "charm" (a gold disc on a ring), "mystery" (a "?") and "plus".
 
+const CharmArt := preload("res://scripts/charm_art.gd")
+
 const INK := Color(0.35, 0.2, 0.08)
 const CREAM := Color(0.99, 0.96, 0.87)
 
@@ -21,6 +23,9 @@ const DISC := {
 
 var kind: String = "lamb"
 var tint: Color = Color(0.95, 0.78, 0.35)
+## For "charm": the paints the child chose (see charm_art.gd). Empty means the plain gold charm.
+var charm_id: String = ""
+var colours: Array = []
 
 
 func _init(icon_kind: String = "lamb", side: float = 96.0) -> void:
@@ -133,6 +138,9 @@ func _leaf(from: Vector2, dir: Vector2, length: float) -> void:
 
 
 func _draw_charm(c: Vector2, r: float) -> void:
+	if not colours.is_empty():
+		CharmArt.draw(self, Rect2(c - Vector2(r, r), Vector2(r, r) * 2.0), charm_id, colours, 2.0)
+		return
 	draw_arc(c, r * 0.95, 0.0, TAU, 48, Color(0.82, 0.62, 0.28), 6.0)
 	draw_arc(c, r * 0.95, 0.0, TAU, 48, INK, 2.0)
 	_dot(c, r * 0.6, tint)

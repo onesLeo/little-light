@@ -7,7 +7,10 @@ extends RefCounted
 ##
 ## A profile is a Dictionary:
 ##   id, name, avatar (one of AVATAR_KINDS), verses (ids), charms (ids), chapters (times finished),
-##   settings (that child's read-aloud and volume choices; empty means "as the tablet has them").
+##   settings (that child's read-aloud and volume choices; empty means "as the tablet has them"),
+##   colours (charm id -> the paints they chose for its regions, see charm_art.gd).
+
+const CharmArt := preload("res://scripts/charm_art.gd")
 
 const DEFAULT_PATH := "user://profiles.cfg"
 const MAX_PROFILES := 4
@@ -52,6 +55,7 @@ static func load_all() -> void:
 			"charms": _strings(cfg.get_value(section, "charms", [])),
 			"chapters": maxi(int(cfg.get_value(section, "chapters", 0)), 0),
 			"settings": cfg.get_value(section, "settings", {}) if cfg.get_value(section, "settings", {}) is Dictionary else {},
+			"colours": _colour_lists(cfg.get_value(section, "colours", {})),
 		}
 		_order.append(str(id))
 	if count() > MAX_PROFILES:
@@ -81,7 +85,22 @@ static func save() -> void:
 		cfg.set_value(section, "charms", p["charms"])
 		cfg.set_value(section, "chapters", p["chapters"])
 		cfg.set_value(section, "settings", p["settings"])
+		cfg.set_value(section, "colours", p["colours"])
 	cfg.save(path)
+
+
+## A saved "colours" value made safe: charm id -> list of paint numbers (-1 for none), nothing else.
+static func _colour_lists(values: Variant) -> Dictionary:
+	var out: Dictionary = {}
+	if values is Dictionary:
+		for charm_id in values:
+			if not (values[charm_id] is Array):
+				continue
+			var list: Array = []
+			for n in (values[charm_id] as Array).slice(0, 16):
+				list.append(clampi(int(n), -1, CharmArt.PALETTE.size() - 1))
+			out[str(charm_id)] = list
+	return out
 
 
 static func _strings(values: Variant) -> Array:
@@ -144,6 +163,7 @@ static func create(display_name: String, avatar: String) -> String:
 		"charms": [],
 		"chapters": 0,
 		"settings": {},
+		"colours": {},
 	}
 	_order.append(id)
 	save()
@@ -185,6 +205,28 @@ static func _unlock(key: String, item_id: String) -> bool:
 	return true
 
 
+## The paints a child chose for a charm: one number per region of its picture, -1 for a region they
+## have not coloured. Always as long as the picture has regions.
+static func charm_colours(id: String, charm_id: String) -> Array:
+	var saved: Array = get_profile(id).get("colours", {}).get(charm_id, [])
+	var list: Array = []
+	for i in CharmArt.region_count(charm_id):
+		list.append(int(saved[i]) if i < saved.size() else -1)
+	return list
+
+
+static func has_coloured_charm(id: String, charm_id: String) -> bool:
+	return charm_colours(id, charm_id).any(func(n: int) -> bool: return n >= 0)
+
+
+static func set_charm_colours(id: String, charm_id: String, colours: Array) -> void:
+	var p := get_profile(id)
+	if p.is_empty() or not (p["charms"] as Array).has(charm_id):
+		return
+	p["colours"][charm_id] = colours.duplicate()
+	save()
+
+
 static func finish_chapter() -> void:
 	var p := active()
 	if p.is_empty():
@@ -211,6 +253,7 @@ static func erase_progress(id: String) -> void:
 		return
 	p["verses"] = []
 	p["charms"] = []
+	p["colours"] = {}
 	p["chapters"] = 0
 	save()
 
