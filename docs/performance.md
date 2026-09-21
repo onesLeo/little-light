@@ -81,7 +81,7 @@ Result on the same laptop:
    523 to 351. The **Mobile renderer read 275 both before and after**, so the tablet may not gain from this; only a
    real tablet will tell. The new rounded leaves cost more triangles (whole scene 263,030 to 272,590, primitives
    with shadows 361k to 405k), so the budget is now 290,000 with only about 17,000 to spare.
-3. **Glow** is worth a look on a tablet: about 0.6 ms here. It could be turned off or cut down on handhelds.
+3. **Glow is off on a phone or tablet** (`performance_tuning.gd`, `apply_glow`). It costs about 0.6 ms here and needs a full-screen HDR pass, which mobile GPUs pay more for. Screenshots with it on and off are almost the same (a little less sparkle on the water; the Wonder Light's halo is its own mesh). If the tablet has frame time to spare, set `glow_on_handhelds` on the PerformanceTuning node to bring it back.
 4. **The stream pack** (35 surfaces, 29 objects, plus 24 fish objects) could be merged.
 5. **David's LODs.** Not needed at his current size.
 

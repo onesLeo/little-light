@@ -205,6 +205,15 @@ func _initialize() -> void:
 	_check(is_equal_approx(perf.render_scale_for(2400.0, 1600.0), 2.0 / 3.0), "a 2400 px wide tablet draws the 3D picture at 1600 px")
 	_check(perf.render_scale_for(9000.0, 1600.0) == 0.5, "a huge screen never drops below half size")
 	_check(main.get_viewport().scaling_3d_scale == 1.0, "on a computer the picture is still drawn at full size")
+	var scene_environment: Environment = (main.find_children("*", "WorldEnvironment", true, false)[0] as WorldEnvironment).environment
+	_check(scene_environment.glow_enabled, "on a computer the glow stays on")
+	perf.apply_glow(true)
+	_check(not scene_environment.glow_enabled, "on a phone or tablet the glow is off")
+	perf.glow_on_handhelds = true
+	perf.apply_glow(true)
+	_check(scene_environment.glow_enabled, "unless it is asked to stay on")
+	perf.glow_on_handhelds = false
+	perf.apply_glow(false)
 	perf.cap_on_computers = true
 	perf.max_render_width = 40   # a headless window is only 100 px wide
 	perf._update_render_scale()

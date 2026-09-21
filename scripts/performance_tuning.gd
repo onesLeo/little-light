@@ -8,11 +8,16 @@ extends Node
 ##   up to the screen. Tablet screens are often 2000+ pixels wide, which is four times the pixels
 ##   of the 1280 x 720 the game is designed at, and the fragment work grows with them. The menus and
 ##   dialogue are 2D and stay sharp. Computers are not touched.
+## - On a phone or tablet the glow (bloom) is off. It needs an extra full-screen HDR pass that mobile
+##   GPUs pay a lot for, and screenshots with it on and off are almost the same (a little less sparkle
+##   on the water). The Wonder Light's halo is its own mesh, so it still glows.
 ## See docs/performance.md for the measurements behind this.
 
 @export var max_render_width: int = 1600
 ## Turn on to apply the render-size cap on a computer too (the smoke test does).
 @export var cap_on_computers: bool = false
+## Keep the glow on a phone or tablet too. Try it once the game runs on a tablet and the frame time allows.
+@export var glow_on_handhelds: bool = false
 
 const OUTLINE_SUFFIX := "_Outline"
 
@@ -22,6 +27,7 @@ func _ready() -> void:
 	call_deferred("_stop_outline_shadows")
 	get_window().size_changed.connect(_update_render_scale)
 	_update_render_scale()
+	apply_glow(OS.has_feature("mobile"))
 
 
 ## Fraction of the window's width to render the 3D picture at: 1.0 when the window is not wider
@@ -36,6 +42,14 @@ func _update_render_scale() -> void:
 	if not (cap_on_computers or OS.has_feature("mobile")):
 		return
 	get_viewport().scaling_3d_scale = render_scale_for(float(get_window().size.x), float(max_render_width))
+
+
+## Switches the scene's glow off for a handheld (unless glow_on_handhelds) and back on for anything else.
+func apply_glow(handheld: bool) -> void:
+	for node in get_parent().find_children("*", "WorldEnvironment", true, false):
+		var env := (node as WorldEnvironment).environment
+		if env != null:
+			env.glow_enabled = not handheld or glow_on_handhelds
 
 
 func _stop_outline_shadows() -> void:
