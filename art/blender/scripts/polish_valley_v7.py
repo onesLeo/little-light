@@ -25,6 +25,7 @@ so nothing about them said "stone". The trees had the same problem: olives were 
   bush is two draw calls (body + outline) instead of five to seven. Godot's importer leaves "vertex colour as
   albedo" off, so `scripts/foliage_colour.gd` switches it on at start. The palette numbers below are what the
   eye should see, and `_shade()` converts them to the linear values a vertex holds.
+* Three flattened boulders of the valley's stone stick out of the shelf's front cliff as ledges, half buried in it, with leafy tufts on top (`make_ledges`).
 * Trees stand on grass. v6's list put ten of them on the steep back wall (which the ground map paints as bare rock) or on the lip of the shelf; `TREE_MOVES` gives those a spot on grass, and the generator reports any tree left on ground steeper than 34 degrees.
 
 Object names are unchanged (Shrub_N / Rock_N / Olive_N / Cypress_N and their *_Outline hulls) because
@@ -753,6 +754,108 @@ def place_cypress(x, y, h=6.5, seed=0):
     return make_cypress(x, y, h=h, seed=seed)
 
 
+# -- Cliff ledges ------------------------------------------------------------
+# The shelf's cliff was one smooth slab, so a child saw a flat wall. Here flattened boulders of
+# the valley's own stone (same textured stone and inked outline as the rocks on the meadow)
+# stick out of it in two rows, half buried in the wall, with leafy tufts growing on top. First
+# try was flat paper slabs with a grassy top; they read as floating tiles, while a rounded
+# outcrop looks like it grew there. They are decoration (the play boundary keeps the walker away
+# from the wall), so they are not part of the height field and nothing else has to know about
+# them. The waterfall gets a clear gap.
+
+FALL_GAP = (-8.2, -4.8)        # no outcrops where the waterfall pours (x range on the front face)
+
+
+def _wall_point(face, along, z):
+    """Where the cliff surface is `z` high. Returns (point, outward normal, tangent)."""
+    if face == "front":                      # the face turned toward the camera, height rises with y
+        lo, hi = 4.4, 6.6
+        for _ in range(30):
+            mid = (lo + hi) / 2
+            if v6.height_at(along, mid) < z:
+                lo = mid
+            else:
+                hi = mid
+        return Vector((along, (lo + hi) / 2, z)), Vector((0.0, -1.0, 0.0)), Vector((1.0, 0.0, 0.0))
+    lo, hi = -4.8, -2.6                      # the right-hand face, height falls as x grows
+    for _ in range(30):
+        mid = (lo + hi) / 2
+        if v6.height_at(mid, along) > z:
+            lo = mid
+        else:
+            hi = mid
+    return Vector(((lo + hi) / 2, along, z)), Vector((1.0, 0.0, 0.0)), Vector((0.0, 1.0, 0.0))
+
+
+def make_outcrop(point, normal, tangent, length, depth, thick, index):
+    """A flattened, noise-displaced boulder half buried in the wall at `point`."""
+    r = random.Random(SEED * 47 + index)
+    bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=2, radius=1.0, location=(0, 0, 0))
+    obj = bpy.context.active_object
+    ox, oy, oz = r.uniform(0, 50), r.uniform(0, 50), r.uniform(0, 50)
+    bm = bmesh.new()
+    bm.from_mesh(obj.data)
+    for v in bm.verts:
+        v.co *= 1.0 + bnoise.noise(Vector((v.co.x * 1.6 + ox, v.co.y * 1.6 + oy, v.co.z * 1.6 + oz))) * 0.32
+    bm.to_mesh(obj.data)
+    bm.free()
+    obj.scale = (length / 2, depth, thick / 2)
+    obj.rotation_euler = Euler((r.uniform(-0.05, 0.05), r.uniform(-0.05, 0.05), math.atan2(tangent.y, tangent.x)), "XYZ")
+    bpy.ops.object.transform_apply(scale=True, rotation=True)
+    obj.location = point + normal * depth * 0.30 - Vector((0.0, 0.0, thick * 0.12))
+    variant = ROCK_VARIANTS[(0, 3, 2, 0)[index % 4]]        # grey, mossy, slate, grey (limestone is the wall's own tan)
+    name, base, dark, light, moss = variant
+    obj.data.materials.append(stone_material(name, base, dark, light, moss, SEED + len(name)))
+    v6.shade_flat(obj)
+    _box_project_uvs(obj, scale=1.6 / max(depth, 0.3))
+    v6.add_outline(obj, 0.022)
+    outline = bpy.data.objects[obj.name + "_Outline"]
+    outline.name = f"LedgeRock_{index}_Outline"
+    obj.name = f"LedgeRock_{index}"
+    return obj
+
+
+def _ledge_tuft(fb, r, centre, s):
+    """A small mound of rounded leaves growing on top of an outcrop."""
+    families = [(f["light"], f["mid"]) for f in LEAF_FAMILIES]
+    _leaf_dome(fb, r, centre + Vector((0.0, 0.0, s * 0.30)), (s, s, s * 0.8), 14, families,
+               LEAF_UNDER, LEAF_CORE, leaf_scale=0.95, below=-0.1)
+
+
+def make_ledges():
+    r = random.Random(SEED * 41)
+    tufts = _Foliage()
+    count = 0
+    # Where the wall is tall enough: the front face left of the fall, and a little of it right of the
+    # fall. Further left and further back the ground rises to meet the wall.
+    spans = [("front", -12.9, -8.5), ("front", -4.85, -3.95)]
+    for face, start, stop in spans:
+        for level, frac in enumerate((0.30, 0.66)):
+            along = start + r.uniform(0.0, 0.3) + 0.9 * level
+            while along < stop - 0.7:
+                length = min(r.uniform(2.0, 3.2), stop - along)
+                mid = along + length / 2
+                if face == "front" and (FALL_GAP[0] - length / 2 < mid < FALL_GAP[1] + length / 2):
+                    along += 0.6
+                    continue
+                foot = v6.height_at(mid, 4.0)
+                z = foot + (v6.SHELF_Z - foot) * frac
+                if z - foot < 0.5 or v6.SHELF_Z - z < 0.45:
+                    along += length + 0.5
+                    continue
+                point, normal, tangent = _wall_point(face, mid, z)
+                depth = r.uniform(0.7, 0.9)
+                thick = r.uniform(0.5, 0.7)
+                make_outcrop(point, normal, tangent, length, depth, thick, count)
+                if r.random() < 0.7:
+                    off = tangent * r.uniform(-length * 0.25, length * 0.25) + normal * depth * 0.10
+                    _ledge_tuft(tufts, r, point + off + Vector((0.0, 0.0, thick * 0.34)), r.uniform(0.14, 0.2))
+                count += 1
+                along += length + r.uniform(0.15, 0.5)
+    print("LEDGES", count)
+    _finish(tufts, "Ledge_Tufts", 0.0, 0.0, 0.0, 0.01)
+
+
 # -- Swap into v6 and run ----------------------------------------------------
 
 v6.make_boulder = make_rock
@@ -760,6 +863,16 @@ v6.build_terrain = build_terrain
 v6.make_shrub = make_shrub
 v6.make_olive = place_olive
 v6.make_cypress = place_cypress
+
+_scatter_vegetation = v6.scatter_vegetation
+
+
+def scatter_with_ledges():
+    _scatter_vegetation()
+    make_ledges()
+
+
+v6.scatter_vegetation = scatter_with_ledges
 
 if __name__ == "__main__":
     v6.OUT_GLB = os.environ["LL_VALLEY_OUT"]

@@ -162,6 +162,17 @@ func _initialize() -> void:
 		if plant_mesh.get_surface_count() != 1 or leaf_material == null or leaf_material.resource_name != "FoliageVertexColour" or not leaf_material.vertex_color_use_as_albedo:
 			white_or_split.append(plant_name)
 	_check(plants == 32 and white_or_split.is_empty(), "all %d trees and bushes are one painted surface (two draws with the outline) %s" % [plants, white_or_split])
+	var ledge_rocks: int = 0
+	var ledge_problems: Array = []
+	for outcrop in main.get_node("BethlehemValley").find_children("LedgeRock_*", "MeshInstance3D", true, false):
+		var outcrop_name: String = String(outcrop.name)
+		if outcrop_name.ends_with("_Outline"):
+			continue
+		ledge_rocks += 1
+		var outcrop_material: Material = (outcrop as MeshInstance3D).mesh.surface_get_material(0)
+		if outcrop_material == null or not (outcrop_material.resource_name in ["RockGrey", "RockSlate", "RockMossy"]) or outcrop.get_node_or_null("BakedCollision") != null:
+			ledge_problems.append(outcrop_name)
+	_check(ledge_rocks >= 3 and ledge_problems.is_empty(), "the cliff wall has %d stone ledges, decoration only (no collision) %s" % [ledge_rocks, ledge_problems])
 	var brook_rocks: int = 0
 	var not_stone: Array = []
 	var no_outline: Array = []

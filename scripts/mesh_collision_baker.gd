@@ -4,7 +4,7 @@ extends Node3D
 
 @export var collision_layer: int = 1
 ## "Bank_" are the stream pack's duplicate banks, hidden at runtime (see stream_alive_clean.gd); baking them left an invisible wall.
-@export var skip_name_contains: PackedStringArray = ["Outline", "Shadow", "Stream", "Waterfall", "Foam", "Fish_", "Bank_"]
+@export var skip_name_contains: PackedStringArray = ["Outline", "Shadow", "Stream", "Waterfall", "Foam", "Fish_", "Bank_", "Ledge"]
 
 
 func _ready() -> void:
