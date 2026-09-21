@@ -1,10 +1,12 @@
 extends RefCounted
-## Player settings persisted to user://settings.cfg.
+## Player settings persisted to user://settings.cfg, and, once a child is playing, kept for that child too
+## (see profiles.gd): on a shared tablet each child gets their own read-aloud and volume.
 ## Use through a preload constant (no class_name, so it works before the
 ## editor has built its global class cache):
 ##   const GameSettings := preload("res://scripts/game_settings.gd")
 
 const PATH := "user://settings.cfg"
+const Profiles := preload("res://scripts/profiles.gd")
 
 static var read_aloud: bool = true
 static var master_volume: float = 1.0
@@ -36,6 +38,30 @@ static func save_settings() -> void:
 	cfg.set_value("audio", "sounds_volume", sounds_volume)
 	cfg.set_value("audio", "voice_volume", voice_volume)
 	cfg.save(PATH)
+	Profiles.store_settings(as_dictionary())
+
+
+## The choices that belong to one child: read-aloud and the volumes.
+static func as_dictionary() -> Dictionary:
+	return {
+		"read_aloud": read_aloud,
+		"master_volume": master_volume,
+		"music_volume": music_volume,
+		"sounds_volume": sounds_volume,
+		"voice_volume": voice_volume,
+	}
+
+
+## Takes on a child's saved choices. An empty dictionary (a new child) leaves things as the tablet has them.
+static func apply_profile(settings: Dictionary) -> void:
+	if settings.is_empty():
+		return
+	read_aloud = bool(settings.get("read_aloud", read_aloud))
+	master_volume = clampf(float(settings.get("master_volume", master_volume)), 0.0, 1.0)
+	music_volume = clampf(float(settings.get("music_volume", music_volume)), 0.0, 1.0)
+	sounds_volume = clampf(float(settings.get("sounds_volume", sounds_volume)), 0.0, 1.0)
+	voice_volume = clampf(float(settings.get("voice_volume", voice_volume)), 0.0, 1.0)
+	apply_volume()
 
 
 static func apply_volume() -> void:

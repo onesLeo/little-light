@@ -3,6 +3,11 @@ extends Node
 ## Arrive → Explore (3 Wonder Items) → Meet David (Band A) → Steady Hands
 ## → Off-screen resolution → Reflect → Joshua 1:9 + "Don't. Be. Afraid." → Courage charm award.
 ## No violence shown. Wonder-Walker is a guest, not David.
+## The story waits at the start until the "Who is playing?" screen has a child (profile_screen.gd);
+## the verse, the charm and the finished chapter go into that child's Faith Journal.
+
+const Profiles := preload("res://scripts/profiles.gd")
+const JournalContent := preload("res://scripts/journal_content.gd")
 
 enum Beat {
 	ARRIVE,
@@ -65,7 +70,16 @@ func _ready() -> void:
 			if child is Area3D:
 				child.body_entered.connect(_on_wonder_item_entered.bind(child))
 				child.body_exited.connect(_on_wonder_item_exited.bind(child))
-	_enter_beat(Beat.ARRIVE)
+	_start_story()
+
+
+## Starts the story, or waits for the "Who is playing?" screen when nobody is playing yet.
+func _start_story() -> void:
+	var picker := get_node_or_null("../ProfileScreen")
+	if Profiles.active_id.is_empty() and picker != null:
+		picker.profile_chosen.connect(func(_id: String) -> void: _enter_beat(Beat.ARRIVE), CONNECT_ONE_SHOT)
+	else:
+		_enter_beat(Beat.ARRIVE)
 
 func _is_continue_pressed(event: InputEvent) -> bool:
 	# ui_accept (Space/Enter) plus raw key fallback — unhandled path can miss Space
@@ -191,6 +205,7 @@ func _enter_beat(next: Beat) -> void:
 			_advance_ready = true
 
 		Beat.VERSE_REWARD:
+			Profiles.unlock_verse(JournalContent.VERSE_JOSHUA_1_9)
 			_cut_tabletop()
 			_celebrate_light()
 			_show(
@@ -200,6 +215,7 @@ func _enter_beat(next: Beat) -> void:
 			_advance_ready = true
 
 		Beat.CHARM_AWARD:
+			Profiles.unlock_charm(JournalContent.CHARM_COURAGE)
 			_set_player_move(false)
 			_advance_ready = false
 			_celebrate_light()
@@ -224,6 +240,7 @@ func _enter_beat(next: Beat) -> void:
 				_advance_ready = true
 
 		Beat.DONE:
+			Profiles.finish_chapter()
 			_set_player_move(true)
 			_cut_tabletop()
 			_point_light(null)

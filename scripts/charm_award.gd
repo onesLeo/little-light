@@ -2,8 +2,13 @@ extends Node3D
 ## Courage charm ceremony (placeholder paper meshes).
 ## Float-in → snap onto Virtue Bracelet → gold pulse → tiny walker hop / David nod.
 ## Models Creations Bot can later swap Bracelet/Charm for authored GLBs.
+## If the child playing has coloured their Courage charm (colour_screen.gd), their picture is on its face.
 
 signal ceremony_finished
+
+const Profiles := preload("res://scripts/profiles.gd")
+const CharmArt := preload("res://scripts/charm_art.gd")
+const JournalContent := preload("res://scripts/journal_content.gd")
 
 @export var player_path: NodePath = ^"../Player"
 @export var david_path: NodePath = ^"../DavidMentor"
@@ -14,6 +19,8 @@ signal ceremony_finished
 var _bracelet: MeshInstance3D
 var _charm: MeshInstance3D
 var _charm_mat: StandardMaterial3D
+var _face: MeshInstance3D
+var _face_mat: StandardMaterial3D
 var _player: Node3D
 var _david: Node3D
 var _audio: Node
@@ -67,6 +74,38 @@ func _build_placeholders() -> void:
 	_charm.set_surface_override_material(0, _charm_mat)
 	_charm.position = _rest_charm_pos
 	add_child(_charm)
+	apply_child_colours()
+
+
+## Puts the playing child's colouring on the charm's face, or takes it off when they have none.
+func apply_child_colours() -> void:
+	if _face != null:
+		_charm.remove_child(_face)
+		_face.queue_free()
+		_face = null
+		_face_mat = null
+	var id := Profiles.active_id
+	var charm_id := JournalContent.CHARM_COURAGE
+	if id.is_empty() or not Profiles.has_coloured_charm(id, charm_id):
+		return
+	var picture := ImageTexture.create_from_image(CharmArt.render_image(charm_id, Profiles.charm_colours(id, charm_id), 128))
+	var quad := QuadMesh.new()
+	quad.size = Vector2(0.15, 0.15)
+	quad.orientation = PlaneMesh.FACE_Y
+	_face_mat = StandardMaterial3D.new()
+	_face_mat.albedo_texture = picture
+	_face_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+	_face_mat.alpha_scissor_threshold = 0.5
+	_face_mat.roughness = 0.8
+	_face_mat.emission_enabled = true
+	_face_mat.emission_texture = picture
+	_face_mat.emission_energy_multiplier = 0.0
+	_face = MeshInstance3D.new()
+	_face.name = "ChildColouring"
+	_face.mesh = quad
+	_face.set_surface_override_material(0, _face_mat)
+	_face.position = Vector3(0.0, 0.0165, 0.0)
+	_charm.add_child(_face)
 
 
 ## Play the award ceremony. Safe to call once per chapter end.
@@ -75,6 +114,7 @@ func play_ceremony() -> void:
 		return
 	_running = true
 	visible = true
+	apply_child_colours()
 	_charm_mat.emission_energy_multiplier = 0.0
 	_charm.position = _rest_charm_pos + Vector3(0.0, float_height, 0.0)
 	_charm.scale = Vector3(0.35, 0.35, 0.35)
@@ -90,7 +130,11 @@ func play_ceremony() -> void:
 	tw.tween_callback(_celebrate_snap)
 	# Gold pulse.
 	tw.tween_property(_charm_mat, "emission_energy_multiplier", 2.2, pulse_duration * 0.45).set_trans(Tween.TRANS_SINE)
+	if _face_mat:
+		tw.parallel().tween_property(_face_mat, "emission_energy_multiplier", 1.0, pulse_duration * 0.45).set_trans(Tween.TRANS_SINE)
 	tw.tween_property(_charm_mat, "emission_energy_multiplier", 0.35, pulse_duration * 0.55)
+	if _face_mat:
+		tw.parallel().tween_property(_face_mat, "emission_energy_multiplier", 0.05, pulse_duration * 0.55)
 	tw.tween_callback(_play_reactions)
 	tw.tween_interval(0.55)
 	tw.tween_callback(_finish)

@@ -76,10 +76,11 @@ Result on the same laptop:
 ## What is left, in the order I would do it
 
 1. **Run it on a real tablet** and read the same table there. Until then everything above is a proxy.
-2. **Draw calls (514 with Forward+, 267 with Mobile).** The trees and bushes use one material per colour, so a tree
-   is four to six draw calls. Baking the colours into one texture or into vertex colours would make each tree one
-   call. That changes how the trees are built and needs the stream placement and collision scripts (which find
-   trees by name) to keep working, so it is a job of its own.
+2. **Draw calls.** Trees and bushes now share one material with the colour in the vertices, so each is two draws
+   (body + outline) instead of four to seven: the valley file went from 261 surfaces to 137, and Forward+ draws from
+   523 to 351. The **Mobile renderer read 275 both before and after**, so the tablet may not gain from this; only a
+   real tablet will tell. The new rounded leaves cost more triangles (whole scene 263,030 to 272,590, primitives
+   with shadows 361k to 405k), so the budget is now 290,000 with only about 17,000 to spare.
 3. **Glow** is worth a look on a tablet: about 0.6 ms here. It could be turned off or cut down on handhelds.
 4. **The stream pack** (35 surfaces, 29 objects, plus 24 fish objects) could be merged.
 5. **David's LODs.** Not needed at his current size.

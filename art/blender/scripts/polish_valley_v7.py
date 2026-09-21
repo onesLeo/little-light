@@ -8,11 +8,10 @@ recipe as its boulders, so from the tabletop camera they read as *green rocks*.
 The rocks themselves shared the flat "paper grain" tint with every other prop,
 so nothing about them said "stone". The trees had the same problem: olives were smooth blobs on a straight trunk and cypresses a stack of cones on a bare pole (reads as a pine). v7 fixes all of these and leaves terrain, river and layout exactly as v6 has them.
 
-* Bushes are now built from ~140 individual leaves: each one is a small folded
-  diamond leaf solid (its two upper faces carry different greens, so the fold
-  reads as a midrib) laid over a dome like shingles, with a dark core showing
-  through the gaps. Leaves are splayed at random and pick one of two green
-  families, so the silhouette is leafy instead of a smooth blob.
+* Bushes are a soft mound: a main dome and four or five smaller lobes, each covered in overlapping
+  rounded leaves that lie on the dome like paper shingles (tip downhill, lifted a little), over a dark core
+  that shows through the gaps. The first v7 leaves were sharp diamonds pointing straight out, which made
+  bushes look like agave and olive crowns like spiky rings; rounded, lying leaves read as foliage.
 * Rocks keep v6's angular displaced-icosphere shape but get a baked stone
   texture: mottled colour, mineral flecks, fine cracks and faint strata, in
   four variants (cool grey, warm limestone, dark slate, and a mossy grey with
@@ -20,8 +19,13 @@ so nothing about them said "stone". The trees had the same problem: olives were 
   of stone, which suits the low-poly look. Stone uses linear filtering; the
   paper-grain props keep their crisp nearest-neighbour look.
 
-* Olives get a leaning, root-flared trunk that forks into three limbs, each carrying a clump of narrow leaves (silvery undersides, like real olive leaves) plus a crown clump.
-* Cypresses are a slim flame-shaped column of overlapping upward-leaning fronds reaching almost to the ground over a dark core, instead of a pine-like stack of cones.
+* Olives get a leaning, root-flared trunk that forks into three limbs, each carrying a rounded clump of overlapping leaves, plus a crown clump.
+* Cypresses are a slim flame-shaped column of overlapping rounded scales reaching almost to the ground over a dark core, instead of a pine-like stack of cones.
+* All foliage shares ONE material and keeps its colour in the vertices (`FoliageVertexColour`), so a tree or
+  bush is two draw calls (body + outline) instead of five to seven. Godot's importer leaves "vertex colour as
+  albedo" off, so `scripts/foliage_colour.gd` switches it on at start. The palette numbers below are what the
+  eye should see, and `_shade()` converts them to the linear values a vertex holds.
+* Three flattened boulders of the valley's stone stick out of the shelf's front cliff as ledges, half buried in it, with leafy tufts on top (`make_ledges`).
 * Trees stand on grass. v6's list put ten of them on the steep back wall (which the ground map paints as bare rock) or on the lip of the shelf; `TREE_MOVES` gives those a spot on grass, and the generator reports any tree left on ground steeper than 34 degrees.
 
 Object names are unchanged (Shrub_N / Rock_N / Olive_N / Cypress_N and their *_Outline hulls) because
@@ -185,15 +189,6 @@ def stone_material(name, base, dark, light, moss, seed):
     return mat
 
 
-def _leaf_materials():
-    mats = {"under": v6.matte("LeafUnder", LEAF_UNDER, v6.GRAIN),
-            "core": v6.matte("LeafCore", LEAF_CORE, v6.GRAIN)}
-    for i, fam in enumerate(LEAF_FAMILIES):
-        mats[f"light{i}"] = v6.matte(f"LeafLight{i}", fam["light"], v6.GRAIN)
-        mats[f"mid{i}"] = v6.matte(f"LeafMid{i}", fam["mid"], v6.GRAIN)
-    return mats
-
-
 # -- Rocks -------------------------------------------------------------------
 
 def _box_project_uvs(obj, scale=1.0):
@@ -240,144 +235,91 @@ def make_rock(x, y, s=0.5, seed=0):
     return obj
 
 
-# -- Bushes ------------------------------------------------------------------
+# -- Foliage: rounded leaves, painted with vertex colours ---------------------
+# v7's first leaves were sharp diamonds pointing straight out, so bushes read as agave rosettes
+# and the olive crowns as spiky rings. Here every leaf is a rounded oval that lies on a dome
+# (or on the flame of a cypress) like a paper shingle, tip downhill and lifted a little, so a
+# bush is a soft mound of overlapping scales. The colour is stored in the vertices and all
+# foliage shares one material, so a whole tree or bush is two draw calls (body + outline)
+# instead of five to seven.
 
-def _add_leaf(bm, slots, matrix, length, width, fold):
-    """One folded diamond leaf solid (6 verts, 8 faces) transformed by `matrix`.
+FOLIAGE_MATERIAL = "FoliageVertexColour"
 
-    `slots` = (top_left, top_right, under) material slot indices.
+
+def _foliage_material():
+    existing = bpy.data.materials.get(FOLIAGE_MATERIAL)
+    if existing is not None:
+        return existing
+    mat = bpy.data.materials.new(FOLIAGE_MATERIAL)
+    mat.use_nodes = True
+    nt = mat.node_tree
+    for n in list(nt.nodes):
+        nt.nodes.remove(n)
+    out = nt.nodes.new("ShaderNodeOutputMaterial")
+    bsdf = nt.nodes.new("ShaderNodeBsdfPrincipled")
+    bsdf.inputs["Roughness"].default_value = 0.95
+    if "Specular IOR Level" in bsdf.inputs:
+        bsdf.inputs["Specular IOR Level"].default_value = 0.05
+    col = nt.nodes.new("ShaderNodeVertexColor")
+    col.layer_name = "Col"
+    nt.links.new(col.outputs["Color"], bsdf.inputs["Base Color"])
+    nt.links.new(bsdf.outputs["BSDF"], out.inputs["Surface"])
+    mat.use_backface_culling = True     # single-sided, like v6's matte() (see the outline hulls)
+    return mat
+
+
+class _Foliage:
+    """A bmesh under construction, with a colour layer the faces are painted into."""
+
+    def __init__(self):
+        self.bm = bmesh.new()
+        self.col = self.bm.loops.layers.float_color.new("Col")
+
+    def paint(self, faces, colour):
+        for f in faces:
+            for loop in f.loops:
+                loop[self.col] = colour
+
+
+def _shade(colour, k):
+    """The palette's colour, darkened by `k`, as the linear value Godot expects in a vertex.
+
+    The palette numbers are what the eye should see (v6's materials pass them through an
+    sRGB image), so they are converted here; a vertex colour is not.
     """
-    pts = [
-        (0.0, 0.0, 0.0),                                   # 0 base
-        (0.0, length, -fold * 2.0),                        # 1 tip (droops slightly)
-        (-width * 0.5, length * 0.50, -fold * 0.6),        # 2 left edge
-        (width * 0.5, length * 0.50, -fold * 0.6),         # 3 right edge
-        (0.0, length * 0.46, fold),                        # 4 midrib (top ridge)
-        (0.0, length * 0.44, -fold * 0.9),                 # 5 underside
-    ]
-    verts = [bm.verts.new(matrix @ Vector(p)) for p in pts]
-    tl, tr, un = slots
-    faces = [
-        ((0, 3, 4), tr), ((0, 4, 2), tl), ((1, 4, 3), tr), ((1, 2, 4), tl),
-        ((0, 2, 5), un), ((0, 5, 3), un), ((1, 5, 2), un), ((1, 3, 5), un),
-    ]
+    return tuple(min(c * k, 1.0) ** 2.2 for c in colour[:3]) + (1.0,)
+
+
+# Outline of one leaf: (fraction of its length, fraction of its half-width). Rounded like an
+# ovate leaf, widest just past the middle, with a short tip.
+LEAF_RIM = [(0.0, 0.0), (0.20, 0.62), (0.48, 1.0), (0.78, 0.74), (1.0, 0.0),
+            (0.78, -0.74), (0.48, -1.0), (0.20, -0.62)]
+
+
+def _add_leaf(fb, matrix, length, width, fold, top_left, top_right, under):
+    """One rounded leaf solid (10 verts, 16 faces) transformed by `matrix`.
+
+    The two upper halves get different greens, so the fold reads as a midrib.
+    """
+    bm = fb.bm
+    rim = []
+    for i, (t, w) in enumerate(LEAF_RIM):
+        z = -fold * 0.35 if 0 < i < 4 or i > 4 else (-fold * 1.6 if i == 4 else 0.0)
+        rim.append(bm.verts.new(matrix @ Vector((w * width * 0.5, t * length, z))))
+    ridge = bm.verts.new(matrix @ Vector((0.0, length * 0.5, fold)))
+    belly = bm.verts.new(matrix @ Vector((0.0, length * 0.5, -fold * 0.9)))
     made = []
-    for tri, mi in faces:
-        try:
-            f = bm.faces.new([verts[i] for i in tri])
-        except ValueError:
-            continue
-        f.material_index = mi
-        made.append(f)
-    bmesh.ops.recalc_face_normals(bm, faces=made)
-
-
-def make_shrub(x, y, s=0.55, seed=0):
-    """A leafy bush: broad folded leaves overlapping like shingles over a dome."""
-    r = random.Random(SEED * 17 + seed)
-    mats = _leaf_materials()
-    # slot 0 core, 1 under, then (light, mid) for each family
-    slots = [mats["core"], mats["under"]]
-    for i in range(len(LEAF_FAMILIES)):
-        slots += [mats[f"light{i}"], mats[f"mid{i}"]]
-
-    R = s * 1.55                      # overall bush radius
-    Rd = R * 0.60                     # radius of the dome the leaves sit on
-    centre = Vector((0.0, 0.0, Rd * 0.30))
-    z0 = v6.height_at(x, y)
-    bm = bmesh.new()
-
-    # Dark core just inside the dome: gaps between leaves show shade, not ground.
-    core = bmesh.ops.create_icosphere(bm, subdivisions=1, radius=Rd * 0.5)
-    for v in core["verts"]:
-        v.co = v.co * Vector((1.0, 1.0, 0.85)) + centre + Vector((0.0, 0.0, Rd * 0.1))
-    for f in bm.faces:
-        f.material_index = 0
-
-    # (elevation deg, leaf count): a ground-hugging skirt first, then rings up the dome.
-    rings = [(4, 22), (10, 22), (20, 24), (32, 24), (46, 20), (60, 14), (74, 9), (85, 4), (90, 1)]
-    for e_deg, count in rings:
-        e = math.radians(e_deg)
-        up = e_deg / 90.0
-        phase = r.uniform(0, math.tau)
-        for i in range(count):
-            phi = phase + i * math.tau / count + r.uniform(-0.22, 0.22)
-            n = Vector((math.cos(phi) * math.cos(e), math.sin(phi) * math.cos(e), math.sin(e)))
-            t_up = Vector((-math.cos(phi) * math.sin(e), -math.sin(phi) * math.sin(e), math.cos(e)))
-            d = (n * 0.95 + t_up * 0.2).normalized()
-            z_ax = (n - d * n.dot(d)).normalized()
-            x_ax = d.cross(z_ax).normalized()
-            basis = Matrix(((x_ax.x, d.x, z_ax.x), (x_ax.y, d.y, z_ax.y), (x_ax.z, d.z, z_ax.z)))
-            # Random splay (wilder near the crown) so leaves do not line up in tidy rows.
-            k = 0.6 + up
-            jitter = (Matrix.Rotation(math.radians(r.uniform(-22.0, 22.0) * k), 4, "Z")
-                      @ Matrix.Rotation(math.radians(r.uniform(-10.0, 10.0) * k), 4, "X")
-                      @ Matrix.Rotation(math.radians(r.uniform(-18.0, 18.0)), 4, "Y"))
-            m = Matrix.Translation(centre + n * Rd * 0.92) @ basis.to_4x4() @ jitter
-            length = R * 0.30 * r.uniform(0.75, 1.30) * (1.1 - 0.30 * up)
-            width = length * r.uniform(0.72, 0.92)
-            fam = r.randrange(len(LEAF_FAMILIES))
-            leaf_slots = (2 + fam * 2, 3 + fam * 2, 1)
-            _add_leaf(bm, leaf_slots, m, length, width, fold=width * 0.09)
-
-    bm.normal_update()
-    mesh = bpy.data.meshes.new(f"Shrub_{seed}")
-    bm.to_mesh(mesh)
-    bm.free()
-    for m in slots:
-        mesh.materials.append(m)
-    for poly in mesh.polygons:
-        poly.use_smooth = False
-    obj = bpy.data.objects.new(f"Shrub_{seed}", mesh)
-    bpy.context.collection.objects.link(obj)
-    # World-space geometry, origin at 0, matching how v6 exports its shrubs.
-    for v in mesh.vertices:
-        v.co += Vector((x, y, z0 - R * 0.08))
-    v6.add_outline(obj, 0.018)
-    return obj
-
-
-# -- Trees -------------------------------------------------------------------
-
-def _tube(bm, pts, radii, mat_index, sides=6):
-    """Closed tapered tube along `pts` (list of Vector) with per-point radii."""
-    mean_t = (pts[-1] - pts[0]).normalized()
-    ref = Vector((1.0, 0.0, 0.0)) if abs(mean_t.z) > 0.7 else Vector((0.0, 0.0, 1.0))
-    rings = []
-    for i, p in enumerate(pts):
-        t = ((pts[i + 1] - p) if i < len(pts) - 1 else (p - pts[i - 1])).normalized()
-        u = t.cross(ref).normalized()
-        v = t.cross(u).normalized()
-        rings.append([bm.verts.new(p + (u * math.cos(a) + v * math.sin(a)) * radii[i])
-                      for a in (k * math.tau / sides for k in range(sides))])
-    made = []
-    for i in range(len(rings) - 1):
-        for k in range(sides):
-            f = bm.faces.new((rings[i][k], rings[i][(k + 1) % sides],
-                              rings[i + 1][(k + 1) % sides], rings[i + 1][k]))
-            f.material_index = mat_index
-            made.append(f)
-    for ring in (rings[0], rings[-1]):
-        f = bm.faces.new(ring)
-        f.material_index = mat_index
-        made.append(f)
-    bmesh.ops.recalc_face_normals(bm, faces=made)
-
-
-def _finish_tree(bm, name, slots, x, y, z, outline):
-    bm.normal_update()
-    mesh = bpy.data.meshes.new(name)
-    bm.to_mesh(mesh)
-    bm.free()
-    for m in slots:
-        mesh.materials.append(m)
-    for poly in mesh.polygons:
-        poly.use_smooth = False
-    obj = bpy.data.objects.new(name, mesh)
-    obj.location = (x, y, z)
-    bpy.context.collection.objects.link(obj)
-    v6.add_outline(obj, outline)
-    return obj
+    for i in range(len(rim)):
+        j = (i + 1) % len(rim)
+        for apex, colour in ((ridge, top_left if i < 4 else top_right), (belly, under)):
+            try:
+                f = bm.faces.new((rim[i], rim[j], apex))
+            except ValueError:
+                continue
+            made.append((f, colour))
+    bmesh.ops.recalc_face_normals(bm, faces=[f for f, _ in made])
+    for f, colour in made:
+        fb.paint([f], colour)
 
 
 def _leaf_frame(d, z_hint):
@@ -390,20 +332,129 @@ def _leaf_frame(d, z_hint):
     return Matrix(((x_ax.x, d.x, z_ax.x), (x_ax.y, d.y, z_ax.y), (x_ax.z, d.z, z_ax.z))).to_4x4()
 
 
-def _jitter(r, yaw, pitch, roll):
-    return (Matrix.Rotation(math.radians(r.uniform(-yaw, yaw)), 4, "Z")
-            @ Matrix.Rotation(math.radians(r.uniform(-pitch, pitch)), 4, "X")
-            @ Matrix.Rotation(math.radians(r.uniform(-roll, roll)), 4, "Y"))
+def _leaf_on_surface(fb, r, pos, n, length, width, families, under, shade, lift):
+    """A leaf lying on a surface: base at `pos`, tip downhill, lifted `lift` radians off it."""
+    down = Vector((0.0, 0.0, -1.0))
+    d = down - n * down.dot(n)
+    if d.length < 0.25:                     # on the crown, where "downhill" is undefined
+        a = r.uniform(0.0, math.tau)
+        d = Vector((math.cos(a), math.sin(a), 0.0))
+        d = d - n * d.dot(n)
+    d = Matrix.Rotation(r.uniform(-0.55, 0.55), 3, n) @ d.normalized()
+    d = (d * math.cos(lift) + n * math.sin(lift)).normalized()
+    light, mid = r.choice(families)
+    k = shade * r.uniform(0.93, 1.07)
+    m = Matrix.Translation(pos) @ _leaf_frame(d, n)
+    _add_leaf(fb, m, length, width, fold=width * 0.10,
+              top_left=_shade(light, k), top_right=_shade(mid, k), under=_shade(under, k))
 
+
+def _leaf_dome(fb, r, centre, radii, count, families, under, core, leaf_scale=0.95, width_k=0.72,
+               below=-0.2, lift=0.30):
+    """A mound of overlapping leaves: a dark core, then `count` leaves over an ellipsoid."""
+    rx, ry, rz = radii
+    inner = bmesh.ops.create_icosphere(fb.bm, subdivisions=1, radius=1.0)
+    for v in inner["verts"]:
+        v.co = Vector((v.co.x * rx * 0.78, v.co.y * ry * 0.78, v.co.z * rz * 0.78)) + centre
+    fb.paint({f for v in inner["verts"] for f in v.link_faces}, _shade(core, 1.0))
+
+    golden = math.pi * (3.0 - math.sqrt(5.0))
+    rc = (rx + ry) * 0.5
+    for i in range(count):
+        zc = 1.0 - (1.0 - below) * (i + 0.5) / count            # fibonacci cap
+        ring = math.sqrt(max(0.0, 1.0 - zc * zc))
+        phi = i * golden
+        u = Vector((math.cos(phi) * ring, math.sin(phi) * ring, zc))
+        pos = centre + Vector((u.x * rx, u.y * ry, u.z * rz))
+        n = Vector((u.x / rx, u.y / ry, u.z / rz)).normalized()
+        length = rc * leaf_scale * r.uniform(0.85, 1.2)
+        shade = 0.80 + 0.20 * (0.5 + 0.5 * zc)                   # lower leaves sit in shade
+        _leaf_on_surface(fb, r, pos, n, length, length * width_k, families, under, shade, lift)
+
+
+def _tube(fb, pts, radii, colour, sides=6):
+    """Closed tapered tube along `pts` (list of Vector) with per-point radii."""
+    bm = fb.bm
+    mean_t = (pts[-1] - pts[0]).normalized()
+    ref = Vector((1.0, 0.0, 0.0)) if abs(mean_t.z) > 0.7 else Vector((0.0, 0.0, 1.0))
+    rings = []
+    for i, p in enumerate(pts):
+        t = ((pts[i + 1] - p) if i < len(pts) - 1 else (p - pts[i - 1])).normalized()
+        u = t.cross(ref).normalized()
+        v = t.cross(u).normalized()
+        rings.append([bm.verts.new(p + (u * math.cos(a) + v * math.sin(a)) * radii[i])
+                      for a in (k * math.tau / sides for k in range(sides))])
+    made = []
+    for i in range(len(rings) - 1):
+        for k in range(sides):
+            made.append(bm.faces.new((rings[i][k], rings[i][(k + 1) % sides],
+                                      rings[i + 1][(k + 1) % sides], rings[i + 1][k])))
+    for ring in (rings[0], rings[-1]):
+        made.append(bm.faces.new(ring))
+    bmesh.ops.recalc_face_normals(bm, faces=made)
+    fb.paint(made, _shade(colour, 1.0))
+
+
+def _finish(fb, name, x, y, z, outline):
+    bm = fb.bm
+    bm.normal_update()
+    mesh = bpy.data.meshes.new(name)
+    bm.to_mesh(mesh)
+    bm.free()
+    mesh.materials.append(_foliage_material())
+    for poly in mesh.polygons:
+        poly.use_smooth = False
+    mesh.color_attributes.active_color = mesh.color_attributes["Col"]
+    mesh.color_attributes.render_color_index = [a.name for a in mesh.color_attributes].index("Col")
+    obj = bpy.data.objects.new(name, mesh)
+    obj.location = (x, y, z)
+    bpy.context.collection.objects.link(obj)
+    hull = v6.add_outline(obj, outline)
+    # The black hull is one shared material; vertex colours on it would tint it in Godot.
+    for attr in list(hull.data.color_attributes):
+        hull.data.color_attributes.remove(attr)
+    return obj
+
+
+# -- Bushes ------------------------------------------------------------------
+
+def make_shrub(x, y, s=0.55, seed=0):
+    """A soft mound: a main dome of overlapping rounded leaves and a few smaller lobes round it."""
+    r = random.Random(SEED * 17 + seed)
+    families = [(f["light"], f["mid"]) for f in LEAF_FAMILIES]
+    R = s * 1.55                      # overall bush radius
+    fb = _Foliage()
+
+    main = R * 0.52
+    _leaf_dome(fb, r, Vector((0.0, 0.0, main * 0.55)), (main, main, main * 0.85), 26,
+               families, LEAF_UNDER, LEAF_CORE)
+    lobes = r.randint(4, 5)
+    a0 = r.uniform(0.0, math.tau)
+    for k in range(lobes):
+        a = a0 + k * math.tau / lobes + r.uniform(-0.3, 0.3)
+        rr = R * r.uniform(0.30, 0.38)
+        dist = R * r.uniform(0.46, 0.56)
+        _leaf_dome(fb, r, Vector((math.cos(a) * dist, math.sin(a) * dist, rr * 0.45)),
+                   (rr, rr, rr * 0.85), 13, families, LEAF_UNDER, LEAF_CORE)
+
+    obj = _finish(fb, f"Shrub_{seed}", 0.0, 0.0, 0.0, 0.012)
+    # World-space geometry, origin at 0, matching how v6 exports its shrubs.
+    z0 = v6.height_at(x, y)
+    shift = Vector((x, y, z0 - R * 0.08))
+    for o in (obj, bpy.data.objects[obj.name + "_Outline"]):
+        for v in o.data.vertices:
+            v.co += shift
+    return obj
+
+
+# -- Trees -------------------------------------------------------------------
 
 def make_olive(x, y, s=2.2, seed=0):
-    """Gnarled forked trunk carrying clumps of narrow, silver-backed leaves."""
+    """Gnarled forked trunk carrying rounded clumps of overlapping, silver-backed leaves."""
     r = random.Random(SEED * 23 + seed)
-    slots = [v6.matte("TreeBark", BARK, v6.GRAIN), v6.matte("OliveCore", OLIVE_CORE, v6.GRAIN),
-             v6.matte("OliveLight", OLIVE_LIGHT, v6.GRAIN), v6.matte("OliveMid", OLIVE_MID, v6.GRAIN),
-             v6.matte("OliveSilver", OLIVE_SILVER, v6.GRAIN)]
+    families = [(OLIVE_LIGHT, OLIVE_MID)]
     z0 = v6.height_at(x, y) - 0.05
-    bm = bmesh.new()
+    fb = _Foliage()
 
     # Trunk: leaning, slightly wobbling, flared at the root.
     lean_dir = r.uniform(0, math.tau)
@@ -415,7 +466,7 @@ def make_olive(x, y, s=2.2, seed=0):
                              math.sin(lean_dir) * lean * t * t + r.uniform(-0.02, 0.02) * s * t,
                              0.72 * s * t)))
     radii = [0.20 * s, 0.14 * s, 0.12 * s, 0.11 * s, 0.10 * s, 0.09 * s]
-    _tube(bm, trunk, radii, 0, sides=6)
+    _tube(fb, trunk, radii, BARK, sides=6)
 
     # Three limbs fork off the top and carry the leaf clumps.
     top = trunk[-1]
@@ -428,45 +479,25 @@ def make_olive(x, y, s=2.2, seed=0):
         d = Vector((math.cos(phi) * math.cos(elev), math.sin(phi) * math.cos(elev), math.sin(elev)))
         pts = [top - Vector((0, 0, 0.04 * s)), top + d * length * 0.4 + Vector((0, 0, 0.03 * s)),
                top + d * length * 0.75 + Vector((0, 0, 0.07 * s)), top + d * length + Vector((0, 0, 0.1 * s))]
-        _tube(bm, pts, [0.075 * s, 0.06 * s, 0.045 * s, 0.03 * s], 0, sides=5)
-        clumps.append((pts[-1] + Vector((0, 0, 0.12 * s)), s * r.uniform(0.36, 0.44)))
-    clumps.append((top + Vector((0, 0, 0.5 * s)), s * 0.40))  # crown
+        _tube(fb, pts, [0.075 * s, 0.06 * s, 0.045 * s, 0.03 * s], BARK, sides=5)
+        clumps.append((pts[-1] + Vector((0, 0, 0.12 * s)), s * r.uniform(0.38, 0.46)))
+    clumps.append((top + Vector((0, 0, 0.5 * s)), s * 0.42))  # crown
 
-    golden = math.pi * (3.0 - math.sqrt(5.0))
     for centre, rc in clumps:
-        core = bmesh.ops.create_icosphere(bm, subdivisions=1, radius=rc * 0.5)
-        for v in core["verts"]:
-            v.co = v.co * Vector((1.0, 1.0, 0.8)) + centre
-            for f in v.link_faces:
-                f.material_index = 1
-        count = 90
-        for i in range(count):
-            zc = 1.0 - 2.0 * (i + 0.5) / count            # fibonacci sphere
-            ring = math.sqrt(max(0.0, 1.0 - zc * zc))
-            phi = i * golden
-            n = Vector((math.cos(phi) * ring, math.sin(phi) * ring, zc))
-            if n.z < -0.55:
-                continue                                    # flatten the underside of the crown
-            d = (n + Vector((0, 0, -0.3))).normalized()
-            m = (Matrix.Translation(centre + Vector((n.x, n.y, n.z * 0.8)) * rc * 0.8)
-                 @ _leaf_frame(d, (n + Vector((0, 0, 0.6))).normalized()) @ _jitter(r, 20, 12, 20))
-            length = s * 0.22 * r.uniform(0.75, 1.3)
-            width = length * r.uniform(0.38, 0.50)
-            top_a, top_b = (2, 3) if r.random() < 0.5 else (3, 2)
-            _add_leaf(bm, (top_a, top_b, 4), m, length, width, fold=width * 0.12)
-    return _finish_tree(bm, f"Olive_{seed}", slots, x, y, z0, 0.03)
+        _leaf_dome(fb, r, centre, (rc, rc, rc * 0.82), 26, families, OLIVE_SILVER, OLIVE_CORE,
+                   leaf_scale=0.85, width_k=0.62, below=-0.35)
+    return _finish(fb, f"Olive_{seed}", x, y, z0, 0.024)
 
 
 def make_cypress(x, y, h=6.5, seed=0):
-    """Slim flame-shaped column of overlapping fronds, foliage nearly to the ground."""
+    """Slim flame-shaped column of overlapping rounded scales, foliage nearly to the ground."""
     r = random.Random(SEED * 29 + seed)
-    slots = [v6.matte("TreeBark", BARK, v6.GRAIN), v6.matte("CypDark", CYP_DARK, v6.GRAIN),
-             v6.matte("CypLight", CYP_LIGHT, v6.GRAIN), v6.matte("CypMid", CYP_MID, v6.GRAIN)]
+    families = [(CYP_LIGHT, CYP_MID)]
     z0 = v6.height_at(x, y) - 0.05
-    bm = bmesh.new()
+    fb = _Foliage()
     k = h / 6.5
-    _tube(bm, [Vector((0, 0, 0)), Vector((0, 0, 0.6 * k)), Vector((0, 0, 1.2 * k))],
-          [0.15 * k, 0.11 * k, 0.09 * k], 0, sides=5)
+    _tube(fb, [Vector((0, 0, 0)), Vector((0, 0, 0.6 * k)), Vector((0, 0, 1.2 * k))],
+          [0.15 * k, 0.11 * k, 0.09 * k], BARK, sides=5)
 
     z_start, H = 0.5 * k, h - 0.5 * k
     rmax = h * 0.075
@@ -477,30 +508,31 @@ def make_cypress(x, y, h=6.5, seed=0):
             return rmax * (0.5 + 0.5 * u * u * (3 - 2 * u))
         return rmax * max(0.0, 1.0 - (t - 0.3) / 0.7) ** 0.85
 
-    # Dark core so gaps between fronds read as shade.
+    # Dark core so gaps between scales read as shade.
     steps = 12
     pts = [Vector((0, 0, z_start + H * i / steps)) for i in range(steps + 1)]
-    _tube(bm, pts, [max(0.02, radius(i / steps) * 0.7) for i in range(steps + 1)], 1, sides=6)
+    _tube(fb, pts, [max(0.02, radius(i / steps) * 0.75) for i in range(steps + 1)], CYP_DARK, sides=6)
 
-    z = z_start + 0.15 * k
+    gap = 0.40 * k
+    z = z_start + 0.1 * k
     while z < z_start + H * 0.985:
         t = (z - z_start) / H
         rad = radius(t)
-        count = max(3, int(round(math.tau * rad / (0.30 * k))))
+        slope = (radius(min(1.0, t + 0.02)) - radius(max(0.0, t - 0.02))) / (0.04 * H)
+        count = max(4, int(round(math.tau * rad / (0.34 * k))))
         phase = r.uniform(0, math.tau)
-        alpha = math.radians(50.0 - 28.0 * t)                # lean from vertical
         for i in range(count):
-            phi = phase + i * math.tau / count + r.uniform(-0.2, 0.2)
-            d = Vector((math.cos(phi) * math.sin(alpha), math.sin(phi) * math.sin(alpha), math.cos(alpha)))
+            phi = phase + i * math.tau / count + r.uniform(-0.15, 0.15)
             out = Vector((math.cos(phi), math.sin(phi), 0.0))
-            base = Vector((math.cos(phi) * rad * 0.55, math.sin(phi) * rad * 0.55, z + r.uniform(-0.05, 0.05)))
-            m = Matrix.Translation(base) @ _leaf_frame(d, out) @ _jitter(r, 18, 10, 20)
-            length = max(0.42 * k, 1.25 * rad * 0.55 / max(0.25, math.sin(alpha))) * r.uniform(0.85, 1.2)
-            width = length * r.uniform(0.40, 0.55)
-            light = r.random() < 0.25 + 0.5 * t
-            _add_leaf(bm, (2, 3, 1) if light else (3, 3, 1), m, length, width, fold=width * 0.12)
-        z += 0.30 * k
-    return _finish_tree(bm, f"Cypress_{seed}", slots, x, y, z0, 0.035)
+            n = Vector((out.x, out.y, -slope)).normalized()
+            pos = Vector((out.x * rad * 0.92, out.y * rad * 0.92, z + r.uniform(-0.04, 0.04)))
+            cell = math.tau * rad / count
+            length = max(0.5 * k, gap * 2.3) * r.uniform(0.85, 1.15)
+            width = max(cell * 1.5, 0.26 * k)
+            shade = 0.82 + 0.18 * t + r.uniform(-0.03, 0.03)
+            _leaf_on_surface(fb, r, pos, n, length, width, families, CYP_DARK, shade, lift=0.38)
+        z += gap
+    return _finish(fb, f"Cypress_{seed}", x, y, z0, 0.026)
 
 
 # -- Terrain: painted ground map ---------------------------------------------
@@ -722,6 +754,108 @@ def place_cypress(x, y, h=6.5, seed=0):
     return make_cypress(x, y, h=h, seed=seed)
 
 
+# -- Cliff ledges ------------------------------------------------------------
+# The shelf's cliff was one smooth slab, so a child saw a flat wall. Here flattened boulders of
+# the valley's own stone (same textured stone and inked outline as the rocks on the meadow)
+# stick out of it in two rows, half buried in the wall, with leafy tufts growing on top. First
+# try was flat paper slabs with a grassy top; they read as floating tiles, while a rounded
+# outcrop looks like it grew there. They are decoration (the play boundary keeps the walker away
+# from the wall), so they are not part of the height field and nothing else has to know about
+# them. The waterfall gets a clear gap.
+
+FALL_GAP = (-8.2, -4.8)        # no outcrops where the waterfall pours (x range on the front face)
+
+
+def _wall_point(face, along, z):
+    """Where the cliff surface is `z` high. Returns (point, outward normal, tangent)."""
+    if face == "front":                      # the face turned toward the camera, height rises with y
+        lo, hi = 4.4, 6.6
+        for _ in range(30):
+            mid = (lo + hi) / 2
+            if v6.height_at(along, mid) < z:
+                lo = mid
+            else:
+                hi = mid
+        return Vector((along, (lo + hi) / 2, z)), Vector((0.0, -1.0, 0.0)), Vector((1.0, 0.0, 0.0))
+    lo, hi = -4.8, -2.6                      # the right-hand face, height falls as x grows
+    for _ in range(30):
+        mid = (lo + hi) / 2
+        if v6.height_at(mid, along) > z:
+            lo = mid
+        else:
+            hi = mid
+    return Vector(((lo + hi) / 2, along, z)), Vector((1.0, 0.0, 0.0)), Vector((0.0, 1.0, 0.0))
+
+
+def make_outcrop(point, normal, tangent, length, depth, thick, index):
+    """A flattened, noise-displaced boulder half buried in the wall at `point`."""
+    r = random.Random(SEED * 47 + index)
+    bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=2, radius=1.0, location=(0, 0, 0))
+    obj = bpy.context.active_object
+    ox, oy, oz = r.uniform(0, 50), r.uniform(0, 50), r.uniform(0, 50)
+    bm = bmesh.new()
+    bm.from_mesh(obj.data)
+    for v in bm.verts:
+        v.co *= 1.0 + bnoise.noise(Vector((v.co.x * 1.6 + ox, v.co.y * 1.6 + oy, v.co.z * 1.6 + oz))) * 0.32
+    bm.to_mesh(obj.data)
+    bm.free()
+    obj.scale = (length / 2, depth, thick / 2)
+    obj.rotation_euler = Euler((r.uniform(-0.05, 0.05), r.uniform(-0.05, 0.05), math.atan2(tangent.y, tangent.x)), "XYZ")
+    bpy.ops.object.transform_apply(scale=True, rotation=True)
+    obj.location = point + normal * depth * 0.30 - Vector((0.0, 0.0, thick * 0.12))
+    variant = ROCK_VARIANTS[(0, 3, 2, 0)[index % 4]]        # grey, mossy, slate, grey (limestone is the wall's own tan)
+    name, base, dark, light, moss = variant
+    obj.data.materials.append(stone_material(name, base, dark, light, moss, SEED + len(name)))
+    v6.shade_flat(obj)
+    _box_project_uvs(obj, scale=1.6 / max(depth, 0.3))
+    v6.add_outline(obj, 0.022)
+    outline = bpy.data.objects[obj.name + "_Outline"]
+    outline.name = f"LedgeRock_{index}_Outline"
+    obj.name = f"LedgeRock_{index}"
+    return obj
+
+
+def _ledge_tuft(fb, r, centre, s):
+    """A small mound of rounded leaves growing on top of an outcrop."""
+    families = [(f["light"], f["mid"]) for f in LEAF_FAMILIES]
+    _leaf_dome(fb, r, centre + Vector((0.0, 0.0, s * 0.30)), (s, s, s * 0.8), 14, families,
+               LEAF_UNDER, LEAF_CORE, leaf_scale=0.95, below=-0.1)
+
+
+def make_ledges():
+    r = random.Random(SEED * 41)
+    tufts = _Foliage()
+    count = 0
+    # Where the wall is tall enough: the front face left of the fall, and a little of it right of the
+    # fall. Further left and further back the ground rises to meet the wall.
+    spans = [("front", -12.9, -8.5), ("front", -4.85, -3.95)]
+    for face, start, stop in spans:
+        for level, frac in enumerate((0.30, 0.66)):
+            along = start + r.uniform(0.0, 0.3) + 0.9 * level
+            while along < stop - 0.7:
+                length = min(r.uniform(2.0, 3.2), stop - along)
+                mid = along + length / 2
+                if face == "front" and (FALL_GAP[0] - length / 2 < mid < FALL_GAP[1] + length / 2):
+                    along += 0.6
+                    continue
+                foot = v6.height_at(mid, 4.0)
+                z = foot + (v6.SHELF_Z - foot) * frac
+                if z - foot < 0.5 or v6.SHELF_Z - z < 0.45:
+                    along += length + 0.5
+                    continue
+                point, normal, tangent = _wall_point(face, mid, z)
+                depth = r.uniform(0.7, 0.9)
+                thick = r.uniform(0.5, 0.7)
+                make_outcrop(point, normal, tangent, length, depth, thick, count)
+                if r.random() < 0.7:
+                    off = tangent * r.uniform(-length * 0.25, length * 0.25) + normal * depth * 0.10
+                    _ledge_tuft(tufts, r, point + off + Vector((0.0, 0.0, thick * 0.34)), r.uniform(0.14, 0.2))
+                count += 1
+                along += length + r.uniform(0.15, 0.5)
+    print("LEDGES", count)
+    _finish(tufts, "Ledge_Tufts", 0.0, 0.0, 0.0, 0.01)
+
+
 # -- Swap into v6 and run ----------------------------------------------------
 
 v6.make_boulder = make_rock
@@ -729,6 +863,16 @@ v6.build_terrain = build_terrain
 v6.make_shrub = make_shrub
 v6.make_olive = place_olive
 v6.make_cypress = place_cypress
+
+_scatter_vegetation = v6.scatter_vegetation
+
+
+def scatter_with_ledges():
+    _scatter_vegetation()
+    make_ledges()
+
+
+v6.scatter_vegetation = scatter_with_ledges
 
 if __name__ == "__main__":
     v6.OUT_GLB = os.environ["LL_VALLEY_OUT"]
