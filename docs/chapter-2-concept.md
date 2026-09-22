@@ -54,6 +54,15 @@ So the child does the same *kind* of things as chapter 1 (walk around, collect, 
 fail-free activity, a verse, a charm to keep and colour), with a different story, a different
 place and a different small idea (loyalty, not courage) — not a new genre of gameplay.
 
+## Band
+
+Chapter 2 targets **Band A**, the same as chapter 1 today (see the README's Band notes): **Meet
+Jonathan** would be an auto line, no reply choices, and **Tying the Friendship Cord** would be
+fail-free and impossible to rush, the same way Steady Hands is. Band B — a reply choice at Meet
+Jonathan, a longer cord to tie — is deferred here too, on purpose, not by accident: it stays a
+documented idea for both chapters, picked up together if it ever is, not built ahead of chapter 1
+where it still doesn't exist.
+
 ## Where it would happen
 
 Chapter 1's valley already has scenery above and behind the waterfall cliff that the player
