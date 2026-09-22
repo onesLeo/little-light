@@ -1,4 +1,4 @@
-[gd_scene load_steps=57 format=3]
+[gd_scene load_steps=58 format=3]
 
 [ext_resource type="PackedScene" path="res://assets/wonder_walker_v13.glb" id="1_ww"]
 [ext_resource type="PackedScene" path="res://assets/bethlehem_valley_v7.glb" id="2_valley"]
@@ -41,6 +41,7 @@
 [ext_resource type="Script" path="res://scripts/lamb_life.gd" id="30_lamb"]
 [ext_resource type="Script" path="res://scripts/butterflies.gd" id="31_fly"]
 [ext_resource type="Script" path="res://scripts/soundscape.gd" id="32_soundscape"]
+[ext_resource type="Script" path="res://scripts/foreground_fade.gd" id="38_foreground"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
 radius = 0.35
@@ -173,13 +174,13 @@ shadow_enabled = false
 
 [node name="TabletopCamera" type="Camera3D" parent="."]
 unique_name_in_owner = true
-transform = Transform3D(1, 0, 0, 0, 0.737, 0.676, 0, -0.676, 0.737, 0, 9.5, 15)
+transform = Transform3D(1, 0, 0, 0, 0.737, 0.676, 0, -0.676, 0.737, 0, 8.7, 14.1)
 current = true
-fov = 42.0
+fov = 40.0
 near = 0.1
 far = 200.0
 script = ExtResource("8_cam")
-offset = Vector3(0, 9.5, 11)
+offset = Vector3(0, 8.7, 10.1)
 look_height = 0.7
 follow_speed = 6.0
 
@@ -491,3 +492,6 @@ script = ExtResource("34_foliage")
 
 [node name="ScreenShape" type="Node" parent="."]
 script = ExtResource("36_shape")
+
+[node name="ForegroundFade" type="Node" parent="."]
+script = ExtResource("38_foreground")

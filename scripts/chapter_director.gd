@@ -28,6 +28,7 @@ enum Beat {
 
 @onready var dialogue_label: Label = %DialogueLabel
 @onready var prompt_label: Label = %PromptLabel
+@onready var dialogue_panel: PanelContainer = get_node_or_null("../UI/Panel") as PanelContainer
 @onready var player: CharacterBody3D = %Player
 @onready var steady_hands: Node = %SteadyHands
 @onready var camera_director: Node = %CameraDirector
@@ -50,6 +51,11 @@ const ITEM_FLAVOR := {
 	"WonderItem_Stone": "A stone, just right for a sling.",
 	"WonderItem_Staff": "Worn smooth from long days watching sheep.",
 	"WonderItem_Lamb": "Baa! This little one wandered off again.",
+}
+const ITEM_LABELS := {
+	"WonderItem_Stone": "stone",
+	"WonderItem_Staff": "staff",
+	"WonderItem_Lamb": "little lamb",
 }
 
 var _advance_ready: bool = false
@@ -126,7 +132,7 @@ func _enter_beat(next: Beat) -> void:
 			_point_light(null)
 			_show(
 				"Wonder Light: \"Three Wonder Items are hidden on the hillside. Find them!\"",
-				"Walk near an item and press E  (%d / %d)" % [wonder_items_found, WONDER_ITEMS_NEEDED]
+				_explore_prompt(false)
 			)
 			_advance_ready = false
 			explore_started.emit()
@@ -142,7 +148,7 @@ func _enter_beat(next: Beat) -> void:
 			_cut_closeup(david_mentor)
 			_point_light(david_mentor)
 			_show(
-				"David: \"Oh! Hello there. Are you lost too?\"\nDavid: \"Everyone's scared of the big giant. But someone has to be brave.\"",
+				"(You bring David the stone, staff, and little lamb.)\nDavid: \"Oh! Hello there. Are you lost too?\"\nDavid: \"Everyone's scared of the big giant. But someone has to be brave.\"",
 				"Press Space to continue"
 			)
 			_advance_ready = true
@@ -192,7 +198,7 @@ func _enter_beat(next: Beat) -> void:
 			_cut_closeup(david_mentor)
 			_point_light(david_mentor)
 			_show(
-				"Wonder Light: \"David walked out to the valley. And when it was over, the whole camp was cheering his name.\"",
+				"Wonder Light: \"A stone, just right for a sling.\"\nWonder Light: \"David walked out to the valley. And when it was over, the whole camp was cheering his name.\"\nWonder Light: \"David trusted God, faced Goliath with his sling, and defeated him. The people were safe.\"",
 				"Press Space to continue"
 			)
 			_advance_ready = true
@@ -287,7 +293,7 @@ func _on_wonder_item_entered(body: Node3D, area: Area3D) -> void:
 		return
 	_near_item = area
 	if beat == Beat.EXPLORE:
-		_set_prompt("Press E to collect  (%d / %d)" % [wonder_items_found, WONDER_ITEMS_NEEDED])
+		_set_prompt(_explore_prompt(true))
 
 func _on_wonder_item_exited(body: Node3D, area: Area3D) -> void:
 	if body != player:
@@ -295,7 +301,7 @@ func _on_wonder_item_exited(body: Node3D, area: Area3D) -> void:
 	if _near_item == area:
 		_near_item = null
 	if beat == Beat.EXPLORE:
-		_set_prompt("Walk near an item and press E  (%d / %d)" % [wonder_items_found, WONDER_ITEMS_NEEDED])
+		_set_prompt(_explore_prompt(false))
 
 func _try_collect_near_item() -> void:
 	if beat != Beat.EXPLORE:
@@ -324,18 +330,48 @@ func _try_collect_near_item() -> void:
 		if outline:
 			outline.visible = false
 	_near_item = null
-	_set_prompt("Collected!  (%d / %d)" % [wonder_items_found, WONDER_ITEMS_NEEDED])
+	_set_prompt(_explore_prompt(false))
 	_celebrate_light()
 	if wonder_items_found >= WONDER_ITEMS_NEEDED:
-		# Brief pause then meet David.
-		await get_tree().create_timer(0.8).timeout
+		# Hold the wide shot for a moment and let Wonder Light lead the eye to
+		# David. This makes the scavenger hunt visibly pay off before the cut.
+		_set_player_move(false)
+		_set_prompt("Everything is ready — let's bring it to David!")
+		_point_light(david_mentor)
+		await get_tree().create_timer(1.35).timeout
 		_enter_beat(Beat.MEET_DAVID_A)
+
+
+## The hunt is not an arbitrary counter: every prompt names what the child is
+## finding for David, and collected things remain visibly checked off.
+func _explore_prompt(near_item: bool) -> String:
+	var parts: PackedStringArray = []
+	for item_name in ["WonderItem_Stone", "WonderItem_Staff", "WonderItem_Lamb"]:
+		var mark := "✓" if _items_collected.has(item_name) else "—"
+		parts.append("%s %s" % [ITEM_LABELS[item_name].capitalize(), mark])
+	var action := "Press E to collect" if near_item else "Find these for David"
+	return "%s   %s   (%d / %d)" % [action, "  ".join(parts), wonder_items_found, WONDER_ITEMS_NEEDED]
 
 func _show(dialogue: String, prompt: String) -> void:
 	_say(dialogue)
 	if camera_director and camera_director.has_method("is_orbiting") and camera_director.is_orbiting():
 		prompt += "   [A / D: look around]"
 	_set_prompt(prompt)
+	call_deferred("_fit_dialogue_panel")
+
+
+## Short lines no longer sit at the top of a mostly empty 200 px panel. Long
+## story beats (especially Joshua 1:9) still grow enough to wrap comfortably.
+func _fit_dialogue_panel() -> void:
+	if dialogue_panel == null:
+		return
+	var dialogue_height := dialogue_label.get_combined_minimum_size().y
+	var prompt_height := prompt_label.get_combined_minimum_size().y
+	var wanted := dialogue_height + prompt_height + 44.0
+	var viewport_height := get_viewport().get_visible_rect().size.y
+	var max_height := maxf(116.0, minf(240.0, viewport_height * 0.38))
+	var height := clampf(wanted, 116.0, max_height)
+	dialogue_panel.offset_top = dialogue_panel.offset_bottom - height
 
 ## Shows a line of story text and reads it aloud (if the player has read-aloud on). With "Easy words" on for the
 ## child playing, lines that have an easier version (easy_words.gd) are swapped for it. Returns what was shown.
@@ -365,15 +401,18 @@ func show_nudge(text: String) -> void:
 	if beat == prev_beat and dialogue_label.text == shown:
 		dialogue_label.text = prev_dialogue
 		_set_prompt(prev_prompt)
+		call_deferred("_fit_dialogue_panel")
 
 ## Prompts are authored with keyboard wording ("Press Space", "press E") and
 ## rewritten for whichever device the player last used.
 func _set_prompt(raw: String) -> void:
 	_prompt_raw = raw
 	prompt_label.text = _localize_prompt(raw)
+	call_deferred("_fit_dialogue_panel")
 
 func _on_device_changed(_mode: String) -> void:
 	prompt_label.text = _localize_prompt(_prompt_raw)
+	call_deferred("_fit_dialogue_panel")
 
 func _localize_prompt(raw: String) -> String:
 	var input_setup := get_node_or_null("../InputSetup")
