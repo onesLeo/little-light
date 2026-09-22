@@ -827,8 +827,10 @@ def make_ledges():
     tufts = _Foliage()
     count = 0
     # Where the wall is tall enough: the front face left of the fall, and a little of it right of the
-    # fall. Further left and further back the ground rises to meet the wall.
-    spans = [("front", -12.9, -8.5), ("front", -4.85, -3.95)]
+    # fall, plus the shelf's right-hand side face. Widened as far as the shelf's own rectangle allows;
+    # the per-spot "tall enough" check below skips the stretches where the ground rises to meet the
+    # wall on its own, so nothing needs to be measured by hand.
+    spans = [("front", -14.7, -8.5), ("front", -4.85, -3.85), ("right", 6.0, 7.6)]
     for face, start, stop in spans:
         for level, frac in enumerate((0.30, 0.66)):
             along = start + r.uniform(0.0, 0.3) + 0.9 * level
@@ -838,7 +840,9 @@ def make_ledges():
                 if face == "front" and (FALL_GAP[0] - length / 2 < mid < FALL_GAP[1] + length / 2):
                     along += 0.6
                     continue
-                foot = v6.height_at(mid, 4.0)
+                # The foot (ground level at the base of the wall) sits a little in front of the
+                # face: below it in y for the front face, out past it in x for the right-hand one.
+                foot = v6.height_at(mid, 4.0) if face == "front" else v6.height_at(-2.0, mid)
                 z = foot + (v6.SHELF_Z - foot) * frac
                 if z - foot < 0.5 or v6.SHELF_Z - z < 0.45:
                     along += length + 0.5
