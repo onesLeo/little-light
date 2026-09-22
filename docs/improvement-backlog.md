@@ -58,6 +58,17 @@ Screenshots and measurements were taken at 1152x648 / 1280x720 on Windows with G
 | 5.5 | Stale docs | **Done, by hand** | The README asset table was checked against `main.tscn` (five models, all current) and the docs that named moved files now point at the archive. Nothing checks the docs automatically. |
 | 5.6 | Tests | **Partly done** | One headless smoke test (203 checks: story, input devices, touch, pause, the play area, the lamb, fish, butterflies, where trees and rocks stand, the performance budget, profiles and the Faith Journal, voice-over, the soundscape and Steady Hands) now runs on every pull request and push to `main` through GitHub Actions (`.github/workflows/smoke-test.yml`, Godot 4.7.2 on Linux). It has run on GitHub and passes (about 35 seconds). Still open: nothing verifies how the game looks, so keep the screenshot helper in mind for visual checks. |
 
+## 6. Before releasing to the public (demo)
+
+Story content is **not** a blocker: chapter 1 is complete, and a single finished chapter is an
+honest "more to come" demo. These two are the real gate, both **Open**:
+
+| # | Item | Status | Notes |
+|---|------|--------|-------|
+| 6.1 | Try it on a real tablet | **Open** | Touch controls, the on-screen keyboard for typing a name (`_fit_to_keyboard` in `profile_screen.gd`), and performance (5.1) have only been checked in the editor and with injected input events, never on real hardware. Same item as 2.1/3.5/5.1 below, called out here as a release gate. |
+| 6.2 | Have a child actually play it once | **Open** | Steady Hands' pacing, the soundscape's volume balance, and the Faith Journal's flow (3.1, 3.2, 3.5) have not been tried by the target audience. |
+| 6.3 | If releasing as a browser build, test the exported build in a real browser | **Open** | See `docs/release-plan.md`. The project has no Web export preset yet, and its default renderer (Forward+) is not what Web export uses — see that doc for what changes. |
+
 ## Suggested order
 
 1. Try touch and gamepad on real hardware (2.1). The voiceover and the lamb's "baa" have been listened to and are fine.
@@ -65,3 +76,4 @@ Screenshots and measurements were taken at 1152x648 / 1280x720 on Windows with G
 3. Try Steady Hands, the soundscape and the Faith Journal with a child, on a real tablet, and tune them (3.1, 3.2, 3.5).
 4. Run the game on a real tablet and profile it there (5.1, `docs/performance.md`). The repo housekeeping (5.2 to 5.6) is done.
 5. A second chapter is a concept only, not decided or built: see [docs/chapter-2-concept.md](chapter-2-concept.md).
+6. Before a public demo release, clear section 6 above and see [docs/release-plan.md](release-plan.md) for how and where to publish it.

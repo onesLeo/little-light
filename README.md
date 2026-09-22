@@ -104,6 +104,8 @@ See [docs/improvement-backlog.md](docs/improvement-backlog.md) for the full revi
 
 A second chapter is only a concept so far, not built: see [docs/chapter-2-concept.md](docs/chapter-2-concept.md).
 
+Releasing a public demo is only a plan so far, not done: see [docs/release-plan.md](docs/release-plan.md) (a browser build, so nobody has to download a big file).
+
 
 ## Band notes
 - **Band A Steady Hands:** three slow breaths (hold to breathe in, let go to breathe out); it cannot be failed and cannot be rushed. This replaced the old one-tap design.

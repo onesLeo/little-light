@@ -58,10 +58,24 @@ place and a different small idea (loyalty, not courage) — not a new genre of g
 
 Chapter 2 targets **Band A**, the same as chapter 1 today (see the README's Band notes): **Meet
 Jonathan** would be an auto line, no reply choices, and **Tying the Friendship Cord** would be
-fail-free and impossible to rush, the same way Steady Hands is. Band B — a reply choice at Meet
-Jonathan, a longer cord to tie — is deferred here too, on purpose, not by accident: it stays a
-documented idea for both chapters, picked up together if it ever is, not built ahead of chapter 1
-where it still doesn't exist.
+fail-free and impossible to rush, the same way Steady Hands is.
+
+**Band B (ages 9-12) — pending, not decided, not built.** Looking into what actually holds older
+kids' interest, the current thinking is that the difference should be *more to explore*, not a way
+to fail or lose — this game's "cannot be failed" pillar stays for every age:
+
+- The three Wonder Items (robe, bow, belt) would be spread across the whole camp — behind a tent,
+  past the lookout point, near the patrolling guards — instead of close together near the path, so
+  an older child has to actually search the space, maybe backtrack, maybe use the lookout view
+  down into the valley as a clue.
+- **Meet Jonathan** could offer a real reply choice that changes his next line, instead of an auto
+  line.
+- **Tying the Friendship Cord** could take a little longer and ask for steadier attention, but
+  stays fail-free — more patience required, never a chance to get it wrong.
+
+Every child, on either band, still reaches the same verse, the same charm and the same ending.
+This is a direction to react to, not a decision: it stays a documented idea for both chapters,
+picked up together if it ever is, not built ahead of chapter 1 where Band B still doesn't exist.
 
 ## Where it would happen
 
