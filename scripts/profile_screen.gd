@@ -225,7 +225,9 @@ func _select_age(band: String) -> void:
 	for k in _age_buttons:
 		var b := _age_buttons[k] as Button
 		b.set_pressed_no_signal(k == band)
-		(b.get_theme_stylebox("normal") as StyleBoxFlat).bg_color = PaperUI.GOLD if k == band else PaperUI.PAPER
+		var fill := PaperUI.GOLD if k == band else PaperUI.PAPER
+		for state in ["normal", "hover", "focus", "pressed"]:
+			(b.get_theme_stylebox(state) as StyleBoxFlat).bg_color = fill
 
 
 func _select_avatar(kind: String) -> void:
