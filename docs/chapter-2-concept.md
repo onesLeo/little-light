@@ -126,6 +126,26 @@ In short: nothing here asks for a new art style, a new lighting setup or a new t
 the same recipe (flat colour, grain, black outline, low-poly, paper-doll figures) pointed at a
 new location, a new character and three new small props.
 
+## Time of day, and life in the camp
+
+Raised after the first sketches: could the camp be lit so the fire actually shows, and could it
+feel less empty?
+
+- **Dusk, not full night.** In flat daylight the campfire's glow does not read; at night the
+  scene risks feeling dark and unwelcoming for a 6-year-old. Dusk (a warm, glowing sky, not
+  black) keeps the fire and a hanging lantern visible and gives the camp its own mood, while
+  staying as gentle as the rest of the game. It also ties into the story: it is the evening of
+  the same day the whole camp was cheering David's name. This is the first thing in the game that
+  is not full daylight, so it is a genuinely new piece of work (a second `Environment`/lighting
+  setup for this one location), not a free change.
+- **Two camp guards**, dressed plainly (not Jonathan's court colours), standing and slowly
+  patrolling near the tent — ambient life, the same idea as the lamb, the fish and the
+  butterflies in chapter 1 (`3.3 A world that reacts`), not a threat and not interactive. Each
+  carries a staff, not a weapon, in keeping with no violence being shown anywhere in the game.
+
+A second sketch, at dusk with the campfire glowing, a hanging lantern, and both guards, was
+shown alongside the first. Still a concept, not built.
+
 ## Open questions
 
 1. Is "The King's Camp" / David and Jonathan the right next beat, or would you rather see other
