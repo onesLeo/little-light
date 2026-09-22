@@ -7,8 +7,7 @@ and decided on before any art or code work starts.
 
 Chapter 1 is the lead-up to the fight, not the fight itself: David gets steady, earns the
 Courage charm and the Joshua 1:9 verse, then walks out to the valley. Wonder Light narrates the
-result in one line ("David walked out to the valley. And when it was over, the whole camp was
-cheering his name.") — the confrontation with Goliath happens off-screen, on purpose. The game
+result in one line ("David walked out to the valley. When it was over, the camp cheered his name.") — the confrontation with Goliath happens off-screen, on purpose. The game
 has stayed gentle throughout (Steady Hands always succeeds, there is no giant on screen, no
 violence), so a chapter 2 that shows the fight itself would break that tone.
 

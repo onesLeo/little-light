@@ -598,7 +598,7 @@ func _initialize() -> void:
 	director._enter_beat(director.Beat.MEET_DAVID_B)
 	_check("God gave David a job" in director.dialogue_label.text, "Wonder Light names David's purpose before the verse")
 	director._enter_beat(director.Beat.REFLECT)
-	_check("for you too" in director.dialogue_label.text and "stay close" in director.dialogue_label.text,
+	_check("for you too" in director.dialogue_label.text and "Stay close" in director.dialogue_label.text and "remember the words" in director.dialogue_label.text,
 			"the child is given a purpose: stay close and remember the words")
 	_check("sheep to keep safe" in FileAccess.get_file_as_string("res://scripts/chapter_director.gd"), "David names his job: keep the sheep safe")
 	_check("small thing" in director.ITEM_FLAVOR["WonderItem_Stone"], "the stone flavour names God, not just a sling")
@@ -678,10 +678,10 @@ func _initialize() -> void:
 	_check(no_clip.is_empty(), "and every easier line has a recorded clip %s" % [no_clip])
 	var verse_block: String = JournalContent.verse_dialogue(JournalContent.VERSE_JOSHUA_1_9)
 	_check(EasyWords.apply(verse_block) == verse_block, "the Joshua 1:9 verse is never changed")
-	var arrive_line: String = "Wonder Light: \"This is David's valley, made of paper and light. He looks after sheep. God looks after him.\""
+	var arrive_line: String = "Wonder Light: \"This is David's valley. He looks after sheep. God looks after him.\""
 	GameSettings.easy_words = false
 	director._say(arrive_line)
-	_check(director.dialogue_label.text == arrive_line and vo_player.stream == vo_lib.clip_for("This is David's valley, made of paper and light. He looks after sheep. God looks after him."), "a child who is 9 or older gets the story as written, in the original voice clip")
+	_check(director.dialogue_label.text == arrive_line and vo_player.stream == vo_lib.clip_for("This is David's valley. He looks after sheep. God looks after him."), "a child who is 9 or older gets the story as written, in the original voice clip")
 	GameSettings.easy_words = true
 	director._say(arrive_line)
 	_check(director.dialogue_label.text == "Wonder Light: \"This is David's valley. God looks after him.\"" and vo_player.stream == vo_lib.clip_for("This is David's valley. God looks after him."), "with Easy words on, the easier line is shown and read aloud")

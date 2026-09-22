@@ -19,7 +19,8 @@ const SoundBus := preload("res://scripts/sound_bus.gd")
 const SoundLibrary := preload("res://scripts/sound_library.gd")
 
 ## Silence between two recorded lines of one dialogue block, in seconds.
-const CLIP_GAP := 0.3
+## Long enough for a breath, short enough that a child does not wander off.
+const CLIP_GAP := 0.45
 
 ## Emitted when read-aloud is switched on or off.
 signal read_aloud_changed(enabled: bool)

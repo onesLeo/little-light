@@ -124,7 +124,7 @@ func _enter_beat(next: Beat) -> void:
 			_cut_tabletop()
 			_point_light(null)
 			_show(
-				"Wonder Light: \"This is David's valley, made of paper and light. He looks after sheep. God looks after him.\"",
+				"Wonder Light: \"This is David's valley. He looks after sheep. God looks after him.\"",
 				"Press Space to continue"
 			)
 			_advance_ready = true
@@ -151,7 +151,7 @@ func _enter_beat(next: Beat) -> void:
 			_cut_closeup(david_mentor)
 			_point_light(david_mentor)
 			_show(
-				"(You bring David the stone, staff, and little lamb.)\nDavid: \"Oh! Hello there. Are you lost too?\"\nDavid: \"Everyone's scared of the big giant. But God gave me these sheep to keep safe.\"\nDavid: \"The Lord who kept me safe from the lion and the bear will keep me safe now.\"",
+				"(You bring David the stone, staff, and little lamb.)\nDavid: \"Oh! Hello there. Are you lost too?\"\nDavid: \"Everyone's scared of the big giant. But God gave me these sheep to keep safe.\"\nDavid: \"The Lord kept me safe from the lion and the bear. He will keep me safe now.\"",
 				"Press Space to continue"
 			)
 			_advance_ready = true
@@ -161,7 +161,7 @@ func _enter_beat(next: Beat) -> void:
 			_cut_closeup(david_mentor)
 			_point_light(david_mentor)
 			_show(
-				"Wonder Light: \"God gave David a job: keep the sheep safe. That is why he will go.\"\nDavid: \"Thanks. Will you stay close while I get ready?\"",
+				"Wonder Light: \"God gave David a job: keep the sheep safe. That's why he will go.\"\nDavid: \"Thanks. Will you stay close while I get ready?\"",
 				"Press Space to continue"
 			)
 			_advance_ready = true
@@ -203,7 +203,7 @@ func _enter_beat(next: Beat) -> void:
 			_cut_closeup(david_mentor)
 			_celebrate_light()
 			_show(
-				"David: \"I still feel small. But I don't feel alone. Thank you for staying — and for the words.\"",
+				"David: \"I still feel small. But I'm not alone. Thank you for staying.\"",
 				"Press Space to continue"
 			)
 			_advance_ready = true
@@ -214,7 +214,7 @@ func _enter_beat(next: Beat) -> void:
 			_cut_closeup(david_mentor)
 			_point_light(david_mentor)
 			_show(
-				"Wonder Light: \"David took the small stone. God can use even a small thing.\"\nWonder Light: \"David walked out to the valley. And when it was over, the whole camp was cheering his name.\"\nWonder Light: \"David trusted God, faced Goliath with his sling, and defeated him. The people were safe.\"",
+				"Wonder Light: \"David took the small stone. God can use even a small thing.\"\nWonder Light: \"David walked out to the valley. When it was over, the camp cheered his name.\"\nWonder Light: \"David trusted God, faced Goliath with his sling, and defeated him. The people were safe.\"",
 				"Press Space to continue"
 			)
 			_advance_ready = true
@@ -223,7 +223,7 @@ func _enter_beat(next: Beat) -> void:
 			_cut_tabletop()
 			_point_light(null)
 			_show(
-				"Wonder Light: \"Being brave doesn't mean you're not scared. It means you go with God anyway.\"\nWonder Light: \"God had a job for David. He has one for you too: stay close, and remember the words.\"",
+				"Wonder Light: \"Being brave doesn't mean you're not scared. It means you go with God anyway.\"\nWonder Light: \"God had a job for David. He has one for you too. Stay close, and remember the words.\"",
 				"Press Space to continue"
 			)
 			_advance_ready = true

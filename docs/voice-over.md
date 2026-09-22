@@ -19,11 +19,11 @@ leading and trailing silence and saved as mono `.wav` (43 clips: 31 of the story
 Voices differ in how "dry" they sound; if one sounds like it was recorded in a room, try another.
 The tool only exposes speed, loudness and pitch, so any emotion comes from the voice and the wording.
 
-On `feat/spine-god-is-the-source` the Chapter 1 spine, purpose, item-flavour and God-through-David
-lines were recut in the same Juno / Bram voices so the recording matches the on-screen text. Exact
-wording lives in `vo_library.gd`. Do **not** recut `wl_verse`, `wl_dont_be_afraid`, or any other
-unchanged line — a new take of the same sentence will sit next to the old Juno and sound like a
-different recording.
+On `feat/spine-god-is-the-source` the story lines were retimed in the same Juno / Bram voices.
+Rushed lines were slowed, and a few wordy sentences were split into shorter beats so a child can
+hold them. Joshua 1:9 and “Don't. Be. Afraid.” were left as they were. Exact wording lives in
+`vo_library.gd`. Do **not** recut an unchanged line just to refresh it — a new take of the same
+sentence will sit next to the old one and sound like a different recording.
 
 ## How it plays
 
