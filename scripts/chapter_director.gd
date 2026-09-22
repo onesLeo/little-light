@@ -76,6 +76,8 @@ var _word_phase: String = "" ## "", listen, tap, done
 var _word_said: Array[bool] = [false, false, false]
 var _word_row: HBoxContainer
 var _word_buttons: Array[Button] = []
+var _word_halos: Array[StyleBoxFlat] = []
+var _word_pulse: Array[Tween] = []
 
 func _ready() -> void:
 	dialogue_label.text = ""
@@ -590,8 +592,23 @@ func _build_word_buttons() -> void:
 		b.focus_mode = Control.FOCUS_NONE
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		b.pressed.connect(press_word.bind(i))
+		var halo := StyleBoxFlat.new()
+		halo.bg_color = Color(1.0, 0.86, 0.35, 0.0)
+		halo.set_corner_radius_all(32)
+		var glow := Panel.new()
+		glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		glow.show_behind_parent = true
+		glow.set_anchors_preset(Control.PRESET_FULL_RECT)
+		glow.offset_left = -22.0
+		glow.offset_top = -22.0
+		glow.offset_right = 22.0
+		glow.offset_bottom = 22.0
+		glow.add_theme_stylebox_override("panel", halo)
+		b.add_child(glow)
 		_word_row.add_child(b)
 		_word_buttons.append(b)
+		_word_halos.append(halo)
+		_word_pulse.append(null)
 
 
 func _begin_word_listen() -> void:
@@ -648,6 +665,7 @@ func press_word(index: int) -> void:
 		audio_director.play_line(WORD_LINES[index])
 	_word_said[index] = true
 	_restyle_words()
+	_pulse_word(index)
 	if _words_complete() and _word_phase != "done":
 		_word_phase = "done"
 		_advance_ready = true
@@ -659,5 +677,46 @@ func press_word(index: int) -> void:
 func _restyle_words() -> void:
 	for i in _word_buttons.size():
 		var said := i < _word_said.size() and _word_said[i]
-		_word_buttons[i].modulate = Color(0.78, 0.9, 0.72) if said else Color.WHITE
+		_paint_word(i, said)
+
+
+## A tapped word stays bright, with a warm halo, so she can see which ones she has said.
+func _paint_word(index: int, lit: bool) -> void:
+	var b := _word_buttons[index]
+	var fill := Color(1.0, 0.97, 0.72) if lit else PaperUI.GOLD
+	var halo_alpha := 0.55 if lit else 0.0
+	if index < _word_halos.size():
+		_word_halos[index].bg_color = Color(1.0, 0.84, 0.28, halo_alpha)
+	for state in ["normal", "hover", "focus", "pressed"]:
+		var sb := b.get_theme_stylebox(state) as StyleBoxFlat
+		if sb == null:
+			continue
+		sb.bg_color = fill
+		sb.shadow_color = Color(1.0, 0.78, 0.2, 0.9 if lit else 0.0)
+		sb.shadow_size = 22 if lit else 0
+
+
+func _pulse_word(index: int) -> void:
+	if index < 0 or index >= _word_buttons.size():
+		return
+	var b := _word_buttons[index]
+	if index < _word_pulse.size() and _word_pulse[index] and _word_pulse[index].is_valid():
+		_word_pulse[index].kill()
+	b.pivot_offset = b.size * 0.5 if b.size.x > 1.0 else Vector2(100, 48)
+	b.scale = Vector2(0.94, 0.94)
+	var tw := create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(b, "scale", Vector2(1.12, 1.12), 0.12).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	if index < _word_halos.size():
+		var halo := _word_halos[index]
+		halo.bg_color.a = 0.2
+		tw.tween_property(halo, "bg_color:a", 0.9, 0.1)
+	tw.chain().set_parallel(true)
+	tw.tween_property(b, "scale", Vector2.ONE, 0.28).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	if index < _word_halos.size():
+		tw.tween_property(_word_halos[index], "bg_color:a", 0.55, 0.35)
+	if index < _word_pulse.size():
+		_word_pulse[index] = tw
+	if wonder_light and wonder_light.has_method("celebrate"):
+		wonder_light.celebrate()
 
