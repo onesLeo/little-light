@@ -235,6 +235,28 @@ func _initialize() -> void:
 	_check(closeup_cam.current == true, "MEET_DAVID_A cuts to close-up")
 	_check(tabletop_cam.current == false, "tabletop stops being current after cut")
 	_check(wonder_light._look_target == david, "Wonder Light looks at David during MEET_DAVID_A")
+	var cam_dir: Node = main.get_node("CameraDirector")
+	var walker_body: Node3D = main.get_node("Player")
+	var david_front := -david.global_transform.basis.z
+	david_front.y = 0.0
+	david_front = david_front.normalized()
+	walker_body.global_position = david.global_position + david_front * 1.5
+	cam_dir._orbit_target = david
+	cam_dir._orbit_angle = -cam_dir.closeup_side_angle
+	cam_dir._place_closeup()
+	var head := walker_body.global_position + Vector3(0.0, 1.17, 0.0)
+	var view := closeup_cam.get_viewport().get_visible_rect().size
+	var head_screen := closeup_cam.unproject_position(head)
+	_check(not closeup_cam.is_position_behind(head), "from David's side the walker's head is in front of the camera")
+	_check(head_screen.y > view.y * 0.04 and head_screen.y < view.y * 0.78,
+			"the walker's head stays on screen instead of being cut off (y %.0f of %.0f)" % [head_screen.y, view.y])
+	_check(closeup_cam.global_position.distance_to(walker_body.global_position + Vector3(0.0, 0.7, 0.0)) > 1.1,
+			"the close-up stays outside the walker")
+	walker_body.global_position = david.global_position + david_front.rotated(Vector3.UP, 2.2) * 2.2
+	cam_dir._orbit_angle = 0.0
+	cam_dir._place_closeup()
+	var david_head := david.global_position + Vector3(0.0, 1.15, 0.0)
+	_check(not closeup_cam.is_position_behind(david_head), "David's own close-up still sees his head")
 
 	print("-- steady hands starts the breathing indicator --")
 	director._enter_beat(director.Beat.STEADY_PLAY)
