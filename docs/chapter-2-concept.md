@@ -29,6 +29,31 @@ final, since the charm's name is spoken aloud by the recorded voice).
 a bow and a belt — each found and given to David in turn, mirroring how chapter 1's items work
 today.
 
+## The story, and what the child does
+
+Same shape as chapter 1, so it stays recognisable rather than becoming a different game halfway
+through:
+
+1. **Explore.** The Wonder-Walker (a guest in the story, not David — chapter 1 is explicit about
+   that, and this keeps it true) arrives at the camp on the ridge and looks around: tents,
+   banners, a campfire, the valley visible below.
+2. **Find three Wonder Items.** Jonathan's robe, bow and belt, scattered around the camp the way
+   the stone, staff and lamb are scattered around the meadow today.
+3. **Meet Jonathan.** A short dialogue beat, the same shape as meeting David: he explains what
+   the gifts mean and that he is giving them to David because of what David did.
+4. **A signature activity, fail-free like Steady Hands.** Working name **"Tying the Friendship
+   Cord"**: the same hold-and-release breathing-ring mechanic Steady Hands already uses, re-skinned
+   as looping a cord three times instead of three slow breaths. Reusing the mechanic keeps the
+   engineering small; only the visuals and words change. (A different activity is possible, but
+   this is the cheapest one that still feels like its own thing rather than a copy.)
+5. **Reflect and receive the verse:** 1 Samuel 18:1, read aloud, the same way Joshua 1:9 is today.
+6. **The charm ceremony,** unchanged code, new charm.
+7. **End panel:** Play again, My journal, Colour my charm, Keep exploring — same as today.
+
+So the child does the same *kind* of things as chapter 1 (walk around, collect, listen, one calm
+fail-free activity, a verse, a charm to keep and colour), with a different story, a different
+place and a different small idea (loyalty, not courage) — not a new genre of gameplay.
+
 ## Where it would happen
 
 Chapter 1's valley already has scenery above and behind the waterfall cliff that the player
