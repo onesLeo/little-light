@@ -3,10 +3,10 @@
 Old versions of the models, kept for reference and history. Godot ignores this folder (see
 `.gdignore`), so nothing here is imported, loaded or shipped by the game.
 
-`models/` holds 34 earlier models with their `.import` files and extracted textures: 9 of the
-Wonder-Walker, 8 of David, 6 of the valley, 6 of the stream fish and 5 of the Wonder Items (version
+`models/` holds 35 earlier models with their `.import` files and extracted textures: 9 of the
+Wonder-Walker, 9 of David, 6 of the valley, 6 of the stream fish and 5 of the Wonder Items (version
 numbers are not consecutive, since some were never kept). The game uses only the newest of each,
-which stay in `assets/`: `wonder_walker_v13`, `david_mentor_v12`, `bethlehem_valley_v7`, `wonder_items_v7` and
+which stay in `assets/`: `wonder_walker_v13`, `david_mentor_v13`, `bethlehem_valley_v7`, `wonder_items_v7` and
 `bethlehem_stream_fish_alive_v7`.
 
 **To use one again**, move it (with its `.import` and `.uid` files and any textures named after it)

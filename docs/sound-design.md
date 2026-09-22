@@ -109,5 +109,11 @@ and the stream after the change. The levels above are the first thing to tune.
 
 ## Not done
 
-- A real recording of steps in shallow water. The stream steps are the "pops" from a recording of steps in mud, which is close but not a splash.
 - Sound for Wonder Light itself beyond the existing chimes.
+
+## Done, not yet heard in the running game
+
+- The stream steps used to be the "pops" from a recording of steps in mud (close, but not a real
+  splash). They are now cut from "Shoes in the Water" (BigSoundBank #690, Joseph Sardin, CC0), a
+  real recording of walking through shallow water — see `assets/audio/CREDITS.md`. Rendered and
+  wired up the same way as the other ground types; not yet checked by ear.

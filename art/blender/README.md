@@ -58,13 +58,14 @@ Run the examples from the repository root. The current character/props generator
 |-----------|-------------|
 | `scripts/characters/generate_wonder_walker_v5.py` | `wonder_walker_v13.glb` |
 | `scripts/characters/generate_wonder_walker_v4.py` | `wonder_walker_v12.glb` |
-| `scripts/characters/generate_david_mentor_v4.py` | `david_mentor_v12.glb` |
+| `scripts/characters/generate_david_mentor_v4.py` | `david_mentor_v13.glb` |
 | `scripts/props/generate_david_and_items_v3.py` | `david_mentor_v9.glb`, `wonder_items_v7.glb` |
 
-`wonder_walker_v12.glb` and `david_mentor_v9.glb` are no longer in `assets/`: they were moved to
-`art/archive/models/` (see its README). Running those generators writes them into `assets/` again.
+`wonder_walker_v12.glb`, `david_mentor_v9.glb` and `david_mentor_v12.glb` are no longer in
+`assets/`: they were moved to `art/archive/models/` (see its README). Running those generators
+writes them into `assets/` again.
 
-The main scene loads **Walker v13, David v12, and items v7**. Use the separate David character generator for the current mentor; the older props generator still outputs David v9. Outputs stay in the output directory until explicitly copied into the project's `assets/` folder; generating a GLB does not change `scenes/main.tscn`. See the [project README](../../README.md#current-scene-assets) for all active scene assets. The technical notes below include earlier iterations as development history.
+The main scene loads **Walker v13, David v13, and items v7**. Use the separate David character generator for the current mentor; the older props generator still outputs David v9. Outputs stay in the output directory until explicitly copied into the project's `assets/` folder; generating a GLB does not change `scenes/main.tscn`. See the [project README](../../README.md#current-scene-assets) for all active scene assets. The technical notes below include earlier iterations as development history.
 
 ## Art constraints (locked for Little Light)
 
@@ -191,28 +192,43 @@ recolor + fix-outline passes v3 needed.
 
 ## Current David mentor
 
-Use **`scripts/characters/generate_david_mentor_v4.py`** for **David v12**:
+Use **`scripts/characters/generate_david_mentor_v4.py`** for **David v13**:
 
 ```sh
 blender --background --python art/blender/scripts/characters/generate_david_mentor_v4.py
 ```
 
 This imports Walker v5's geometry helpers and v4's material helpers, so keep
-those scripts together. It writes `output/david_mentor_v12.glb` and the editable
-`output/david_mentor_v12.blend`; copy the GLB into the repository's `assets/`
+those scripts together. It writes `output/david_mentor_v13.glb` and the editable
+`output/david_mentor_v13.blend`; copy the GLB into the repository's `assets/`
 directory to update the game. It does not regenerate the Walker or collectibles.
 
 The body has welded shoulder/sleeve transitions, tapered arms and wrists,
 integrated thumbs, a shaped face and a closed smile. David is slightly taller
 than the Walker, with a longer golden tunic, green sash, leather pouch, sandals,
-and a distinct wavy scalp cap. His lamb uses a fused wool surface. All geometry
-is static, with the root origin at his feet for the chapter's existing turn
-and nod tweens. Body and outline meshes remain separate so the collision baker
-can skip outlines. Hull thickness is 2.6 mm; outline materials cull back faces.
+and a distinct wavy scalp cap. His lamb uses a fused wool surface (built the
+same way as before, from overlapping blobs joined with `ww.fuse()`). David's
+own body is static, with the root origin at his feet for the chapter's existing
+turn and nod tweens. Body and outline meshes remain separate so the collision
+baker can skip outlines. Hull thickness is 2.6 mm; outline materials cull back
+faces.
 
 V11's mouth interiors and overlapping shells are not reused. The scene no
 longer needs its old `FixDavidMentorVisuals` node, which pointed to the wrong
 relative path and could not hide mouth surfaces merged into a larger mesh.
+
+**v13: the companion lamb is its own node, not welded into David's body.**
+Every earlier version (including v12) joined the lamb's parts into the same
+`David_Mentor` / `David_Mentor_Outline` meshes as David's own body at export
+time, which is exactly why it could never move on its own (backlog 3.3): a
+mesh has no sub-parts a runtime script can animate independently. `main()` now
+builds and joins the lamb's body and outline hull separately
+(`David_CompanionLamb` / `David_CompanionLamb_Outline`), with their own origin
+at the lamb's own feet rather than David's, and exports all four objects
+together. `scripts/companion_sheep_life.gd` finds those two nodes under
+`DavidMentor` at runtime and gives them a gentle breathing sway and a glance
+toward the Wonder-Walker, entirely in local space so it stays correctly
+anchored beside David however the chapter has turned him.
 
 ```sh
 godot --headless --path . --script tests/david_visual_review.gd
