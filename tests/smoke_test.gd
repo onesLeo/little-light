@@ -506,6 +506,26 @@ func _initialize() -> void:
 	flies._flutter(Vector3.ZERO)
 	_check(flies._flutter_players.filter(func(p): return p.playing).size() == 1, "a group taking off in one moment makes one rustle, not a roar")
 
+	print("-- David's companion sheep --")
+	var sheep_life: Node = david.get_node("CompanionSheepLife")
+	await process_frame
+	_check(sheep_life._ready_to_animate, "it is set up once David's model is ready, found as its own node")
+	var sheep_mesh: Node3D = sheep_life._meshes[0]
+	var sheep_base: Vector3 = sheep_life._base_pos[sheep_mesh]
+	sheep_life._time = 0.25
+	sheep_life._process(0.016)
+	var sheep_move: float = (sheep_mesh.position - sheep_base).length()
+	_check(sheep_move > 0.0 and sheep_move < 0.05, "it breathes gently, a small nudge, not a jump")
+	walker.global_position = david.global_position + Vector3(1.0, 0.0, 0.0)
+	for i in range(30):
+		sheep_life._process(0.05)
+	_check(absf(sheep_life._yaw_offset) > 0.1, "and glances toward the Wonder-Walker when they come close")
+	walker.global_position = david.global_position + Vector3(50.0, 0.0, 0.0)
+	for i in range(60):
+		sheep_life._process(0.05)
+	_check(absf(sheep_life._yaw_offset) < 0.01, "and settles back once they wander off, never leaving its own spot")
+	_check(sheep_mesh.position.x == sheep_base.x and sheep_mesh.position.z == sheep_base.z, "its footprint (x/z) never moves at all, only a breathing bob and a glance")
+
 	print("-- sound: the music ducks under speech and while paused --")
 	walker.global_position = Vector3(0.0, 1.0, 4.0)
 	settings.read_aloud = true

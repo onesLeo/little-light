@@ -150,7 +150,13 @@ def main():
             v.co.z+=.060*ww.smoothstep(.06,.84,v.co.z)
         obj.vertex_groups.clear()
         ww.old.uv(obj)
-    parts.extend(build_lamb())
+    # The companion lamb is built, UV'd and outlined separately from David's own
+    # parts, and joined into its own two objects rather than folded into his body
+    # mesh -- so it stays a separate node in the exported scene that a runtime
+    # script (companion_sheep_life.gd) can move on its own: a little breathing
+    # sway and a glance toward the Wonder-Walker, the same idea as the collectible
+    # lamb's life script, without needing it welded into David's single mesh.
+    lamb_parts=build_lamb()
     bodies,hulls=[],[]
     for obj,outlined in parts:
         ww.old.uv(obj)
@@ -159,25 +165,46 @@ def main():
             hull=ww.old.single_skin_outline(obj,.0026,(.07,.043,.026))
             for face in hull.data.polygons: face.use_smooth=True
             hulls.append(hull)
+    lamb_bodies,lamb_hulls=[],[]
+    for obj,outlined in lamb_parts:
+        ww.old.uv(obj)
+        lamb_bodies.append(obj)
+        if outlined:
+            hull=ww.old.single_skin_outline(obj,.0026,(.07,.043,.026))
+            for face in hull.data.polygons: face.use_smooth=True
+            lamb_hulls.append(hull)
     body=ww.old.join(bodies,"David_Mentor")
     hull=ww.old.join(hulls,"David_Mentor_Outline")
+    lamb_body=ww.old.join(lamb_bodies,"David_CompanionLamb")
+    lamb_hull=ww.old.join(lamb_hulls,"David_CompanionLamb_Outline")
     # The rigless model turns around its feet, not its mesh's former center.
     bpy.context.scene.cursor.location=(0,0,0)
     for obj in (body,hull):
         bpy.ops.object.select_all(action="DESELECT")
         obj.select_set(True); bpy.context.view_layer.objects.active=obj
         bpy.ops.object.origin_set(type="ORIGIN_CURSOR")
+    # The lamb pivots around where it stands (build_lamb()'s own origin point,
+    # at the ground), not David's feet, so a gentle turn-to-look reads as the
+    # lamb turning in place rather than swinging around David's position.
+    bpy.context.scene.cursor.location=(.39,.015,0.0)
+    for obj in (lamb_body,lamb_hull):
+        bpy.ops.object.select_all(action="DESELECT")
+        obj.select_set(True); bpy.context.view_layer.objects.active=obj
+        bpy.ops.object.origin_set(type="ORIGIN_CURSOR")
     hull.data.materials[0].name="D_OutlineInk"
     assert hull.data.materials[0].use_backface_culling
+    assert lamb_hull.data.materials[0].name=="D_OutlineInk"
     assert not any(any(term in m.name.lower() for term in ("teeth","tongue","interior"))
                    for m in body.data.materials)
-    bpy.ops.wm.save_as_mainfile(filepath=str(OUT/"david_mentor_v12.blend"))
+    bpy.ops.wm.save_as_mainfile(filepath=str(OUT/"david_mentor_v13.blend"))
     bpy.ops.object.select_all(action="DESELECT")
-    body.select_set(True); hull.select_set(True)
+    for obj in (body,hull,lamb_body,lamb_hull):
+        obj.select_set(True)
     bpy.context.view_layer.objects.active=body
-    bpy.ops.export_scene.gltf(filepath=str(OUT/"david_mentor_v12.glb"),export_format="GLB",
+    bpy.ops.export_scene.gltf(filepath=str(OUT/"david_mentor_v13.glb"),export_format="GLB",
         use_selection=True,export_apply=True,export_yup=True)
-    print("DAVID_V12_COMPLETE",len(body.data.vertices),"body vertices")
+    print("DAVID_V13_COMPLETE",len(body.data.vertices),"body vertices",
+          len(lamb_body.data.vertices),"companion lamb vertices")
 
 
 if __name__=="__main__": main()
