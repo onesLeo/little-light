@@ -198,7 +198,7 @@ func _enter_beat(next: Beat) -> void:
 			_cut_closeup(david_mentor)
 			_point_light(david_mentor)
 			_show(
-				"Wonder Light: \"A stone, just right for a sling.\"\nWonder Light: \"David walked out to the valley. And when it was over, the whole camp was cheering his name.\"\n(David trusted God, faced Goliath with his sling, and defeated him. The people were safe.)",
+				"Wonder Light: \"A stone, just right for a sling.\"\nWonder Light: \"David walked out to the valley. And when it was over, the whole camp was cheering his name.\"\nWonder Light: \"David trusted God, faced Goliath with his sling, and defeated him. The people were safe.\"",
 				"Press Space to continue"
 			)
 			_advance_ready = true

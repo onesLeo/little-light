@@ -21,6 +21,7 @@ const LINES := {
 	"Breathe with David...": "wl_breathe",
 	"I feel steady now. Thank you for staying with me.": "dv_steady_now",
 	"David walked out to the valley. And when it was over, the whole camp was cheering his name.": "wl_resolution",
+	"David trusted God, faced Goliath with his sling, and defeated him. The people were safe.": "wl_resolution_clear",
 	"Being brave doesn't mean you're not scared. It means you go anyway.": "wl_reflect",
 	"Joshua, chapter one, verse nine.": "wl_verse_ref",
 	"Haven't I commanded you? Be strong and of good courage; don't be afraid, neither be dismayed: for Yahweh your God is with you wherever you go.": "wl_verse",
