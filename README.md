@@ -32,10 +32,10 @@ The speaker button (top right) turns **read-aloud** on or off; settings are save
 ## What you'll play through
 
 1. **Arrive** — Wonder Light dialogue text (Space or Enter to continue)
-2. **Explore** — find 3 Wonder Items (stone / staff / lamb), placed at random spots in the meadow each run; press **E** (or tap GRAB). If nothing is found for ~18 s, a bobbing arrow (and an edge-of-screen arrow) points to the nearest missing item
-3. **Meet David** — Band A auto line (no reply choices)
+2. **Explore** — find David's 3 Wonder Items (stone / staff / lamb), placed at random spots in the meadow each run; press **E** (or tap GRAB). A checklist keeps their purpose visible. If nothing is found for ~18 s, a bobbing arrow (and an edge-of-screen arrow) points to the nearest missing item
+3. **Meet David** — Wonder Light leads the child to David, the found items are brought to him, then Band A plays an auto line (no reply choices)
 4. **Steady Hands** — hold **Space** to breathe in and let go to breathe out, three slow breaths (Band A; cannot be failed, see [docs/steady-hands.md](docs/steady-hands.md))
-5. **Resolution** — narrated off-screen; no fight
+5. **Resolution** — narrated off-screen; the text clearly says that David trusted God, faced Goliath with his sling, and defeated him, while no fight is shown
 6. **Reflect** + **Joshua 1:9** + “Don't. Be. Afraid.”
 7. **Courage charm** — animated placeholder bracelet/charm ceremony, followed by chapter completion, then a **Play again / Keep exploring** panel
 
