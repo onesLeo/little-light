@@ -64,3 +64,4 @@ Screenshots and measurements were taken at 1152x648 / 1280x720 on Windows with G
 2. The trees, stream rocks and cliff ledges (4.3, 4.4, 4.8, 4.9) are done; real ledge geometry in the wall would need a finer terrain mesh.
 3. Try Steady Hands, the soundscape and the Faith Journal with a child, on a real tablet, and tune them (3.1, 3.2, 3.5).
 4. Run the game on a real tablet and profile it there (5.1, `docs/performance.md`). The repo housekeeping (5.2 to 5.6) is done.
+5. A second chapter is a concept only, not decided or built: see [docs/chapter-2-concept.md](chapter-2-concept.md).

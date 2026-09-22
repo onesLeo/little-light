@@ -102,6 +102,8 @@ little-light-godot/
 
 See [docs/improvement-backlog.md](docs/improvement-backlog.md) for the full review (done and still open): game feel, visual polish, performance and repo hygiene.
 
+A second chapter is only a concept so far, not built: see [docs/chapter-2-concept.md](docs/chapter-2-concept.md).
+
 
 ## Band notes
 - **Band A Steady Hands:** three slow breaths (hold to breathe in, let go to breathe out); it cannot be failed and cannot be rushed. This replaced the old one-tap design.
