@@ -146,6 +146,14 @@ feel less empty?
 A second sketch, at dusk with the campfire glowing, a hanging lantern, and both guards, was
 shown alongside the first. Still a concept, not built.
 
+**Pushed further, toward "blue hour":** a third sketch cools the sky and everything lit by it
+(hills, ground, trees, the valley below) toward deep calm blues and a bright moon, and lets the
+campfire, the lantern and the guard's torch be the one warm, glowing note in the scene, rather
+than spreading warmth through the whole sky as a sunset does. Warm firelight against a calm blue
+evening is a common, well-liked pairing (the same idea behind most cosy campfire pictures), and
+it reads as calmer than an orange sunset while keeping the fire and lantern clearly visible —
+closer to what was asked for ("warm... where the tone is calm"). Still a concept.
+
 ## Open questions
 
 1. Is "The King's Camp" / David and Jonathan the right next beat, or would you rather see other
