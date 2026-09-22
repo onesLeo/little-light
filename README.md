@@ -108,7 +108,7 @@ A second chapter is only a concept so far, not built: see [docs/chapter-2-concep
 ## Band notes
 - **Band A Steady Hands:** three slow breaths (hold to breathe in, let go to breathe out); it cannot be failed and cannot be rushed. This replaced the old one-tap design.
 - **Who is playing and the Faith Journal:** each child on a tablet picks a name and a picture (up to 4), and has their own journal of the verses and charms they earn, read aloud when tapped (round book button, pause menu, end panel). Saved on the tablet only. A press-and-hold "For grown-ups" area can empty a journal or remove a child. A child can also colour their Courage charm (tap a paint, tap a part) from the journal or the end-of-chapter panel; it shows in the journal and on the charm in the ceremony. See [docs/faith-journal.md](docs/faith-journal.md).
-- Band B can raise `breaths_required` later.
+- **Band B is intentionally deferred.** The age question on "Who is playing?" (8 or younger / 9 or older, see the Faith Journal above) already collects the split Band B would use, but nothing reads it for gameplay yet — every child gets Band A's Meet David (an auto line, no reply choices) and Steady Hands (three breaths, cannot be rushed or failed). Band B — reply choices at Meet David, a longer Steady Hands — stays a documented idea, not a task, until it's picked up on purpose.
 
 - Historical Wonder-Walker **v3** introduced paper-grain material and a 12fps step walk animation; the scene now loads **v13**.
 
