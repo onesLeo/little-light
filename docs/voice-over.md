@@ -15,9 +15,14 @@ There are two layers:
 | David | Bram | preset voice, default settings; a dry, young-adult voice. Chosen over Cody, whose recording sounded like it was made in a room and was too young |
 
 The clips were generated with the Seed Audio 1.0 text-to-speech model (24 kHz), then trimmed of
-leading and trailing silence and saved as mono `.wav` (36 clips: 25 of the story as written plus the "Who is playing?" prompts, and 10 easier lines for younger children; about 3 minutes of speech, 7.5 MB).
+leading and trailing silence and saved as mono `.wav` (39 clips: 28 of the story as written plus the "Who is playing?" prompts, and 11 easier lines for younger children).
 Voices differ in how "dry" they sound; if one sounds like it was recorded in a room, try another.
 The tool only exposes speed, loudness and pitch, so any emotion comes from the voice and the wording.
+
+On `feat/spine-god-is-the-source` the Chapter 1 spine, purpose and item-flavour lines were recut in
+the same Juno / Bram voices so the recording matches the on-screen text. Exact wording lives in
+`vo_library.gd`. Do **not** recut `wl_verse`, `wl_dont_be_afraid`, or any other unchanged line — a
+new take of the same sentence will sit next to the old Juno and sound like a different recording.
 
 ## How it plays
 
@@ -33,7 +38,7 @@ The tool only exposes speed, loudness and pitch, so any emotion comes from the v
 ## Easy words
 
 A child who says they are 8 or younger when they are made ("How old are you?" on the "Who is playing?"
-screen) plays with **Easy words** on: ten lines swap for a simpler version (`scripts/easy_words.gd`), each
+screen) plays with **Easy words** on: eleven lines swap for a simpler version (`scripts/easy_words.gd`), each
 with its own recorded clip (`ez_*`). Every other line, and the Joshua 1:9 verse, is never changed. The
 choice is kept with the child like read-aloud, and can be switched in the pause menu at any time; the
 line on screen when it is switched stays as it is until the next line.
@@ -52,6 +57,6 @@ block, and the smoke test reports the line.
 
 ## Open
 
-- The set was listened to in the running game (2026-09-22) and is fine. Not yet heard on a tablet speaker.
+- The Juno/Bram set, including the spine / purpose / item recuts, has not yet been heard on a tablet speaker.
 - Emotion is limited to what the voices and punctuation give. A human voice actor would do more.
 - A quiet ambience or music bed under the voice, with ducking, is done (backlog 3.2).

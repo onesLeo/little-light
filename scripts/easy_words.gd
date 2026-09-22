@@ -13,14 +13,15 @@ extends RefCounted
 const LINES := {
 	"Ooh, look at that! A little valley, all made of paper and light.": "Wow! A little valley made of paper and light.",
 	"Three Wonder Items are hidden on the hillside. Find them!": "Three Wonder Items are hiding on the hill. Find them!",
-	"Everyone's scared of the big giant. But someone has to be brave.": "Everyone is afraid of the big giant. But someone must be brave.",
-	"David is scared too. But he's still going to try.": "David is scared too. But he will try anyway.",
+	"Everyone's scared of the big giant. But God gave me these sheep to keep safe.": "Everyone is afraid of the big giant. God gave me these sheep to keep safe.",
+	"God gave David a job: keep the sheep safe. That is why he will go.": "God gave David a job: keep the sheep safe.",
 	"Let's breathe God's promise with David. In: God is with you. Out: don't be afraid.": "Let's breathe God's words with David. In... God is with you. Out... do not be afraid.",
 	"I still feel small. But I don't feel alone. Thank you for staying — and for the words.": "I am still small. But I am not alone.",
 	"David walked out to the valley. And when it was over, the whole camp was cheering his name.": "David walked out to the valley. When it was over, everyone in the camp cheered for him.",
 	"Being brave doesn't mean you're not scared. It means you go with God anyway.": "Being brave does not mean you are never scared. It means you go with God.",
+	"God had a job for David. He has one for you too: stay close, and remember the words.": "God had a job for David. He has one for you too: stay close.",
 	"Keep this close. Courage is yours to carry.": "Keep it close. Courage is yours.",
-	"Worn smooth from long days watching sheep.": "Rubbed smooth from many days watching sheep.",
+	"A shepherd's staff. David stays with his sheep.": "David's staff. He stays with his sheep.",
 }
 
 

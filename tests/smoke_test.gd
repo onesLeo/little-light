@@ -402,7 +402,7 @@ func _initialize() -> void:
 		spoken_texts.append(director.dialogue_label.text)
 	spoken_texts.append("Wonder Light: \"Breathe with David...\"")
 	spoken_texts.append("Wonder Light: \"Keep this close. Courage is yours to carry.\"")
-	spoken_texts.append("Wonder Light: \"A Courage charm — for staying with David when he was scared.\"")
+	spoken_texts.append("Wonder Light: \"A Courage charm — for staying with David, and breathing God's promise with him.\"")
 	for flavor in director.ITEM_FLAVOR.values():
 		spoken_texts.append(flavor)
 	for nudge in main.get_node("PlayBounds").NUDGE_LINES:
@@ -418,7 +418,7 @@ func _initialize() -> void:
 	settings.read_aloud = true
 	var vo_player: AudioStreamPlayer = audio.get_node("Vo")
 	audio.stop_speech()
-	audio.speak_dialogue("David: \"Oh! Hello there. Are you lost too?\"\nDavid: \"Everyone's scared of the big giant. But someone has to be brave.\"")
+	audio.speak_dialogue("David: \"Oh! Hello there. Are you lost too?\"\nDavid: \"Everyone's scared of the big giant. But God gave me these sheep to keep safe.\"")
 	_check(vo_player.playing and vo_player.stream == vo_lib.clip_for("Oh! Hello there. Are you lost too?"), "the first line of a block plays its recorded clip")
 	_check(audio._clip_queue.size() == 1, "the second line waits in the queue")
 	vo_player.finished.emit()
@@ -554,7 +554,7 @@ func _initialize() -> void:
 	print("-- sound: the music ducks under speech and while paused --")
 	walker.global_position = Vector3(0.0, 1.0, 4.0)
 	settings.read_aloud = true
-	audio.speak_dialogue("Wonder Light: \"Being brave doesn't mean you're not scared. It means you go anyway.\"")
+	audio.speak_dialogue("Wonder Light: \"Being brave doesn't mean you're not scared. It means you go with God anyway.\"")
 	await create_timer(0.8).timeout
 	var music_idx := AudioServer.get_bus_index("Music")
 	_check(audio.is_speaking() and sound_bus.duck > 0.5, "the music ducks while somebody is speaking")
@@ -582,6 +582,34 @@ func _initialize() -> void:
 	_check(is_equal_approx(game_menu._music_slider.value, 1.0) and game_menu._voice_slider.value_changed.is_connected(game_menu._on_voice_changed),
 			"the pause menu has music, sounds and voice sliders")
 	walker.global_position = Vector3(0.0, 1.0, 4.0)
+
+	print("-- spine: the word comes before the breath --")
+	director.beat = director.Beat.MEET_DAVID_B
+	director._advance_ready = true
+	director._on_advance()
+	_check(director.beat == director.Beat.VERSE_REWARD, "after Meet David the child hears Joshua 1:9, before breathing")
+	_check("Don't. Be. Afraid." in director.dialogue_label.text, "the three words are said with David before he walks")
+	_check(Profiles.has_verse(Profiles.active_id, JournalContent.VERSE_JOSHUA_1_9), "the verse is in the journal before Steady Hands")
+	director._advance_ready = true
+	director._on_advance()
+	_check(director.beat == director.Beat.STEADY_INTRO, "the breath comes after the word")
+	_check("God's promise" in director.dialogue_label.text, "Steady Hands is breathing the promise, not manufacturing calm")
+	director._enter_beat(director.Beat.MEET_DAVID_B)
+	_check("God gave David a job" in director.dialogue_label.text, "Wonder Light names David's purpose before the verse")
+	director._enter_beat(director.Beat.REFLECT)
+	_check("job for you too" in director.dialogue_label.text, "the child is given a purpose: stay close and remember the words")
+	_check("sheep to keep safe" in FileAccess.get_file_as_string("res://scripts/chapter_director.gd"), "David names his job: keep the sheep safe")
+	_check("small thing" in director.ITEM_FLAVOR["WonderItem_Stone"], "the stone flavour names God, not just a sling")
+	director.beat = director.Beat.STEADY_DONE
+	director._advance_ready = true
+	director._on_advance()
+	_check(director.beat == director.Beat.RESOLUTION, "after the breath, David walks")
+	_check("small stone" in director.dialogue_label.text and "Goliath" in director.dialogue_label.text,
+			"resolution ties the hunted stone to what God used against Goliath")
+	director.beat = director.Beat.REFLECT
+	director._advance_ready = true
+	director._on_advance()
+	_check(director.beat == director.Beat.CHARM_AWARD, "reflect goes to the charm, not a second verse prize")
 
 	print("-- full beat traversal reaches DONE without throwing --")
 	for b in [director.Beat.MEET_DAVID_B, director.Beat.STEADY_INTRO, director.Beat.STEADY_DONE,

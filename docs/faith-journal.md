@@ -8,7 +8,7 @@ Backlog item 3.5. Each child on a tablet has their own name, picture and journal
    One big button per child (picture and first name)
    and a dashed **New** button. A new child types a name (up to 12 letters), picks one of six paper pictures
    (lamb, star, sun, cloud, heart, olive branch) and taps **Let's go**. Up to **4 children** fit on one tablet.
-   A child also says **How old they are**: "8 or younger" turns on Easy words, ten lines of the story shown
+   A child also says **How old they are**: "8 or younger" turns on Easy words, eleven lines of the story shown
    and read aloud in simpler wording (`scripts/easy_words.gd`); "9 or older" keeps the story exactly as
    written. It can be switched later in the pause menu, and is kept with the child.
 2. **The story** starts once a child is chosen. *Play again* keeps the same child; the pause menu's
