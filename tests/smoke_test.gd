@@ -362,14 +362,27 @@ func _initialize() -> void:
 	print("-- item collection triggers Wonder Light celebrate() without error --")
 	director._enter_beat(director.Beat.EXPLORE)
 	_check(tabletop_cam.current == true, "EXPLORE cuts back to tabletop")
+	_check("for David" in director.prompt_label.text and "Stone" in director.prompt_label.text
+			and "Staff" in director.prompt_label.text and "Little Lamb" in director.prompt_label.text,
+			"the hunt names all three things as something the child is finding for David")
+	await process_frame
+	var panel_height: float = director.dialogue_panel.offset_bottom - director.dialogue_panel.offset_top
+	_check(panel_height <= 150.0, "a short line uses a compact dialogue panel instead of hiding the valley (%.0f px)" % panel_height)
 	var stone: Area3D = main.get_node("WonderItems/WonderItem_Stone")
 	director._near_item = stone
 	director._try_collect_near_item()
 	_check(director.wonder_items_found == 1, "collecting an item increments the counter")
+	_check("Stone ✓" in director.prompt_label.text, "the hunt checks off the thing that was found")
+	var foreground_fade: Node = main.get_node("ForegroundFade")
+	var olive: GeometryInstance3D = main.get_node("BethlehemValley").find_children("Olive*", "MeshInstance3D", true, false)[0]
+	_check(foreground_fade._is_foreground_foliage(olive), "foreground foliage can soften instead of hiding the player")
 
 	print("-- reflect beat returns to the wide tabletop shot --")
 	director._enter_beat(director.Beat.REFLECT)
 	_check(tabletop_cam.current == true, "REFLECT is a tabletop (wide) shot")
+	director._enter_beat(director.Beat.RESOLUTION)
+	_check("Goliath" in director.dialogue_label.text and "The people were safe" in director.dialogue_label.text,
+			"the gentle ending still clearly explains what happened")
 
 	print("-- voice-over: every spoken line has a recorded clip --")
 	var audio: Node = main.get_node("AudioDirector")
