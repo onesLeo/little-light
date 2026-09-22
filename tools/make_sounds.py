@@ -325,11 +325,12 @@ def render_steps():
 
 
 # Other ground. Same idea as the grass steps, but these recordings are not pre-cut, so each step is
-# found by where the sound suddenly gets loud, unless the start times are given (the mud recording has a
-# slow squelch and then a pop for each foot; the four pops were picked by looking at the loudness, and are
-# the closest thing to a splash). (name, source file, keep, decay, fade, low-pass, high-pass, start times)
+# found by where the sound suddenly gets loud, unless the start times are given.
+# (name, source file, keep, decay, fade, low-pass, high-pass, start times)
 PATH_STEPS = ("path", "steps_gravel_bigsoundbank.wav", 0.24, 0.12, 0.08, 6500.0, 140.0, None)
-WATER_STEPS = ("water", "steps_mud_bigsoundbank.wav", 0.34, 0.16, 0.12, 3200.0, 90.0, [2.04, 3.35, 7.15, 7.85])
+# A real recording of walking through shallow water (not the earlier mud-pop stand-in): brighter
+# and shorter than the path/mud steps so the splash's spray reads instead of a dull thud.
+WATER_STEPS = ("water", "steps_water_bigsoundbank.wav", 0.30, 0.14, 0.10, 5200.0, 110.0, None)
 
 
 def find_steps(x, rate, count=4, min_gap=0.42):
