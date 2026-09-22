@@ -183,7 +183,15 @@ def height_at(x, y):
     h = terrain_height(x, y)
     # Flat shelf at the back-left; its front edge becomes the cliff.
     sm = 1.0 - smoothstep(0.0, SHELF_EDGE, rect_dist(x, y, SHELF))
-    h = lerp(h, SHELF_Z + fbm(x, y, scale=0.25) * 0.12, sm)
+    # SHELF_EDGE is only 0.5 m wide, about one terrain grid cell, so without
+    # this the cliff face was one flat, razor-straight ramp between two grid
+    # rows. wall_band is 0 on the flat shelf top and 0 out on ordinary
+    # terrain, peaking right on the face itself, so this noise gives the wall
+    # slab its own uneven, faceted relief (on top of make_ledges()'s separate
+    # embedded boulders) instead of touching the meadow or the shelf top.
+    wall_band = sm * (1.0 - sm) * 4.0
+    shelf_h = SHELF_Z + fbm(x, y, scale=0.25) * 0.12 + fbm(x, y, scale=0.4, octaves=2) * 0.4 * wall_band
+    h = lerp(h, shelf_h, sm)
     # Upper reach runs along the shelf, lower reach across the meadow.
     wu = channel_weight(x, y, UPPER_RIVER) * sm
     h = lerp(h, SHELF_Z - CHANNEL_DEPTH, wu)

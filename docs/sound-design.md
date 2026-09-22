@@ -13,7 +13,7 @@ real recordings (see `assets/audio/CREDITS.md`).
 | Wind, 16 s loop | always, very quiet; eases in over 6 s | `Soundscape` |
 | Stream, 12 s loop | always, eases in over 6 s; louder and panned toward the water as you walk near it | `Soundscape` |
 | Seven bird calls | every 4-11 s from somewhere around you; sometimes a second bird answers | `Soundscape` |
-| Footsteps (four real steps) | while the Wonder-Walker walks, two per walk cycle | `wonder_walker.gd` |
+| Footsteps (four real steps on each of grass, the path and the stream) | while the Wonder-Walker walks, two per walk cycle; `ground_surface.gd` says which ground it is | `wonder_walker.gd` |
 | Lamb "baa" (a real recording, pitch varied a little each time) | when the lamb notices you, then every 6-11 s while you stay close | `lamb_life.gd` |
 | Wing rustle | when butterflies take off; at most one every 0.4 s | `butterflies.gd` |
 | Soft hush of air | while the child breathes in Steady Hands; swells and rises in pitch with the ring | `steady_hands_minigame.gd` |
@@ -109,5 +109,11 @@ and the stream after the change. The levels above are the first thing to tune.
 
 ## Not done
 
-- Different footstep sounds on the path and in the water.
 - Sound for Wonder Light itself beyond the existing chimes.
+
+## Done, not yet heard in the running game
+
+- The stream steps used to be the "pops" from a recording of steps in mud (close, but not a real
+  splash). They are now cut from "Shoes in the Water" (BigSoundBank #690, Joseph Sardin, CC0), a
+  real recording of walking through shallow water — see `assets/audio/CREDITS.md`. Rendered and
+  wired up the same way as the other ground types; not yet checked by ear.

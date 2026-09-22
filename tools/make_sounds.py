@@ -10,6 +10,7 @@ identically and tuned here instead of being edited by hand. Output is mono, 16-b
   ambience/wind.wav            16 s seamless loop
   ambience/stream.wav          12 s seamless loop
   ambience/bird_1..7.wav       short bird calls, played at random by the game
+  sfx/step_path_1..4.wav       real footsteps on gravel (the path), sfx/step_water_1..4.wav real steps in mud (stand-in for the stream)
   sfx/step_1..4.wav            real footsteps in grass (a CC0 recording, see assets/audio/CREDITS.md),
                                cut to the landing and shortened so they thud, not swish
   sfx/bleat_1.wav              the lamb: a real sheep recording (CC0, see assets/audio/CREDITS.md),
@@ -323,6 +324,54 @@ def render_steps():
     return steps
 
 
+# Other ground. Same idea as the grass steps, but these recordings are not pre-cut, so each step is
+# found by where the sound suddenly gets loud, unless the start times are given.
+# (name, source file, keep, decay, fade, low-pass, high-pass, start times)
+PATH_STEPS = ("path", "steps_gravel_bigsoundbank.wav", 0.24, 0.12, 0.08, 6500.0, 140.0, None)
+# A real recording of walking through shallow water (not the earlier mud-pop stand-in): brighter
+# and shorter than the path/mud steps so the splash's spray reads instead of a dull thud.
+WATER_STEPS = ("water", "steps_water_bigsoundbank.wav", 0.30, 0.14, 0.10, 5200.0, 110.0, None)
+
+
+def find_steps(x, rate, count=4, min_gap=0.42):
+    """Start times (seconds) of the first `count` footfalls: where the loudness first jumps up."""
+    frame = int(0.005 * rate)
+    level = [math.sqrt(sum(v * v for v in x[i:i + frame]) / frame) for i in range(0, len(x) - frame, frame)]
+    threshold = 0.30 * max(level)
+    starts = []
+    for i, v in enumerate(level):
+        if v > threshold and (not starts or (i - starts[-1]) * frame / rate >= min_gap):
+            j = i
+            while j > 0 and level[j - 1] < level[j] and level[j - 1] > threshold * 0.25:
+                j -= 1
+            starts.append(j)
+    return [j * frame / rate for j in starts[:count]]
+
+
+def render_steps_from(kind):
+    """Four real footsteps on another ground, cut from a recording in tools/source."""
+    _, filename, keep, decay, fade, lowpass, highpass, given = kind
+    x, rate = read_wav_24(os.path.join(os.path.dirname(os.path.abspath(__file__)), "source", filename))
+    steps = []
+    for t in (given or find_steps(x, rate)):
+        a = max(int((t - 0.020) * rate), 0)
+        s = x[a:a + int((keep + 0.05) * rate)]
+        s = biquad(biquad(s, "hp", highpass, sr=rate), "hp", highpass, sr=rate)
+        s = biquad(s, "lp", lowpass, sr=rate)
+        out = resample(s[:int(keep * rate)], rate)
+        lead = int(0.020 * SR)
+        for i in range(len(out)):
+            out[i] *= math.exp(-max(0.0, (i - lead) / SR) / decay)
+        fade_in = int(0.004 * SR)
+        for i in range(fade_in):
+            out[i] *= i / fade_in
+        fade_out = int(fade * SR)
+        for i in range(fade_out):
+            out[-1 - i] *= (i / fade_out) ** 1.5
+        steps.append(out)
+    return steps
+
+
 SHEEP_SOURCE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "source", "sheep_2_bigsoundbank.wav")
 
 
@@ -447,6 +496,12 @@ def main():
         gain = 10 ** (-19.0 / 20.0) / math.sqrt(sum(v * v for v in body) / len(body))
         step = [v * gain for v in step]
         save("sfx/step_%d.wav" % i, step, min(peak_of(step), 0.90))
+    for kind in (PATH_STEPS, WATER_STEPS):
+        for i, step in enumerate(render_steps_from(kind), 1):
+            body = step[:int(0.12 * SR)]
+            gain = 10 ** (-19.0 / 20.0) / math.sqrt(sum(v * v for v in body) / len(body))
+            step = [v * gain for v in step]
+            save("sfx/step_%s_%d.wav" % (kind[0], i), step, min(peak_of(step), 0.90))
     # Normalised by how loud the bleat is while it sounds, not by its peak, so both lambs match.
     lamb = process_sheep(pitch=1.30, start=0.06, end=0.80, presence=0.25)
     lamb = [v * 10 ** ((-14.0 - active_rms_db(lamb)) / 20.0) for v in lamb]

@@ -1,4 +1,6 @@
 extends CharacterBody3D
+
+const GroundSurface := preload("res://scripts/ground_surface.gd")
 ## Wonder-Walker third-person movement (Godot 4.3+).
 ## Camera-relative WASD; only the Model mesh yaws (camera stays stable).
 
@@ -118,7 +120,7 @@ func _update_footsteps(walking: bool, delta: float) -> void:
 		period = clampf(_anim.get_animation(walk_anim).length / 2.0, 0.2, 0.6)
 	_step_timer = period
 	if _audio and _audio.has_method("play_step"):
-		_audio.play_step()
+		_audio.play_step(GroundSurface.at(global_position))
 
 
 func _set_walking(walking: bool) -> void:

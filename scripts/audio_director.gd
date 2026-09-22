@@ -84,11 +84,11 @@ func play_fanfare() -> void:
 func play_cheer() -> void:
 	_play_sfx(_stream_cheer)
 
-## A soft footstep on grass, a little different every time.
-func play_step() -> void:
+## A soft footstep, a little different every time: on "grass", the "path" or in "water".
+func play_step(surface: String = "grass") -> void:
 	var player := _step_players[_next_step]
 	_next_step = (_next_step + 1) % _step_players.size()
-	var stream := SoundLibrary.step(_rng.randi())
+	var stream := SoundLibrary.step(_rng.randi(), surface)
 	if stream == null:
 		return
 	player.stream = stream

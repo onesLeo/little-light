@@ -112,6 +112,39 @@ static func _strings(values: Variant) -> Array:
 	return out
 
 
+## Words a child's name may not be or contain. Kept short on purpose: a long list turns away real names,
+## so this only stops the plain cases (see name_allowed).
+const BLOCKED_INSIDE := ["fuck", "shit", "bitch", "cunt", "whore", "slut", "porn", "nazi", "hitler", "bastard", "asshole", "penis", "vagina"]
+const BLOCKED_EXACT := ["sex", "ass", "arse", "piss", "cock", "tit", "tits", "poo", "poop", "butt", "crap"]
+
+
+## False for a name that is a rude word: letters only, capitals and look-alike digits ignored ("sh1t" counts).
+## Whole-name matches only for the short words, so names such as Cassie or Dickson are never turned away.
+static func name_allowed(raw: String) -> bool:
+	var plain := ""
+	for ch in clean_name(raw).to_lower():
+		match ch:
+			"0":
+				plain += "o"
+			"1", "!":
+				plain += "i"
+			"3":
+				plain += "e"
+			"4", "@":
+				plain += "a"
+			"5", "$":
+				plain += "s"
+			_:
+				if ch >= "a" and ch <= "z":
+					plain += ch
+	if plain in BLOCKED_EXACT:
+		return false
+	for word in BLOCKED_INSIDE:
+		if plain.contains(word):
+			return false
+	return true
+
+
 ## A name as it will be kept: trimmed, and no longer than MAX_NAME_LENGTH letters.
 static func clean_name(raw: String) -> String:
 	return raw.strip_edges().substr(0, MAX_NAME_LENGTH).strip_edges()
@@ -151,7 +184,7 @@ static func active() -> Dictionary:
 static func create(display_name: String, avatar: String) -> String:
 	load_all()
 	var cleaned := clean_name(display_name)
-	if cleaned.is_empty() or not can_add():
+	if cleaned.is_empty() or not name_allowed(cleaned) or not can_add():
 		return ""
 	var id := "p%d" % _next_number
 	_next_number += 1

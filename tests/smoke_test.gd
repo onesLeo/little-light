@@ -12,6 +12,9 @@ const Profiles := preload("res://scripts/profiles.gd")
 const JournalContent := preload("res://scripts/journal_content.gd")
 const GameSettings := preload("res://scripts/game_settings.gd")
 const CharmArt := preload("res://scripts/charm_art.gd")
+const EasyWords := preload("res://scripts/easy_words.gd")
+const GroundSurface := preload("res://scripts/ground_surface.gd")
+const SoundLibraryFile := preload("res://scripts/sound_library.gd")
 const TEST_PROFILES := "user://smoke_test_profiles.cfg"
 
 var _failures: int = 0
@@ -205,6 +208,15 @@ func _initialize() -> void:
 	_check(is_equal_approx(perf.render_scale_for(2400.0, 1600.0), 2.0 / 3.0), "a 2400 px wide tablet draws the 3D picture at 1600 px")
 	_check(perf.render_scale_for(9000.0, 1600.0) == 0.5, "a huge screen never drops below half size")
 	_check(main.get_viewport().scaling_3d_scale == 1.0, "on a computer the picture is still drawn at full size")
+	var scene_environment: Environment = (main.find_children("*", "WorldEnvironment", true, false)[0] as WorldEnvironment).environment
+	_check(scene_environment.glow_enabled, "on a computer the glow stays on")
+	perf.apply_glow(true)
+	_check(not scene_environment.glow_enabled, "on a phone or tablet the glow is off")
+	perf.glow_on_handhelds = true
+	perf.apply_glow(true)
+	_check(scene_environment.glow_enabled, "unless it is asked to stay on")
+	perf.glow_on_handhelds = false
+	perf.apply_glow(false)
 	perf.cap_on_computers = true
 	perf.max_render_width = 40   # a headless window is only 100 px wide
 	perf._update_render_scale()
@@ -314,12 +326,24 @@ func _initialize() -> void:
 			break
 	_check(not steady_hands._air.playing, "the air sound fades out and stops")
 
+	print("-- steady hands: David leans down toward the lamb, and back up --")
+	_check(steady_hands._crouch_shape >= 0, "his Crouch shape key is found on both his body and its outline hull")
+	steady_hands.start_minigame()
+	await create_timer(1.3).timeout
+	var david_mesh: MeshInstance3D = steady_hands._david_meshes[0]
+	_check(david_mesh.get_blend_shape_value(steady_hands._crouch_shape) > 0.9, "he leans down while the child breathes with him")
+	steady_hands._tween_crouch(0.0, 1.0)
+	await create_timer(1.2).timeout
+	_check(david_mesh.get_blend_shape_value(steady_hands._crouch_shape) < 0.1, "and rises back to standing once the activity ends")
+	steady_hands.active = false
+	steady_hands.set_process(false)
+
 	print("-- steady hands: holding on touch and gamepad --")
 	input_setup.set_mode("touch")
 	var finger := InputEventScreenTouch.new()
 	finger.index = 0
 	finger.pressed = true
-	finger.position = touch_controls.button_center
+	finger.position = touch_controls.button_position()
 	touch_controls._input(finger)
 	await process_frame  # injected input is applied at the end of the frame
 	_check(Input.is_action_pressed("ui_accept") and Input.is_action_pressed("interact"), "the touch button stays pressed while a finger is on it")
@@ -451,6 +475,19 @@ func _initialize() -> void:
 	walker._update_footsteps(false, 0.5)
 	walker._update_footsteps(true, 0.01)
 	_check(not audio._step_players.any(func(p): return p.playing), "standing still makes none, and the first step waits a moment")
+	_check(GroundSurface.at(Vector3(5.0, 0.0, 0.0)) == "grass" and GroundSurface.at(Vector3(0.45, 0.0, 1.6)) == "path" and GroundSurface.at(Vector3(0.3, 0.0, 9.5)) == "path", "the walker can tell grass from the path")
+	_check(GroundSurface.at(Vector3(-8.2, 0.0, 2.2)) == "water" and GroundSurface.at(Vector3(-6.45, 0.0, -4.5)) == "water" and GroundSurface.at(Vector3(-3.0, 0.0, 3.0)) == "grass", "and the stream and the pool under the waterfall")
+	var surface_names: Array = []
+	for surface in ["grass", "path", "water"]:
+		var one_step: AudioStream = SoundLibraryFile.step(0, surface)
+		var other_step: AudioStream = SoundLibraryFile.step(1, surface)
+		if one_step == null or other_step == null or one_step == other_step or (surface != "grass" and not one_step.resource_path.contains("step_" + surface)):
+			surface_names.append(surface)
+	_check(surface_names.is_empty(), "each ground has its own recorded steps %s" % [surface_names])
+	for p in audio._step_players:
+		p.stop()
+	audio.play_step("water")
+	_check(audio._step_players.any(func(p): return p.playing and p.stream.resource_path.contains("step_water_")), "a step in the stream makes the splashy sound")
 	var lamb_node: Node = main.get_node("WonderItems/LambLife")
 	_check(lamb_node._bleat != null, "the lamb has a voice")
 	lamb_node._excite = 0.0
@@ -480,6 +517,26 @@ func _initialize() -> void:
 	flies._flutter(Vector3.ZERO)
 	flies._flutter(Vector3.ZERO)
 	_check(flies._flutter_players.filter(func(p): return p.playing).size() == 1, "a group taking off in one moment makes one rustle, not a roar")
+
+	print("-- David's companion sheep --")
+	var sheep_life: Node = david.get_node("CompanionSheepLife")
+	await process_frame
+	_check(sheep_life._ready_to_animate, "it is set up once David's model is ready, found as its own node")
+	var sheep_mesh: Node3D = sheep_life._meshes[0]
+	var sheep_base: Vector3 = sheep_life._base_pos[sheep_mesh]
+	sheep_life._time = 0.25
+	sheep_life._process(0.016)
+	var sheep_move: float = (sheep_mesh.position - sheep_base).length()
+	_check(sheep_move > 0.0 and sheep_move < 0.05, "it breathes gently, a small nudge, not a jump")
+	walker.global_position = david.global_position + Vector3(1.0, 0.0, 0.0)
+	for i in range(30):
+		sheep_life._process(0.05)
+	_check(absf(sheep_life._yaw_offset) > 0.1, "and glances toward the Wonder-Walker when they come close")
+	walker.global_position = david.global_position + Vector3(50.0, 0.0, 0.0)
+	for i in range(60):
+		sheep_life._process(0.05)
+	_check(absf(sheep_life._yaw_offset) < 0.01, "and settles back once they wander off, never leaving its own spot")
+	_check(sheep_mesh.position.x == sheep_base.x and sheep_mesh.position.z == sheep_base.z, "its footprint (x/z) never moves at all, only a breathing bob and a glance")
 
 	print("-- sound: the music ducks under speech and while paused --")
 	walker.global_position = Vector3(0.0, 1.0, 4.0)
@@ -556,6 +613,30 @@ func _initialize() -> void:
 	Profiles.remove(second_id)
 	Profiles.set_active(kid_id)
 
+	print("-- easy words: the story for younger readers --")
+	var director_source: String = FileAccess.get_file_as_string("res://scripts/chapter_director.gd")
+	var missing_original: Array = []
+	var no_clip: Array = []
+	for original in EasyWords.LINES:
+		if not director_source.contains(original):
+			missing_original.append(original)
+		if vo_lib.clip_for(EasyWords.LINES[original]) == null:
+			no_clip.append(EasyWords.LINES[original])
+	_check(missing_original.is_empty(), "every line that has an easier version is still in the story as written %s" % [missing_original])
+	_check(no_clip.is_empty(), "and every easier line has a recorded clip %s" % [no_clip])
+	var verse_block: String = JournalContent.verse_dialogue(JournalContent.VERSE_JOSHUA_1_9)
+	_check(EasyWords.apply(verse_block) == verse_block, "the Joshua 1:9 verse is never changed")
+	var arrive_line: String = "Wonder Light: \"Ooh, look at that! A little valley, all made of paper and light.\""
+	GameSettings.easy_words = false
+	director._say(arrive_line)
+	_check(director.dialogue_label.text == arrive_line and vo_player.stream == vo_lib.clip_for("Ooh, look at that! A little valley, all made of paper and light."), "a child who is 9 or older gets the story as written, in the original voice clip")
+	GameSettings.easy_words = true
+	director._say(arrive_line)
+	_check(director.dialogue_label.text == "Wonder Light: \"Wow! A little valley made of paper and light.\"" and vo_player.stream == vo_lib.clip_for("Wow! A little valley made of paper and light."), "with Easy words on, the easier line is shown and read aloud")
+	var mixed: String = director._say("David: \"Thanks. Will you stay close while I get ready?\"")
+	_check(mixed == "David: \"Thanks. Will you stay close while I get ready?\"", "a line with no easier version stays as it is")
+	GameSettings.easy_words = false
+
 	print("-- Faith Journal: the story fills it, and it reads aloud --")
 	var kid: Dictionary = Profiles.active()
 	_check(Profiles.has_verse(kid_id, JournalContent.VERSE_JOSHUA_1_9), "reaching the verse puts Joshua 1:9 in the child's journal")
@@ -631,6 +712,22 @@ func _initialize() -> void:
 	_check(Profiles.charm_colours(kid_id, courage) == [-1, -1, -1, -1, -1, -1], "Start again clears the page")
 	colour_screen.undo()
 	_check(Profiles.charm_colours(kid_id, courage)[0] == 3 and Profiles.charm_colours(kid_id, courage)[2] == 1, "and Undo brings it all back")
+	var move := InputEventAction.new()
+	move.action = "ui_right"
+	move.pressed = true
+	colour_screen._page.cursor = 4
+	colour_screen._page._gui_input(move)
+	_check(colour_screen._page.cursor == 5, "with a gamepad or keyboard, right moves to the next part of the charm")
+	colour_screen._select(6)
+	var press := InputEventAction.new()
+	press.action = "ui_accept"
+	press.pressed = true
+	colour_screen._page._gui_input(press)
+	_check(Profiles.charm_colours(kid_id, courage)[5] == 6, "and accept fills it with the chosen paint")
+	move.action = "ui_left"
+	colour_screen._page.cursor = 0
+	colour_screen._page._gui_input(move)
+	_check(colour_screen._page.cursor == 5, "left from the first part wraps round to the last")
 	Profiles.use_file(TEST_PROFILES)   # read it back from disk
 	Profiles.set_active(kid_id)
 	_check(Profiles.charm_colours(kid_id, courage)[2] == 1 and Profiles.has_coloured_charm(kid_id, courage), "the colours are still there after reading the file again")
@@ -688,14 +785,43 @@ func _initialize() -> void:
 	picker.open()
 	_check(picker.is_open() and paused_now() and Profiles.picker_open, "opening the picker pauses the game")
 	_check(picker._profile_row.get_child_count() == Profiles.count() + 1, "it shows one button per child, and New")
+	_check(vo_lib.LINES.has(picker.PICK_LINE) and vo_lib.LINES.has(picker.CREATE_LINE) and vo_lib.clip_for(picker.PICK_LINE) != null and vo_lib.clip_for(picker.CREATE_LINE) != null, "both lines of the screen have a recorded clip")
+	await create_timer(0.8).timeout
+	_check(vo_player.stream == vo_lib.clip_for(picker.PICK_LINE) and audio.process_mode == Node.PROCESS_MODE_ALWAYS, "it reads \"Who is playing?\" aloud for a child who cannot read yet")
 	game_menu._input(pause_event)
 	_check(paused_now() and not game_menu._pause_layer.visible, "the pause key does nothing behind the picker")
 	_check(picker.create_profile("   ", "sun") == "" and picker._hint.text == "Type your name first", "an empty name is not accepted, and the hint says why")
+	_check(Profiles.name_allowed("Maya") and Profiles.name_allowed("Cassie") and Profiles.name_allowed("Dickson"), "ordinary names, even ones that contain short words, are welcome")
+	_check(not Profiles.name_allowed("Sh1t") and not Profiles.name_allowed("F u c k") and not Profiles.name_allowed("POOP") and not Profiles.name_allowed("  ass "), "a rude word is not accepted as a name, whatever the capitals, spaces or look-alike digits")
+	var profiles_before: int = Profiles.count()
+	_check(picker.create_profile("Sh1t", "sun") == "" and picker._hint.text == "Please pick a different name" and Profiles.count() == profiles_before, "and the hint asks for a different name without making a profile")
+	picker._fit_to_keyboard(300.0)
+	_check(is_equal_approx((picker._create_view.get_parent() as Control).offset_bottom, -300.0) and not (picker._title_labels[0] as Control).visible, "the name form lifts above the on-screen keyboard and drops its headings to fit")
+	picker._fit_to_keyboard(0.0)
+	_check(is_equal_approx((picker._create_view.get_parent() as Control).offset_bottom, 0.0) and (picker._title_labels[0] as Control).visible, "and goes back when the keyboard goes away")
 	var made: String = picker.create_profile("Maya", "sun")
 	_check(not made.is_empty() and Profiles.active_id == made and Profiles.active()["avatar"] == "sun" and chosen.back() == made, "a new child is made and chosen")
 	_check(not picker.is_open() and not paused_now() and not Profiles.picker_open, "then the game carries on")
 	Profiles.remove(made)
 	Profiles.set_active(kid_id)
+	picker.open()
+	picker._show_create()
+	picker._name_edit.text = "Zed"
+	_check(picker.submit() == "" and picker._hint.text == "Pick your age" and Profiles.count() == 1, "a name without an age is not enough: the hint asks for the age")
+	picker._select_age("younger")
+	var zed: String = picker.submit()
+	_check(not zed.is_empty() and GameSettings.easy_words and Profiles.get_profile(zed)["settings"]["easy_words"] == true, "a child who is 8 or younger gets Easy words, kept with them")
+	Profiles.remove(zed)
+	Profiles.set_active(kid_id)
+	picker.open()
+	picker._show_create()
+	picker._name_edit.text = "Yan"
+	picker._select_age("older")
+	var yan: String = picker.submit()
+	_check(not yan.is_empty() and not GameSettings.easy_words and Profiles.get_profile(yan)["settings"]["easy_words"] == false, "and one who is 9 or older gets the story as written")
+	Profiles.remove(yan)
+	Profiles.set_active(kid_id)
+	GameSettings.easy_words = false
 	picker.open()
 	picker.choose(kid_id)
 	_check(chosen.back() == kid_id and not picker.is_open(), "tapping a child chooses them")

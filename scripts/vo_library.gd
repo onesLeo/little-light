@@ -33,6 +33,19 @@ const LINES := {
 	"A stone, just right for a sling.": "wl_item_stone",
 	"Worn smooth from long days watching sheep.": "wl_item_staff",
 	"Baa! This little one wandered off again.": "wl_item_lamb",
+	"Who is playing? Tap your picture.": "wl_who_playing",
+	"What is your name? Type it, pick a picture, and tell me how old you are.": "wl_your_name",
+	# The story in easier words (easy_words.gd), for a child who said they are 8 or younger.
+	"Wow! A little valley made of paper and light.": "ez_arrive",
+	"Three Wonder Items are hiding on the hill. Find them!": "ez_explore",
+	"Everyone is afraid of the big giant. But someone must be brave.": "ez_giant",
+	"David is scared too. But he will try anyway.": "ez_david_scared",
+	"Let's help David feel calm. Breathe in... and out.": "ez_steady_intro",
+	"I feel calm now. Thank you for staying with me.": "ez_steady_now",
+	"David walked out to the valley. When it was over, everyone in the camp cheered for him.": "ez_resolution",
+	"Being brave does not mean you are never scared. It means you keep going.": "ez_reflect",
+	"Keep it close. Courage is yours.": "ez_keep_close",
+	"Rubbed smooth from many days watching sheep.": "ez_item_staff",
 }
 
 static var _cache: Dictionary = {}

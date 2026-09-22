@@ -15,7 +15,7 @@ There are two layers:
 | David | Bram | preset voice, default settings; a dry, young-adult voice. Chosen over Cody, whose recording sounded like it was made in a room and was too young |
 
 The clips were generated with the Seed Audio 1.0 text-to-speech model (24 kHz), then trimmed of
-leading and trailing silence and saved as mono `.wav` (23 clips, about 2 minutes of speech, 5 MB).
+leading and trailing silence and saved as mono `.wav` (36 clips: 25 of the story as written plus the "Who is playing?" prompts, and 10 easier lines for younger children; about 3 minutes of speech, 7.5 MB).
 Voices differ in how "dry" they sound; if one sounds like it was recorded in a room, try another.
 The tool only exposes speed, loudness and pitch, so any emotion comes from the voice and the wording.
 
@@ -29,6 +29,14 @@ The tool only exposes speed, loudness and pitch, so any emotion comes from the v
   queue never plays after being cut.
 - The pause menu's speaker button and read-aloud checkbox switch all of it off and on.
 - A clip in `AudioDirector.vo_clips` (keyed by beat name) still takes priority over everything.
+
+## Easy words
+
+A child who says they are 8 or younger when they are made ("How old are you?" on the "Who is playing?"
+screen) plays with **Easy words** on: ten lines swap for a simpler version (`scripts/easy_words.gd`), each
+with its own recorded clip (`ez_*`). Every other line, and the Joshua 1:9 verse, is never changed. The
+choice is kept with the child like read-aloud, and can be switched in the pause menu at any time; the
+line on screen when it is switched stays as it is until the next line.
 
 ## Adding or changing a line
 
@@ -44,7 +52,6 @@ block, and the smoke test reports the line.
 
 ## Open
 
-- Nobody has listened to the whole set in the running game yet. Check the pauses between lines, the
-  breathing line ("Breathe with David...") and how David's voice sits next to Wonder Light's.
+- The set was listened to in the running game (2026-09-22) and is fine. Not yet heard on a tablet speaker.
 - Emotion is limited to what the voices and punctuation give. A human voice actor would do more.
-- A quiet ambience or music bed under the voice, with ducking, is not done (backlog 3.2).
+- A quiet ambience or music bed under the voice, with ducking, is done (backlog 3.2).

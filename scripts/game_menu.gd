@@ -37,6 +37,7 @@ var _play_again_button: Button
 var _colour_charm_button: Button
 var _resume_button: Button
 var _read_check: CheckButton
+var _easy_check: CheckButton
 var _volume: HSlider
 var _music_slider: HSlider
 var _sounds_slider: HSlider
@@ -233,7 +234,7 @@ func _build_pause_panel() -> void:
 	panel.add_theme_stylebox_override("panel", _panel_style())
 	center.add_child(panel)
 	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 16)
+	vbox.add_theme_constant_override("separation", 10)
 	panel.add_child(vbox)
 
 	vbox.add_child(_label("Paused", 40))
@@ -255,6 +256,14 @@ func _build_pause_panel() -> void:
 	_read_check.add_theme_color_override("font_pressed_color", INK)
 	_read_check.toggled.connect(_on_read_check_toggled)
 	vbox.add_child(_read_check)
+
+	_easy_check = CheckButton.new()
+	_easy_check.text = "Easy words"
+	_easy_check.add_theme_font_size_override("font_size", 24)
+	for color_name in ["font_color", "font_hover_color", "font_focus_color", "font_pressed_color"]:
+		_easy_check.add_theme_color_override(color_name, INK)
+	_easy_check.toggled.connect(_on_easy_check_toggled)
+	vbox.add_child(_easy_check)
 
 	_volume = _add_slider_row(vbox, "Volume", _on_volume_changed)
 	_music_slider = _add_slider_row(vbox, "Music", _on_music_changed)
@@ -330,6 +339,7 @@ func _build_end_panel() -> void:
 func _sync_pause_controls() -> void:
 	_read_check.visible = _audio != null and _audio.has_method("is_read_aloud_available") and _audio.is_read_aloud_available()
 	_read_check.set_pressed_no_signal(GameSettings.read_aloud)
+	_easy_check.set_pressed_no_signal(GameSettings.easy_words)
 	_volume.set_value_no_signal(GameSettings.master_volume)
 	_music_slider.set_value_no_signal(GameSettings.music_volume)
 	_sounds_slider.set_value_no_signal(GameSettings.sounds_volume)
@@ -347,6 +357,12 @@ func _on_speaker_pressed() -> void:
 	if _audio and _audio.has_method("set_read_aloud"):
 		_audio.set_read_aloud(not GameSettings.read_aloud)
 	_refresh_speaker()
+
+
+## Takes effect from the next line of the story; what is on screen now stays as it is.
+func _on_easy_check_toggled(pressed: bool) -> void:
+	GameSettings.easy_words = pressed
+	GameSettings.save_settings()
 
 
 func _on_read_check_toggled(pressed: bool) -> void:

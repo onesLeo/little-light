@@ -1,11 +1,11 @@
-[gd_scene load_steps=55 format=3]
+[gd_scene load_steps=57 format=3]
 
 [ext_resource type="PackedScene" path="res://assets/wonder_walker_v13.glb" id="1_ww"]
 [ext_resource type="PackedScene" path="res://assets/bethlehem_valley_v7.glb" id="2_valley"]
 [ext_resource type="Script" path="res://scripts/wonder_walker.gd" id="3_ww_script"]
 [ext_resource type="Script" path="res://scripts/steady_hands_minigame.gd" id="4_sh"]
 [ext_resource type="Script" path="res://scripts/chapter_director.gd" id="5_dir"]
-[ext_resource type="PackedScene" path="res://assets/david_mentor_v12.glb" id="6_david"]
+[ext_resource type="PackedScene" path="res://assets/david_mentor_v13.glb" id="6_david"]
 [ext_resource type="PackedScene" path="res://assets/wonder_items_v7.glb" id="7_items"]
 [ext_resource type="Script" path="res://scripts/tabletop_camera.gd" id="8_cam"]
 [ext_resource type="Script" path="res://scripts/mesh_collision_baker.gd" id="9_bake"]
@@ -23,6 +23,8 @@
 [ext_resource type="Script" path="res://scripts/stream_rocks.gd" id="30_streamrocks"]
 [ext_resource type="Script" path="res://scripts/performance_tuning.gd" id="31_perf"]
 [ext_resource type="Script" path="res://scripts/foliage_colour.gd" id="34_foliage"]
+[ext_resource type="Script" path="res://scripts/screen_shape.gd" id="36_shape"]
+[ext_resource type="Script" path="res://scripts/companion_sheep_life.gd" id="37_sheep"]
 [ext_resource type="Script" path="res://scripts/profile_screen.gd" id="32_profiles"]
 [ext_resource type="Script" path="res://scripts/journal_screen.gd" id="33_journal"]
 [ext_resource type="Script" path="res://scripts/colour_screen.gd" id="35_colour"]
@@ -239,6 +241,9 @@ script = ExtResource("20_fish")
 [node name="DavidMentor" parent="." instance=ExtResource("6_david")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -3)
 script = ExtResource("9_bake")
+
+[node name="CompanionSheepLife" type="Node" parent="DavidMentor"]
+script = ExtResource("37_sheep")
 
 
 [node name="Player" type="CharacterBody3D" parent="."]
@@ -483,3 +488,6 @@ script = ExtResource("31_perf")
 
 [node name="FoliageColour" type="Node" parent="."]
 script = ExtResource("34_foliage")
+
+[node name="ScreenShape" type="Node" parent="."]
+script = ExtResource("36_shape")

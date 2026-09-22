@@ -21,17 +21,29 @@ class Page extends Control:
 	signal tapped(region: int)
 	var charm_id: String = ""
 	var colours: Array = []
+	## The part a keyboard or gamepad is on: left and right move between the parts, accept fills it.
+	var cursor: int = 4
 
 	func _init() -> void:
 		custom_minimum_size = Vector2(PAGE_SIDE, PAGE_SIDE)
 		mouse_filter = Control.MOUSE_FILTER_STOP
-		focus_mode = Control.FOCUS_NONE
+		focus_mode = Control.FOCUS_ALL
+		focus_entered.connect(queue_redraw)
+		focus_exited.connect(queue_redraw)
 
 	## Where the charm is drawn on the sheet.
 	func art_rect() -> Rect2:
 		return Rect2(Vector2(18.0, 14.0), size - Vector2(36.0, 28.0))
 
 	func _gui_input(event: InputEvent) -> void:
+		var count := CharmArt.region_count(charm_id)
+		if count > 0 and (event.is_action_pressed("ui_left") or event.is_action_pressed("ui_right")):
+			cursor = posmod(cursor + (1 if event.is_action_pressed("ui_right") else -1), count)
+			queue_redraw()
+			accept_event()
+		elif event.is_action_pressed("ui_accept"):
+			tapped.emit(cursor)
+			accept_event()
 		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 			var art := art_rect()
 			tapped.emit(CharmArt.hit(charm_id, (event.position - art.position) / art.size))
@@ -45,6 +57,13 @@ class Page extends Control:
 		sheet.set_corner_radius_all(14)
 		draw_style_box(sheet, Rect2(Vector2.ZERO, size))
 		CharmArt.draw(self, art_rect(), charm_id, colours, 4.0)
+		if has_focus() and cursor < CharmArt.region_count(charm_id):
+			var art := art_rect()
+			var ring := PackedVector2Array()
+			for q in CharmArt.regions(charm_id)[cursor]:
+				ring.append(art.position + q * art.size)
+			ring.append(ring[0])
+			draw_polyline(ring, Color(0.2, 0.45, 0.85), 7.0)
 
 
 var _audio: Node
@@ -187,7 +206,7 @@ func _build() -> void:
 	_title = PaperUI.label("Colour your charm", 34, HORIZONTAL_ALIGNMENT_LEFT)
 	_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	side.add_child(_title)
-	var hint := PaperUI.label("Tap a colour, then tap the charm.", 22, HORIZONTAL_ALIGNMENT_LEFT)
+	var hint := PaperUI.label("Tap a colour, then tap the charm. With a gamepad or keyboard: pick a colour, then move to the charm and press A or Space.", 22, HORIZONTAL_ALIGNMENT_LEFT)
 	hint.add_theme_color_override("font_color", PaperUI.INK_SOFT)
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	side.add_child(hint)

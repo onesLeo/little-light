@@ -15,7 +15,9 @@ extends Node
 ## - wait 7 s at empty and the ring breathes in by itself, and that breath counts
 ##
 ## Wonder Light glows and David rises a little as the ring grows, and a soft hush
-## of air follows it.
+## of air follows it. David also settles down toward his lamb for the whole
+## activity (a shape key, since he has no rig -- see companion_sheep_life.gd's
+## neighbour, the "Crouch" key on his own model) instead of standing frozen.
 
 signal minigame_completed
 ## Emitted after each finished breath, with how many are done.
@@ -63,6 +65,9 @@ var _air: AudioStreamPlayer
 var _wonder_light: Node
 var _david: Node3D
 var _david_base_scale: Vector3 = Vector3.ONE
+var _david_meshes: Array[MeshInstance3D] = []
+var _crouch_shape: int = -1
+var _crouch_tween: Tween
 var _tween: Tween
 var _air_tween: Tween
 
@@ -89,6 +94,15 @@ func _ready() -> void:
 	_david = get_node_or_null("../DavidMentor") as Node3D
 	if _david:
 		_david_base_scale = _david.scale
+		for name in ["David_Mentor", "David_Mentor_Outline"]:
+			var mesh_node := _david.get_node_or_null(name) as MeshInstance3D
+			if mesh_node:
+				_david_meshes.append(mesh_node)
+				if _crouch_shape < 0 and mesh_node.mesh:
+					for i in mesh_node.mesh.get_blend_shape_count():
+						if mesh_node.mesh.get_blend_shape_name(i) == "Crouch":
+							_crouch_shape = i
+							break
 	_air = AudioStreamPlayer.new()
 	_air.stream = SoundLibrary.load_stream(SoundLibrary.BREATH, true)
 	_air.bus = SoundBus.EFFECTS
@@ -147,6 +161,9 @@ func start_minigame() -> void:
 	_air.volume_db = air_db_still
 	_air.play()
 	_update_visuals()
+	# David settles down toward the lamb while the child breathes with him,
+	# rather than standing frozen off to the side.
+	_tween_crouch(1.0, 1.2)
 
 
 func _process(delta: float) -> void:
@@ -255,6 +272,7 @@ func _finish_breath() -> void:
 		_wonder_light.set_breath(0.0)
 	if _david:
 		_david.scale = _david_base_scale
+	_tween_crouch(0.0, 1.0)
 	_kill_tween(_air_tween)
 	_air_tween = create_tween()
 	_air_tween.tween_property(_air, "volume_db", -60.0, 0.8)
@@ -282,6 +300,21 @@ func _set_breath_text(text: String) -> void:
 	if _breath_label and text != _label_text:
 		_label_text = text
 		_breath_label.text = text
+
+
+## Blends David's "Crouch" shape key (0 standing, 1 leaned down toward the
+## lamb) on both his body and its outline hull together, so the ink outline
+## never lags behind and separates from the body mid-tween.
+func _tween_crouch(target: float, seconds: float) -> void:
+	if _crouch_shape < 0 or _david_meshes.is_empty():
+		return
+	_kill_tween(_crouch_tween)
+	_crouch_tween = create_tween()
+	_crouch_tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	for mesh_node in _david_meshes:
+		_crouch_tween.parallel().tween_method(
+			func(v: float) -> void: mesh_node.set_blend_shape_value(_crouch_shape, v),
+			mesh_node.get_blend_shape_value(_crouch_shape), target, seconds)
 
 
 func _kill_tween(t: Tween) -> void:
