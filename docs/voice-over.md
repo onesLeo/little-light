@@ -32,7 +32,9 @@ sentence will sit next to the old one and sound like a different recording.
 - `AudioDirector.speak_dialogue()` splits a dialogue block into lines. If every line has a clip they
   play in order with a 0.3 s gap; otherwise the whole block is spoken by the system voice.
 - Pressing Space quickly cuts the current line and starts the next one. A line still waiting in the
-  queue never plays after being cut.
+  queue never plays after being cut. After Joshua 1:9, Space does not skip ahead: the child taps
+  Don't, Be, and Afraid, and each tap plays that one word (`wl_word_dont`, `wl_word_be`,
+  `wl_word_afraid`, cut from the same take as `wl_dont_be_afraid`).
 - The pause menu's speaker button and read-aloud checkbox switch all of it off and on.
 - A clip in `AudioDirector.vo_clips` (keyed by beat name) still takes priority over everything.
 

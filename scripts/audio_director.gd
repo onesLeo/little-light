@@ -24,6 +24,11 @@ const CLIP_GAP := 0.45
 
 ## Emitted when read-aloud is switched on or off.
 signal read_aloud_changed(enabled: bool)
+## Emitted when a run of recorded lines has finished on its own, not when speech
+## is cut off to start another line.
+signal speech_finished
+
+var _suppress_finish: bool = false
 
 @export var vo_clips: Dictionary = {}
 
@@ -153,11 +158,27 @@ func set_read_aloud(enabled: bool) -> void:
 func stop_speech() -> void:
 	_clip_run += 1
 	_clip_queue.clear()
+	_suppress_finish = true
 	if _speaking_clips:
 		_speaking_clips = false
 		_vo_player.stop()
+	_suppress_finish = false
 	if not _voices.is_empty():
 		DisplayServer.tts_stop()
+
+
+## Speaks one recorded line, cutting off whatever was playing. Used when the
+## child taps a single word. Does nothing if that line has no clip.
+func play_line(text: String) -> void:
+	if not is_read_aloud_enabled():
+		return
+	var clip := VoLibrary.clip_for(text)
+	if clip == null:
+		return
+	stop_speech()
+	_speaking_clips = true
+	_vo_player.stream = clip
+	_vo_player.play()
 
 ## Speaks a dialogue block ("Speaker: \"line\"" per line; "(...)" lines are stage
 ## directions and stay silent). Interrupts whatever was being spoken, so pressing
@@ -191,8 +212,11 @@ func _play_next_clip() -> void:
 	_vo_player.play()
 
 func _on_vo_finished() -> void:
+	if _suppress_finish:
+		return
 	if not _speaking_clips or _clip_queue.is_empty():
 		_speaking_clips = false
+		speech_finished.emit()
 		return
 	var run := _clip_run
 	await get_tree().create_timer(CLIP_GAP).timeout

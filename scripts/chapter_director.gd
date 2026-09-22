@@ -3,7 +3,7 @@ extends Node
 ## Arrive → Explore (3 Wonder Items) → Meet David (Band A) → Joshua 1:9
 ## → Steady Hands (breathe the promise) → Off-screen resolution → Reflect
 ## → Courage charm award.
-## Spine: hear the word → practise it → watch David walk on it → keep it.
+## Spine: hear the word → she taps the three words → breathe it → watch David walk → keep it.
 ## Courage comes from God being with David, not from feeling calm.
 ## No violence shown. Wonder-Walker is a guest, not David.
 ## The story waits at the start until the "Who is playing?" screen has a child (profile_screen.gd);
@@ -13,6 +13,7 @@ const Profiles := preload("res://scripts/profiles.gd")
 const JournalContent := preload("res://scripts/journal_content.gd")
 const GameSettings := preload("res://scripts/game_settings.gd")
 const EasyWords := preload("res://scripts/easy_words.gd")
+const PaperUI := preload("res://scripts/paper_ui.gd")
 
 enum Beat {
 	ARRIVE,
@@ -67,6 +68,15 @@ var _last_nudge_ms: int = -100000
 var _near_item: Area3D = null
 var _items_collected: Dictionary = {}
 
+## Her turn after Joshua 1:9. She taps each word and hears that word. Nothing is
+## marked wrong, and the breath does not start until all three have been tapped.
+const WORD_LABELS: PackedStringArray = ["Don't", "Be", "Afraid"]
+const WORD_LINES: PackedStringArray = ["Don't.", "Be.", "Afraid."]
+var _word_phase: String = "" ## "", listen, tap, done
+var _word_said: Array[bool] = [false, false, false]
+var _word_row: HBoxContainer
+var _word_buttons: Array[Button] = []
+
 func _ready() -> void:
 	dialogue_label.text = ""
 	_set_prompt("")
@@ -81,6 +91,9 @@ func _ready() -> void:
 			if child is Area3D:
 				child.body_entered.connect(_on_wonder_item_entered.bind(child))
 				child.body_exited.connect(_on_wonder_item_exited.bind(child))
+	if audio_director and audio_director.has_signal("speech_finished"):
+		audio_director.speech_finished.connect(_on_speech_finished)
+	_build_word_buttons()
 	_start_story()
 
 
@@ -105,6 +118,11 @@ func _is_continue_pressed(event: InputEvent) -> bool:
 
 
 func _input(event: InputEvent) -> void:
+	# During her word turn, Space or NEXT must not skip the three words.
+	if beat == Beat.VERSE_REWARD and _word_phase != "done" and _is_continue_pressed(event):
+		_open_word_turn()
+		get_viewport().set_input_as_handled()
+		return
 	# Prefer _input over _unhandled_input so dialogue UI cannot swallow Space.
 	if _advance_ready and _is_continue_pressed(event):
 		_advance_ready = false
@@ -115,6 +133,8 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 func _enter_beat(next: Beat) -> void:
+	if next != Beat.VERSE_REWARD:
+		_close_word_turn()
 	beat = next
 	if audio_director and audio_director.has_method("play_vo"):
 		audio_director.play_vo(Beat.keys()[next])
@@ -175,9 +195,10 @@ func _enter_beat(next: Beat) -> void:
 			_celebrate_light()
 			_show(
 				"Joshua 1:9 (WEB):\n\"Haven't I commanded you? Be strong and of good courage; don't be afraid, neither be dismayed: for Yahweh your God is with you wherever you go.\"\n\nWonder Light: \"This verse has three special words. Can you say them with me?\nDon't. Be. Afraid.\"\nWonder Light: \"Yahweh is God's name. It means He is with you.\"",
-				"Press Space to breathe with David"
+				"Listen"
 			)
-			_advance_ready = true
+			_advance_ready = false
+			_begin_word_listen()
 
 		Beat.STEADY_INTRO:
 			_set_player_move(false)
@@ -275,6 +296,10 @@ func _on_advance() -> void:
 		Beat.MEET_DAVID_B:
 			_enter_beat(Beat.VERSE_REWARD)
 		Beat.VERSE_REWARD:
+			if not _words_complete():
+				_open_word_turn()
+				return
+			_close_word_turn()
 			_enter_beat(Beat.STEADY_INTRO)
 		Beat.STEADY_INTRO:
 			_enter_beat(Beat.STEADY_PLAY)
@@ -540,3 +565,99 @@ func _on_charm_ceremony_finished() -> void:
 		"Press Space to keep your charm"
 	)
 	_advance_ready = true
+
+
+func _build_word_buttons() -> void:
+	var ui := get_node_or_null("../UI")
+	if ui == null:
+		return
+	_word_row = HBoxContainer.new()
+	_word_row.name = "WordTurn"
+	_word_row.visible = false
+	_word_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	_word_row.add_theme_constant_override("separation", 16)
+	_word_row.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	_word_row.anchor_left = 0.06
+	_word_row.anchor_right = 0.72
+	_word_row.anchor_top = 0.56
+	_word_row.anchor_bottom = 0.56
+	_word_row.offset_top = -48.0
+	_word_row.offset_bottom = 48.0
+	_word_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ui.add_child(_word_row)
+	for i in WORD_LABELS.size():
+		var b := PaperUI.button(WORD_LABELS[i], Vector2(200, 96), 36)
+		b.focus_mode = Control.FOCUS_NONE
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		b.pressed.connect(press_word.bind(i))
+		_word_row.add_child(b)
+		_word_buttons.append(b)
+
+
+func _begin_word_listen() -> void:
+	_word_phase = "listen"
+	_word_said = [false, false, false]
+	_restyle_words()
+	if _word_row:
+		_word_row.visible = false
+	if audio_director and audio_director.has_method("is_speaking") and audio_director.is_speaking():
+		return
+	_open_word_turn()
+
+
+func _on_speech_finished() -> void:
+	if beat == Beat.VERSE_REWARD and _word_phase == "listen":
+		_open_word_turn()
+
+
+func _open_word_turn() -> void:
+	if beat != Beat.VERSE_REWARD or _word_phase == "done":
+		return
+	_word_phase = "tap"
+	if _word_row:
+		_word_row.visible = true
+	_advance_ready = false
+	_set_prompt("Tap each word")
+	_restyle_words()
+
+
+func _close_word_turn() -> void:
+	_word_phase = ""
+	if _word_row:
+		_word_row.visible = false
+
+
+func _words_complete() -> bool:
+	for said in _word_said:
+		if not said:
+			return false
+	return true
+
+
+## Tap one of the three words. Plays that word, and can be tapped again to hear
+## it once more. Any order counts. The breath stays locked until each one has
+## been tapped at least once.
+func press_word(index: int) -> void:
+	if beat != Beat.VERSE_REWARD:
+		return
+	if index < 0 or index >= WORD_LINES.size():
+		return
+	if _word_phase == "listen" or _word_phase == "":
+		_open_word_turn()
+	if audio_director and audio_director.has_method("play_line"):
+		audio_director.play_line(WORD_LINES[index])
+	_word_said[index] = true
+	_restyle_words()
+	if _words_complete() and _word_phase != "done":
+		_word_phase = "done"
+		_advance_ready = true
+		_set_prompt("Press Space to breathe with David")
+		if audio_director and audio_director.has_method("play_success"):
+			audio_director.play_success()
+
+
+func _restyle_words() -> void:
+	for i in _word_buttons.size():
+		var said := i < _word_said.size() and _word_said[i]
+		_word_buttons[i].modulate = Color(0.78, 0.9, 0.72) if said else Color.WHITE
+
