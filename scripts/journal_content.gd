@@ -27,8 +27,8 @@ const CHARMS := [
 	{
 		"id": CHARM_COURAGE,
 		"name": "Courage",
-		"reason": "For staying with David when he was scared.",
-		"spoken": "A Courage charm — for staying with David when he was scared.",
+		"reason": "For staying with David, and breathing God's promise with him.",
+		"spoken": "A Courage charm — for staying with David, and breathing God's promise with him.",
 		"color": Color(0.95, 0.78, 0.35),
 	},
 ]
