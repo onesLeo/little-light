@@ -142,10 +142,6 @@ func _enter_beat(next: Beat) -> void:
 
 		Beat.MEET_DAVID_A:
 			_set_player_move(false)
-			# Both turn to face each other — fire the Walker's turn without
-			# awaiting it (nothing downstream depends on his facing, unlike
-			# David's, which _place_closeup() reads), so they turn at the
-			# same time instead of one after the other.
 			_face_david(david_mentor)
 			await _face_player(david_mentor)
 			_cut_closeup(david_mentor)
@@ -157,7 +153,6 @@ func _enter_beat(next: Beat) -> void:
 			_advance_ready = true
 
 		Beat.MEET_DAVID_B:
-			# Band A: Wonder Light speaks for the child — no reply choices.
 			_cut_closeup(david_mentor)
 			_point_light(david_mentor)
 			_show(
@@ -167,8 +162,6 @@ func _enter_beat(next: Beat) -> void:
 			_advance_ready = true
 
 		Beat.VERSE_REWARD:
-			# The word is given before the breath and the walk, so courage has a
-			# source: God is with David. The child says the three words *with* him.
 			Profiles.unlock_verse(JournalContent.VERSE_JOSHUA_1_9)
 			_cut_closeup(david_mentor)
 			_point_light(david_mentor)
@@ -209,8 +202,6 @@ func _enter_beat(next: Beat) -> void:
 			_advance_ready = true
 
 		Beat.RESOLUTION:
-			# Off-screen resolution — no fight shown. Script doc calls for the
-			# camera staying on David's determined face here.
 			_cut_closeup(david_mentor)
 			_point_light(david_mentor)
 			_show(
@@ -246,7 +237,6 @@ func _enter_beat(next: Beat) -> void:
 					charm_award.ceremony_finished.connect(_on_charm_ceremony_finished, CONNECT_ONE_SHOT)
 				charm_award.play_ceremony()
 			else:
-				# Fallback if node missing — still allow advance.
 				_show(
 					"Wonder Light: \"A Courage charm — for staying with David, and breathing God's promise with him.\"",
 					"Press Space to keep your charm"
@@ -288,3 +278,214 @@ func _on_advance() -> void:
 			_enter_beat(Beat.DONE)
 		_:
 			pass
+
+func _on_minigame_completed() -> void:
+	_enter_beat(Beat.STEADY_DONE)
+
+func _on_wonder_item_entered(body: Node3D, area: Area3D) -> void:
+	if body != player:
+		return
+	if _items_collected.has(area.name):
+		return
+	_near_item = area
+	if beat == Beat.EXPLORE:
+		_set_prompt(_explore_prompt(true))
+
+func _on_wonder_item_exited(body: Node3D, area: Area3D) -> void:
+	if body != player:
+		return
+	if _near_item == area:
+		_near_item = null
+	if beat == Beat.EXPLORE:
+		_set_prompt(_explore_prompt(false))
+
+func _try_collect_near_item() -> void:
+	if beat != Beat.EXPLORE:
+		return
+	if _near_item == null:
+		return
+	if _items_collected.has(_near_item.name):
+		return
+	_items_collected[_near_item.name] = true
+	wonder_items_found += 1
+	wonder_item_collected.emit(String(_near_item.name))
+	if audio_director and audio_director.has_method("play_pickup"):
+		audio_director.play_pickup()
+	var flavor: String = ITEM_FLAVOR.get(_near_item.name, "A Wonder Item!")
+	_say(flavor)
+	var mesh := _near_item.get_node_or_null("Marker")
+	if mesh:
+		mesh.visible = false
+	var visuals := get_node_or_null("../WonderItems/WonderItemsVisual")
+	if visuals:
+		var visual_mesh := visuals.find_child(_near_item.name, true, false)
+		if visual_mesh:
+			visual_mesh.visible = false
+		var outline := visuals.find_child(_near_item.name + "_Outline", true, false)
+		if outline:
+			outline.visible = false
+	_near_item = null
+	_set_prompt(_explore_prompt(false))
+	_celebrate_light()
+	if wonder_items_found >= WONDER_ITEMS_NEEDED:
+		_set_player_move(false)
+		_set_prompt("Everything is ready — let's bring it to David!")
+		_point_light(david_mentor)
+		await get_tree().create_timer(1.35).timeout
+		_enter_beat(Beat.MEET_DAVID_A)
+
+func _explore_prompt(near_item: bool) -> String:
+	var parts: PackedStringArray = []
+	for item_name in ["WonderItem_Stone", "WonderItem_Staff", "WonderItem_Lamb"]:
+		var mark := "\u2713" if _items_collected.has(item_name) else "\u2014"
+		parts.append("%s %s" % [ITEM_LABELS[item_name].capitalize(), mark])
+	var action := "Press E to collect" if near_item else "Find these for David"
+	return "%s   %s   (%d / %d)" % [action, "  ".join(parts), wonder_items_found, WONDER_ITEMS_NEEDED]
+
+func _show(dialogue: String, prompt: String) -> void:
+	_say(dialogue)
+	if camera_director and camera_director.has_method("is_orbiting") and camera_director.is_orbiting():
+		prompt += "   [A / D: look around]"
+	_set_prompt(prompt)
+	call_deferred("_fit_dialogue_panel")
+
+func _fit_dialogue_panel() -> void:
+	if dialogue_panel == null:
+		return
+	var dialogue_height := dialogue_label.get_combined_minimum_size().y
+	var prompt_height := prompt_label.get_combined_minimum_size().y
+	var wanted := dialogue_height + prompt_height + 44.0
+	var viewport_height := get_viewport().get_visible_rect().size.y
+	var max_height := maxf(116.0, minf(240.0, viewport_height * 0.38))
+	var height := clampf(wanted, 116.0, max_height)
+	dialogue_panel.offset_top = dialogue_panel.offset_bottom - height
+
+func _say(text: String) -> String:
+	if GameSettings.easy_words:
+		text = EasyWords.apply(text)
+	dialogue_label.text = text
+	if audio_director and audio_director.has_method("speak_dialogue"):
+		audio_director.speak_dialogue(text)
+	return text
+
+func show_nudge(text: String) -> void:
+	if beat != Beat.EXPLORE and beat != Beat.DONE:
+		return
+	var now := Time.get_ticks_msec()
+	if now - _last_nudge_ms < 12000:
+		return
+	_last_nudge_ms = now
+	var prev_dialogue := dialogue_label.text
+	var prev_prompt := _prompt_raw
+	var prev_beat := beat
+	var shown := _say(text)
+	await get_tree().create_timer(3.5).timeout
+	if beat == prev_beat and dialogue_label.text == shown:
+		dialogue_label.text = prev_dialogue
+		_set_prompt(prev_prompt)
+		call_deferred("_fit_dialogue_panel")
+
+func _set_prompt(raw: String) -> void:
+	_prompt_raw = raw
+	prompt_label.text = _localize_prompt(raw)
+	call_deferred("_fit_dialogue_panel")
+
+func _on_device_changed(_mode: String) -> void:
+	prompt_label.text = _localize_prompt(_prompt_raw)
+	call_deferred("_fit_dialogue_panel")
+
+func _localize_prompt(raw: String) -> String:
+	var input_setup := get_node_or_null("../InputSetup")
+	var mode: String = input_setup.mode if input_setup else "keyboard"
+	match mode:
+		"touch":
+			return raw.replace("Hold Space", "Hold BREATHE") \\
+				.replace("Press Space", "Tap NEXT").replace("Press E", "Tap GRAB") \\
+				.replace("press E", "tap GRAB").replace("[A / D: look around]", "[stick: look around]")
+		"gamepad":
+			return raw.replace("Hold Space", "Hold A") \\
+				.replace("Press Space", "Press A").replace("Press E", "Press A") \\
+				.replace("press E", "press A").replace("[A / D: look around]", "[stick: look around]")
+	return raw
+
+func get_action_hint() -> String:
+	if beat == Beat.EXPLORE:
+		return "GRAB" if _near_item != null else ""
+	if steady_hands and "active" in steady_hands and steady_hands.active:
+		return "BREATHE"
+	if _advance_ready:
+		return "NEXT"
+	return ""
+
+func _set_player_move(enabled: bool) -> void:
+	if player and "can_move" in player:
+		player.can_move = enabled
+
+func _cut_tabletop() -> void:
+	if camera_director and camera_director.has_method("cut_to_tabletop"):
+		camera_director.cut_to_tabletop()
+
+func _cut_closeup(look_target: Node3D) -> void:
+	if camera_director and camera_director.has_method("cut_to_closeup"):
+		camera_director.cut_to_closeup(look_target)
+
+func _point_light(target: Node3D) -> void:
+	if wonder_light and wonder_light.has_method("point_at"):
+		wonder_light.point_at(target)
+
+func _turn_to_face(mover: Node3D, target_pos: Vector3, duration: float = 0.6) -> void:
+	if not mover:
+		return
+	var to_target := target_pos - mover.global_position
+	to_target.y = 0.0
+	if to_target.length() < 0.01:
+		return
+	var start_rot := mover.rotation
+	mover.look_at(mover.global_position + to_target, Vector3.UP)
+	var target_yaw := mover.rotation.y
+	mover.rotation = start_rot
+	var delta := wrapf(target_yaw - start_rot.y, -PI, PI)
+	if absf(delta) < 0.01:
+		return
+	var tw := create_tween()
+	tw.tween_property(mover, "rotation:y", start_rot.y + delta, duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	await tw.finished
+
+func _face_player(target: Node3D) -> void:
+	if not player:
+		return
+	await _turn_to_face(target, player.global_position)
+
+func _face_david(target: Node3D) -> void:
+	if not player:
+		return
+	var model := player.get_node_or_null("Model") as Node3D
+	if not model or not target:
+		return
+	await _turn_to_face(model, target.global_position)
+
+func _play_finale() -> void:
+	if audio_director and audio_director.has_method("play_cheer"):
+		audio_director.play_cheer()
+	if confetti and confetti.has_method("burst") and player:
+		confetti.burst(player.global_position + Vector3(0.0, 2.8, 0.0), 220, 1.4, 6.5, 0.95)
+	_celebrate_light()
+	if complete_banner:
+		complete_banner.visible = true
+		complete_banner.modulate.a = 0.0
+		complete_banner.pivot_offset = complete_banner.size * 0.5
+		complete_banner.scale = Vector2(0.4, 0.4)
+		var tw := create_tween().set_parallel(true)
+		tw.tween_property(complete_banner, "modulate:a", 1.0, 0.25)
+		tw.tween_property(complete_banner, "scale", Vector2.ONE, 0.55).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+func _celebrate_light() -> void:
+	if wonder_light and wonder_light.has_method("celebrate"):
+		wonder_light.celebrate()
+
+func _on_charm_ceremony_finished() -> void:
+	_show(
+		"Wonder Light: \"Keep this close. Courage is yours to carry.\"\n(Courage charm sealed on the Virtue Bracelet.)",
+		"Press Space to keep your charm"
+	)
+	_advance_ready = true
