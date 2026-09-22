@@ -230,6 +230,29 @@ together. `scripts/companion_sheep_life.gd` finds those two nodes under
 toward the Wonder-Walker, entirely in local space so it stays correctly
 anchored beside David however the chapter has turned him.
 
+**v13: a "Crouch" shape key, so David can lean down without a rig.** David has
+no armature, so there is no way to bend him at a joint the way the Wonder-
+Walker bends an elbow or a knee. `add_crouch_shape_key()` instead builds a
+second absolute vertex position for every vertex of `David_Mentor` and
+`David_Mentor_Outline`: everything from roughly the hips up rotates forward
+and down around a hip pivot (`ww.HIP`, the same height fraction the geometry
+helper already uses for its own vertex-weight blending), faded in smoothly
+with height so the tunic's own waist does not tear at the transition — 0 at
+and below the hips, fully leaned over by the chest. Straight legs, no knee
+bend, no independent arm reach (yet): a whole-body forward lean already reads
+clearly as "bending down" at this figure's scale, and keeps this a same-day,
+low-risk first pass rather than something that needs per-limb vertex
+selection. Godot imports it as a normal blend shape (0 = standing, the
+default; 1 = fully leaned over); `steady_hands_minigame.gd` blends both the
+body's and the hull's copy of it together, 0→1 as the activity starts and
+back to 0 when it ends, so the ink outline never separates from the body
+mid-tween.
+
+One export gotcha worth knowing: `export_apply=True` (bake modifiers) also
+silently drops shape keys from a glTF export, even when, as here, nothing
+actually has an unapplied modifier left by that point. The export call now
+passes `export_apply=False, export_morph=True` instead.
+
 ```sh
 godot --headless --path . --script tests/david_visual_review.gd
 ```

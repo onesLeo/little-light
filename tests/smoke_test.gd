@@ -326,6 +326,18 @@ func _initialize() -> void:
 			break
 	_check(not steady_hands._air.playing, "the air sound fades out and stops")
 
+	print("-- steady hands: David leans down toward the lamb, and back up --")
+	_check(steady_hands._crouch_shape >= 0, "his Crouch shape key is found on both his body and its outline hull")
+	steady_hands.start_minigame()
+	await create_timer(1.3).timeout
+	var david_mesh: MeshInstance3D = steady_hands._david_meshes[0]
+	_check(david_mesh.get_blend_shape_value(steady_hands._crouch_shape) > 0.9, "he leans down while the child breathes with him")
+	steady_hands._tween_crouch(0.0, 1.0)
+	await create_timer(1.2).timeout
+	_check(david_mesh.get_blend_shape_value(steady_hands._crouch_shape) < 0.1, "and rises back to standing once the activity ends")
+	steady_hands.active = false
+	steady_hands.set_process(false)
+
 	print("-- steady hands: holding on touch and gamepad --")
 	input_setup.set_mode("touch")
 	var finger := InputEventScreenTouch.new()

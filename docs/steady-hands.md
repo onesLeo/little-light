@@ -14,6 +14,9 @@ exercise, not a test: there is no aiming, no score and no way to fail.
   for the gamepad and touch).
 - Wonder Light glows brighter and David rises a little as the ring grows, and a soft hush of air
   swells and fades with it.
+- David leans down toward his lamb for the whole activity, instead of standing frozen off to the
+  side — a shape key on his model (he has no rig), blended in as it starts and back to standing
+  once it finishes.
 
 ## It is slow on purpose
 
