@@ -3,12 +3,12 @@
 importer="wav"
 type="AudioStreamWAV"
 uid="uid://c8tookstone01"
-path="res://.godot/imported/wl_took_stone.wav-8c4e2a91b7d04f11a6e3c5d9b1f8a072.sample"
+path="res://.godot/imported/wl_took_stone.wav-db9f95967b1a07ad0000ffcaa67ce520.sample"
 
 [deps]
 
 source_file="res://assets/audio/vo/wl_took_stone.wav"
-dest_files=["res://.godot/imported/wl_took_stone.wav-8c4e2a91b7d04f11a6e3c5d9b1f8a072.sample"]
+dest_files=["res://.godot/imported/wl_took_stone.wav-db9f95967b1a07ad0000ffcaa67ce520.sample"]
 
 [params]
 

@@ -15,14 +15,15 @@ There are two layers:
 | David | Bram | preset voice, default settings; a dry, young-adult voice. Chosen over Cody, whose recording sounded like it was made in a room and was too young |
 
 The clips were generated with the Seed Audio 1.0 text-to-speech model (24 kHz), then trimmed of
-leading and trailing silence and saved as mono `.wav` (39 clips: 28 of the story as written plus the "Who is playing?" prompts, and 11 easier lines for younger children).
+leading and trailing silence and saved as mono `.wav` (43 clips: 31 of the story as written plus the "Who is playing?" prompts, and 12 easier lines for younger children).
 Voices differ in how "dry" they sound; if one sounds like it was recorded in a room, try another.
 The tool only exposes speed, loudness and pitch, so any emotion comes from the voice and the wording.
 
-On `feat/spine-god-is-the-source` the Chapter 1 spine, purpose and item-flavour lines were recut in
-the same Juno / Bram voices so the recording matches the on-screen text. Exact wording lives in
-`vo_library.gd`. Do **not** recut `wl_verse`, `wl_dont_be_afraid`, or any other unchanged line — a
-new take of the same sentence will sit next to the old Juno and sound like a different recording.
+On `feat/spine-god-is-the-source` the Chapter 1 spine, purpose, item-flavour and God-through-David
+lines were recut in the same Juno / Bram voices so the recording matches the on-screen text. Exact
+wording lives in `vo_library.gd`. Do **not** recut `wl_verse`, `wl_dont_be_afraid`, or any other
+unchanged line — a new take of the same sentence will sit next to the old Juno and sound like a
+different recording.
 
 ## How it plays
 
@@ -38,7 +39,7 @@ new take of the same sentence will sit next to the old Juno and sound like a dif
 ## Easy words
 
 A child who says they are 8 or younger when they are made ("How old are you?" on the "Who is playing?"
-screen) plays with **Easy words** on: eleven lines swap for a simpler version (`scripts/easy_words.gd`), each
+screen) plays with **Easy words** on: twelve lines swap for a simpler version (`scripts/easy_words.gd`), each
 with its own recorded clip (`ez_*`). Every other line, and the Joshua 1:9 verse, is never changed. The
 choice is kept with the child like read-aloud, and can be switched in the pause menu at any time; the
 line on screen when it is switched stays as it is until the next line.

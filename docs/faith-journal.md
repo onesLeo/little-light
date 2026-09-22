@@ -8,7 +8,7 @@ Backlog item 3.5. Each child on a tablet has their own name, picture and journal
    One big button per child (picture and first name)
    and a dashed **New** button. A new child types a name (up to 12 letters), picks one of six paper pictures
    (lamb, star, sun, cloud, heart, olive branch) and taps **Let's go**. Up to **4 children** fit on one tablet.
-   A child also says **How old they are**: "8 or younger" turns on Easy words, eleven lines of the story shown
+   A child also says **How old they are**: "8 or younger" turns on Easy words, twelve lines of the story shown
    and read aloud in simpler wording (`scripts/easy_words.gd`); "9 or older" keeps the story exactly as
    written. It can be switched later in the pause menu, and is kept with the child.
 2. **The story** starts once a child is chosen. *Play again* keeps the same child; the pause menu's
@@ -16,7 +16,9 @@ Backlog item 3.5. Each child on a tablet has their own name, picture and journal
 3. **The Faith Journal** opens from the round book button (top right, next to the speaker and pause), from the
    pause menu, and from the end-of-chapter panel (**My journal**). It shows:
    - **Verses** the child has earned, each with a **Hear it** button that reads it aloud in the recorded voice
-     (the same clips as the story).
+     (the same clips as the story). Under Joshua 1:9 a short note tells a parent why that verse lives in
+     David's story: the same God who was with Joshua was with David — the Lord who kept him safe from
+     the lion and the bear.
    - **Charms** the child has earned. Tapping one reads its line and shows why it was earned. The charms not
      earned yet are dashed circles with a "?" and "Not yet". There are two spare slots for chapters to come.
 4. **Colour my charm.** A charm can be coloured: **Colour my charm** in the journal (next to the note under the charms)

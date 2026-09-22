@@ -11,9 +11,10 @@ extends RefCounted
 
 ## original line -> easier line (the text spoken, without the speaker's name or quote marks)
 const LINES := {
-	"Ooh, look at that! A little valley, all made of paper and light.": "Wow! A little valley made of paper and light.",
-	"Three Wonder Items are hidden on the hillside. Find them!": "Three Wonder Items are hiding on the hill. Find them!",
+	"This is David's valley, made of paper and light. He looks after sheep. God looks after him.": "This is David's valley. God looks after him.",
+	"David needs his stone, his staff, and his little lamb. Find them for him!": "Find David's stone, staff, and little lamb.",
 	"Everyone's scared of the big giant. But God gave me these sheep to keep safe.": "Everyone is afraid of the big giant. God gave me these sheep to keep safe.",
+	"The Lord who kept me safe from the lion and the bear will keep me safe now.": "God kept me safe before. He will keep me safe now.",
 	"God gave David a job: keep the sheep safe. That is why he will go.": "God gave David a job: keep the sheep safe.",
 	"Let's breathe God's promise with David. In: God is with you. Out: don't be afraid.": "Let's breathe God's words with David. In... God is with you. Out... do not be afraid.",
 	"I still feel small. But I don't feel alone. Thank you for staying — and for the words.": "I am still small. But I am not alone.",

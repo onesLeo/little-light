@@ -20,6 +20,7 @@ const VERSES := [
 		"ref": "Joshua 1:9",
 		"spoken_ref": "Joshua, chapter one, verse nine.",
 		"text": "Haven't I commanded you? Be strong and of good courage; don't be afraid, neither be dismayed: for Yahweh your God is with you wherever you go.",
+		"why": "The same God who was with Joshua was with David — the Lord who kept him safe from the lion and the bear. That is why this verse lives here.",
 	},
 ]
 

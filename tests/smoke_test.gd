@@ -403,6 +403,7 @@ func _initialize() -> void:
 	spoken_texts.append("Wonder Light: \"Breathe with David...\"")
 	spoken_texts.append("Wonder Light: \"Keep this close. Courage is yours to carry.\"")
 	spoken_texts.append("Wonder Light: \"A Courage charm — for staying with David, and breathing God's promise with him.\"")
+	spoken_texts.append("Wonder Light: \"God was with David. God is with you.\"")
 	for flavor in director.ITEM_FLAVOR.values():
 		spoken_texts.append(flavor)
 	for nudge in main.get_node("PlayBounds").NUDGE_LINES:
@@ -426,7 +427,7 @@ func _initialize() -> void:
 	await create_timer(0.5).timeout
 	_check(vo_player.stream == vo_lib.clip_for("Breathe with David...") and audio._clip_queue.is_empty(),
 			"skipping ahead cuts the old line and a stale queued line never plays")
-	audio.speak_dialogue("Wonder Light: \"Three Wonder Items are hidden on the hillside. Find them!\"\nDavid: \"Thanks. Will you stay close while I get ready?\"")
+	audio.speak_dialogue("Wonder Light: \"David needs his stone, his staff, and his little lamb. Find them for him!\"\nDavid: \"Thanks. Will you stay close while I get ready?\"")
 	vo_player.finished.emit()
 	await create_timer(0.5).timeout
 	_check(vo_player.stream == vo_lib.clip_for("Thanks. Will you stay close while I get ready?"), "clips of one block play one after another")
@@ -597,9 +598,19 @@ func _initialize() -> void:
 	director._enter_beat(director.Beat.MEET_DAVID_B)
 	_check("God gave David a job" in director.dialogue_label.text, "Wonder Light names David's purpose before the verse")
 	director._enter_beat(director.Beat.REFLECT)
-	_check("job for you too" in director.dialogue_label.text, "the child is given a purpose: stay close and remember the words")
+	_check("for you too" in director.dialogue_label.text and "stay close" in director.dialogue_label.text,
+			"the child is given a purpose: stay close and remember the words")
 	_check("sheep to keep safe" in FileAccess.get_file_as_string("res://scripts/chapter_director.gd"), "David names his job: keep the sheep safe")
 	_check("small thing" in director.ITEM_FLAVOR["WonderItem_Stone"], "the stone flavour names God, not just a sling")
+	director._enter_beat(director.Beat.ARRIVE)
+	_check("David's valley" in director.dialogue_label.text and "God looks after him" in director.dialogue_label.text,
+			"God is named through David from the first beat")
+	director._enter_beat(director.Beat.VERSE_REWARD)
+	_check("Yahweh is God's name" in director.dialogue_label.text, "Yahweh is explained so a child (and a parent) can hear it")
+	_check("lion and the bear" in FileAccess.get_file_as_string("res://scripts/chapter_director.gd"),
+			"David speaks 1 Samuel 17:37 in his own words")
+	_check("God was with David" in FileAccess.get_file_as_string("res://scripts/chapter_director.gd"),
+			"the ending names God, not a secular slogan")
 	director.beat = director.Beat.STEADY_DONE
 	director._advance_ready = true
 	director._on_advance()
@@ -667,13 +678,13 @@ func _initialize() -> void:
 	_check(no_clip.is_empty(), "and every easier line has a recorded clip %s" % [no_clip])
 	var verse_block: String = JournalContent.verse_dialogue(JournalContent.VERSE_JOSHUA_1_9)
 	_check(EasyWords.apply(verse_block) == verse_block, "the Joshua 1:9 verse is never changed")
-	var arrive_line: String = "Wonder Light: \"Ooh, look at that! A little valley, all made of paper and light.\""
+	var arrive_line: String = "Wonder Light: \"This is David's valley, made of paper and light. He looks after sheep. God looks after him.\""
 	GameSettings.easy_words = false
 	director._say(arrive_line)
-	_check(director.dialogue_label.text == arrive_line and vo_player.stream == vo_lib.clip_for("Ooh, look at that! A little valley, all made of paper and light."), "a child who is 9 or older gets the story as written, in the original voice clip")
+	_check(director.dialogue_label.text == arrive_line and vo_player.stream == vo_lib.clip_for("This is David's valley, made of paper and light. He looks after sheep. God looks after him."), "a child who is 9 or older gets the story as written, in the original voice clip")
 	GameSettings.easy_words = true
 	director._say(arrive_line)
-	_check(director.dialogue_label.text == "Wonder Light: \"Wow! A little valley made of paper and light.\"" and vo_player.stream == vo_lib.clip_for("Wow! A little valley made of paper and light."), "with Easy words on, the easier line is shown and read aloud")
+	_check(director.dialogue_label.text == "Wonder Light: \"This is David's valley. God looks after him.\"" and vo_player.stream == vo_lib.clip_for("This is David's valley. God looks after him."), "with Easy words on, the easier line is shown and read aloud")
 	var mixed: String = director._say("David: \"Thanks. Will you stay close while I get ready?\"")
 	_check(mixed == "David: \"Thanks. Will you stay close while I get ready?\"", "a line with no easier version stays as it is")
 	GameSettings.easy_words = false
@@ -697,6 +708,12 @@ func _initialize() -> void:
 	journal.open()
 	_check(journal.is_open() and paused_now(), "opening the journal pauses the game")
 	_check(journal._title.text == "Test's Faith Journal", "the journal is titled with the child's name")
+	_check("The same God who was with Joshua was with David" in JournalContent.VERSES[0]["why"],
+			"the journal tells a parent why Joshua 1:9 belongs in David's story")
+	_check("lion and the bear" in JournalContent.VERSES[0]["why"],
+			"the parent note ties Joshua 1:9 to David's own words (1 Samuel 17:37)")
+	_check(journal._verse_box.find_child("WhyNote", true, false) != null,
+			"the journal card actually shows that parent note under the verse")
 	_check(journal._verse_box.get_child_count() == 1, "it shows the verse the child has earned")
 	_check(journal._charm_row.get_child_count() == 1 + JournalContent.MYSTERY_SLOTS and journal._charm_row.get_child(0) is Button, "it shows the Courage charm and %d empty slots" % JournalContent.MYSTERY_SLOTS)
 	_check(audio.process_mode == Node.PROCESS_MODE_ALWAYS, "the audio keeps running while the game is paused")

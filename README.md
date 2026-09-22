@@ -31,14 +31,14 @@ The speaker button (top right) turns **read-aloud** on or off; settings are save
 
 ## What you'll play through
 
-1. **Arrive** — Wonder Light dialogue text (Space or Enter to continue)
+1. **Arrive** — Wonder Light names this as **David's valley**: he looks after sheep, God looks after him
 2. **Explore** — find David's 3 Wonder Items (stone / staff / lamb), placed at random spots in the meadow each run; press **E** (or tap GRAB). A checklist keeps their purpose visible. If nothing is found for ~18 s, a bobbing arrow (and an edge-of-screen arrow) points to the nearest missing item
-3. **Meet David** — the found items are brought to him. David says God gave him these sheep to keep safe. Wonder Light names that job as why he will go.
-4. **The Word** — Joshua 1:9 (WEB) and “Don't. Be. Afraid.” are given **before** David walks, so the child has a promise to stand on
+3. **Meet David** — the found items are brought to him. David says God gave him these sheep to keep safe, then speaks 1 Samuel 17:37 in his own words: the Lord who kept him safe from the lion and the bear will keep him safe now. Wonder Light names that job as why he will go.
+4. **The Word** — Joshua 1:9 (WEB) and “Don't. Be. Afraid.” are given **before** David walks. Wonder Light then says **Yahweh is God's name** — so courage is God-with-you, not a feeling.
 5. **Steady Hands** — hold **Space** to breathe that promise in and let go to breathe it out, three slow breaths (Band A; cannot be failed, see [docs/steady-hands.md](docs/steady-hands.md))
 6. **Resolution** — narrated off-screen; David takes the small stone (God can use even a small thing), then the text clearly says that David trusted God, faced Goliath with his sling, and defeated him, while no fight is shown
 7. **Reflect** — “Being brave doesn't mean you're not scared. It means you go with God anyway.” Then: God had a job for David; He has one for you too: stay close, and remember the words.
-8. **Courage charm** — animated placeholder bracelet/charm ceremony, followed by chapter completion, then a **Play again / Keep exploring** panel
+8. **Courage charm** — animated placeholder bracelet/charm ceremony, then **“God was with David. God is with you.”**, then a **Play again / Keep exploring** panel
 
 ## Current scene assets
 

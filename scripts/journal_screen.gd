@@ -252,6 +252,13 @@ func _verse_card(v: Dictionary) -> Control:
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	body.custom_minimum_size.x = 640.0
 	text_column.add_child(body)
+	if v.has("why") and not str(v["why"]).is_empty():
+		var why := PaperUI.label(str(v["why"]), 20, HORIZONTAL_ALIGNMENT_LEFT)
+		why.name = "WhyNote"
+		why.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		why.modulate = Color(0.35, 0.28, 0.18, 1.0)
+		why.custom_minimum_size.x = 640.0
+		text_column.add_child(why)
 	var hear := PaperUI.button("Hear it", Vector2(170.0, 60.0), 26)
 	hear.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	hear.pressed.connect(_hear.bind(JournalContent.verse_dialogue(v["id"])))

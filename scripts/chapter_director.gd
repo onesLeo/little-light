@@ -124,7 +124,7 @@ func _enter_beat(next: Beat) -> void:
 			_cut_tabletop()
 			_point_light(null)
 			_show(
-				"Wonder Light: \"Ooh, look at that! A little valley, all made of paper and light.\"",
+				"Wonder Light: \"This is David's valley, made of paper and light. He looks after sheep. God looks after him.\"",
 				"Press Space to continue"
 			)
 			_advance_ready = true
@@ -134,7 +134,7 @@ func _enter_beat(next: Beat) -> void:
 			_cut_tabletop()
 			_point_light(null)
 			_show(
-				"Wonder Light: \"Three Wonder Items are hidden on the hillside. Find them!\"",
+				"Wonder Light: \"David needs his stone, his staff, and his little lamb. Find them for him!\"",
 				_explore_prompt(false)
 			)
 			_advance_ready = false
@@ -151,7 +151,7 @@ func _enter_beat(next: Beat) -> void:
 			_cut_closeup(david_mentor)
 			_point_light(david_mentor)
 			_show(
-				"(You bring David the stone, staff, and little lamb.)\nDavid: \"Oh! Hello there. Are you lost too?\"\nDavid: \"Everyone's scared of the big giant. But God gave me these sheep to keep safe.\"",
+				"(You bring David the stone, staff, and little lamb.)\nDavid: \"Oh! Hello there. Are you lost too?\"\nDavid: \"Everyone's scared of the big giant. But God gave me these sheep to keep safe.\"\nDavid: \"The Lord who kept me safe from the lion and the bear will keep me safe now.\"",
 				"Press Space to continue"
 			)
 			_advance_ready = true
@@ -174,7 +174,7 @@ func _enter_beat(next: Beat) -> void:
 			_point_light(david_mentor)
 			_celebrate_light()
 			_show(
-				"Joshua 1:9 (WEB):\n\"Haven't I commanded you? Be strong and of good courage; don't be afraid, neither be dismayed: for Yahweh your God is with you wherever you go.\"\n\nWonder Light: \"This verse has three special words. Can you say them with me?\nDon't. Be. Afraid.\"",
+				"Joshua 1:9 (WEB):\n\"Haven't I commanded you? Be strong and of good courage; don't be afraid, neither be dismayed: for Yahweh your God is with you wherever you go.\"\n\nWonder Light: \"This verse has three special words. Can you say them with me?\nDon't. Be. Afraid.\"\nWonder Light: \"Yahweh is God's name. It means He is with you.\"",
 				"Press Space to breathe with David"
 			)
 			_advance_ready = true
@@ -259,7 +259,7 @@ func _enter_beat(next: Beat) -> void:
 			_cut_tabletop()
 			_point_light(null)
 			_show(
-				"Chapter complete — courage over fear.",
+				"Wonder Light: \"God was with David. God is with you.\"",
 				"Well done, Wonder-Walker!"
 			)
 			_advance_ready = false
