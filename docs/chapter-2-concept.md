@@ -153,13 +153,14 @@ new location, a new character and three new small props.
 Raised after the first sketches: could the camp be lit so the fire actually shows, and could it
 feel less empty?
 
-- **Dusk, not full night.** In flat daylight the campfire's glow does not read; at night the
-  scene risks feeling dark and unwelcoming for a 6-year-old. Dusk (a warm, glowing sky, not
-  black) keeps the fire and a hanging lantern visible and gives the camp its own mood, while
-  staying as gentle as the rest of the game. It also ties into the story: it is the evening of
-  the same day the whole camp was cheering David's name. This is the first thing in the game that
-  is not full daylight, so it is a genuinely new piece of work (a second `Environment`/lighting
-  setup for this one location), not a free change.
+- **Warm dusk was the first idea. The chosen look is a calm blue hour, in the Bluey sense.** Flat daylight hides the campfire. A black night would feel unfriendly to a six-year-old. The reference is not a dark fantasy night. It is the way Bluey nights stay calm: the blue is a real colour, bright enough to see by, and a warm lamp does the comforting. Sleepytime and the campfire episodes are the pictures to match, not a horror still.
+  - Sky, far hills, the valley below, and the shadows on the trees go saturated blue and blue-violet. Never black, never grey.
+  - The path under the child's feet stays light enough to walk without guessing.
+  - The campfire, one hanging lantern, and at most one small torch are the only warm lights, and they are bright. A dim ember is not enough. Faces in the close-up stay readable, not silhouettes.
+  - The moon is soft. It is not a spotlight.
+  - The lookout still shows chapter 1's valley. Fog does not eat it.
+  - Paper grain and the black ink outline stay. This is a change of light only, not a change to Bluey's lineless style.
+  - It is the evening of the same day the camp cheered David's name. It needs its own `Environment` for this location. That is real new work, not a free change.
 - **Two camp guards**, dressed plainly (not Jonathan's court colours), standing and slowly
   patrolling near the tent — ambient life, the same idea as the lamb, the fish and the
   butterflies in chapter 1 (`3.3 A world that reacts`), not a threat and not interactive. Each
@@ -168,13 +169,7 @@ feel less empty?
 A second sketch, at dusk with the campfire glowing, a hanging lantern, and both guards, was
 shown alongside the first. Still a concept, not built.
 
-**Pushed further, toward "blue hour":** a third sketch cools the sky and everything lit by it
-(hills, ground, trees, the valley below) toward deep calm blues and a bright moon, and lets the
-campfire, the lantern and the guard's torch be the one warm, glowing note in the scene, rather
-than spreading warmth through the whole sky as a sunset does. Warm firelight against a calm blue
-evening is a common, well-liked pairing (the same idea behind most cosy campfire pictures), and
-it reads as calmer than an orange sunset while keeping the fire and lantern clearly visible —
-closer to what was asked for ("warm... where the tone is calm"). Still a concept.
+A later sketch pushed this all the way to blue hour: cool blue on the hills and the valley, and the fire and lantern as the one warm note. That sketch is the one to follow, with the rules above so the blue stays calm instead of dark. Still a concept, not built.
 
 ## Open questions
 
