@@ -8,6 +8,8 @@ extends Node
 
 const Profiles := preload("res://scripts/profiles.gd")
 const JournalContent := preload("res://scripts/journal_content.gd")
+const GameSettings := preload("res://scripts/game_settings.gd")
+const EasyWords := preload("res://scripts/easy_words.gd")
 
 enum Beat {
 	ARRIVE,
@@ -335,11 +337,15 @@ func _show(dialogue: String, prompt: String) -> void:
 		prompt += "   [A / D: look around]"
 	_set_prompt(prompt)
 
-## Shows a line of story text and reads it aloud (if the player has read-aloud on).
-func _say(text: String) -> void:
+## Shows a line of story text and reads it aloud (if the player has read-aloud on). With "Easy words" on for the
+## child playing, lines that have an easier version (easy_words.gd) are swapped for it. Returns what was shown.
+func _say(text: String) -> String:
+	if GameSettings.easy_words:
+		text = EasyWords.apply(text)
 	dialogue_label.text = text
 	if audio_director and audio_director.has_method("speak_dialogue"):
 		audio_director.speak_dialogue(text)
+	return text
 
 ## A short friendly line from Wonder Light while the player is free to roam
 ## (used when they wander toward the edge of the valley). It replaces the
@@ -354,9 +360,9 @@ func show_nudge(text: String) -> void:
 	var prev_dialogue := dialogue_label.text
 	var prev_prompt := _prompt_raw
 	var prev_beat := beat
-	_say(text)
+	var shown := _say(text)
 	await get_tree().create_timer(3.5).timeout
-	if beat == prev_beat and dialogue_label.text == text:
+	if beat == prev_beat and dialogue_label.text == shown:
 		dialogue_label.text = prev_dialogue
 		_set_prompt(prev_prompt)
 

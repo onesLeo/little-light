@@ -12,6 +12,7 @@ const Profiles := preload("res://scripts/profiles.gd")
 const JournalContent := preload("res://scripts/journal_content.gd")
 const GameSettings := preload("res://scripts/game_settings.gd")
 const CharmArt := preload("res://scripts/charm_art.gd")
+const EasyWords := preload("res://scripts/easy_words.gd")
 const GroundSurface := preload("res://scripts/ground_surface.gd")
 const SoundLibraryFile := preload("res://scripts/sound_library.gd")
 const TEST_PROFILES := "user://smoke_test_profiles.cfg"
@@ -580,6 +581,30 @@ func _initialize() -> void:
 	Profiles.remove(second_id)
 	Profiles.set_active(kid_id)
 
+	print("-- easy words: the story for younger readers --")
+	var director_source: String = FileAccess.get_file_as_string("res://scripts/chapter_director.gd")
+	var missing_original: Array = []
+	var no_clip: Array = []
+	for original in EasyWords.LINES:
+		if not director_source.contains(original):
+			missing_original.append(original)
+		if vo_lib.clip_for(EasyWords.LINES[original]) == null:
+			no_clip.append(EasyWords.LINES[original])
+	_check(missing_original.is_empty(), "every line that has an easier version is still in the story as written %s" % [missing_original])
+	_check(no_clip.is_empty(), "and every easier line has a recorded clip %s" % [no_clip])
+	var verse_block: String = JournalContent.verse_dialogue(JournalContent.VERSE_JOSHUA_1_9)
+	_check(EasyWords.apply(verse_block) == verse_block, "the Joshua 1:9 verse is never changed")
+	var arrive_line: String = "Wonder Light: \"Ooh, look at that! A little valley, all made of paper and light.\""
+	GameSettings.easy_words = false
+	director._say(arrive_line)
+	_check(director.dialogue_label.text == arrive_line and vo_player.stream == vo_lib.clip_for("Ooh, look at that! A little valley, all made of paper and light."), "a child who is 9 or older gets the story as written, in the original voice clip")
+	GameSettings.easy_words = true
+	director._say(arrive_line)
+	_check(director.dialogue_label.text == "Wonder Light: \"Wow! A little valley made of paper and light.\"" and vo_player.stream == vo_lib.clip_for("Wow! A little valley made of paper and light."), "with Easy words on, the easier line is shown and read aloud")
+	var mixed: String = director._say("David: \"Thanks. Will you stay close while I get ready?\"")
+	_check(mixed == "David: \"Thanks. Will you stay close while I get ready?\"", "a line with no easier version stays as it is")
+	GameSettings.easy_words = false
+
 	print("-- Faith Journal: the story fills it, and it reads aloud --")
 	var kid: Dictionary = Profiles.active()
 	_check(Profiles.has_verse(kid_id, JournalContent.VERSE_JOSHUA_1_9), "reaching the verse puts Joshua 1:9 in the child's journal")
@@ -747,6 +772,24 @@ func _initialize() -> void:
 	_check(not picker.is_open() and not paused_now() and not Profiles.picker_open, "then the game carries on")
 	Profiles.remove(made)
 	Profiles.set_active(kid_id)
+	picker.open()
+	picker._show_create()
+	picker._name_edit.text = "Zed"
+	_check(picker.submit() == "" and picker._hint.text == "Pick your age" and Profiles.count() == 1, "a name without an age is not enough: the hint asks for the age")
+	picker._select_age("younger")
+	var zed: String = picker.submit()
+	_check(not zed.is_empty() and GameSettings.easy_words and Profiles.get_profile(zed)["settings"]["easy_words"] == true, "a child who is 8 or younger gets Easy words, kept with them")
+	Profiles.remove(zed)
+	Profiles.set_active(kid_id)
+	picker.open()
+	picker._show_create()
+	picker._name_edit.text = "Yan"
+	picker._select_age("older")
+	var yan: String = picker.submit()
+	_check(not yan.is_empty() and not GameSettings.easy_words and Profiles.get_profile(yan)["settings"]["easy_words"] == false, "and one who is 9 or older gets the story as written")
+	Profiles.remove(yan)
+	Profiles.set_active(kid_id)
+	GameSettings.easy_words = false
 	picker.open()
 	picker.choose(kid_id)
 	_check(chosen.back() == kid_id and not picker.is_open(), "tapping a child chooses them")
