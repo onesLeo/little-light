@@ -11,6 +11,8 @@ const FLUTTER := DIR + "sfx/flutter.wav"
 const BREATH := DIR + "sfx/breath_loop.wav"
 const BIRD_COUNT := 7
 const STEP_COUNT := 4
+## Ground the footsteps change with (grass is the plain "step_N" files).
+const SURFACES := ["path", "water"]
 const BLEAT_COUNT := 1
 
 static var _cache: Dictionary = {}
@@ -40,8 +42,10 @@ static func bird(index: int) -> AudioStream:
 	return load_stream(DIR + "ambience/bird_%d.wav" % (index % BIRD_COUNT + 1))
 
 
-static func step(index: int) -> AudioStream:
-	return load_stream(DIR + "sfx/step_%d.wav" % (index % STEP_COUNT + 1))
+## A footstep on "grass" (the default), "path" or "water": four of each, picked by `index`.
+static func step(index: int, surface: String = "grass") -> AudioStream:
+	var prefix := "step" if surface == "grass" or not SURFACES.has(surface) else "step_" + surface
+	return load_stream(DIR + "sfx/%s_%d.wav" % [prefix, index % STEP_COUNT + 1])
 
 
 static func bleat(index: int) -> AudioStream:
@@ -55,6 +59,8 @@ static func all_paths() -> PackedStringArray:
 		paths.append(DIR + "ambience/bird_%d.wav" % (i + 1))
 	for i in STEP_COUNT:
 		paths.append(DIR + "sfx/step_%d.wav" % (i + 1))
+		for surface in SURFACES:
+			paths.append(DIR + "sfx/step_%s_%d.wav" % [surface, i + 1])
 	for i in BLEAT_COUNT:
 		paths.append(DIR + "sfx/bleat_%d.wav" % (i + 1))
 	return paths

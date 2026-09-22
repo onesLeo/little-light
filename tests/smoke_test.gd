@@ -12,6 +12,8 @@ const Profiles := preload("res://scripts/profiles.gd")
 const JournalContent := preload("res://scripts/journal_content.gd")
 const GameSettings := preload("res://scripts/game_settings.gd")
 const CharmArt := preload("res://scripts/charm_art.gd")
+const GroundSurface := preload("res://scripts/ground_surface.gd")
+const SoundLibraryFile := preload("res://scripts/sound_library.gd")
 const TEST_PROFILES := "user://smoke_test_profiles.cfg"
 
 var _failures: int = 0
@@ -460,6 +462,19 @@ func _initialize() -> void:
 	walker._update_footsteps(false, 0.5)
 	walker._update_footsteps(true, 0.01)
 	_check(not audio._step_players.any(func(p): return p.playing), "standing still makes none, and the first step waits a moment")
+	_check(GroundSurface.at(Vector3(5.0, 0.0, 0.0)) == "grass" and GroundSurface.at(Vector3(0.45, 0.0, 1.6)) == "path" and GroundSurface.at(Vector3(0.3, 0.0, 9.5)) == "path", "the walker can tell grass from the path")
+	_check(GroundSurface.at(Vector3(-8.2, 0.0, 2.2)) == "water" and GroundSurface.at(Vector3(-6.45, 0.0, -4.5)) == "water" and GroundSurface.at(Vector3(-3.0, 0.0, 3.0)) == "grass", "and the stream and the pool under the waterfall")
+	var surface_names: Array = []
+	for surface in ["grass", "path", "water"]:
+		var one_step: AudioStream = SoundLibraryFile.step(0, surface)
+		var other_step: AudioStream = SoundLibraryFile.step(1, surface)
+		if one_step == null or other_step == null or one_step == other_step or (surface != "grass" and not one_step.resource_path.contains("step_" + surface)):
+			surface_names.append(surface)
+	_check(surface_names.is_empty(), "each ground has its own recorded steps %s" % [surface_names])
+	for p in audio._step_players:
+		p.stop()
+	audio.play_step("water")
+	_check(audio._step_players.any(func(p): return p.playing and p.stream.resource_path.contains("step_water_")), "a step in the stream makes the splashy sound")
 	var lamb_node: Node = main.get_node("WonderItems/LambLife")
 	_check(lamb_node._bleat != null, "the lamb has a voice")
 	lamb_node._excite = 0.0
