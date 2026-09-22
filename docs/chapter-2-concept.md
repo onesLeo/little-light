@@ -87,6 +87,45 @@ backlog 4.4.
   new charm-award reason.
 - Recorded clips for the new lines, in the same two voices.
 
+## How it would look
+
+Same paper-craft rules as everything already in the game — nothing new to invent here, just
+applied to new things:
+
+- **Every surface is flat matte colour with a fine paper-grain texture**, and every object has a
+  thin black ink outline (a slightly bigger inverted copy of itself, see `add_outline` in
+  `polish_valley_v6.py`). No gradients, no gloss. This is why the valley reads as a diorama made
+  of paper rather than a realistic 3D scene, and the ridge camp would follow the same rule.
+- **Terrain, trees, stone and light stay exactly as they are** — the ridge already exists in the
+  valley's own palette (the same cypress green, olive green, and the grey/mossy/slate stone from
+  `ROCK_VARIANTS`), under the same sun and the same soft distance fog. Nothing about the *place*
+  needs restyling, only new props placed in it.
+- **New props, in the valley's existing material style** (flat colour + grain, like the sign
+  post and the stream rocks): a canvas tent (a warm cream or worn-red, like a folded blanket, not
+  a bright colour), a small ring of stones with orange "flame" shapes for the campfire (the same
+  low-poly paper-flame trick used nowhere else yet, but simple to build), a couple of cloth
+  banners on poles, and a log or two to sit on. Nothing elaborate — the meadow's sign post and
+  wonder-item stand are a good gauge of how much detail a prop gets.
+- **Jonathan**, built the same way as David and the Wonder-Walker (`generate_david_mentor_v*.py`,
+  `generate_wonder_walker_v*.py`): a simple paper-doll figure, rounded low-poly body, flat matte
+  cloth. David's colours are a shepherd's — a golden-brown tunic, an olive-green sash — because
+  he is a shepherd. Jonathan is a prince, so his colours should read as court rather than
+  hillside: I'd suggest a deep blue or wine-red tunic with a gold sash or trim, something a child
+  reads as "royal" next to David's earth tones, without any texture or detail that isn't already
+  in the game's vocabulary (no patterns, no jewellery beyond maybe one gold band).
+- **The Wonder Items** (robe, bow, belt) would look like the existing ones: small, simple,
+  paper-craft objects with the same outline and grain, sized and staged the way the stone, staff
+  and lamb are today (see `WonderItemsVisual` in `main.tscn`) — not miniature versions of
+  Jonathan's actual clothes, just a clear, readable icon of each.
+- **Camera and lighting are unchanged.** Same tabletop follow-camera, same close-up camera for
+  dialogue, same sun and fog. The one new thing is the lookout point (mentioned above), where the
+  tabletop camera would have a clear sightline back down into chapter 1's valley — a visual
+  callback that costs nothing extra to build, since the terrain is already there.
+
+In short: nothing here asks for a new art style, a new lighting setup or a new technique. It's
+the same recipe (flat colour, grain, black outline, low-poly, paper-doll figures) pointed at a
+new location, a new character and three new small props.
+
 ## Open questions
 
 1. Is "The King's Camp" / David and Jonathan the right next beat, or would you rather see other
