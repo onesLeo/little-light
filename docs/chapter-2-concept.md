@@ -112,65 +112,79 @@ backlog 4.4.
 
 ## How it would look
 
-Same paper-craft rules as everything already in the game — nothing new to invent here, just
-applied to new things:
+This is the picture to build from. It is still the chapter 1 diorama — flat matte colour, paper grain, a thin black ink outline, low-poly paper-doll people. What changes is the hour, and the few new things standing in it.
 
-- **Every surface is flat matte colour with a fine paper-grain texture**, and every object has a
-  thin black ink outline (a slightly bigger inverted copy of itself, see `add_outline` in
-  `polish_valley_v6.py`). No gradients, no gloss. This is why the valley reads as a diorama made
-  of paper rather than a realistic 3D scene, and the ridge camp would follow the same rule.
-- **Terrain, trees, stone and light stay exactly as they are** — the ridge already exists in the
-  valley's own palette (the same cypress green, olive green, and the grey/mossy/slate stone from
-  `ROCK_VARIANTS`), under the same sun and the same soft distance fog. Nothing about the *place*
-  needs restyling, only new props placed in it.
-- **New props, in the valley's existing material style** (flat colour + grain, like the sign
-  post and the stream rocks): a canvas tent (a warm cream or worn-red, like a folded blanket, not
-  a bright colour), a small ring of stones with orange "flame" shapes for the campfire (the same
-  low-poly paper-flame trick used nowhere else yet, but simple to build), a couple of cloth
-  banners on poles, and a log or two to sit on. Nothing elaborate — the meadow's sign post and
-  wonder-item stand are a good gauge of how much detail a prop gets.
-- **Jonathan**, built the same way as David and the Wonder-Walker (`generate_david_mentor_v*.py`,
-  `generate_wonder_walker_v*.py`): a simple paper-doll figure, rounded low-poly body, flat matte
-  cloth. David's colours are a shepherd's — a golden-brown tunic, an olive-green sash — because
-  he is a shepherd. Jonathan is a prince, so his colours should read as court rather than
-  hillside: I'd suggest a deep blue or wine-red tunic with a gold sash or trim, something a child
-  reads as "royal" next to David's earth tones, without any texture or detail that isn't already
-  in the game's vocabulary (no patterns, no jewellery beyond maybe one gold band).
-- **The Wonder Items** (robe, bow, belt) would look like the existing ones: small, simple,
-  paper-craft objects with the same outline and grain, sized and staged the way the stone, staff
-  and lamb are today (see `WonderItemsVisual` in `main.tscn`) — not miniature versions of
-  Jonathan's actual clothes, just a clear, readable icon of each.
-- **Camera and lighting are unchanged.** Same tabletop follow-camera, same close-up camera for
-  dialogue, same sun and fog. The one new thing is the lookout point (mentioned above), where the
-  tabletop camera would have a clear sightline back down into chapter 1's valley — a visual
-  callback that costs nothing extra to build, since the terrain is already there.
+The evening of the same day. Down in the meadow it is still the valley the child just walked, only seen from above and already going blue. Up on the ridge the day has tipped into a calm blue hour. Not a black night, and not a warm orange sunset. The blue is a real colour, bright enough to play in. One fire does the comforting. The reference for the *feeling* is a gentle bedtime picture: you can see every face, the path is obvious, and the dark is a colour rather than a hole. Sleepytime and a quiet campfire are the mood. A horror still is not.
 
-In short: nothing here asks for a new art style, a new lighting setup or a new technique. It's
-the same recipe (flat colour, grain, black outline, low-poly, paper-doll figures) pointed at a
-new location, a new character and three new small props.
+### The first view
 
-## Time of day, and life in the camp
+The path climbs through the trees the child already knows, cypress and olive, and opens onto one clearing. The eye should land in this order:
 
-Raised after the first sketches: could the camp be lit so the fire actually shows, and could it
-feel less empty?
+1. The campfire, the only bright warm thing, a little right of centre.
+2. One cream tent behind it, open toward the fire, big enough to be "the camp" and not a city of tents.
+3. Jonathan near the fire, in a wine-red tunic, so he does not disappear into the blue.
+4. David, smaller, in the same golden-brown tunic and olive sash as chapter 1, so the child knows him before anyone speaks.
+5. Past a low stone at the cliff edge, the whole of chapter 1 laid out below: waterfall, stream, the path where they first met. The fog must not eat that view. It is the reward for walking up.
 
-- **Warm dusk was the first idea. The chosen look is a calm blue hour, in the Bluey sense.** Flat daylight hides the campfire. A black night would feel unfriendly to a six-year-old. The reference is not a dark fantasy night. It is the way Bluey nights stay calm: the blue is a real colour, bright enough to see by, and a warm lamp does the comforting. Sleepytime and the campfire episodes are the pictures to match, not a horror still.
-  - Sky, far hills, the valley below, and the shadows on the trees go saturated blue and blue-violet. Never black, never grey.
-  - The path under the child's feet stays light enough to walk without guessing.
-  - The campfire, one hanging lantern, and at most one small torch are the only warm lights, and they are bright. A dim ember is not enough. Faces in the close-up stay readable, not silhouettes.
-  - The moon is soft. It is not a spotlight.
-  - The lookout still shows chapter 1's valley. Fog does not eat it.
-  - Paper grain and the black ink outline stay. This is a change of light only, not a change to Bluey's lineless style.
-  - It is the evening of the same day the camp cheered David's name. It needs its own `Environment` for this location. That is real new work, not a free change.
-- **Two camp guards**, dressed plainly (not Jonathan's court colours), standing and slowly
-  patrolling near the tent — ambient life, the same idea as the lamb, the fish and the
-  butterflies in chapter 1 (`3.3 A world that reacts`), not a threat and not interactive. Each
-  carries a staff, not a weapon, in keeping with no violence being shown anywhere in the game.
+Two plain guards walk a short, slow loop near the tent. They are life in the camp, like the lamb and the butterflies, not a puzzle and not a threat. Sand and brown cloth, a staff each, no armour, no swords, no torches. The fire and one hanging lantern are the only warm lights. A torch in every hand would turn the blue hour back into daylight.
 
-A second sketch, at dusk with the campfire glowing, a hanging lantern, and both guards, was
-shown alongside the first. Still a concept, not built.
+### The blue, and the one warm note
 
-A later sketch pushed this all the way to blue hour: cool blue on the hills and the valley, and the fire and lantern as the one warm note. That sketch is the one to follow, with the rules above so the blue stays calm instead of dark. Still a concept, not built.
+Same paper surfaces as the valley. The light is a second set of flat colours, not a realistic night render and not a gradient painted onto the rocks.
+
+| What | Colour | So that |
+|---|---|---|
+| Sky | A clear mid blue, lighter toward the horizon | The top of the picture feels open, not like a lid |
+| Far hills and the valley below | Blue, a step toward violet | They sit back, and the child still recognises the waterfall |
+| Near ground | Pale dusty blue, light enough to walk | Nobody has to guess where the floor is |
+| The path | The same warm stone as chapter 1, only a little cooler | It stays the "walk here" colour |
+| Tree shadows | Blue, never black or grey | The ink outline is the dark line. The shadow is not |
+| Cypress and olive | The same greens, seen in blue light | The place is still the ridge, not a new forest |
+| Moon | A soft pale disc, low in the sky | It is there. It is not a spotlight |
+| Fire | Flat orange shapes with a smaller yellow centre, in a ring of the valley's own stones | It reads as fire from across the clearing |
+| Warm pool | A soft orange only on the nearest tent wall, the log, and the cheek turned toward the fire | The rest of the camp stays blue |
+| Lantern | One, cream paper with a yellow centre, hung at the tent mouth | A second comfort, not a second sun |
+
+Faces stay the paper skin colour from chapter 1. They are not dipped in blue, or they look cold and unwell. The fire may warm one edge of a cheek in the close-up. Eyes, mouths and the ink line stay as readable as they are in the meadow.
+
+Paper grain and the black outline stay on everything, including the flame and the lantern. This is a change of light, not a change to a lineless cartoon.
+
+It needs its own `Environment` on this ridge. Chapter 1's sun and daytime sky stay down in the meadow. Carrying the daytime sun up here would hide the fire, which is the whole point of the hour.
+
+### The camp, piece by piece
+
+Nothing here is more detailed than the meadow's signpost. If a prop needs a pattern, a jewel or a second material, it is too much.
+
+- **The tent.** One large tent, warm cream, like a folded blanket. The front is open so the inside is a darker cream, not a black cave. A smaller folded canvas may sit behind it. No crowd of tents, no guy-ropes to trip on, no flags so small the child cannot read them.
+- **The banners.** Two. Simple cloth rectangles on plain poles: one deep blue, one dull wine. No crest, no writing, no animal. They may sway as slowly as the meadow grass. They do not snap or flutter hard.
+- **The fire.** A low ring of the grey, moss and slate stones already used in the valley (`ROCK_VARIANTS`). The flame is a few flat paper shapes, the way a paper diorama fakes fire, not a bright particle glow that blows the scene out. A log on the near side gives Jonathan somewhere to be.
+- **The gifts.** Three small paper objects, staged like the stone, the staff and the lamb, each obvious from a few steps away. The robe is a folded rectangle of deep blue with one gold edge. The bow is one curved piece with a single string, and no arrow anywhere near it. The belt is a short brown loop with one small gold square. They are icons, not tiny copies of real clothes. The sword in the Bible verse is not a Wonder Item and not a prop. It stays off the screen the way Goliath did.
+- **Jonathan.** Built like David and the Wonder-Walker: rounded low-poly, flat matte cloth, ink outline. A prince next to a shepherd, so the child can tell them apart at a glance. Wine-red tunic, a gold sash, maybe one gold band at the neck. No pattern, no crown, no jewellery beyond that. Deep blue was the other idea for him. In this hour a blue tunic would vanish into the trees, so the wine-red is the one to use.
+- **David.** Unchanged from chapter 1. The familiar clothes do the introducing.
+- **The guards.** Two. Plain sand and brown, shorter capes or none, staffs held down. They walk a loop that never crosses the path the child needs, and they never turn to face the child as if to stop them.
+- **The lookout.** The cliff edge, one low stone to mark "stand here," and the valley in clear view underneath. The waterfall keeps the bright blue the child already knows, so the place reads as "where I was" even in the new light.
+
+### What the camera is looking at
+
+The tabletop camera and the close-up camera stay the ones from chapter 1. The framing is what changes.
+
+- **Arriving.** Wide enough to hold the fire, the tent and a slice of the valley below. The child's head is fully in frame. The blue sky gets room above the cypress.
+- **Finding a gift.** The gift sits in clear space, not tucked in a dark corner. Blue hour is bright enough to see a bow lying on a stone without a glow. A gift beside the fire may pick up a little warm light. A gift near the lookout stays blue and still readable.
+- **Meeting Jonathan.** Close-up on his face, the same intimate cut as meeting David. Behind him: blue tent or blue trees, and a little of the fire. David can sit small in the mid-ground so the friendship is visible, not only spoken.
+- **The friendship cord.** The activity fills the lower middle of the picture: two hands and a cream-gold cord, looped three times, in the warm pool of the fire. The camp stays soft behind it. The cord is a gift being tied, not a rope, not a weapon.
+- **The verse and the charm.** The same paper ceremony as chapter 1. The new charm reads as friendship at thumbnail size: two small loops linked, or a simple knot. Not a sword, not a crown.
+
+### Never in the picture
+
+- Black sky, grey fog, or a shadow dark enough to hide the path.
+- A giant, a drawn sword, arrows, armour, or a guard who blocks the way.
+- More than the fire and one lantern as warm lights.
+- Gloss, gradients on the props, or a lineless style. The outline stays.
+- Blue poured over the characters' skin. The world goes blue. The people stay themselves.
+
+## Life in the camp
+
+The two guards above are the camp's answer to chapter 1's lamb, fish and butterflies: something alive, so the ridge is not a set. They are not interactive. A second sketch, at dusk with the campfire glowing, a hanging lantern and both guards, was shown alongside the first daylight sketch. A later sketch pushed the same camp all the way to blue hour. That last sketch is the one to follow, with the colour rules above so the blue stays calm instead of dark. Still a concept, not built.
 
 ## Open questions
 
