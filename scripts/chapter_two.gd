@@ -171,9 +171,15 @@ func _say(text: String, prompt: String) -> void:
 
 
 func _pressed(event: InputEvent) -> bool:
+	# ui_accept (Space/Enter) plus raw key fallback — unhandled path can miss Space
+	# when a Control has focus or InputMap keycode matching is flaky.
 	if event.is_action_pressed("ui_accept"):
 		return true
-	return event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_SPACE
+	if event is InputEventKey and event.pressed and not event.echo:
+		var k: int = event.keycode
+		var pk: int = event.physical_keycode
+		return k == KEY_SPACE or pk == KEY_SPACE or k == KEY_ENTER or pk == KEY_ENTER
+	return false
 
 
 func _box(size: Vector3, color: Color) -> BoxMesh:

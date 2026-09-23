@@ -129,8 +129,9 @@ func _ready() -> void:
 
 func _input(event: InputEvent) -> void:
 	if InputMap.has_action("pause") and event.is_action_pressed("pause") and not event.is_echo():
-		# The "Who is playing?" screen, the journal and the colouring page handle their own way out.
-		if Profiles.picker_open or (_journal != null and _journal.is_open()) or (_colour != null and _colour.is_open()):
+		# The "Who is playing?" screen, the journal, the colouring page and the
+		# Faith Journey map handle their own way out.
+		if Profiles.picker_open or (_journal != null and _journal.is_open()) or (_colour != null and _colour.is_open()) or (_journey != null and _journey.is_open()):
 			return
 		set_paused(not get_tree().paused)
 		get_viewport().set_input_as_handled()
