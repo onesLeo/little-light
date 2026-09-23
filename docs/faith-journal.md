@@ -30,19 +30,25 @@ Backlog item 3.5. Each child on a tablet has their own name, picture and journal
 5. **What is earned:** the verse (Joshua 1:9) when the story reaches it, the Courage charm when its ceremony
    starts, and a finished-chapter count when the chapter ends.
 
-## Faith Journey (proposed, not built)
+## Faith Journey (designed, not built)
 
 After a child finishes chapter 1, the end panel gains one more button: **Faith Journey**. The journal keeps what she earned. The journey shows where she can go next. They are not the same screen.
 
 **Faith Journey**, not Faith Map. A map sounds like the valley she already walks. This is a paper path from one story to the next, in the same ink and grain as the journal.
 
-What she sees:
+The picture to build from is [faith-journey-sketch.jpg](faith-journey-sketch.jpg). It is a sketch of the page, not a texture to paste into the game. The real page is drawn with the same paper colours as the journal (`paper_ui.gd`: cream paper, brown ink, gold button).
 
-- A short path on a paper page, read aloud by Wonder Light the first time it opens: "This is your faith journey. One story at a time."
-- **Stop 1, the valley.** Lit. David's sheep, the Courage charm, "God is with you." Tap it to play chapter 1 again, or to hear the verse.
-- **Stop 2, the ridge.** The blue-hour camp, the tent and the fire. It stays closed until chapter 1 is finished, then it is the next step, not a prize she missed. Tap it to begin chapter 2 once that chapter exists.
-- **One faint stop further on,** unnamed, just a soft hill on the path. She can see that the journey continues. She is not shown a row of locked chapters. A long line of grey locks feels like a game she is failing, and it gives away stories she has not lived yet.
-- A stop that is still ahead, if she taps it, gets a kind line and nothing else: "This part of the path is still ahead." No buzzer, no shake.
+How the page is laid out, top to bottom, on the tablet's wide screen:
+
+1. **Title.** "Faith Journey", large, brown ink, centred. Under it one quiet line: "One story at a time." Wonder Light reads that line the first time the page opens.
+2. **The path.** A dotted ink line, starting at the lower left and wandering up toward the upper right. Lots of empty paper around it. No compass, no grid, no miniature of the 3D valley.
+3. **Three round stops** sitting on the path, each a picture inside an ink circle, with a small cream label underneath.
+   - **The valley**, lower left. Bright daytime greens, a sheep, the Courage charm. A small gold dot on the label means this story is finished. Tap it to play chapter 1 again, or to hear the verse.
+   - **The ridge**, in the middle. The calm blue hour, a cream tent, a small orange fire. After chapter 1 it is simply the next step. Tap it to begin chapter 2 once that chapter exists. Until then the tap says, kindly, that this story is still being prepared. No lock, no buzzer.
+   - **One faint stop**, upper right. A dashed circle and a pale hill, no name. The path goes on. Tapping it says "This part of the path is still ahead." She is not shown a row of locked chapters.
+4. **Back.** One gold button, the same shape as the other paper buttons, centred at the bottom. It closes the page and returns to wherever she opened it from.
+
+Nothing else on the page. No padlock, no greyed-out list, no count of chapters left.
 
 The button does not appear before the first chapter is finished, so chapter 1 stays as simple as it is now. After that it also lives in the journal, beside the charms, so she can open the path without replaying the ending. Each child on the tablet has their own path, the same way they have their own journal. Emptying the journal folds the path back to the start.
 
