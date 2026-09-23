@@ -424,6 +424,7 @@ func _initialize() -> void:
 			director.Beat.STEADY_DONE, director.Beat.RESOLUTION, director.Beat.REFLECT, director.Beat.VERSE_REWARD]:
 		director._enter_beat(b)
 		spoken_texts.append(director.dialogue_label.text)
+	spoken_texts.append(director.VERSE_PAGE_TWO)
 	spoken_texts.append("Wonder Light: \"Breathe with David...\"")
 	spoken_texts.append("Wonder Light: \"Keep this close. Courage is yours to carry.\"")
 	spoken_texts.append("Wonder Light: \"A Courage charm — for staying with David, and breathing God's promise with him.\"")
@@ -603,6 +604,30 @@ func _initialize() -> void:
 	await create_timer(1.6).timeout
 	_check(sound_bus.duck < 0.05, "and returns when the game resumes")
 
+	print("-- who is talking: the name tag over the dialogue bar --")
+	var talk_view: Control = main.get_node("UI/DialogueView")
+	audio.stop_speech()
+	director._say("Wonder Light: \"God gave David a job: keep the sheep safe. That's why he will go.\"\nDavid: \"Thanks. Will you stay close while I get ready?\"")
+	await process_frame
+	await process_frame
+	_check(talk_view.speaker == "Wonder Light" and talk_view._current == 0 and talk_view._tag.visible
+			and director.dialogue_label.self_modulate.a == 0.0 and "Thanks. Will you stay close" in talk_view._rich.text,
+			"the tag shows Wonder Light while her line is read, over the same text drawn in colour")
+	vo_player.finished.emit()
+	await create_timer(audio.CLIP_GAP + 0.2).timeout
+	_check(talk_view.speaker == "David" and talk_view._current == 1, "when David's line starts, the tag turns to David")
+	audio.stop_speech()
+	director._say("Jonathan: \"I am Jonathan. David was brave today, because God was with him.\"")
+	await process_frame
+	_check(talk_view.speaker == "Jonathan", "Jonathan has his own tag")
+	director._say(director.VERSE_PAGE_ONE)
+	await process_frame
+	_check(talk_view.speaker == "Bible", "a verse shows the Bible tag")
+	director._say("(Virtue Bracelet receives the charm.)")
+	await process_frame
+	_check(not talk_view._tag.visible, "a line with nobody speaking has no tag")
+	audio.stop_speech()
+
 	print("-- sound: volume sliders --")
 	var full_db: float = sound_bus.bus_db("Music", 1.0)
 	var half_db: float = sound_bus.bus_db("Music", 0.5)
@@ -622,7 +647,12 @@ func _initialize() -> void:
 	director._advance_ready = true
 	director._on_advance()
 	_check(director.beat == director.Beat.VERSE_REWARD, "after Meet David the child hears Joshua 1:9, before breathing")
-	_check("Don't. Be. Afraid." in director.dialogue_label.text, "the three words are said with David before he walks")
+	_check("Haven't I commanded you?" in director.dialogue_label.text and "Yahweh is God's name" in director.dialogue_label.text
+			and not ("Don't. Be. Afraid." in director.dialogue_label.text) and not director._word_row.visible
+			and director.get_action_hint() == "NEXT", "page one is the verse and what Yahweh means, with NEXT to turn the page")
+	director._on_advance()
+	_check(director.beat == director.Beat.VERSE_REWARD and "Don't. Be. Afraid." in director.dialogue_label.text
+			and not ("Haven't I" in director.dialogue_label.text), "page two: the three words are said with David before he walks")
 	_check(Profiles.has_verse(Profiles.active_id, JournalContent.VERSE_JOSHUA_1_9), "the verse is in the journal before Steady Hands")
 	director._on_advance()
 	_check(director.beat == director.Beat.VERSE_REWARD, "tapping next does not skip her turn with the three words")

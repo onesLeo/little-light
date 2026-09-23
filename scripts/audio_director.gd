@@ -27,6 +27,12 @@ signal read_aloud_changed(enabled: bool)
 ## Emitted when a run of recorded lines has finished on its own, not when speech
 ## is cut off to start another line.
 signal speech_finished
+## Emitted as each line of a dialogue block starts, with {"speaker", "text"} (see _spoken_lines).
+## The dialogue box uses it to show who is talking and which line is being read.
+signal line_started(line: Dictionary)
+
+## The line being read aloud now ({"speaker", "text"}), or {} when nobody is speaking.
+var current_line: Dictionary = {}
 
 var _suppress_finish: bool = false
 
@@ -46,6 +52,8 @@ var _vo_active: bool = false
 var _has_clips: bool = false
 var _speaking_clips: bool = false
 var _clip_queue: Array[AudioStream] = []
+## The lines that go with _clip_queue, in the same order.
+var _line_queue: Array[Dictionary] = []
 ## Bumped whenever speech is cut off, so a queued clip knows it is stale.
 var _clip_run: int = 0
 var _step_players: Array[AudioStreamPlayer] = []
@@ -158,6 +166,8 @@ func set_read_aloud(enabled: bool) -> void:
 func stop_speech() -> void:
 	_clip_run += 1
 	_clip_queue.clear()
+	_line_queue.clear()
+	current_line = {}
 	_suppress_finish = true
 	if _speaking_clips:
 		_speaking_clips = false
@@ -199,8 +209,12 @@ func speak_dialogue(text: String) -> void:
 		clips.append(clip)
 	if not clips.is_empty():
 		_clip_queue = clips
+		_line_queue = lines.duplicate()
 		_play_next_clip()
 	else:
+		# System speech reads the block in one go: the first line stands for all of it.
+		if not lines.is_empty():
+			_start_line(lines[0])
 		_speak_with_tts(lines)
 
 func _play_next_clip() -> void:
@@ -209,13 +223,20 @@ func _play_next_clip() -> void:
 		return
 	_speaking_clips = true
 	_vo_player.stream = _clip_queue.pop_front()
+	if not _line_queue.is_empty():
+		_start_line(_line_queue.pop_front())
 	_vo_player.play()
+
+func _start_line(line: Dictionary) -> void:
+	current_line = line
+	line_started.emit(line)
 
 func _on_vo_finished() -> void:
 	if _suppress_finish:
 		return
 	if not _speaking_clips or _clip_queue.is_empty():
 		_speaking_clips = false
+		current_line = {}
 		speech_finished.emit()
 		return
 	var run := _clip_run

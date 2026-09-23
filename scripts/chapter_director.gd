@@ -15,6 +15,7 @@ const GameSettings := preload("res://scripts/game_settings.gd")
 const EasyWords := preload("res://scripts/easy_words.gd")
 const PaperUI := preload("res://scripts/paper_ui.gd")
 const WordChip := preload("res://scripts/word_chip.gd")
+const DialogueView := preload("res://scripts/dialogue_view.gd")
 
 enum Beat {
 	ARRIVE,
@@ -75,7 +76,12 @@ var _items_collected: Dictionary = {}
 ## marked wrong, and the breath does not start until all three have been tapped.
 const WORD_LABELS: PackedStringArray = ["Don't", "Be", "Afraid"]
 const WORD_LINES: PackedStringArray = ["Don't.", "Be.", "Afraid."]
-var _word_phase: String = "" ## "", listen, tap, done
+var _word_phase: String = "" ## "", verse (page one), listen, tap, done
+
+## Joshua 1:9 comes in two short pages instead of one wall of text. Page one: the verse and what
+## "Yahweh" means. Page two: the three words to say with David, then her turn to tap them.
+const VERSE_PAGE_ONE := "Joshua 1:9 (WEB):\n\"Haven't I commanded you? Be strong and of good courage; don't be afraid, neither be dismayed: for Yahweh your God is with you wherever you go.\"\nWonder Light: \"Yahweh is God's name. It means He is with you.\""
+const VERSE_PAGE_TWO := "Wonder Light: \"This verse has three special words. Can you say them with me?\nDon't. Be. Afraid.\""
 var _word_said: Array[bool] = [false, false, false]
 var _word_row: HBoxContainer
 var _word_buttons: Array[Button] = []
@@ -97,6 +103,7 @@ func _ready() -> void:
 	if audio_director and audio_director.has_signal("speech_finished"):
 		audio_director.speech_finished.connect(_on_speech_finished)
 	_build_word_buttons()
+	_build_dialogue_view()
 	_start_story()
 
 
@@ -151,7 +158,10 @@ func _is_continue_pressed(event: InputEvent) -> bool:
 func _input(event: InputEvent) -> void:
 	# During her word turn, Space or NEXT must not skip the three words.
 	if beat == Beat.VERSE_REWARD and _word_phase != "done" and _is_continue_pressed(event):
-		_open_word_turn()
+		if _word_phase == "verse":
+			_verse_page_two()
+		else:
+			_open_word_turn()
 		get_viewport().set_input_as_handled()
 		return
 	# Prefer _input over _unhandled_input so dialogue UI cannot swallow Space.
@@ -224,12 +234,13 @@ func _enter_beat(next: Beat) -> void:
 			_cut_closeup(david_mentor)
 			_point_light(david_mentor)
 			_celebrate_light()
-			_show(
-				"Joshua 1:9 (WEB):\n\"Haven't I commanded you? Be strong and of good courage; don't be afraid, neither be dismayed: for Yahweh your God is with you wherever you go.\"\n\nWonder Light: \"This verse has three special words. Can you say them with me?\nDon't. Be. Afraid.\"\nWonder Light: \"Yahweh is God's name. It means He is with you.\"",
-				"Listen"
-			)
+			_word_phase = "verse"
+			_word_said = [false, false, false]
+			_restyle_words()
+			if _word_row:
+				_word_row.visible = false
+			_show(VERSE_PAGE_ONE, "Press Space to continue   ● ○")
 			_advance_ready = false
-			_begin_word_listen()
 
 		Beat.STEADY_INTRO:
 			_set_player_move(false)
@@ -327,6 +338,9 @@ func _on_advance() -> void:
 		Beat.MEET_DAVID_B:
 			_enter_beat(Beat.VERSE_REWARD)
 		Beat.VERSE_REWARD:
+			if _word_phase == "verse":
+				_verse_page_two()
+				return
 			if not _words_complete():
 				_open_word_turn()
 				return
@@ -437,7 +451,8 @@ func _fit_dialogue_panel() -> void:
 	if _word_row:
 		# A very long line (Joshua 1:9) makes the bar taller than `height`: go by what it needs.
 		var bar_top := dialogue_panel.offset_bottom - maxf(height, dialogue_panel.get_combined_minimum_size().y)
-		_word_row.offset_bottom = bar_top - 22.0
+		# Clear of the speaker's name tag, which sits on the bar's top edge (dialogue_view.gd).
+		_word_row.offset_bottom = bar_top - 64.0
 		_word_row.offset_top = _word_row.offset_bottom - 96.0
 
 ## Shows a line of story text and reads it aloud (if the player has read-aloud on). With "Easy words" on for the
@@ -501,7 +516,7 @@ func get_action_hint() -> String:
 		return "GRAB" if _near_item != null else ""
 	if steady_hands and "active" in steady_hands and steady_hands.active:
 		return "BREATHE"
-	if _advance_ready:
+	if _advance_ready or (beat == Beat.VERSE_REWARD and _word_phase == "verse"):
 		return "NEXT"
 	return ""
 
@@ -623,6 +638,17 @@ func _on_charm_ceremony_finished() -> void:
 	_advance_ready = true
 
 
+## The speaker's name tag and face over the dialogue bar, shared by both chapters (dialogue_view.gd).
+func _build_dialogue_view() -> void:
+	var ui := get_node_or_null("../UI")
+	if ui == null or dialogue_panel == null:
+		return
+	var view := DialogueView.new()
+	view.name = "DialogueView"
+	view.setup(dialogue_panel, dialogue_label, audio_director)
+	ui.add_child(view)
+
+
 func _build_word_buttons() -> void:
 	var ui := get_node_or_null("../UI")
 	if ui == null:
@@ -649,6 +675,14 @@ func _build_word_buttons() -> void:
 		chip.pressed.connect(press_word.bind(i))
 		_word_row.add_child(chip)
 		_word_buttons.append(chip)
+
+
+## The second page of Joshua 1:9: the three words, then (once she has heard them) her turn.
+func _verse_page_two() -> void:
+	if beat != Beat.VERSE_REWARD or _word_phase != "verse":
+		return
+	_show(VERSE_PAGE_TWO, "Listen   ○ ●")
+	_begin_word_listen()
 
 
 func _begin_word_listen() -> void:
@@ -699,6 +733,8 @@ func press_word(index: int) -> void:
 		return
 	if index < 0 or index >= WORD_LINES.size():
 		return
+	if _word_phase == "verse":
+		_verse_page_two()
 	if _word_phase == "listen" or _word_phase == "":
 		_open_word_turn()
 	if audio_director and audio_director.has_method("play_line"):

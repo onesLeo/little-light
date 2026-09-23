@@ -88,3 +88,13 @@ saved by `python tools/fetch_vo.py`, which also writes each clip's import settin
 It uses only the Python standard library. Run it once from the project folder, open the project in Godot
 (or `godot --headless --import .`), then run the smoke test; until then those lines fall back to the
 system voice, and the smoke test lists them as missing.
+
+## Who is talking
+
+Above the dialogue bar a name tag shows who is being read aloud, with a small drawn face: Wonder
+Light's gold glow, David (short brown hair, blue tunic), Jonathan (long hair, gold band, wine tunic),
+or an open book for a Bible verse (`scripts/dialogue_view.gd`). It follows `AudioDirector.line_started`,
+so in a block with two speakers it changes as the voice changes. In the bar, each speaker's name is in
+their colour, stage directions are softer, and while a block is read the line being spoken stays in
+full ink and the others step back a little, so a parent can point along. The story still writes plain
+text to `DialogueLabel`; the view draws the same text over it with the same font and wrapping.
