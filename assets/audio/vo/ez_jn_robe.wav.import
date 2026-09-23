@@ -2,6 +2,13 @@
 
 importer="wav"
 type="AudioStreamWAV"
+uid="uid://cd4wo0ska868f"
+path="res://.godot/imported/ez_jn_robe.wav-6d766c525c3871859a70a520ec1456cc.sample"
+
+[deps]
+
+source_file="res://assets/audio/vo/ez_jn_robe.wav"
+dest_files=["res://.godot/imported/ez_jn_robe.wav-6d766c525c3871859a70a520ec1456cc.sample"]
 
 [params]
 

@@ -2,6 +2,13 @@
 
 importer="wav"
 type="AudioStreamWAV"
+uid="uid://cqrhejglxgalc"
+path="res://.godot/imported/ez_jn_cord.wav-8f09307da27c0e18301ef078cfc8c4cb.sample"
+
+[deps]
+
+source_file="res://assets/audio/vo/ez_jn_cord.wav"
+dest_files=["res://.godot/imported/ez_jn_cord.wav-8f09307da27c0e18301ef078cfc8c4cb.sample"]
 
 [params]
 

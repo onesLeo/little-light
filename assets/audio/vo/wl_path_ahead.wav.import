@@ -2,6 +2,13 @@
 
 importer="wav"
 type="AudioStreamWAV"
+uid="uid://baxeypvevc5no"
+path="res://.godot/imported/wl_path_ahead.wav-f0fef3a3fcb430a981215651b8548317.sample"
+
+[deps]
+
+source_file="res://assets/audio/vo/wl_path_ahead.wav"
+dest_files=["res://.godot/imported/wl_path_ahead.wav-f0fef3a3fcb430a981215651b8548317.sample"]
 
 [params]
 

@@ -2,6 +2,13 @@
 
 importer="wav"
 type="AudioStreamWAV"
+uid="uid://dd810b4u2shkp"
+path="res://.godot/imported/wl_map_any.wav-a88dc24a51dd487580cdea5bd5e7aed6.sample"
+
+[deps]
+
+source_file="res://assets/audio/vo/wl_map_any.wav"
+dest_files=["res://.godot/imported/wl_map_any.wav-a88dc24a51dd487580cdea5bd5e7aed6.sample"]
 
 [params]
 

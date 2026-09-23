@@ -2,6 +2,13 @@
 
 importer="wav"
 type="AudioStreamWAV"
+uid="uid://cpwhpam6iuj2l"
+path="res://.godot/imported/ez_jn_give.wav-7faf190f121089d8b8fe69782df5d1cd.sample"
+
+[deps]
+
+source_file="res://assets/audio/vo/ez_jn_give.wav"
+dest_files=["res://.godot/imported/ez_jn_give.wav-7faf190f121089d8b8fe69782df5d1cd.sample"]
 
 [params]
 

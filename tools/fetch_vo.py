@@ -88,13 +88,68 @@ def read_wav(data: bytes) -> tuple[list[float], int]:
     return scaled, rate
 
 
+## A click or pop is loud for a moment only; a word stays up for at least this long.
+MIN_SPEECH_SECONDS = 0.1
+SPEECH_LEVEL = 0.04  # of full scale, for a window to count towards a word
+WINDOW_SECONDS = 0.02
+## A pause inside a line longer than this is shortened to PAUSE_KEEP_SECONDS: some takes stop for
+## a second and a half after a full stop, and a child's attention goes with it.
+LONG_PAUSE_SECONDS = 0.6
+PAUSE_KEEP_SECONDS = 0.45
+
+
+def _speech_windows(samples: list[float], win: int) -> list[bool]:
+    """True for each window that is part of a word (a run of loud windows long enough)."""
+    peaks = [max((abs(v) for v in samples[i:i + win]), default=0.0) for i in range(0, len(samples), win)]
+    need = max(int(round(MIN_SPEECH_SECONDS / WINDOW_SECONDS)), 1)
+    speech = [False] * len(peaks)
+    start = None
+    for i, peak in enumerate(peaks + [0.0]):
+        if peak >= SPEECH_LEVEL:
+            start = i if start is None else start
+        elif start is not None:
+            if i - start >= need:
+                for k in range(start, i):
+                    speech[k] = True
+            start = None
+    return speech
+
+
 def trim(samples: list[float], rate: int) -> list[float]:
-    loud = [i for i, v in enumerate(samples) if abs(v) >= THRESHOLD]
-    if not loud:
+    """A short lead-in before the first word, pauses inside the line kept short, and about a third
+    of a second after the last word. The takes end with a click or two, which must not count as
+    a word, or the silence before them is kept."""
+    win = max(int(WINDOW_SECONDS * rate), 1)
+    speech = _speech_windows(samples, win)
+    words = [i for i, on in enumerate(speech) if on]
+    if not words:
         return samples
-    start = max(loud[0] - int(LEAD_SECONDS * rate), 0)
-    end = min(loud[-1] + int(TAIL_SECONDS * rate), len(samples))
-    return samples[start:end]
+    first, last = words[0], words[-1]
+    start = max(first * win - int(LEAD_SECONDS * rate), 0)
+    end = min((last + 1) * win + int(TAIL_SECONDS * rate), len(samples))
+    out: list[float] = []
+    cursor = start
+    i = first
+    while i <= last:
+        if speech[i]:
+            i += 1
+            continue
+        gap_end = i
+        while gap_end <= last and not speech[gap_end]:
+            gap_end += 1
+        gap = (gap_end - i) * win
+        if gap > LONG_PAUSE_SECONDS * rate:
+            keep_after = int(PAUSE_KEEP_SECONDS * rate * 0.45)
+            keep_before = int(PAUSE_KEEP_SECONDS * rate) - keep_after
+            out.extend(samples[cursor:i * win + keep_after])
+            cursor = gap_end * win - keep_before
+        i = gap_end
+    out.extend(samples[cursor:end])
+    # A take that stops right after its last word gets the usual quiet tail added.
+    short = (last + 1) * win + int(TAIL_SECONDS * rate) - end
+    if short > 0:
+        out.extend([0.0] * short)
+    return out
 
 
 def write_wav(path: Path, samples: list[float], rate: int) -> None:
@@ -133,8 +188,18 @@ compress/mode=0
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--force", action="store_true", help="download and overwrite clips that exist")
+    parser.add_argument("--retrim", action="store_true", help="trim the clips already saved again, without downloading")
     args = parser.parse_args()
     out_dir = Path(__file__).resolve().parent.parent / "assets" / "audio" / "vo"
+    if args.retrim:
+        for clip_id in CLIPS:
+            target = out_dir / f"{clip_id}.wav"
+            if target.exists():
+                samples, rate = read_wav(target.read_bytes())
+                trimmed = trim(samples, rate)
+                write_wav(target, trimmed, rate)
+                print(f"  trimmed {clip_id}: {len(samples) / rate:.2f}s -> {len(trimmed) / rate:.2f}s")
+        return 0
     failed = 0
     for clip_id, (result, voice, line) in CLIPS.items():
         target = out_dir / f"{clip_id}.wav"

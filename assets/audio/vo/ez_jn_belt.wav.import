@@ -2,6 +2,13 @@
 
 importer="wav"
 type="AudioStreamWAV"
+uid="uid://bv4mdtvvxeum8"
+path="res://.godot/imported/ez_jn_belt.wav-afcd66865d72ca3f7595266de0de52f3.sample"
+
+[deps]
+
+source_file="res://assets/audio/vo/ez_jn_belt.wav"
+dest_files=["res://.godot/imported/ez_jn_belt.wav-afcd66865d72ca3f7595266de0de52f3.sample"]
 
 [params]
 

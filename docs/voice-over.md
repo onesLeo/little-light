@@ -83,8 +83,12 @@ Seventeen more clips, all Seed Audio 1.0, mono 24 kHz:
 - **The camp lookout**, in Juno: "Look. David's valley is still down there." (`jn_lookout`).
 - **Chapter 2 in easy words** (`ez_jn_*`): seven lines in Juno, and Jonathan's two in Dylan.
 
-The takes are downloaded, trimmed (a short lead-in, about a third of a second after the last word) and
-saved by `python tools/fetch_vo.py`, which also writes each clip's import settings as uncompressed PCM.
+The takes are downloaded, trimmed (a short lead-in, about a third of a second after the last word,
+padded with quiet when a take stops sooner) and saved by `python tools/fetch_vo.py`. Seed Audio takes
+end with a short click or two, and some pause for a second and a half after a full stop, so the trim
+counts only sounds that last at least a tenth of a second as words, and shortens any pause inside a
+line to under half a second. `python tools/fetch_vo.py --retrim` applies that again to the clips already
+saved. The script also writes each clip's import settings as uncompressed PCM.
 It uses only the Python standard library. Run it once from the project folder, open the project in Godot
 (or `godot --headless --import .`), then run the smoke test; until then those lines fall back to the
 system voice, and the smoke test lists them as missing.
