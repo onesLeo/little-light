@@ -19,6 +19,11 @@ const NUDGE_LINES := [
 	"Wonder Light: \"There's so much to find right here. Let's turn back!\"",
 ]
 
+## Opens the ridge behind the waterfall, where The King's Camp stands.
+func open_camp() -> void:
+	center = Vector2(0.0, 14.0)
+	half_extents = Vector2(10.4, 18.0)
+
 var _player: CharacterBody3D
 var _director: Node
 var _nudge_index: int = 0

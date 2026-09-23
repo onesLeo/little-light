@@ -667,7 +667,10 @@ func _initialize() -> void:
 	journey._on_stop("ahead")
 	_check("still ahead" in journey._line.text, "a stop further on is a kind line, not a lock")
 	journey._on_stop("camp")
-	_check("King's Camp" in journey._line.text, "the ridge is drawn, and not playable yet")
+	var camp: Node = main.get_node("KingsCamp")
+	var camp_walker: Node3D = main.get_node("Player")
+	_check(camp.tent_count() >= 4, "the king's camp has its tents on the ridge")
+	_check(camp_walker.global_position.z > 20.0, "the journey can walk up to the camp")
 	journey.close()
 	_check(not journey.is_open(), "Back leaves the map")
 

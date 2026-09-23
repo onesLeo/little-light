@@ -1,6 +1,6 @@
 # Chapter 2 — The King's Camp
 
-The chapter is not built yet. Three choices are decided: the title is **The King's Camp**, the charm is **Friendship**, and the place is the ridge that already exists, dressed as a king's camp rather than a new world.
+The chapter's story is not finished. The place has started: four tents, four banners, four guards and a fire stand on the ridge behind the waterfall. From the Faith Journey, The King's Camp opens that ground and turns the light to the blue hour. Jonathan, the gifts, the cord and the verse are not in the game yet.
 
 ## Where chapter 1 leaves off
 

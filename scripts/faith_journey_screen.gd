@@ -150,7 +150,12 @@ func _on_stop(id: String) -> void:
 	if id == "valley":
 		_replay_valley()
 	elif id == "camp":
-		_say("The King's Camp is still being prepared.")
+		var camp := get_parent().get_node_or_null("KingsCamp")
+		if camp and camp.has_method("visit"):
+			close()
+			camp.visit()
+		else:
+			_say("The King's Camp is still being prepared.")
 	else:
 		_say("This part of the path is still ahead.")
 
