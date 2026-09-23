@@ -77,7 +77,7 @@ func _run() -> void:
 	check(player.can_move and story._checklist.visible, "hunt restores walking and shows checklist")
 	story._on_gift(player, story.get_node("Bow"))
 	story._on_gift(player, story.get_node("Bow"))
-	check(story._found == 1 and "☑  Bow" in story._checks.text, "out-of-order pickup checks the right gift only once")
+	check(story._found == 1 and story._checklist.is_found("Bow") and not story._checklist.is_found("Robe"), "out-of-order pickup checks the right gift only once")
 	await settle()
 	await shot("checklist")
 	story._on_gift(player, story.get_node("Robe"))

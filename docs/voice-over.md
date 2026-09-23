@@ -70,3 +70,21 @@ block, and the smoke test reports the line.
 
 
 The Chapter 2 arrival was regenerated in Juno on 2026-09-23: “This is the king's camp. The day is turning into night.” (`jn_arrive.wav`, mono 24 kHz PCM, Seed Audio job `50c40233-52c9-4109-97a3-27687e3753f1`). Jonathan's two lines were regenerated in the user-selected Dylan preset (`b847bc29-f184-583a-8ad9-d1f1e16d1a60`): `jn_hello` (job `13328a4f-32e0-47a9-a8df-482122c35694`) and `jn_give` (job `df42d83a-2791-42ba-ae72-97f6a525dc09`). Both use Seed Audio, mono 24 kHz PCM, with a short lead-in and a tail after the last word.
+
+## Faith Journey map and chapter 2 easy words (2026-09-23)
+
+Seventeen more clips, all Seed Audio 1.0, mono 24 kHz:
+
+- **The Faith Journey map**, in Juno: "Hello!", "Your journey starts in the valley.", "The King's Camp is
+  next.", "Tap a story to begin.", "One story at a time.", the locked card ("Finish Chapter 1, The valley,
+  first. Then The King's Camp will open for you.") and the path ahead ("This part of the path is still
+  ahead. New stories will be waiting here."). The greeting on screen has the child's name ("Hello, Maya!");
+  the voice says only "Hello!", because a recording cannot say every name.
+- **The camp lookout**, in Juno: "Look. David's valley is still down there." (`jn_lookout`).
+- **Chapter 2 in easy words** (`ez_jn_*`): seven lines in Juno, and Jonathan's two in Dylan.
+
+The takes are downloaded, trimmed (a short lead-in, about a third of a second after the last word) and
+saved by `python tools/fetch_vo.py`, which also writes each clip's import settings as uncompressed PCM.
+It uses only the Python standard library. Run it once from the project folder, open the project in Godot
+(or `godot --headless --import .`), then run the smoke test; until then those lines fall back to the
+system voice, and the smoke test lists them as missing.

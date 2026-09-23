@@ -437,6 +437,15 @@ func _initialize() -> void:
 			if vo_lib.clip_for(line["text"]) == null:
 				unrecorded.append(line["text"])
 	_check(unrecorded.is_empty(), "no spoken line in the game is missing from the library %s" % [unrecorded])
+	var map_script := load("res://scripts/faith_journey_screen.gd")
+	var map_unrecorded: Array = []
+	for block in ["Hello!\nYour journey starts in the valley.", "Hello!\nThe King's Camp is next.", "Hello!\nTap a story to begin.",
+			"One story at a time.", "Finish Chapter 1, The valley, first. Then The King's Camp will open for you.",
+			"This part of the path is still ahead. New stories will be waiting here.", "Look. David's valley is still down there."]:
+		for line in audio._spoken_lines(map_script._wonder_light(block)):
+			if vo_lib.clip_for(line["text"]) == null:
+				map_unrecorded.append(line["text"])
+	_check(map_unrecorded.is_empty(), "the Faith Journey map and the camp lookout speak in the recorded voice too %s" % [map_unrecorded])
 
 	print("-- voice-over: playback, chaining and fast skipping --")
 	var settings := load("res://scripts/game_settings.gd")
@@ -761,6 +770,24 @@ func _initialize() -> void:
 	_check(Profiles.current_chapter == Profiles.CHAPTER_CAMP, "from here, Play again comes back to the camp")
 	_check(director.beat == director.Beat.CAMP and not ("David needs his stone" in director.dialogue_label.text),
 			"the valley's item hunt never shows up at the camp")
+
+	print("-- the gift hunt: pictures to tick, and the golden arrow --")
+	story._advance()
+	_check(story.phase == story.Phase.FIND and story._checklist.visible and not story._checklist.is_found("Robe")
+			and story._checklist.get_child(0).get_child_count() == 4, "the gift list shows the three gifts as pictures, none ticked yet")
+	var gift_hints: Node3D = story._hints
+	_check(gift_hints != null and gift_hints._active and gift_hints._items.size() == 3 and not gift_hints.is_pointing(),
+			"the golden arrow watches the three gifts, and waits before it shows")
+	gift_hints._idle = story.HINT_DELAY + 1.0
+	for _i in 40:
+		await process_frame
+	_check(gift_hints.is_pointing(), "after a while with nothing found, the arrow points to the nearest gift")
+	story._on_gift(camp_walker, story.get_node("Robe"))
+	_check(story._checklist.is_found("Robe") and story._checklist._title.text.contains("1 / 3") and gift_hints._idle == 0.0
+			and gift_hints._collected.has("Robe"), "finding the robe ticks its picture, and the arrow waits again for the next gift")
+	story._on_gift(camp_walker, story.get_node("Bow"))
+	story._on_gift(camp_walker, story.get_node("Belt"))
+	_check(story.phase == story.Phase.GIVE and not gift_hints._active, "with all three found, the arrow is put away")
 	for _i in 6:
 		await physics_frame
 	_check(camp_walker.global_position.y > 9.0, "the child stands on the camp ground instead of falling through")
@@ -804,6 +831,8 @@ func _initialize() -> void:
 	story._advance()
 	_check(story.phase == story.Phase.CORD and is_instance_valid(story._cord)
 			and story._cord.offset_bottom < bar.offset_top, "the cord card sits above the dialogue bar, so the line stays readable")
+	_check(story._cord.PANEL.y <= 120.0 and story._cord.offset_top > -420.0,
+			"the cord card is short, so it stays below the child standing in the camp")
 
 	print("-- The King's Camp ends the way chapter 1 does --")
 	# A scratch child, so the journal checks further down still see only chapter 1's progress.
@@ -878,7 +907,8 @@ func _initialize() -> void:
 	Profiles.set_active(kid_id)
 
 	print("-- easy words: the story for younger readers --")
-	var director_source: String = FileAccess.get_file_as_string("res://scripts/chapter_director.gd")
+	var director_source: String = FileAccess.get_file_as_string("res://scripts/chapter_director.gd") \
+			+ FileAccess.get_file_as_string("res://scripts/chapter_two.gd")
 	var missing_original: Array = []
 	var no_clip: Array = []
 	for original in EasyWords.LINES:
@@ -897,6 +927,11 @@ func _initialize() -> void:
 	GameSettings.easy_words = true
 	director._say(arrive_line)
 	_check(director.dialogue_label.text == "Wonder Light: \"This is David's valley. God looks after him.\"" and vo_player.stream == vo_lib.clip_for("This is David's valley. God looks after him."), "with Easy words on, the easier line is shown and read aloud")
+	var camp_story: Node = main.get_node("KingsCamp/ChapterTwo")
+	camp_story._say("Jonathan: \"I am Jonathan. David was brave today, because God was with him.\"", "")
+	_check(director.dialogue_label.text == "Jonathan: \"I am Jonathan. God was with David today.\"", "the King's Camp has easier words too")
+	_check(vo_player.stream != null and vo_player.stream == vo_lib.clip_for("I am Jonathan. God was with David today."),
+			"and Jonathan reads his easier line in his own recorded voice")
 	var mixed: String = director._say("David: \"Thanks. Will you stay close while I get ready?\"")
 	_check(mixed == "David: \"Thanks. Will you stay close while I get ready?\"", "a line with no easier version stays as it is")
 	GameSettings.easy_words = false

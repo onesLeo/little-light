@@ -4,6 +4,11 @@ extends Node3D
 ## nearest missing item. When that item is off-screen, a matching arrow sits at
 ## the screen edge pointing the way. Purely visual, so it also works for the
 ## no-reading Band A play mode.
+##
+## Chapter 1's copy finds the valley's WonderItem_ areas and follows the chapter
+## director. Chapter 2 makes its own copy for Jonathan's gifts: set `main` before
+## adding it, then call watch() with the gifts, found() for each one picked up,
+## and stop() when the hunt is over.
 
 @export var hint_delay: float = 18.0
 @export var arrow_height: float = 2.0
@@ -12,6 +17,8 @@ extends Node3D
 const GOLD := Color(0.98, 0.78, 0.2)
 const INK := Color(0.35, 0.2, 0.08)
 
+## The main scene. Left empty, it is this node's grandparent (chapter 1's layout).
+var main: Node
 var _director: Node
 var _player: Node3D
 var _items: Array[Area3D] = []
@@ -25,12 +32,15 @@ var _arrow2d: Node2D
 
 
 func _ready() -> void:
-	var main := get_parent().get_parent()
-	_director = main.get_node_or_null("ChapterDirector")
+	var auto := main == null
+	if auto:
+		main = get_parent().get_parent()
 	_player = main.get_node_or_null("Player") as Node3D
-	for child in get_parent().get_children():
-		if child is Area3D and String(child.name).begins_with("WonderItem_"):
-			_items.append(child)
+	if auto:
+		_director = main.get_node_or_null("ChapterDirector")
+		for child in get_parent().get_children():
+			if child is Area3D and String(child.name).begins_with("WonderItem_"):
+				_items.append(child)
 	if _director:
 		_director.explore_started.connect(_on_explore_started)
 		_director.wonder_item_collected.connect(_on_item_collected)
@@ -39,6 +49,32 @@ func _ready() -> void:
 	_build_arrow3d()
 	var ui := main.get_node_or_null("UI")
 	_build_arrow2d(ui if ui else self)
+
+
+## Starts helping with a new hunt: after `hint_delay` seconds with nothing found, the arrow
+## points at the nearest of `items` still to find.
+func watch(items: Array) -> void:
+	_items.clear()
+	for item in items:
+		if item is Area3D:
+			_items.append(item)
+	_collected.clear()
+	_active = true
+	_idle = 0.0
+	_fade = 0.0
+
+
+## One of the watched items was found: the wait starts again, and the arrow looks for the next.
+func found(item_name: String) -> void:
+	_on_item_collected(item_name)
+
+
+func stop() -> void:
+	_active = false
+
+
+func is_pointing() -> bool:
+	return _arrow3d.visible or _arrow2d.visible
 
 
 func _on_explore_started() -> void:

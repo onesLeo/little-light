@@ -174,17 +174,19 @@ func open() -> void:
 func open_to_choose() -> void:
 	_choosing = true
 	var p := Profiles.active()
-	var hello := "Hello, %s! " % p["name"] if not p.is_empty() else ""
 	var next := Profiles.next_chapter(Profiles.active_id)
-	var line := hello + "Tap a story to begin."
+	var line := "Tap a story to begin."
 	if next == Profiles.CHAPTER_VALLEY:
-		line = hello + "Your journey starts in the valley."
+		line = "Your journey starts in the valley."
 	elif next == Profiles.CHAPTER_CAMP:
-		line = hello + "The King's Camp is next."
-	_show_map(line)
+		line = "The King's Camp is next."
+	# The name is on the screen only: the recorded "Hello!" cannot say every child's name.
+	var hello := "Hello, %s! " % p["name"] if not p.is_empty() else "Hello! "
+	_show_map(hello + line, "Hello!\n" + line)
 
 
-func _show_map(line: String) -> void:
+## `spoken` is what Wonder Light reads (one recorded clip per line); by default the line itself.
+func _show_map(line: String, spoken: String = "") -> void:
 	_line.text = line
 	visible = true
 	_notice.visible = false
@@ -197,7 +199,7 @@ func _show_map(line: String) -> void:
 	if _audio:
 		_audio.stop_speech()
 		_audio.process_mode = Node.PROCESS_MODE_ALWAYS
-		_audio.speak_dialogue("Wonder Light: \"%s\"" % line)
+		_audio.speak_dialogue(_wonder_light(spoken if not spoken.is_empty() else line))
 	_layout()
 	var first := _stop_button(_marker_stop) if not _marker_stop.is_empty() else null
 	if first:
@@ -516,7 +518,15 @@ func _say(text: String, show_on_map: bool = true) -> void:
 		_line.text = text
 	if _audio:
 		_audio.stop_speech()
-		_audio.speak_dialogue("Wonder Light: \"%s\"" % text)
+		_audio.speak_dialogue(_wonder_light(text))
+
+
+## A block of lines in Wonder Light's voice, for AudioDirector.speak_dialogue().
+static func _wonder_light(text: String) -> String:
+	var lines: PackedStringArray = []
+	for line in text.split("\n", false):
+		lines.append("Wonder Light: \"%s\"" % line)
+	return "\n".join(lines)
 
 
 ## Chapter 1. When the map is the first stop the valley is already waiting behind it, so it

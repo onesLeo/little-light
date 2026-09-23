@@ -9,6 +9,10 @@ const Profiles := preload("res://scripts/profiles.gd")
 const Cord := preload("res://scripts/friendship_cord.gd")
 const PaperUI := preload("res://scripts/paper_ui.gd")
 const WordChip := preload("res://scripts/word_chip.gd")
+const GiftChecklist := preload("res://scripts/gift_checklist.gd")
+const Hints := preload("res://scripts/wonder_item_hints.gd")
+const GameSettings := preload("res://scripts/game_settings.gd")
+const EasyWords := preload("res://scripts/easy_words.gd")
 
 const Paper := preload("res://scripts/camp_paper.gd")
 const SoundLibrary := preload("res://scripts/sound_library.gd")
@@ -16,6 +20,8 @@ const SoundLibrary := preload("res://scripts/sound_library.gd")
 enum Phase { IDLE, ARRIVE, MEET, FIND, GIVE, WORDS, CORD, VERSE, CHARM, DONE }
 
 const CHARM_LINE := "Wonder Light: \"A Friendship charm, for Jonathan giving David what was his.\""
+## Seconds with no gift found before the golden arrow shows the way (chapter 1 waits 18).
+const HINT_DELAY := 14.0
 const WORD_LABELS: PackedStringArray = ["Knit", "Loved", "Friend"]
 const WORD_LINES: PackedStringArray = ["Knit.", "Loved.", "Friend."]
 
@@ -23,8 +29,9 @@ var phase: Phase = Phase.IDLE
 var _found: int = 0
 var _loops: int = 0
 var _collected: Array[String] = []
-var _checklist: PanelContainer
-var _checks: Label
+var _checklist: GiftChecklist
+## The golden arrow that points at the next gift when the child has found nothing for a while.
+var _hints: Hints
 var _cord: Control
 var _camera: Node
 var _player: Node3D
@@ -59,6 +66,8 @@ func begin() -> void:
 	_camera = main.get_node_or_null("CameraDirector")
 	_player = main.get_node_or_null("Player")
 	_build_ui()
+	if _hints:
+		_hints.stop()
 	_clear_given()
 	_clear_world_cord()
 	_lookout_said = false
@@ -129,6 +138,7 @@ func _advance() -> void:
 				"Walk up to a gift"
 			)
 			_collect_overlapping.call_deferred()
+			_watch_gifts()
 		Phase.GIVE:
 			phase = Phase.WORDS
 			_word_said = [false, false, false] as Array[bool]
@@ -148,8 +158,8 @@ func _advance() -> void:
 			_cord = Cord.new()
 			get_parent().get_parent().get_node("UI").add_child(_cord)
 			_cord.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-			_cord.offset_left = -280.0
-			_cord.offset_right = 280.0
+			_cord.offset_left = -Cord.PANEL.x * 0.5
+			_cord.offset_right = Cord.PANEL.x * 0.5
 			_cord.completed.connect(_on_cord_completed)
 			_build_world_cord()
 			_say(
@@ -180,6 +190,8 @@ func _on_gift(body: Node, area: Area3D) -> void:
 	_found += 1
 	_place_beside_david(str(area.name))
 	_update_checklist()
+	if _hints:
+		_hints.found(str(area.name))
 	if _audio and _audio.has_method("play_pickup"):
 		_audio.play_pickup()
 	var light := get_parent().get_parent().get_node_or_null("WonderLight")
@@ -194,6 +206,8 @@ func _on_gift(body: Node, area: Area3D) -> void:
 		_say(flavor.get(area.name, ""), "Find the rest")
 		return
 	phase = Phase.GIVE
+	if _hints:
+		_hints.stop()
 	_say(
 		"Jonathan: \"These were mine. I give them to David, because he is my friend.\"",
 		"Press Space to continue"
@@ -317,7 +331,8 @@ func _award_charm() -> void:
 func _on_charm_sealed() -> void:
 	_ceremony = false
 	if _line:
-		_line.text = CHARM_LINE + "\n(Friendship charm sealed on the Virtue Bracelet.)"
+		var line := CHARM_LINE + "\n(Friendship charm sealed on the Virtue Bracelet.)"
+		_line.text = EasyWords.apply(line) if GameSettings.easy_words else line
 	if _prompt:
 		_prompt.text = _device_prompt("Press Space to keep your charm")
 
@@ -513,6 +528,9 @@ func _play_bleat(at: Vector3) -> void:
 
 
 func _say(text: String, prompt: String) -> void:
+	# Easy words (a child of 8 or younger): the lines with an easier version swap for it.
+	if GameSettings.easy_words:
+		text = EasyWords.apply(text)
 	var close := phase == Phase.MEET or phase == Phase.GIVE or phase == Phase.WORDS
 	if _player:
 		_player.can_move = phase in [Phase.FIND, Phase.DONE]
@@ -586,13 +604,8 @@ func _build_ui() -> void:
 		_cord.queue_free()
 	if is_instance_valid(_checklist):
 		_checklist.queue_free()
-	_checklist = PanelContainer.new()
-	_checklist.name = "CampGiftChecklist"
+	_checklist = GiftChecklist.new()
 	_checklist.position = Vector2(24, 90)
-	_checklist.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_checklist.add_theme_stylebox_override("panel", PaperUI.panel_style(16, 18))
-	_checks = PaperUI.label("", 23, HORIZONTAL_ALIGNMENT_LEFT)
-	_checklist.add_child(_checks)
 	var ui := get_parent().get_parent().get_node("UI")
 	ui.add_child(_checklist)
 	_build_words(ui)
@@ -632,6 +645,21 @@ func _place_above_dialogue(card: Control, height: float) -> void:
 
 
 func _update_checklist() -> void:
-	_checks.text = "Gifts for David  %d / 3" % _found
-	for gift in ["Robe", "Bow", "Belt"]:
-		_checks.text += "\n%s  %s" % ["☑" if gift in _collected else "☐", gift]
+	_checklist.set_found(_collected)
+
+
+## The golden arrow from chapter 1's hunt, pointing at the nearest gift still in the camp.
+func _watch_gifts() -> void:
+	if _hints == null:
+		_hints = Hints.new()
+		_hints.name = "GiftHints"
+		_hints.main = get_parent().get_parent()
+		_hints.hint_delay = HINT_DELAY
+		get_parent().add_child(_hints)
+	var gifts: Array = []
+	for child in get_children():
+		if child is Area3D and child.visible:
+			gifts.append(child)
+	_hints.watch(gifts)
+	for gift in _collected:
+		_hints.found(gift)

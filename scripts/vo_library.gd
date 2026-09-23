@@ -72,6 +72,25 @@ const LINES := {
 	"First Samuel, chapter eighteen, verse one.": "jn_verse_ref",
 	"The soul of Jonathan was knit with the soul of David, and Jonathan loved him as his own soul.": "jn_verse",
 	"A Friendship charm, for Jonathan giving David what was his.": "jn_charm",
+	"Look. David's valley is still down there.": "jn_lookout",
+	# Chapter 2 in easier words (easy_words.gd).
+	"This is the king's camp. It is almost night.": "ez_jn_arrive",
+	"I am Jonathan. God was with David today.": "ez_jn_hello",
+	"Find the robe, the bow, and the belt. They are gifts for David.": "ez_jn_find",
+	"A robe. It is a gift for David.": "ez_jn_robe",
+	"A bow. It is a gift, not for fighting.": "ez_jn_bow",
+	"A belt. Friends share what they have.": "ez_jn_belt",
+	"These were mine. Now they are David's. He is my friend.": "ez_jn_give",
+	"Loop the cord. Three slow loops.": "ez_jn_cord",
+	"A Friendship charm, because Jonathan gave to his friend.": "ez_jn_charm",
+	# The Faith Journey map (faith_journey_screen.gd). The child's name is shown, not spoken.
+	"One story at a time.": "wl_map_open",
+	"Hello!": "wl_hello",
+	"Your journey starts in the valley.": "wl_map_valley",
+	"The King's Camp is next.": "wl_map_camp",
+	"Tap a story to begin.": "wl_map_any",
+	"Finish Chapter 1, The valley, first. Then The King's Camp will open for you.": "wl_locked_camp",
+	"This part of the path is still ahead. New stories will be waiting here.": "wl_path_ahead",
 }
 
 static var _cache: Dictionary = {}
