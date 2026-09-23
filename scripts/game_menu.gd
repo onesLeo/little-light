@@ -5,7 +5,8 @@ extends CanvasLayer
 ##   Resume, the Faith Journal, read-aloud on/off, volume, "Play again from the start"
 ##   and "Change player".
 ## - Book button (top-right): opens the Faith Journal (journal_screen.gd).
-## - The end panel also offers "Colour my charm" (colour_screen.gd).
+## - The end panel also offers "Colour my charm" (colour_screen.gd) and, once a
+##   chapter is finished, "Faith Journey" (faith_journey_screen.gd).
 ## - Read-aloud button (speaker icon): turns text-to-speech on or off.
 ## - After the chapter finishes, a "Play again" / "Keep exploring" panel
 ##   appears once the confetti has had a moment.
@@ -27,6 +28,7 @@ var _audio: Node
 var _director: Node
 var _journal: CanvasLayer
 var _colour: CanvasLayer
+var _journey: CanvasLayer
 var _root: Control
 var _pause_layer: Control
 var _pause_button: IconButton
@@ -35,6 +37,7 @@ var _book_button: IconButton
 var _end_panel: PanelContainer
 var _play_again_button: Button
 var _colour_charm_button: Button
+var _journey_button: Button
 var _resume_button: Button
 var _read_check: CheckButton
 var _easy_check: CheckButton
@@ -101,6 +104,7 @@ func _ready() -> void:
 	_director = main.get_node_or_null("ChapterDirector")
 	_journal = main.get_node_or_null("JournalScreen")
 	_colour = main.get_node_or_null("ColourScreen")
+	_journey = main.get_node_or_null("FaithJourney")
 
 	_root = Control.new()
 	_root.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -163,6 +167,11 @@ func _open_journal() -> void:
 		_journal.open()
 
 
+func _open_journey() -> void:
+	if _journey and _journey.has_method("open"):
+		_journey.open()
+
+
 ## Forgets who is playing and starts over, which brings back the "Who is playing?" screen.
 func change_player_and_restart() -> void:
 	Profiles.set_active("")
@@ -172,6 +181,11 @@ func change_player_and_restart() -> void:
 func _on_chapter_finished() -> void:
 	await get_tree().create_timer(end_panel_delay).timeout
 	_colour_charm_button.visible = Profiles.has_charm(Profiles.active_id, JournalContent.CHARM_COURAGE)
+	var finished := 0
+	if not Profiles.active().is_empty():
+		finished = int(Profiles.active()["chapters"])
+	_journey_button.visible = finished >= 1
+	_end_panel.offset_top = -390.0 if _journey_button.visible else -290.0
 	_end_panel.visible = true
 	_play_again_button.grab_focus()
 
@@ -308,12 +322,16 @@ func _build_end_panel() -> void:
 	_end_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_end_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	_end_panel.offset_top = -290.0
-	_end_panel.offset_bottom = -290.0
+	_end_panel.offset_bottom = -24.0
 	_end_panel.visible = false
 	_root.add_child(_end_panel)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 14)
+	_end_panel.add_child(column)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 18)
-	_end_panel.add_child(row)
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	column.add_child(row)
 	_play_again_button = _make_button("Play again")
 	_play_again_button.custom_minimum_size = Vector2(200.0, 62.0)
 	_play_again_button.pressed.connect(_restart)
@@ -332,6 +350,13 @@ func _build_end_panel() -> void:
 		_end_panel.visible = false
 		get_viewport().gui_release_focus())
 	row.add_child(keep)
+	_journey_button = _make_button("Faith Journey")
+	_journey_button.custom_minimum_size = Vector2(280.0, 62.0)
+	_journey_button.visible = false
+	_journey_button.pressed.connect(_open_journey)
+	var journey_row := CenterContainer.new()
+	journey_row.add_child(_journey_button)
+	column.add_child(journey_row)
 
 
 ## -- Settings sync -----------------------------------------------------------

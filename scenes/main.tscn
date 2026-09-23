@@ -1,4 +1,4 @@
-[gd_scene load_steps=58 format=3]
+[gd_scene load_steps=59 format=3]
 
 [ext_resource type="PackedScene" path="res://assets/wonder_walker_v13.glb" id="1_ww"]
 [ext_resource type="PackedScene" path="res://assets/bethlehem_valley_v7.glb" id="2_valley"]
@@ -34,6 +34,7 @@
 [ext_resource type="Script" path="res://scripts/input_setup.gd" id="23_input"]
 [ext_resource type="Script" path="res://scripts/touch_controls.gd" id="24_touch"]
 [ext_resource type="Script" path="res://scripts/game_menu.gd" id="25_menu"]
+[ext_resource type="Script" path="res://scripts/faith_journey_screen.gd" id="39_journey"]
 [ext_resource type="Script" path="res://scripts/stream_water_fx.gd" id="26_water"]
 [ext_resource type="Script" path="res://scripts/horizon_backdrop.gd" id="27_horizon"]
 [ext_resource type="Script" path="res://scripts/meadow_dressing.gd" id="28_meadow"]
@@ -389,6 +390,9 @@ script = ExtResource("25_menu")
 
 [node name="JournalScreen" type="CanvasLayer" parent="."]
 script = ExtResource("33_journal")
+
+[node name="FaithJourney" type="CanvasLayer" parent="."]
+script = ExtResource("39_journey")
 
 [node name="ColourScreen" type="CanvasLayer" parent="."]
 script = ExtResource("35_colour")

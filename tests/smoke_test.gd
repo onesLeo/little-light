@@ -660,6 +660,16 @@ func _initialize() -> void:
 	print("-- end of chapter offers Play again --")
 	await create_timer(0.3).timeout
 	_check(game_menu._end_panel.visible, "end panel appears after the chapter finishes")
+	_check(game_menu._journey_button.visible, "Faith Journey is offered once the chapter is finished")
+	var journey: CanvasLayer = main.get_node("FaithJourney")
+	journey.open()
+	_check(journey.is_open() and journey._map.texture != null, "the journey opens on the old map, not a blank page")
+	journey._on_stop("ahead")
+	_check("still ahead" in journey._line.text, "a stop further on is a kind line, not a lock")
+	journey._on_stop("camp")
+	_check("King's Camp" in journey._line.text, "the ridge is drawn, and not playable yet")
+	journey.close()
+	_check(not journey.is_open(), "Back leaves the map")
 
 	print("-- profiles: who is playing, and what is saved --")
 	var kid_id: String = Profiles.active_id
