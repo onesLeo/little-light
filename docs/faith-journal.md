@@ -34,7 +34,13 @@ Backlog item 3.5. Each child on a tablet has their own name, picture and journal
 
 After a child finishes chapter 1, the end panel and the journal gain **Faith Journey**. The journal keeps what she earned. The journey shows where she can go next.
 
-The page is an old paper map, `assets/ui/faith_journey_map.jpg`, not a blank sheet with icons on it. Mountains run across the top, a river comes down into the green valley, and the path climbs to the tents of The King's Camp, then fades into a paler hill. The story labels sit on those places.
+The page is an old paper map, `assets/ui/faith_journey_map.jpg`, not a blank sheet with icons on it. Mountains run across the top, a river comes down into the green valley, and the path climbs to the tents of The King's Camp, then fades toward a paler hill. The sketch with the markers is [faith-journey-sketch.jpg](faith-journey-sketch.jpg), and the moving version is [faith-journey-sketch.mp4](faith-journey-sketch.mp4).
+
+Markers, so she can see where she is and what comes after:
+
+- **The valley** has a gold star and a gold dot. The star means that chapter is finished. The dot means she is here. In the animation the river moves, the trees lean, and the sheep shifts.
+- **The King's Camp** has a gold ring. That ring means this is the next journey, not a lock. In the animation the fire flickers and the tents lean in the wind.
+- **A dashed circle** further on, with no name. It stays still. The path is not drawn yet.
 
 - **The valley**, on the river and the sheep. A finished story. Tap it to play chapter 1 again.
 - **The King's Camp**, on the tents and the fire. Drawn, and not playable yet. A tap says it is still being prepared. No lock, no buzzer.
