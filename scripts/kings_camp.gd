@@ -39,7 +39,7 @@ func visit() -> void:
 		player.velocity = Vector3.ZERO
 		player.global_position = ground + Vector3(0.0, 0.2, 0.0)
 	var story := get_node_or_null("ChapterTwo")
-	var mid_story := story != null and story.phase != ChapterTwo.Phase.IDLE and story.phase != ChapterTwo.Phase.DONE
+	var mid_story: bool = story != null and story.phase != ChapterTwo.Phase.IDLE and story.phase != ChapterTwo.Phase.DONE
 	var line := get_parent().find_child("DialogueLabel", true, false) as Label
 	if line and not mid_story:
 		line.text = "Jonathan is by the fire. His hair is long, and his tunic is red."
