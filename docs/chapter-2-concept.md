@@ -1,7 +1,6 @@
-# Chapter 2 — a concept, not yet approved
+# Chapter 2 — The King's Camp
 
-This is a proposal, not a plan. Nothing here is built. It exists so the idea can be looked at
-and decided on before any art or code work starts.
+The chapter is not built yet. Three choices are decided: the title is **The King's Camp**, the charm is **Friendship**, and the place is the ridge that already exists, dressed as a king's camp rather than a new world.
 
 ## Where chapter 1 leaves off
 
@@ -11,7 +10,7 @@ result in one line ("David walked out to the valley. When it was over, the camp 
 has stayed gentle throughout (Steady Hands always succeeds, there is no giant on screen, no
 violence), so a chapter 2 that shows the fight itself would break that tone.
 
-## The proposal: "The King's Camp"
+## The story: The King's Camp
 
 **Bible passage:** 1 Samuel 18:1-4 — after the battle, Jonathan (King Saul's son) becomes
 David's loyal friend and gives him his robe, sword, bow and belt as a sign of that friendship.
@@ -21,8 +20,7 @@ second virtue alongside courage.
 **New verse:** 1 Samuel 18:1 (WEB) — "...the soul of Jonathan was knit with the soul of David,
 and Jonathan loved him as his own soul."
 
-**New charm:** Loyalty (or Friendship — either reads well; worth deciding once the wording is
-final, since the charm's name is spoken aloud by the recorded voice).
+**New charm:** Friendship. The name is spoken aloud, so the recorded line says "Friendship," not Loyalty. The charm itself is two small loops linked, the same picture as the ceremony.
 
 **New Wonder Items:** instead of a stone, a staff and a lamb, three of Jonathan's gifts — a robe,
 a bow and a belt — each found and given to David in turn, mirroring how chapter 1's items work
@@ -83,12 +81,7 @@ never reaches: a ridge with its own trees and a view back down over the whole va
 built as backdrop, not as a place to stand, but it is already there. Two screenshots from the
 existing (unmodified) valley, taken from a camera placed on that ridge, are attached to this
 message — one looking down at the cliff and waterfall from above, one closer in among the trees.
-That view, made walkable, becomes King Saul's camp: a clearing among the same cypress and olive
-trees, a large tent, a campfire, banners, and a lookout point where the whole of chapter 1's
-valley is visible below — waterfall, stream, and the path where David and the Wonder-Walker
-first met. It would reuse the terrain, trees and stone that already exist rather than building a
-new environment from nothing, and the walk up to it could start near the cliff ledges added in
-backlog 4.4.
+That view, made walkable, becomes King Saul's camp. The ground, the cypress, the olives and the stone stay. What is new is only what a child needs in order to say "this is a king's camp": several tents, banners, guards, a fire, and a lookout back down onto chapter 1. No second valley is built. The walk up can start near the cliff ledges from backlog 4.4.
 
 ## What would carry over as-is
 
@@ -104,7 +97,7 @@ backlog 4.4.
 - A Jonathan character model (or a simple placeholder, the way the charm ceremony uses
   placeholder meshes today).
 - Making the ridge walkable: a path up from the cliff-ledge area, a boundary for the new area,
-  and camp props (tent, campfire, banners).
+  and camp props (tents, campfire, banners, guards).
 - A short new beat sequence in `chapter_director.gd`, three new Wonder Item flavour lines, and a
   new charm-award reason.
 - Recorded clips for the new lines, in the same two voices.
@@ -119,13 +112,13 @@ The evening of the same day. Down in the meadow it is still the valley the child
 
 The path climbs through the trees the child already knows, cypress and olive, and opens onto one clearing. The eye should land in this order:
 
-1. The campfire, the only bright warm thing, a little right of centre.
-2. One cream tent behind it, open toward the fire, big enough to be "the camp" and not a city of tents.
+1. The camp itself: one large tent and three smaller ones, so it reads as a king's camp and not a single shelter.
+2. The campfire, the only bright warm thing, a little right of centre, in front of the large tent.
 3. Jonathan near the fire, in a wine-red tunic, so he does not disappear into the blue.
 4. David, smaller, in the same golden-brown tunic and olive sash as chapter 1, so the child knows him before anyone speaks.
 5. Past a low stone at the cliff edge, the whole of chapter 1 laid out below: waterfall, stream, the path where they first met. The fog must not eat that view. It is the reward for walking up.
 
-Two plain guards walk a short, slow loop near the tent. They are life in the camp, like the lamb and the butterflies, not a puzzle and not a threat. Sand and brown cloth, a staff each, no armour, no swords, no torches. The fire and one hanging lantern are the only warm lights. A torch in every hand would turn the blue hour back into daylight.
+Four plain guards walk slow loops among the tents. They are life in the camp, like the lamb and the butterflies, not a puzzle and not a threat. Sand and brown cloth, a staff each, no armour, no swords, no torches. They never cross the path the child needs, and they never turn to stop her. The fire and one hanging lantern are the only warm lights. A torch in every hand would turn the blue hour back into daylight.
 
 ### The blue, and the one warm note
 
@@ -154,13 +147,14 @@ It needs its own `Environment` on this ridge. Chapter 1's sun and daytime sky st
 
 Nothing here is more detailed than the meadow's signpost. If a prop needs a pattern, a jewel or a second material, it is too much.
 
-- **The tent.** One large tent, warm cream, like a folded blanket. The front is open so the inside is a darker cream, not a black cave. A smaller folded canvas may sit behind it. No crowd of tents, no guy-ropes to trip on, no flags so small the child cannot read them.
-- **The banners.** Two. Simple cloth rectangles on plain poles: one deep blue, one dull wine. No crest, no writing, no animal. They may sway as slowly as the meadow grass. They do not snap or flutter hard.
+- **The tents.** One large tent, warm cream, open toward the fire. The inside is a darker cream, not a black cave. Three smaller tents of the same cloth sit further back and to the sides, enough to say "the king's camp" without becoming a city. No guy-ropes on the path. The large tent's door cloth and the banners move when the wind does.
+- **The banners.** Four. Simple cloth rectangles on plain poles: deep blue and dull wine, two of each, set among the tents. No crest, no writing, no animal. They lean with the wind, the same slow way the meadow grass leans, and settle again. They do not snap.
 - **The fire.** A low ring of the grey, moss and slate stones already used in the valley (`ROCK_VARIANTS`). The flame is three or four flat paper shapes with the usual ink outline, orange around a smaller yellow centre. They are animated, the way the meadow grass already leans: each tongue slowly grows, shrinks and tips, on its own timing, so the fire breathes instead of sitting still. The warm pool on the tent wall brightens and eases with it, slowly. No sparks flying out, and no flash. A log on the near side gives Jonathan somewhere to be.
 - **The gifts.** Three small paper objects, staged like the stone, the staff and the lamb, each obvious from a few steps away. The robe is a folded rectangle of deep blue with one gold edge. The bow is one curved piece with a single string, and no arrow anywhere near it. The belt is a short brown loop with one small gold square. They are icons, not tiny copies of real clothes. The sword in the Bible verse is not a Wonder Item and not a prop. It stays off the screen the way Goliath did.
 - **Jonathan.** Built like David and the Wonder-Walker: rounded low-poly, flat matte cloth, ink outline. A prince next to a shepherd, so the child can tell them apart at a glance. Wine-red tunic, a gold sash, maybe one gold band at the neck. No pattern, no crown, no jewellery beyond that. Deep blue was the other idea for him. In this hour a blue tunic would vanish into the trees, so the wine-red is the one to use.
 - **David.** Unchanged from chapter 1. The familiar clothes do the introducing.
-- **The guards.** Two. Plain sand and brown, shorter capes or none, staffs held down. They walk a loop that never crosses the path the child needs, and they never turn to face the child as if to stop them.
+- **The guards.** Four. Plain sand and brown, shorter capes or none, staffs held down. They walk loops that stay off the child's path.
+- **The wind.** A breeze you can see. Every so often the banners, the tent door, and the grass at the edge of the clearing all lean the same way, then ease back. A few paper leaves, or one loose strip of cream cloth, drift across the clearing and leave. It is the same idea as the meadow grass that leans when she walks, not a storm and not a cloud of particles. The path stays clear. Nothing blows into her face.
 - **The lookout.** The cliff edge, one low stone to mark "stand here," and the valley in clear view underneath. The waterfall keeps the bright blue the child already knows, so the place reads as "where I was" even in the new light.
 - **The owl.** One, small, paper, with wings that can open. When the child first reaches the clearing it is already in the air: a slow glide in from the side, two or three calm wingbeats, then it lands on a high branch of the back cypress and folds its wings. It does not dive, and it does not cross in front of her face. Once it has stopped it stays a while: a slow blink, a turn of the head, a little settle, and the soft "hoo-hoo" only while it is perched. After a long pause it may glide to a second branch on that same tree and stop again. Same kind of motion as the butterflies, not a chase.
 - **The fireflies.** Six or eight. Tiny warm paper dots drifting over the grass at the edge of the clearing, the night version of chapter 1's butterflies. They are dimmer than the lantern and they do not light the ground. Walk toward them and they lift aside, the way the butterflies do, then settle again. No swarm, and none on the path, so the walking colour stays clear.
@@ -191,23 +185,20 @@ The meadow's daytime bed does not come up the hill. Birds and the close stream b
 | Sound | What it is like | When it rests |
 |---|---|---|
 | Lullaby | The same music box, a little further away | Ducks while anyone speaks, as it does now |
-| Wind | The same wind, slower and quieter | Stays, very low, under the voice |
+| Wind | A soft evening breeze, the same recording family as chapter 1, a little closer here so it matches the banners moving. It swells when the visible gust passes and settles after. Never a howl | Stays under the voice, quieter while someone is speaking |
 | Crickets | A few soft chirps, not a wall of summer noise. This is the sound that makes the blue hour feel like evening | Ducks with the other ambience |
 | Campfire | A small dry crackle, sitting on the fire itself, louder as you walk up to it | Ducks while anyone speaks |
 | Owl | Two low notes, "hoo-hoo," only while it is perched, once every 15 to 25 seconds. A single soft wing-flutter as it lands, the same family as the butterfly rustle, and never a clap | Silent the whole time somebody is speaking |
 | Valley, from the lookout only | A faint stream, and now and then one far sheep. It says the meadow is still down there | Only while the child is standing at the edge |
 
-The fireflies make no sound. A tick or a chime on each one would turn them into a toy and crowd the voice. The owl is the night bird. The crickets are the bed. The fire is the close, warm sound, matched to the one warm light.
+The fireflies make no sound. A tick or a chime on each one would turn them into a toy and crowd the voice. The wind is the sound you can match to something you see. The owl is the night bird. The crickets are the bed. The fire is the close, warm sound.
 
-Nothing else. No wolves, no thunder, no armour, no startled wing-clap. If a sound would make a six-year-old look around to see what went wrong, it does not belong here.
+Nothing else. No wolves, no thunder, no armour, no gale, no startled wing-clap. If a sound would make a six-year-old look around to see what went wrong, it does not belong here.
 
-## Open questions
+## Decided
 
-1. Is "The King's Camp" / David and Jonathan the right next beat, or would you rather see other
-   ideas (for example, David and Jonathan's covenant is one option among several later Bible
-   scenes)?
-2. Loyalty or Friendship for the charm's name?
-3. Is reusing the existing ridge as the new location the right call, or should chapter 2 be a
-   wholly new environment?
+1. **The title is The King's Camp.** The story is still David and Jonathan, the evening after the camp cheered David's name. A later covenant can be its own chapter. It is not this one.
+2. **The charm is Friendship.**
+3. **The place is the ridge that is already in the valley.** Same ground, trees and stone. Tents, banners, guards, the fire and the wind are added so the clearing looks like a king's camp. A wholly new environment is not needed.
 
-Nothing moves forward on this until it's decided.
+Nothing else on this page is built yet.
