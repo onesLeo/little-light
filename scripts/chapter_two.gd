@@ -10,10 +10,13 @@ const Cord := preload("res://scripts/friendship_cord.gd")
 const PaperUI := preload("res://scripts/paper_ui.gd")
 
 const Paper := preload("res://scripts/camp_paper.gd")
+const SoundLibrary := preload("res://scripts/sound_library.gd")
 
-enum Phase { IDLE, ARRIVE, MEET, FIND, GIVE, CORD, VERSE, CHARM, DONE }
+enum Phase { IDLE, ARRIVE, MEET, FIND, GIVE, WORDS, CORD, VERSE, CHARM, DONE }
 
 const CHARM_LINE := "Wonder Light: \"A Friendship charm, for Jonathan giving David what was his.\""
+const WORD_LABELS: PackedStringArray = ["Knit", "Loved", "Friend"]
+const WORD_LINES: PackedStringArray = ["Knit.", "Loved.", "Friend."]
 
 var phase: Phase = Phase.IDLE
 var _found: int = 0
@@ -31,6 +34,15 @@ var _audio: Node
 var _heard_loops: int = 0
 ## The charm is floating onto the bracelet: Space waits until it has landed.
 var _ceremony: bool = false
+var _words: HBoxContainer
+var _word_buttons: Array[Button] = []
+var _word_halos: Array[StyleBoxFlat] = []
+var _word_said: Array[bool] = [false, false, false]
+var _words_done: bool = false
+var _world_loops: Array[MeshInstance3D] = []
+var _lookout_said: bool = false
+var _bleat_wait: float = 6.0
+var _bleat: AudioStreamPlayer3D
 
 
 func begin() -> void:
@@ -47,6 +59,12 @@ func begin() -> void:
 	_camera = main.get_node_or_null("CameraDirector")
 	_player = main.get_node_or_null("Player")
 	_build_ui()
+	_clear_given()
+	_clear_world_cord()
+	_lookout_said = false
+	_words_done = false
+	_word_said = [false, false, false] as Array[bool]
+	_bleat_wait = 6.0
 	# Coming from chapter 1's end card, its "Chapter Complete!" banner must not hang over the camp.
 	var banner := main.find_child("CompleteBanner", true, false) as CanvasItem
 	if banner:
@@ -61,13 +79,17 @@ func begin() -> void:
 func _input(event: InputEvent) -> void:
 	if phase == Phase.IDLE or phase == Phase.FIND or phase == Phase.CORD or phase == Phase.DONE:
 		return
+	if phase == Phase.WORDS and not _words_done:
+		return
 	if not _pressed(event):
 		return
 	_advance()
 	get_viewport().set_input_as_handled()
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	_grow_world_cord()
+	_watch_lookout(delta)
 	if phase != Phase.CORD or not is_instance_valid(_cord):
 		return
 	if _cord.loops > _heard_loops:
@@ -79,6 +101,10 @@ func _process(_delta: float) -> void:
 func _on_cord_completed() -> void:
 	_loops = 3
 	phase = Phase.VERSE
+	# The cord card sits on the dialogue bar. Take it away before the verse is shown.
+	if is_instance_valid(_cord):
+		_cord.visible = false
+		_cord.queue_free()
 	Profiles.unlock_verse(JournalContent.VERSE_SAMUEL_18_1)
 	if _audio:
 		_audio.play_success()
@@ -104,14 +130,30 @@ func _advance() -> void:
 			)
 			_collect_overlapping.call_deferred()
 		Phase.GIVE:
+			phase = Phase.WORDS
+			_word_said = [false, false, false] as Array[bool]
+			_words_done = false
+			_restyle_words()
+			# An existing Wonder Light recording, so this beat stays in her voice.
+			_say(
+				"Wonder Light: \"Friends stay tied together.\"",
+				"Tap Knit, Loved, and Friend"
+			)
+		Phase.WORDS:
+			if not _words_done:
+				return
 			phase = Phase.CORD
 			_loops = 0
 			_heard_loops = 0
 			_cord = Cord.new()
 			get_parent().get_parent().get_node("UI").add_child(_cord)
-			_cord.set_anchors_preset(Control.PRESET_CENTER)
-			_cord.position = _cord.get_viewport_rect().size * 0.5 - Vector2(300, 220)
+			_cord.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+			_cord.offset_left = -280.0
+			_cord.offset_right = 280.0
+			_cord.offset_top = -230.0
+			_cord.offset_bottom = -54.0
 			_cord.completed.connect(_on_cord_completed)
+			_build_world_cord()
 			_say(
 				"Wonder Light: \"Hold still, and loop the cord. Three slow loops.\"",
 				"Hold Space / Enter or the button, then release to tie"
@@ -138,6 +180,7 @@ func _on_gift(body: Node, area: Area3D) -> void:
 	area.set_deferred("monitoring", false)
 	_collected.append(str(area.name))
 	_found += 1
+	_place_beside_david(str(area.name))
 	_update_checklist()
 	if _audio and _audio.has_method("play_pickup"):
 		_audio.play_pickup()
@@ -165,10 +208,10 @@ func _spawn_gifts() -> void:
 		child.queue_free()
 	var camp: Node = get_parent()
 	var here: Vector3 = camp._clearing
-	# Spread across the camp: by the king's tent, out at the lookout, and in the supply corner.
+	# By the king's tent, out toward the lookout, and in the open on the right.
 	_gift("Robe", _robe(), here + Vector3(-5.2, 0.0, 3.0))
-	_gift("Bow", _bow(), here + Vector3(6.0, 0.0, -6.8))
-	_gift("Belt", _belt(), here + Vector3(7.8, 0.0, 8.4))
+	_gift("Bow", _bow(), here + Vector3(4.6, 0.0, -5.4))
+	_gift("Belt", _belt(), here + Vector3(8.4, 0.0, 2.2))
 
 
 func _gift(gift_name: String, shown: Node3D, at: Vector3) -> void:
@@ -301,10 +344,209 @@ func _finish() -> void:
 		menu.show_end_panel(JournalContent.CHARM_FRIENDSHIP)
 
 
+## The found gift leaves the meadow and sits in a row beside David, so the giving is visible.
+func _place_beside_david(gift_name: String) -> void:
+	var david := get_parent().get_parent().get_node_or_null("DavidMentor") as Node3D
+	if david == null:
+		return
+	var holder := get_parent().get_node_or_null("GivenGifts") as Node3D
+	if holder == null:
+		holder = Node3D.new()
+		holder.name = "GivenGifts"
+		get_parent().add_child(holder)
+	var shown: Node3D
+	var slot := 0
+	if gift_name == "Robe":
+		shown = _robe()
+		slot = 0
+	elif gift_name == "Bow":
+		shown = _bow()
+		slot = 1
+	else:
+		shown = _belt()
+		slot = 2
+	shown.name = "Given" + gift_name
+	holder.add_child(shown)
+	var right := david.global_transform.basis.x
+	var forward := -david.global_transform.basis.z
+	var pos := david.global_position + right * (0.72 + float(slot) * 0.46) + forward * 0.2
+	var ground: Vector3 = get_parent()._ground(pos)
+	shown.global_position = ground
+	shown.scale = Vector3.ONE * 0.85
+
+
+func _clear_given() -> void:
+	var given := get_parent().get_node_or_null("GivenGifts")
+	if given:
+		for child in given.get_children():
+			child.queue_free()
+
+
+func press_word(index: int) -> void:
+	if phase != Phase.WORDS or index < 0 or index >= WORD_LINES.size():
+		return
+	_word_said[index] = true
+	_restyle_words()
+	_pulse_word(index)
+	# Same narrator path as Wonder Light's other lines: the recorded clip, not system speech.
+	if _audio and _audio.has_method("play_line"):
+		_audio.play_line(WORD_LINES[index])
+	for said in _word_said:
+		if not said:
+			return
+	if _words_done:
+		return
+	_words_done = true
+	if _prompt:
+		_prompt.text = "Press Space to loop the cord"
+	if _audio and _audio.has_method("play_success"):
+		_audio.play_success()
+
+
+func _restyle_words() -> void:
+	if _words:
+		_words.visible = phase == Phase.WORDS
+	for i in _word_buttons.size():
+		_paint_word(i, i < _word_said.size() and _word_said[i])
+
+
+## A tapped word stays bright, with a warm halo, the same way chapter 1's words do.
+func _paint_word(index: int, lit: bool) -> void:
+	if index >= _word_buttons.size():
+		return
+	var button := _word_buttons[index]
+	button.text = WORD_LABELS[index]
+	var fill := Color(1.0, 0.97, 0.72) if lit else PaperUI.GOLD
+	if index < _word_halos.size():
+		_word_halos[index].bg_color = Color(1.0, 0.84, 0.28, 0.7 if lit else 0.0)
+	for state in ["normal", "hover", "focus", "pressed"]:
+		var box := button.get_theme_stylebox(state) as StyleBoxFlat
+		if box == null:
+			continue
+		box.bg_color = fill
+		box.shadow_color = Color(1.0, 0.78, 0.2, 0.95 if lit else 0.0)
+		box.shadow_size = 24 if lit else 0
+
+
+func _pulse_word(index: int) -> void:
+	if index < 0 or index >= _word_buttons.size():
+		return
+	var button := _word_buttons[index]
+	button.pivot_offset = button.size * 0.5 if button.size.x > 1.0 else Vector2(90, 43)
+	button.scale = Vector2(0.94, 0.94)
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(button, "scale", Vector2(1.12, 1.12), 0.12)
+	if index < _word_halos.size():
+		_word_halos[index].bg_color.a = 0.25
+		tween.tween_property(_word_halos[index], "bg_color:a", 0.95, 0.1)
+	tween.chain().set_parallel(true)
+	tween.tween_property(button, "scale", Vector2.ONE, 0.28)
+	if index < _word_halos.size():
+		tween.tween_property(_word_halos[index], "bg_color:a", 0.7, 0.35)
+
+
+## Three cream-gold loops in the firelight. The panel at the bottom is only the control.
+func _build_world_cord() -> void:
+	_clear_world_cord()
+	var camp := get_parent()
+	var at: Vector3 = camp._at(camp.FIRE) + Vector3(0.0, 0.78, 1.2)
+	for i in 3:
+		var loop := MeshInstance3D.new()
+		loop.name = "CordLoop%d" % i
+		var ring := TorusMesh.new()
+		ring.inner_radius = 0.1
+		ring.outer_radius = 0.17
+		ring.rings = 8
+		ring.ring_segments = 14
+		loop.mesh = ring
+		var mat := StandardMaterial3D.new()
+		mat.albedo_color = Color(0.9, 0.78, 0.48)
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		mat.emission_enabled = true
+		mat.emission = Color(0.85, 0.48, 0.14)
+		mat.emission_energy_multiplier = 0.35
+		loop.material_override = mat
+		loop.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		camp.add_child(loop)
+		loop.global_position = at + Vector3(float(i - 1) * 0.42, 0.0, 0.0)
+		loop.rotation.x = PI * 0.5
+		loop.scale = Vector3.ONE * 0.08
+		_world_loops.append(loop)
+
+
+func _grow_world_cord() -> void:
+	if phase != Phase.CORD or not is_instance_valid(_cord):
+		return
+	for i in _world_loops.size():
+		var amount := 0.0
+		if i < _cord.loops:
+			amount = 1.0
+		elif i == _cord.loops:
+			amount = _cord.progress
+		var loop := _world_loops[i]
+		loop.scale = Vector3.ONE * lerpf(0.08, 1.0, amount)
+		var mat := loop.material_override as StandardMaterial3D
+		if mat:
+			mat.albedo_color = Color(0.86, 0.79, 0.64).lerp(Color(0.96, 0.74, 0.28), amount)
+
+
+func _clear_world_cord() -> void:
+	for loop in _world_loops:
+		if is_instance_valid(loop):
+			loop.queue_free()
+	_world_loops.clear()
+
+
+func _watch_lookout(delta: float) -> void:
+	if _player == null or phase not in [Phase.FIND, Phase.DONE]:
+		_set_lookout(0.0)
+		return
+	var camp := get_parent()
+	var stone: Vector3 = camp._at(camp.LOOKOUT)
+	var near := Vector2(_player.global_position.x, _player.global_position.z).distance_to(Vector2(stone.x, stone.z)) < 3.4
+	_set_lookout(1.0 if near else 0.0)
+	if not near:
+		return
+	_bleat_wait -= delta
+	if _bleat_wait <= 0.0 and (_audio == null or not _audio.is_speaking()):
+		_bleat_wait = randf_range(14.0, 22.0)
+		_play_bleat(stone)
+	if _lookout_said or phase != Phase.FIND:
+		return
+	_lookout_said = true
+	_say(
+		"Wonder Light: \"Look. David's valley is still down there.\"",
+		"The waterfall is the way you came"
+	)
+
+
+func _set_lookout(amount: float) -> void:
+	var soundscape := get_parent().get_parent().get_node_or_null("Soundscape")
+	if soundscape and soundscape.has_method("set_lookout"):
+		soundscape.set_lookout(amount)
+
+
+func _play_bleat(at: Vector3) -> void:
+	var clip := SoundLibrary.bleat(0)
+	if clip == null:
+		return
+	if _bleat == null:
+		_bleat = AudioStreamPlayer3D.new()
+		_bleat.name = "FarSheep"
+		_bleat.unit_size = 4.0
+		_bleat.max_distance = 28.0
+		_bleat.volume_db = -10.0
+		get_parent().add_child(_bleat)
+	_bleat.global_position = at + Vector3(0.0, -6.0, -8.0)
+	_bleat.stream = clip
+	_bleat.play()
+
+
 func _say(text: String, prompt: String) -> void:
-	var close := phase == Phase.MEET or phase == Phase.GIVE
+	var close := phase == Phase.MEET or phase == Phase.GIVE or phase == Phase.WORDS
 	if _player:
-		_player.can_move = phase in [Phase.ARRIVE, Phase.FIND, Phase.DONE]
+		_player.can_move = phase in [Phase.FIND, Phase.DONE]
 	if _camera:
 		if close:
 			_camera.move_to_closeup(get_parent().get_node("Jonathan"))
@@ -313,6 +555,7 @@ func _say(text: String, prompt: String) -> void:
 			_camera.cut_to_tabletop()
 	if _checklist:
 		_checklist.visible = phase in [Phase.FIND, Phase.GIVE]
+	_restyle_words()
 	var jon := get_parent().get_node_or_null("Jonathan")
 	if jon:
 		jon.speaking = text.begins_with("Jonathan:")
@@ -339,6 +582,8 @@ func _pressed(event: InputEvent) -> bool:
 func get_action_hint() -> String:
 	if phase == Phase.CORD:
 		return "RELEASE" if is_instance_valid(_cord) and _cord.ready_to_release else "LOOP"
+	if phase == Phase.WORDS:
+		return "NEXT" if _words_done else ""
 	if phase in [Phase.ARRIVE, Phase.MEET, Phase.GIVE, Phase.VERSE, Phase.CHARM]:
 		return "NEXT"
 	return ""
@@ -356,8 +601,48 @@ func _build_ui() -> void:
 	_checklist.add_theme_stylebox_override("panel", PaperUI.panel_style(16, 18))
 	_checks = PaperUI.label("", 23, HORIZONTAL_ALIGNMENT_LEFT)
 	_checklist.add_child(_checks)
-	get_parent().get_parent().get_node("UI").add_child(_checklist)
+	var ui := get_parent().get_parent().get_node("UI")
+	ui.add_child(_checklist)
+	_build_words(ui)
 	_update_checklist()
+
+
+func _build_words(ui: Node) -> void:
+	if is_instance_valid(_words):
+		_words.queue_free()
+	_word_buttons.clear()
+	_word_halos.clear()
+	_words = HBoxContainer.new()
+	_words.name = "CampWords"
+	_words.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	_words.offset_left = -360.0
+	_words.offset_right = 360.0
+	_words.offset_top = -250.0
+	_words.offset_bottom = -140.0
+	_words.alignment = BoxContainer.ALIGNMENT_CENTER
+	_words.add_theme_constant_override("separation", 18)
+	_words.visible = false
+	ui.add_child(_words)
+	for i in WORD_LABELS.size():
+		var button := PaperUI.button(WORD_LABELS[i], Vector2(180, 86), 32)
+		button.focus_mode = Control.FOCUS_NONE
+		button.pressed.connect(press_word.bind(i))
+		var halo := StyleBoxFlat.new()
+		halo.bg_color = Color(1.0, 0.86, 0.35, 0.0)
+		halo.set_corner_radius_all(28)
+		var glow := Panel.new()
+		glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		glow.show_behind_parent = true
+		glow.set_anchors_preset(Control.PRESET_FULL_RECT)
+		glow.offset_left = -18.0
+		glow.offset_top = -18.0
+		glow.offset_right = 18.0
+		glow.offset_bottom = 18.0
+		glow.add_theme_stylebox_override("panel", halo)
+		button.add_child(glow)
+		_words.add_child(button)
+		_word_buttons.append(button)
+		_word_halos.append(halo)
 
 
 func _update_checklist() -> void:

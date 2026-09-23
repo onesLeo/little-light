@@ -10,7 +10,7 @@ extends Node3D
 ##
 ## Layout, looking the way the tabletop camera looks (toward the valley):
 ## the lookout stone at the far edge, the fire in the middle, the king's round
-## tent to its left, five smaller tents around it, and the arrival path behind.
+## tent to its left, three smaller tents around it, and the arrival path behind.
 
 const Paper := preload("res://scripts/camp_paper.gd")
 const ChapterTwo := preload("res://scripts/chapter_two.gd")
@@ -30,8 +30,8 @@ const FIRE := Vector2(1.0, 0.0)
 const ARRIVE := Vector2(0.0, 10.0)
 const LOOKOUT := Vector2(0.6, -7.4)
 const KING_TENT := Vector2(-6.2, -1.2)
-## (x, z) and whether the doorway faces the fire.
-const TENTS := [Vector2(6.8, -2.0), Vector2(7.6, 4.2), Vector2(-7.8, 6.0), Vector2(-4.5, 10.5), Vector2(5.5, 10.0)]
+## Three smaller tents, further back and to the sides, so the fire and the path stay clear.
+const TENTS := [Vector2(6.8, -2.0), Vector2(7.6, 4.2), Vector2(-7.8, 6.0)]
 const FLAGS := [Vector2(-3.6, -3.4), Vector2(3.2, -3.6), Vector2(-4.2, 7.0), Vector2(3.6, 6.8)]
 ## The walking line through the camp, kept clear of props and grass.
 const PATH := [Vector2(0.0, 16.0), Vector2(0.0, 12.5), Vector2(0.4, 6.0), Vector2(0.9, 2.4), Vector2(0.8, -3.0), Vector2(0.6, -7.2)]
@@ -98,6 +98,8 @@ var _owl: Node3D
 var _fireflies: Node3D
 var _sounds: Node3D
 var _moon: MeshInstance3D
+var _people_shader: Shader
+var _white_tex: Texture2D
 var _time: float = 0.0
 
 
@@ -154,6 +156,7 @@ func visit() -> void:
 		_owl.arrive(_owl_start())
 	if _fireflies:
 		_fireflies.light_up()
+	_keep_people_paper()
 
 
 func _snap_followers(player: Node3D) -> void:
@@ -269,7 +272,7 @@ func _build() -> void:
 		_ridge_tent(i, TENTS[i])
 	for i in FLAGS.size():
 		_flag(i, FLAGS[i], BLUE if i % 3 == 0 else WINE)
-	_build_supplies()
+	_warm_the_tent()
 	_build_lookout()
 	for i in GUARD_ROUTES.size():
 		_guard(i, GUARD_ROUTES[i])
@@ -666,31 +669,20 @@ func _ridge_tent(index: int, p: Vector2) -> void:
 	_solid(tent, Vector3(0.0, h * 0.45, 0.0), Vector3(w * 0.9, h * 0.9, l))
 
 
-## Crates, clay jars and grain sacks: a small supply corner, nothing more detailed
-## than the meadow's signpost.
-func _build_supplies() -> void:
-	var holder := Node3D.new()
-	holder.name = "Supplies"
-	add_child(holder)
-	var crate := Color(0.62, 0.45, 0.27)
-	for spec in [[Vector2(10.2, 5.2), 0.2, 0.0], [Vector2(10.5, 6.1), -0.3, 0.0], [Vector2(10.3, 5.6), 0.5, 0.56]]:
-		var at := _at(spec[0]) + Vector3(0.0, 0.28 + float(spec[2]), 0.0)
-		var c := Paper.part(holder, "Crate", Paper.box(Vector3(0.62, 0.56, 0.62)), crate, at, Vector3(0.0, spec[1], 0.0), Vector3.ONE, 0.022)
-		Paper.part(c, "Slat", Paper.box(Vector3(0.64, 0.08, 0.64)), crate.darkened(0.2), Vector3(0.0, 0.12, 0.0), Vector3.ZERO, Vector3.ONE, 0.0)
-	_solid(holder, _at(Vector2(10.35, 5.65)) + Vector3(0.0, 0.5, 0.0), Vector3(1.3, 1.0, 1.6))
-	var clay := Color(0.74, 0.46, 0.3)
-	for spec in [Vector2(5.9, 6.9), Vector2(6.35, 7.2), Vector2(5.6, 7.45), Vector2(-3.4, -4.3)]:
-		var at := _at(spec)
-		var jar := Node3D.new()
-		holder.add_child(jar)
-		jar.global_position = at
-		Paper.part(jar, "Jar", Paper.sphere(0.22), clay, Vector3(0.0, 0.26, 0.0), Vector3.ZERO, Vector3(1.0, 1.2, 1.0), 0.02)
-		Paper.part(jar, "Neck", Paper.cylinder(0.09, 0.14, 8, 0.11), clay.darkened(0.1), Vector3(0.0, 0.56, 0.0), Vector3.ZERO, Vector3.ONE, 0.015)
-	_solid(holder, _at(Vector2(6.0, 7.2)) + Vector3(0.0, 0.3, 0.0), Vector3(1.3, 0.6, 1.1))
-	var sack := Color(0.68, 0.58, 0.41)
-	for spec in [Vector2(-9.9, 7.9), Vector2(-10.4, 8.4), Vector2(-9.6, 8.6)]:
-		var at := _at(spec)
-		Paper.part(holder, "Sack", Paper.sphere(0.26), sack, at + Vector3(0.0, 0.22, 0.0), Vector3(0.0, spec.x, 0.0), Vector3(1.0, 0.85, 0.9), 0.02)
+## A small warm pool on the king's tent wall. The fire's own light stays on the log.
+## People are unshaded, so this does not turn their skin blue or orange.
+func _warm_the_tent() -> void:
+	var at := _at(FIRE).lerp(_at(KING_TENT), 0.62)
+	at.y += 1.35
+	var light := OmniLight3D.new()
+	light.name = "TentWarmth"
+	light.light_color = Color(1.0, 0.58, 0.24)
+	light.light_energy = 2.6
+	light.omni_range = 3.6
+	light.omni_attenuation = 1.7
+	light.shadow_enabled = false
+	add_child(light)
+	light.global_position = at
 
 
 func _build_lookout() -> void:
@@ -890,23 +882,151 @@ func _blue_hour() -> void:
 		_moon = MeshInstance3D.new()
 		_moon.name = "Moon"
 		var quad := QuadMesh.new()
-		quad.size = Vector2(9.0, 9.0)
+		quad.size = Vector2(7.0, 7.0)
 		var m := StandardMaterial3D.new()
 		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		m.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
 		m.disable_fog = true
-		var g := Gradient.new()
-		g.offsets = PackedFloat32Array([0.0, 0.62, 0.7, 1.0])
-		g.colors = PackedColorArray([Color(0.98, 0.97, 0.9), Color(0.96, 0.95, 0.88), Color(0.9, 0.92, 0.98, 0.25), Color(0.9, 0.92, 0.98, 0.0)])
-		var tex := GradientTexture2D.new()
-		tex.gradient = g
-		tex.fill = GradientTexture2D.FILL_RADIAL
-		tex.fill_from = Vector2(0.5, 0.5)
-		tex.fill_to = Vector2(1.0, 0.5)
-		m.albedo_texture = tex
+		m.albedo_texture = _crescent_texture()
 		quad.material = m
 		_moon.mesh = quad
 		_moon.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		add_child(_moon)
-		_moon.global_position = Vector3(-26.0, 30.0, -60.0)
+		_moon.global_position = Vector3(-26.0, 32.0, -60.0)
+		_add_stars()
+
+
+## A paper crescent, bright enough to see and small enough not to be a second sun.
+func _crescent_texture() -> Texture2D:
+	var n := 96
+	var img := Image.create(n, n, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	var body := Vector2(0.44, 0.50)
+	var bite := Vector2(0.62, 0.42)
+	for y in n:
+		for x in n:
+			var p := Vector2(float(x) + 0.5, float(y) + 0.5) / float(n)
+			var d_body := p.distance_to(body)
+			var d_bite := p.distance_to(bite)
+			if d_body < 0.30 and d_bite > 0.26:
+				var edge := clampf((0.30 - d_body) / 0.025, 0.0, 1.0) * clampf((d_bite - 0.26) / 0.03, 0.0, 1.0)
+				img.set_pixel(x, y, Color(0.98, 0.96, 0.88, edge))
+	return ImageTexture.create_from_image(img)
+
+
+func _add_stars() -> void:
+	var tex := _star_texture()
+	var at := [
+		Vector3(-18.0, 34.0, 8.0), Vector3(-6.0, 39.0, -8.0), Vector3(10.0, 36.0, 2.0),
+		Vector3(18.0, 33.0, 24.0), Vector3(-12.0, 31.0, 30.0), Vector3(3.0, 41.0, 28.0),
+		Vector3(24.0, 35.0, -2.0),
+	]
+	for i in at.size():
+		var star := MeshInstance3D.new()
+		star.name = "Star%d" % i
+		var quad := QuadMesh.new()
+		quad.size = Vector2(0.7, 0.7)
+		var m := StandardMaterial3D.new()
+		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		m.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+		m.disable_fog = true
+		m.albedo_texture = tex
+		quad.material = m
+		star.mesh = quad
+		star.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		add_child(star)
+		star.global_position = at[i]
+
+
+func _star_texture() -> Texture2D:
+	var n := 32
+	var img := Image.create(n, n, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	var c := Vector2(0.5, 0.5)
+	for y in n:
+		for x in n:
+			var p := Vector2(float(x) + 0.5, float(y) + 0.5) / float(n)
+			var d := p.distance_to(c)
+			if d < 0.48:
+				var arm := maxf(1.0 - absf(p.x - 0.5) * 7.0, 0.0) * maxf(1.0 - absf(p.y - 0.5) * 3.5, 0.0)
+				arm = maxf(arm, maxf(1.0 - absf(p.y - 0.5) * 7.0, 0.0) * maxf(1.0 - absf(p.x - 0.5) * 3.5, 0.0))
+				var disc := clampf(1.0 - d / 0.16, 0.0, 1.0)
+				img.set_pixel(x, y, Color(0.98, 0.96, 0.88, clampf(maxf(arm, disc), 0.0, 1.0)))
+	return ImageTexture.create_from_image(img)
+
+
+## The blue hour tints shaded surfaces. People keep the paper colours they were
+## painted with, plus a warm cheek only on the side turned toward the fire.
+const PEOPLE_SHADER := """
+shader_type spatial;
+render_mode unshaded, cull_back;
+uniform sampler2D albedo_tex : source_color, hint_default_white;
+uniform vec4 albedo_color : source_color = vec4(1.0);
+uniform float use_tex = 1.0;
+uniform vec3 fire_world = vec3(0.0);
+uniform float warmth = 1.0;
+varying vec3 world_pos;
+varying vec3 world_normal;
+void vertex() {
+	world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+	world_normal = normalize((MODEL_MATRIX * vec4(NORMAL, 0.0)).xyz);
+}
+void fragment() {
+	vec3 base = albedo_color.rgb;
+	if (use_tex > 0.5) {
+		base *= texture(albedo_tex, UV).rgb;
+	}
+	vec3 to_fire = fire_world - world_pos;
+	float dist = length(to_fire);
+	float facing = clamp(dot(world_normal, to_fire / max(dist, 0.001)), 0.0, 1.0);
+	float near = smoothstep(4.8, 0.8, dist);
+	ALBEDO = base + vec3(0.42, 0.16, 0.04) * facing * near * warmth;
+}
+"""
+
+
+func _keep_people_paper() -> void:
+	if _people_shader == null:
+		_people_shader = Shader.new()
+		_people_shader.code = PEOPLE_SHADER
+	if _white_tex == null:
+		var img := Image.create(1, 1, false, Image.FORMAT_RGBA8)
+		img.fill(Color.WHITE)
+		_white_tex = ImageTexture.create_from_image(img)
+	var main := get_parent()
+	_paint_people(get_node_or_null("Jonathan"))
+	_paint_people(main.get_node_or_null("DavidMentor"))
+	_paint_people(main.get_node_or_null("Player"))
+	for child in get_children():
+		if str(child.name).begins_with("Guard"):
+			_paint_people(child)
+
+
+func _paint_people(root: Node) -> void:
+	if root == null:
+		return
+	var fire := _at(FIRE)
+	for node in root.find_children("*", "MeshInstance3D", true, false):
+		var mi := node as MeshInstance3D
+		if mi == null or mi.mesh == null:
+			continue
+		var n := str(mi.name)
+		if "Outline" in n or n.ends_with("Ink"):
+			continue
+		for i in mi.mesh.get_surface_count():
+			var mat := mi.get_active_material(i) as StandardMaterial3D
+			if mat == null:
+				continue
+			if mat.albedo_color.get_luminance() < 0.08:
+				continue
+			var sh := ShaderMaterial.new()
+			sh.shader = _people_shader
+			sh.resource_name = mat.resource_name
+			sh.set_shader_parameter("albedo_color", mat.albedo_color)
+			sh.set_shader_parameter("albedo_tex", mat.albedo_texture if mat.albedo_texture else _white_tex)
+			sh.set_shader_parameter("use_tex", 1.0 if mat.albedo_texture else 0.0)
+			sh.set_shader_parameter("fire_world", fire)
+			sh.set_shader_parameter("warmth", 1.0)
+			mi.set_surface_override_material(i, sh)
