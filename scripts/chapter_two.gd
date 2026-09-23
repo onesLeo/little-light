@@ -8,6 +8,7 @@ const JournalContent := preload("res://scripts/journal_content.gd")
 const Profiles := preload("res://scripts/profiles.gd")
 const Cord := preload("res://scripts/friendship_cord.gd")
 const PaperUI := preload("res://scripts/paper_ui.gd")
+const WordChip := preload("res://scripts/word_chip.gd")
 
 const Paper := preload("res://scripts/camp_paper.gd")
 const SoundLibrary := preload("res://scripts/sound_library.gd")
@@ -36,7 +37,6 @@ var _heard_loops: int = 0
 var _ceremony: bool = false
 var _words: HBoxContainer
 var _word_buttons: Array[Button] = []
-var _word_halos: Array[StyleBoxFlat] = []
 var _word_said: Array[bool] = [false, false, false]
 var _words_done: bool = false
 var _world_loops: Array[MeshInstance3D] = []
@@ -150,8 +150,6 @@ func _advance() -> void:
 			_cord.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 			_cord.offset_left = -280.0
 			_cord.offset_right = 280.0
-			_cord.offset_top = -230.0
-			_cord.offset_bottom = -54.0
 			_cord.completed.connect(_on_cord_completed)
 			_build_world_cord()
 			_say(
@@ -321,14 +319,14 @@ func _on_charm_sealed() -> void:
 	if _line:
 		_line.text = CHARM_LINE + "\n(Friendship charm sealed on the Virtue Bracelet.)"
 	if _prompt:
-		_prompt.text = "Press Space to keep your charm"
+		_prompt.text = _device_prompt("Press Space to keep your charm")
 
 
 ## Chapter complete: back to the wide view, the cheer and confetti, the banner, and
 ## the end-of-chapter card (Play again, Colour my charm, Faith Journey).
 func _finish() -> void:
 	var main := get_parent().get_parent()
-	Profiles.finish_chapter()
+	Profiles.finish_chapter(Profiles.CHAPTER_CAMP)
 	var cameras := main.get_node_or_null("CameraDirector")
 	if cameras and cameras.has_method("cut_to_tabletop"):
 		cameras.cut_to_tabletop()
@@ -338,7 +336,7 @@ func _finish() -> void:
 	_say("Wonder Light: \"Friends stay tied together.\"", "Well done, Wonder-Walker!")
 	var director := main.get_node_or_null("ChapterDirector")
 	if director and director.has_method("play_finale"):
-		director.play_finale()
+		director.play_finale("Chapter 2 Complete!")
 	var menu := main.get_node_or_null("GameMenu")
 	if menu and menu.has_method("show_end_panel"):
 		menu.show_end_panel(JournalContent.CHARM_FRIENDSHIP)
@@ -387,7 +385,10 @@ func press_word(index: int) -> void:
 		return
 	_word_said[index] = true
 	_restyle_words()
-	_pulse_word(index)
+	(_word_buttons[index] as WordChip).pop()
+	var light := get_parent().get_parent().get_node_or_null("WonderLight")
+	if light and light.has_method("celebrate"):
+		light.celebrate()
 	# Same narrator path as Wonder Light's other lines: the recorded clip, not system speech.
 	if _audio and _audio.has_method("play_line"):
 		_audio.play_line(WORD_LINES[index])
@@ -398,7 +399,7 @@ func press_word(index: int) -> void:
 		return
 	_words_done = true
 	if _prompt:
-		_prompt.text = "Press Space to loop the cord"
+		_prompt.text = _device_prompt("Press Space to loop the cord")
 	if _audio and _audio.has_method("play_success"):
 		_audio.play_success()
 
@@ -406,44 +407,12 @@ func press_word(index: int) -> void:
 func _restyle_words() -> void:
 	if _words:
 		_words.visible = phase == Phase.WORDS
+		_place_above_dialogue(_words, 118.0)
+	var next := _word_said.find(false)
 	for i in _word_buttons.size():
-		_paint_word(i, i < _word_said.size() and _word_said[i])
-
-
-## A tapped word stays bright, with a warm halo, the same way chapter 1's words do.
-func _paint_word(index: int, lit: bool) -> void:
-	if index >= _word_buttons.size():
-		return
-	var button := _word_buttons[index]
-	button.text = WORD_LABELS[index]
-	var fill := Color(1.0, 0.97, 0.72) if lit else PaperUI.GOLD
-	if index < _word_halos.size():
-		_word_halos[index].bg_color = Color(1.0, 0.84, 0.28, 0.7 if lit else 0.0)
-	for state in ["normal", "hover", "focus", "pressed"]:
-		var box := button.get_theme_stylebox(state) as StyleBoxFlat
-		if box == null:
-			continue
-		box.bg_color = fill
-		box.shadow_color = Color(1.0, 0.78, 0.2, 0.95 if lit else 0.0)
-		box.shadow_size = 24 if lit else 0
-
-
-func _pulse_word(index: int) -> void:
-	if index < 0 or index >= _word_buttons.size():
-		return
-	var button := _word_buttons[index]
-	button.pivot_offset = button.size * 0.5 if button.size.x > 1.0 else Vector2(90, 43)
-	button.scale = Vector2(0.94, 0.94)
-	var tween := create_tween()
-	tween.set_parallel(true)
-	tween.tween_property(button, "scale", Vector2(1.12, 1.12), 0.12)
-	if index < _word_halos.size():
-		_word_halos[index].bg_color.a = 0.25
-		tween.tween_property(_word_halos[index], "bg_color:a", 0.95, 0.1)
-	tween.chain().set_parallel(true)
-	tween.tween_property(button, "scale", Vector2.ONE, 0.28)
-	if index < _word_halos.size():
-		tween.tween_property(_word_halos[index], "bg_color:a", 0.7, 0.35)
+		var chip := _word_buttons[i] as WordChip
+		chip.set_lit(i < _word_said.size() and _word_said[i])
+		chip.set_beckon(i == next)
 
 
 ## Three cream-gold loops in the firelight. The panel at the bottom is only the control.
@@ -559,12 +528,35 @@ func _say(text: String, prompt: String) -> void:
 	var jon := get_parent().get_node_or_null("Jonathan")
 	if jon:
 		jon.speaking = text.begins_with("Jonathan:")
+	var director := get_parent().get_parent().get_node_or_null("ChapterDirector")
 	if _line:
 		_line.text = text
 	if _prompt:
-		_prompt.text = prompt
+		_prompt.text = _device_prompt(prompt)
+	# The bar fits this line (not the last one of chapter 1), then the cards sit above it.
+	if director and director.has_method("_fit_dialogue_panel"):
+		director._fit_dialogue_panel()
+	if is_instance_valid(_cord):
+		_place_above_dialogue(_cord, Cord.PANEL.y)
+	if _words and _words.visible:
+		_place_above_dialogue(_words, 118.0)
 	if _audio and _audio.has_method("speak_dialogue"):
 		_audio.speak_dialogue(text)
+
+
+## Prompts are written for the keyboard. On a tablet or a gamepad they name that
+## device's buttons instead, as chapter 1's do.
+func _device_prompt(raw: String) -> String:
+	var input_setup := get_parent().get_parent().get_node_or_null("InputSetup")
+	var mode: String = input_setup.mode if input_setup and "mode" in input_setup else "keyboard"
+	match mode:
+		"touch":
+			return raw.replace("Press Space", "Tap NEXT").replace("Hold Space / Enter or the button", "Hold LOOP") \
+				.replace("A / D or arrows: look around", "stick: look around")
+		"gamepad":
+			return raw.replace("Press Space", "Press A").replace("Hold Space / Enter or the button", "Hold A") \
+				.replace("A / D or arrows: look around", "stick: look around")
+	return raw
 
 
 func _pressed(event: InputEvent) -> bool:
@@ -611,38 +603,32 @@ func _build_words(ui: Node) -> void:
 	if is_instance_valid(_words):
 		_words.queue_free()
 	_word_buttons.clear()
-	_word_halos.clear()
 	_words = HBoxContainer.new()
 	_words.name = "CampWords"
 	_words.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	_words.offset_left = -360.0
-	_words.offset_right = 360.0
-	_words.offset_top = -250.0
-	_words.offset_bottom = -140.0
+	_words.offset_left = -380.0
+	_words.offset_right = 380.0
 	_words.alignment = BoxContainer.ALIGNMENT_CENTER
-	_words.add_theme_constant_override("separation", 18)
+	# Room between the words so each one's glow stays its own.
+	_words.add_theme_constant_override("separation", 40)
 	_words.visible = false
 	ui.add_child(_words)
 	for i in WORD_LABELS.size():
-		var button := PaperUI.button(WORD_LABELS[i], Vector2(180, 86), 32)
-		button.focus_mode = Control.FOCUS_NONE
-		button.pressed.connect(press_word.bind(i))
-		var halo := StyleBoxFlat.new()
-		halo.bg_color = Color(1.0, 0.86, 0.35, 0.0)
-		halo.set_corner_radius_all(28)
-		var glow := Panel.new()
-		glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		glow.show_behind_parent = true
-		glow.set_anchors_preset(Control.PRESET_FULL_RECT)
-		glow.offset_left = -18.0
-		glow.offset_top = -18.0
-		glow.offset_right = 18.0
-		glow.offset_bottom = 18.0
-		glow.add_theme_stylebox_override("panel", halo)
-		button.add_child(glow)
-		_words.add_child(button)
-		_word_buttons.append(button)
-		_word_halos.append(halo)
+		var chip := WordChip.new(WORD_LABELS[i], Vector2(190, 86), 34)
+		chip.pressed.connect(press_word.bind(i))
+		_words.add_child(chip)
+		_word_buttons.append(chip)
+
+
+## Sits a card just above the story's dialogue bar (whatever height the bar is now), so the
+## words and the cord never cover the line being read.
+func _place_above_dialogue(card: Control, height: float) -> void:
+	var bar := get_parent().get_parent().get_node_or_null("UI/Panel") as Control
+	var top := -200.0
+	if bar:
+		top = bar.offset_bottom - maxf(bar.offset_bottom - bar.offset_top, bar.get_combined_minimum_size().y)
+	card.offset_bottom = top - 22.0
+	card.offset_top = card.offset_bottom - height
 
 
 func _update_checklist() -> void:

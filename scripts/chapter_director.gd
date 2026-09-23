@@ -14,6 +14,7 @@ const JournalContent := preload("res://scripts/journal_content.gd")
 const GameSettings := preload("res://scripts/game_settings.gd")
 const EasyWords := preload("res://scripts/easy_words.gd")
 const PaperUI := preload("res://scripts/paper_ui.gd")
+const WordChip := preload("res://scripts/word_chip.gd")
 
 enum Beat {
 	ARRIVE,
@@ -78,8 +79,6 @@ var _word_phase: String = "" ## "", listen, tap, done
 var _word_said: Array[bool] = [false, false, false]
 var _word_row: HBoxContainer
 var _word_buttons: Array[Button] = []
-var _word_halos: Array[StyleBoxFlat] = []
-var _word_pulse: Array[Tween] = []
 
 func _ready() -> void:
 	dialogue_label.text = ""
@@ -101,13 +100,41 @@ func _ready() -> void:
 	_start_story()
 
 
-## Starts the story, or waits for the "Who is playing?" screen when nobody is playing yet.
+## Starts the story. Nobody playing yet: the "Who is playing?" screen comes first, then the Faith
+## Journey map, where the child picks a chapter. A reload for "Play again" goes straight back into
+## the chapter they were on (Profiles.current_chapter).
 func _start_story() -> void:
 	var picker := get_node_or_null("../ProfileScreen")
 	if Profiles.active_id.is_empty() and picker != null:
-		picker.profile_chosen.connect(func(_id: String) -> void: _enter_beat(Beat.ARRIVE), CONNECT_ONE_SHOT)
+		picker.profile_chosen.connect(func(_id: String) -> void: _open_journey_first(), CONNECT_ONE_SHOT)
+		return
+	match Profiles.current_chapter:
+		Profiles.CHAPTER_VALLEY:
+			_enter_beat(Beat.ARRIVE)
+		Profiles.CHAPTER_CAMP:
+			var camp := get_node_or_null("../KingsCamp")
+			if camp and camp.has_method("visit"):
+				camp.visit.call_deferred()
+			else:
+				_enter_beat(Beat.ARRIVE)
+		_:
+			_open_journey_first.call_deferred()
+
+
+## The Faith Journey map as the first stop, before any chapter. Without it (a trimmed scene), the
+## valley starts as before.
+func _open_journey_first() -> void:
+	var journey := get_node_or_null("../FaithJourney")
+	if journey and journey.has_method("open_to_choose"):
+		journey.open_to_choose()
 	else:
-		_enter_beat(Beat.ARRIVE)
+		begin_valley()
+
+
+## Chapter 1 from its first line, in the scene as it is (the map uses it when nothing has started yet).
+func begin_valley() -> void:
+	Profiles.current_chapter = Profiles.CHAPTER_VALLEY
+	_enter_beat(Beat.ARRIVE)
 
 func _is_continue_pressed(event: InputEvent) -> bool:
 	# ui_accept (Space/Enter) plus raw key fallback — unhandled path can miss Space
@@ -279,7 +306,7 @@ func _enter_beat(next: Beat) -> void:
 				_advance_ready = true
 
 		Beat.DONE:
-			Profiles.finish_chapter()
+			Profiles.finish_chapter(Profiles.CHAPTER_VALLEY)
 			_set_player_move(true)
 			_cut_tabletop()
 			_point_light(null)
@@ -288,7 +315,7 @@ func _enter_beat(next: Beat) -> void:
 				"Well done, Wonder-Walker!"
 			)
 			_advance_ready = false
-			play_finale()
+			play_finale("Chapter 1 Complete!")
 			chapter_finished.emit()
 
 func _on_advance() -> void:
@@ -407,6 +434,11 @@ func _fit_dialogue_panel() -> void:
 	var max_height := maxf(116.0, minf(240.0, viewport_height * 0.38))
 	var height := clampf(wanted, 116.0, max_height)
 	dialogue_panel.offset_top = dialogue_panel.offset_bottom - height
+	if _word_row:
+		# A very long line (Joshua 1:9) makes the bar taller than `height`: go by what it needs.
+		var bar_top := dialogue_panel.offset_bottom - maxf(height, dialogue_panel.get_combined_minimum_size().y)
+		_word_row.offset_bottom = bar_top - 22.0
+		_word_row.offset_top = _word_row.offset_bottom - 96.0
 
 ## Shows a line of story text and reads it aloud (if the player has read-aloud on). With "Easy words" on for the
 ## child playing, lines that have an easier version (easy_words.gd) are swapped for it. Returns what was shown.
@@ -561,13 +593,14 @@ func _face_david(target: Node3D) -> void:
 ## Wonder-Walker, the light celebrating, and a banner that pops in.
 ## The end-of-chapter celebration: a cheer, confetti, Wonder Light's burst and the
 ## "Chapter Complete!" banner. The King's Camp uses it too, so both chapters end alike.
-func play_finale() -> void:
+func play_finale(title: String = "Chapter Complete!") -> void:
 	if audio_director and audio_director.has_method("play_cheer"):
 		audio_director.play_cheer()
 	if confetti and confetti.has_method("burst") and player:
 		confetti.burst(player.global_position + Vector3(0.0, 2.8, 0.0), 220, 1.4, 6.5, 0.95)
 	_celebrate_light()
 	if complete_banner:
+		complete_banner.text = title
 		complete_banner.visible = true
 		complete_banner.modulate.a = 0.0
 		complete_banner.pivot_offset = complete_banner.size * 0.5
@@ -598,38 +631,24 @@ func _build_word_buttons() -> void:
 	_word_row.name = "WordTurn"
 	_word_row.visible = false
 	_word_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	_word_row.add_theme_constant_override("separation", 16)
-	_word_row.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	# Room between the words so each one's glow stays its own.
+	_word_row.add_theme_constant_override("separation", 40)
+	# Anchored to the bottom and kept just above the dialogue bar (see _fit_dialogue_panel),
+	# so the long Joshua 1:9 text is never hidden under the words.
 	_word_row.anchor_left = 0.06
 	_word_row.anchor_right = 0.72
-	_word_row.anchor_top = 0.56
-	_word_row.anchor_bottom = 0.56
-	_word_row.offset_top = -48.0
-	_word_row.offset_bottom = 48.0
+	_word_row.anchor_top = 1.0
+	_word_row.anchor_bottom = 1.0
+	_word_row.offset_bottom = -300.0
+	_word_row.offset_top = -396.0
 	_word_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	ui.add_child(_word_row)
 	for i in WORD_LABELS.size():
-		var b := PaperUI.button(WORD_LABELS[i], Vector2(200, 96), 36)
-		b.focus_mode = Control.FOCUS_NONE
-		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		b.pressed.connect(press_word.bind(i))
-		var halo := StyleBoxFlat.new()
-		halo.bg_color = Color(1.0, 0.86, 0.35, 0.0)
-		halo.set_corner_radius_all(32)
-		var glow := Panel.new()
-		glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		glow.show_behind_parent = true
-		glow.set_anchors_preset(Control.PRESET_FULL_RECT)
-		glow.offset_left = -22.0
-		glow.offset_top = -22.0
-		glow.offset_right = 22.0
-		glow.offset_bottom = 22.0
-		glow.add_theme_stylebox_override("panel", halo)
-		b.add_child(glow)
-		_word_row.add_child(b)
-		_word_buttons.append(b)
-		_word_halos.append(halo)
-		_word_pulse.append(null)
+		var chip := WordChip.new(WORD_LABELS[i], Vector2(200, 96), 36)
+		chip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		chip.pressed.connect(press_word.bind(i))
+		_word_row.add_child(chip)
+		_word_buttons.append(chip)
 
 
 func _begin_word_listen() -> void:
@@ -695,49 +714,19 @@ func press_word(index: int) -> void:
 			audio_director.play_success()
 
 
+## Lit words stay lit; the next word to tap breathes gently (word_chip.gd).
 func _restyle_words() -> void:
+	var next := _word_said.find(false) if _word_phase == "tap" else -1
 	for i in _word_buttons.size():
-		var said := i < _word_said.size() and _word_said[i]
-		_paint_word(i, said)
-
-
-## A tapped word stays bright, with a warm halo, so she can see which ones she has said.
-func _paint_word(index: int, lit: bool) -> void:
-	var b := _word_buttons[index]
-	var fill := Color(1.0, 0.97, 0.72) if lit else PaperUI.GOLD
-	var halo_alpha := 0.55 if lit else 0.0
-	if index < _word_halos.size():
-		_word_halos[index].bg_color = Color(1.0, 0.84, 0.28, halo_alpha)
-	for state in ["normal", "hover", "focus", "pressed"]:
-		var sb := b.get_theme_stylebox(state) as StyleBoxFlat
-		if sb == null:
-			continue
-		sb.bg_color = fill
-		sb.shadow_color = Color(1.0, 0.78, 0.2, 0.9 if lit else 0.0)
-		sb.shadow_size = 22 if lit else 0
+		var chip := _word_buttons[i] as WordChip
+		chip.set_lit(i < _word_said.size() and _word_said[i])
+		chip.set_beckon(i == next)
 
 
 func _pulse_word(index: int) -> void:
 	if index < 0 or index >= _word_buttons.size():
 		return
-	var b := _word_buttons[index]
-	if index < _word_pulse.size() and _word_pulse[index] and _word_pulse[index].is_valid():
-		_word_pulse[index].kill()
-	b.pivot_offset = b.size * 0.5 if b.size.x > 1.0 else Vector2(100, 48)
-	b.scale = Vector2(0.94, 0.94)
-	var tw := create_tween()
-	tw.set_parallel(true)
-	tw.tween_property(b, "scale", Vector2(1.12, 1.12), 0.12).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	if index < _word_halos.size():
-		var halo := _word_halos[index]
-		halo.bg_color.a = 0.2
-		tw.tween_property(halo, "bg_color:a", 0.9, 0.1)
-	tw.chain().set_parallel(true)
-	tw.tween_property(b, "scale", Vector2.ONE, 0.28).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	if index < _word_halos.size():
-		tw.tween_property(_word_halos[index], "bg_color:a", 0.55, 0.35)
-	if index < _word_pulse.size():
-		_word_pulse[index] = tw
+	(_word_buttons[index] as WordChip).pop()
 	if wonder_light and wonder_light.has_method("celebrate"):
 		wonder_light.celebrate()
 

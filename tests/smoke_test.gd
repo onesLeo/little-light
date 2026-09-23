@@ -65,6 +65,8 @@ func _initialize() -> void:
 	DirAccess.remove_absolute(TEST_PROFILES)
 	Profiles.use_file(TEST_PROFILES)
 	Profiles.set_active(Profiles.create("Test", "lamb"))
+	# As after "Play again" in the valley: the story goes straight into chapter 1.
+	Profiles.current_chapter = Profiles.CHAPTER_VALLEY
 	var main: Node = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
 	await process_frame  # let _ready() propagate through the tree first
@@ -661,11 +663,60 @@ func _initialize() -> void:
 	await create_timer(0.3).timeout
 	_check(game_menu._end_panel.visible, "end panel appears after the chapter finishes")
 	_check(game_menu._journey_button.visible, "Faith Journey is offered once the chapter is finished")
+	_check("Courage" in game_menu._end_title.text and director.complete_banner.text == "Chapter 1 Complete!",
+			"the end card names the charm earned, and the banner names the chapter")
+	_check(game_menu._end_panel.size.y < 330.0 and not (main.get_node("UI/Panel") as Control).visible,
+			"the end card is only as tall as its buttons, and the dialogue bar steps aside for it")
+	_check(Profiles.has_finished(Profiles.active_id, Profiles.CHAPTER_VALLEY) and Profiles.current_chapter == Profiles.CHAPTER_VALLEY,
+			"the valley is marked finished, and Play again would replay the valley")
 	var journey: CanvasLayer = main.get_node("FaithJourney")
 	journey.open()
 	_check(journey.is_open() and journey._map.texture != null, "the journey opens on the old map, not a blank page")
+	_check(journey._back.visible and not journey._change_player.visible and not journey.is_locked("camp")
+			and journey._marker.visible and journey._marker_stop == "camp",
+			"opened later it has Back, and with the valley done the King's Camp is open and marked as next")
 	journey._on_stop("ahead")
-	_check("still ahead" in journey._line.text, "a stop further on is a kind line, not a lock")
+	_check(journey._notice.visible and "still ahead" in journey._notice_body.text, "a stop further on is a kind card, not a dead end")
+	journey._hide_notice()
+
+	print("-- the Faith Journey comes first, and chapter 2 waits for chapter 1 --")
+	var finished_kid: String = Profiles.active_id
+	var new_kid: String = Profiles.create("New", "sun")
+	Profiles.set_active(new_kid)
+	_check(Profiles.next_chapter(new_kid) == Profiles.CHAPTER_VALLEY and Profiles.is_unlocked(new_kid, Profiles.CHAPTER_VALLEY)
+			and not Profiles.is_unlocked(new_kid, Profiles.CHAPTER_CAMP), "a new child starts at the valley, and the camp is closed")
+	journey.close()
+	journey.open_to_choose()
+	_check(journey.is_open() and paused_now() and not journey._back.visible and journey._change_player.visible
+			and "New" in journey._line.text, "straight after \"Who is playing?\" the map greets the child by name, with no Back")
+	_check(journey._marker.visible and journey._marker_stop == "valley" and journey._marker.text == "Start here"
+			and journey._ring.visible, "a bouncing Start here tag and rings mark the valley")
+	journey._on_stop("camp")
+	_check(journey._notice.visible and "Chapter 1" in journey._notice_body.text and journey._notice_go.visible
+			and journey._notice_go.text == "Play Chapter 1" and main.get_node("KingsCamp").tent_count() == 0,
+			"tapping the King's Camp first says to finish Chapter 1, and offers to play it")
+	var pause_key := InputEventAction.new()
+	pause_key.action = "pause"
+	pause_key.pressed = true
+	root.push_input(pause_key)
+	_check(not journey._notice.visible and journey.is_open(), "the pause key closes the card, and the map stays up to choose from")
+	root.push_input(pause_key)
+	_check(journey.is_open(), "with nothing started yet, the pause key does not leave the map")
+	journey.close()
+	Profiles.set_active(finished_kid)
+	Profiles.remove(new_kid)
+	var legacy := ConfigFile.new()
+	legacy.set_value("app", "order", ["p1"])
+	legacy.set_value("profile_p1", "name", "Old")
+	legacy.set_value("profile_p1", "chapters", 2)
+	legacy.save("user://smoke-legacy-profiles.cfg")
+	Profiles.use_file("user://smoke-legacy-profiles.cfg")
+	_check(Profiles.has_finished("p1", Profiles.CHAPTER_VALLEY) and Profiles.is_unlocked("p1", Profiles.CHAPTER_CAMP),
+			"a save from before chapters were told apart still has the valley finished")
+	DirAccess.remove_absolute("user://smoke-legacy-profiles.cfg")
+	Profiles.use_file(TEST_PROFILES)
+	Profiles.set_active(finished_kid)
+	journey.open()
 	var camp: Node = main.get_node("KingsCamp")
 	_check(camp.tent_count() == 0, "the camp is not built while the child is still in the valley")
 	# As after Play again: chapter 1 is waiting for Space when the child jumps to the camp.
@@ -707,6 +758,7 @@ func _initialize() -> void:
 	var story: Node = camp.get_node("ChapterTwo")
 	_check(story.phase == story.Phase.MEET and "I am Jonathan" in director.dialogue_label.text,
 			"Space at the camp moves the camp story on, and chapter 1 does not take it")
+	_check(Profiles.current_chapter == Profiles.CHAPTER_CAMP, "from here, Play again comes back to the camp")
 	_check(director.beat == director.Beat.CAMP and not ("David needs his stone" in director.dialogue_label.text),
 			"the valley's item hunt never shows up at the camp")
 	for _i in 6:
@@ -732,6 +784,27 @@ func _initialize() -> void:
 	var camp_triangles := _triangles_under(camp)
 	_check(camp_triangles <= 80000, "the camp stays light (%d triangles, budget 80000)" % camp_triangles)
 
+	print("-- Knit, Loved, Friend: each tapped word lights up on its own --")
+	story.phase = story.Phase.GIVE
+	story._advance()
+	var chips: Array = story._word_buttons
+	_check(story.phase == story.Phase.WORDS and story._words.visible and chips.size() == 3
+			and chips[0].beckon and not chips[0].lit, "the three words are up, and the first one beckons")
+	var bar := main.get_node("UI/Panel") as Control
+	_check(story._words.offset_bottom < bar.offset_top, "the words sit above the dialogue bar, not over it")
+	story.press_word(0)
+	_check(chips[0].lit and not chips[0].beckon and chips[1].beckon and chips[0]._sparks.size() > 0,
+			"a tapped word pops with sparkles and stays lit, and the next one beckons")
+	for _i in 20:
+		await process_frame
+	_check(chips[0]._glow > 0.5 and chips[2]._glow < 0.05, "a lit word glows, an untapped one does not")
+	story.press_word(1)
+	story.press_word(2)
+	_check(story._words_done and chips.all(func(c: Node) -> bool: return c.lit), "all three lit: the cord can come next")
+	story._advance()
+	_check(story.phase == story.Phase.CORD and is_instance_valid(story._cord)
+			and story._cord.offset_bottom < bar.offset_top, "the cord card sits above the dialogue bar, so the line stays readable")
+
 	print("-- The King's Camp ends the way chapter 1 does --")
 	# A scratch child, so the journal checks further down still see only chapter 1's progress.
 	var valley_kid: String = Profiles.active_id
@@ -756,11 +829,14 @@ func _initialize() -> void:
 	_check(story.phase == story.Phase.DONE and "Friends stay tied together" in director.dialogue_label.text
 			and "Well done" in director.prompt_label.text and director.complete_banner.visible,
 			"the camp ends with the cheer, the confetti and the Chapter Complete banner")
-	_check(int(Profiles.active()["chapters"]) == chapters_before + 1, "and it counts as a finished chapter")
+	_check(int(Profiles.active()["chapters"]) == chapters_before + 1 and Profiles.has_finished(camp_kid, Profiles.CHAPTER_CAMP)
+			and director.complete_banner.text == "Chapter 2 Complete!", "and it counts as chapter 2 finished")
 	await create_timer(game_menu.end_panel_delay + 0.3).timeout
 	_check(game_menu._end_panel.visible and game_menu._journey_button.visible and game_menu._colour_charm_button.visible
 			and game_menu._end_charm == JournalContent.CHARM_FRIENDSHIP,
 			"then the end card offers Play again, the Faith Journey, and colouring the Friendship charm")
+	_check("Friendship" in game_menu._end_title.text and Profiles.current_chapter == Profiles.CHAPTER_CAMP,
+			"it names the Friendship charm, and Play again replays the camp, not the valley")
 	game_menu.hide_end_panel()
 	Profiles.set_active(valley_kid)
 	Profiles.remove(camp_kid)
@@ -1030,10 +1106,23 @@ func _initialize() -> void:
 	director._start_story()
 	_check(director.beat == director.Beat.DONE and director.dialogue_label.text == "", "and the story does not start yet")
 	picker.choose(kid_id)
-	_check(director.beat == director.Beat.ARRIVE and director.dialogue_label.text.contains("valley") and not paused_now(), "choosing a child starts the story")
+	var first_map: CanvasLayer = main.get_node("FaithJourney")
+	_check(first_map.is_open() and first_map._choosing and paused_now() and director.beat == director.Beat.DONE,
+			"choosing a child opens the Faith Journey map first, and the story still waits")
+	first_map._on_stop("valley")
+	_check(not first_map.is_open() and director.beat == director.Beat.ARRIVE and director.dialogue_label.text.contains("valley") and not paused_now(),
+			"tapping the valley on the map starts chapter 1 right there")
 	Profiles.set_active(kid_id)
+	Profiles.current_chapter = Profiles.CHAPTER_VALLEY
+	director.beat = director.Beat.DONE
 	director._start_story()
-	_check(director.beat == director.Beat.ARRIVE, "with a child already playing (Play again), the story starts straight away")
+	_check(director.beat == director.Beat.ARRIVE, "with a child already playing (Play again), the chapter they were on starts straight away")
+	Profiles.current_chapter = Profiles.CHAPTER_CAMP
+	director._start_story()
+	await process_frame
+	var replay_story: Node = main.get_node("KingsCamp/ChapterTwo")
+	_check(director.beat == director.Beat.CAMP and replay_story.phase == replay_story.Phase.ARRIVE,
+			"and Play again after the King's Camp goes back to the camp, not the valley")
 
 	audio.stop_speech()   # the story was just restarted, so its first line may be playing
 	vo_player.stream = null

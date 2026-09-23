@@ -239,7 +239,7 @@ func _refresh() -> void:
 	for _i in JournalContent.MYSTERY_SLOTS:
 		_charm_row.add_child(_mystery_slot())
 	_colour_button.visible = _colour_screen != null and not _picked_charm.is_empty()
-	_journey_button.visible = _journey != null and not p.is_empty() and int(p["chapters"]) >= 1
+	_journey_button.visible = _journey != null and not p.is_empty()
 
 
 func _open_journey() -> void:

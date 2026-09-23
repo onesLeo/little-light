@@ -11,6 +11,7 @@ func _initialize() -> void:
 	DirAccess.remove_absolute("res://.godot/camp-review-profile.cfg")
 	Profiles.use_file("res://.godot/camp-review-profile.cfg")
 	Profiles.set_active(Profiles.create("Camp Review", "star"))
+	Profiles.current_chapter = Profiles.CHAPTER_VALLEY
 	main = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
 	_run.call_deferred()

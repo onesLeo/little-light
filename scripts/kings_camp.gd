@@ -18,6 +18,7 @@ const Guard := preload("res://scripts/camp_guard.gd")
 const Owl := preload("res://scripts/camp_owl.gd")
 const Fireflies := preload("res://scripts/camp_fireflies.gd")
 const CampSounds := preload("res://scripts/camp_sounds.gd")
+const Profiles := preload("res://scripts/profiles.gd")
 const MeadowDressing := preload("res://scripts/meadow_dressing.gd")
 
 ## The middle of the clearing. Everything below is placed relative to it (x, z).
@@ -112,6 +113,8 @@ func tent_count() -> int:
 
 
 func visit() -> void:
+	# "Play again" from here comes back to the camp, not to the valley.
+	Profiles.current_chapter = Profiles.CHAPTER_CAMP
 	_build()
 	var main := get_parent()
 	var director := main.get_node_or_null("ChapterDirector")
