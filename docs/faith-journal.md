@@ -28,6 +28,22 @@ Backlog item 3.5. Each child on a tablet has their own name, picture and journal
 5. **What is earned:** the verse (Joshua 1:9) when the story reaches it, the Courage charm when its ceremony
    starts, and a finished-chapter count when the chapter ends.
 
+## Faith Journey (proposed, not built)
+
+After a child finishes chapter 1, the end panel gains one more button: **Faith Journey**. The journal keeps what she earned. The journey shows where she can go next. They are not the same screen.
+
+**Faith Journey**, not Faith Map. A map sounds like the valley she already walks. This is a paper path from one story to the next, in the same ink and grain as the journal.
+
+What she sees:
+
+- A short path on a paper page, read aloud by Wonder Light the first time it opens: "This is your faith journey. One story at a time."
+- **Stop 1, the valley.** Lit. David's sheep, the Courage charm, "God is with you." Tap it to play chapter 1 again, or to hear the verse.
+- **Stop 2, the ridge.** The blue-hour camp, the tent and the fire. It stays closed until chapter 1 is finished, then it is the next step, not a prize she missed. Tap it to begin chapter 2 once that chapter exists.
+- **One faint stop further on,** unnamed, just a soft hill on the path. She can see that the journey continues. She is not shown a row of locked chapters. A long line of grey locks feels like a game she is failing, and it gives away stories she has not lived yet.
+- A stop that is still ahead, if she taps it, gets a kind line and nothing else: "This part of the path is still ahead." No buzzer, no shake.
+
+The button does not appear before the first chapter is finished, so chapter 1 stays as simple as it is now. After that it also lives in the journal, beside the charms, so she can open the path without replaying the ending. Each child on the tablet has their own path, the same way they have their own journal. Emptying the journal folds the path back to the start.
+
 ## For grown-ups
 
 A small **For grown-ups** button at the bottom of the journal asks for a press and hold of 3 seconds (a

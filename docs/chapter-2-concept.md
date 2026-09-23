@@ -48,7 +48,7 @@ through:
    this is the cheapest one that still feels like its own thing rather than a copy.)
 5. **Reflect and receive the verse:** 1 Samuel 18:1, read aloud, the same way Joshua 1:9 is today.
 6. **The charm ceremony,** unchanged code, new charm.
-7. **End panel:** Play again, My journal, Colour my charm, Keep exploring — same as today.
+7. **End panel:** Play again, My journal, Colour my charm, Keep exploring — same as today — plus **Faith Journey**, the paper path described in `docs/faith-journal.md`. Chapter 1's valley is a finished stop. The ridge is the next one.
 
 So the child does the same *kind* of things as chapter 1 (walk around, collect, listen, one calm
 fail-free activity, a verse, a charm to keep and colour), with a different story, a different
