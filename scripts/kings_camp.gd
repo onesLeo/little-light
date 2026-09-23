@@ -6,6 +6,7 @@ extends Node3D
 
 const CAMP := Vector3(-2.0, 0.0, 28.0)
 
+var _clearing := Vector3.ZERO
 var _built: bool = false
 var _flames: Array[MeshInstance3D] = []
 var _banners: Array[Node3D] = []
@@ -38,7 +39,10 @@ func visit() -> void:
 		player.global_position = ground + Vector3(0.0, 0.2, 0.0)
 	var line := get_parent().find_child("DialogueLabel", true, false) as Label
 	if line:
-		line.text = "The King's Camp. The day is turning blue."
+		line.text = "Jonathan is by the fire. His hair is long, and his tunic is red."
+	var david := get_parent().get_node_or_null("DavidMentor") as Node3D
+	if david:
+		david.global_position = _ground(_clearing + Vector3(1.15, 0.0, -0.35))
 
 
 func _process(delta: float) -> void:
@@ -60,6 +64,7 @@ func _build() -> void:
 		return
 	_built = true
 	var here := _ground(CAMP)
+	_clearing = here
 	_tent("TentLarge", here + Vector3(0.0, 0.0, 2.2), 1.7, Color(0.93, 0.86, 0.72))
 	_tent("TentA", here + Vector3(-3.2, 0.0, 1.4), 1.05, Color(0.90, 0.84, 0.70))
 	_tent("TentB", here + Vector3(3.0, 0.0, 1.6), 1.0, Color(0.88, 0.82, 0.68))
@@ -71,6 +76,7 @@ func _build() -> void:
 	_banner(_ground(here + Vector3(4.0, 0.0, 2.8)), Color(0.25, 0.38, 0.62))
 	for spot in [Vector3(-4.5, 0.0, -0.5), Vector3(4.4, 0.0, -0.2), Vector3(-3.5, 0.0, 3.8), Vector3(3.6, 0.0, 4.0)]:
 		_guard(_ground(here + spot))
+	_place_jonathan(here)
 	var light := OmniLight3D.new()
 	light.name = "FireLight"
 	light.light_color = Color(1.0, 0.62, 0.28)
@@ -137,6 +143,13 @@ func _guard(at: Vector3) -> void:
 	add_child(body)
 	_guards.append(body)
 	_guard_home.append(body.global_position)
+
+
+func _place_jonathan(here: Vector3) -> void:
+	var jon := preload("res://scripts/jonathan.gd").new()
+	jon.name = "Jonathan"
+	add_child(jon)
+	jon.global_position = _ground(here + Vector3(-1.15, 0.0, -0.55))
 
 
 func _blue_hour() -> void:

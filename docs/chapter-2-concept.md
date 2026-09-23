@@ -1,6 +1,6 @@
 # Chapter 2 — The King's Camp
 
-The chapter's story is not finished. The place has started: four tents, four banners, four guards and a fire stand on the ridge behind the waterfall. From the Faith Journey, The King's Camp opens that ground and turns the light to the blue hour. Jonathan, the gifts, the cord and the verse are not in the game yet.
+The chapter's story is not finished. The place has started: four tents, four banners, four guards and a fire stand on the ridge behind the waterfall. From the Faith Journey, The King's Camp opens that ground and turns the light to the blue hour. Jonathan stands by the fire. He is not a recolour of David: longer straight hair to his shoulders, a thin gold band in it, a longer face, wider eyes, a wine-red tunic and a gold sash. No crown. The look to judge is [jonathan-look.jpg](jonathan-look.jpg). His lines, the gifts, the cord and the verse are still not in the game.
 
 ## Where chapter 1 leaves off
 

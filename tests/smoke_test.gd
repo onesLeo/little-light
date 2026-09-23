@@ -671,6 +671,11 @@ func _initialize() -> void:
 	var camp_walker: Node3D = main.get_node("Player")
 	_check(camp.tent_count() >= 4, "the king's camp has its tents on the ridge")
 	_check(camp_walker.global_position.z > 20.0, "the journey can walk up to the camp")
+	var jon := camp.get_node_or_null("Jonathan")
+	_check(jon != null and jon.get_node_or_null("HairBack") != null, "Jonathan has long hair, not David's short cap")
+	var tunic := jon.get_node_or_null("Tunic") as MeshInstance3D if jon else null
+	var tint: Color = tunic.mesh.material.albedo_color if tunic and tunic.mesh else Color.BLACK
+	_check(tint.r > tint.g + 0.2, "Jonathan's tunic is wine red, not David's gold")
 	journey.close()
 	_check(not journey.is_open(), "Back leaves the map")
 
