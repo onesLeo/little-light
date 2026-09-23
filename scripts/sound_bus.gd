@@ -12,7 +12,7 @@ const EFFECTS := "Effects"
 const VOICE := "Voice"
 
 ## Balance of each bus before the player's sliders, in dB.
-const BASE_DB := {MUSIC: -11.0, AMBIENCE: -7.0, EFFECTS: -2.0, VOICE: 3.0}
+const BASE_DB := {MUSIC: -11.0, AMBIENCE: -7.0, EFFECTS: -2.0, VOICE: 0.0}
 ## How far the music and ambience drop while a voice is speaking, in dB.
 const DUCK_DB := {MUSIC: -9.0, AMBIENCE: -10.0}
 
@@ -28,12 +28,28 @@ static func ensure_buses() -> void:
 			AudioServer.set_bus_name(idx, bus_name)
 			AudioServer.set_bus_send(idx, "Master")
 	# A limiter on Master so the louder voice plus a sound effect can never clip.
+	var master_has_limiter := false
 	for i in AudioServer.get_bus_effect_count(0):
 		if AudioServer.get_bus_effect(0, i) is AudioEffectLimiter:
-			return
-	var limiter := AudioEffectLimiter.new()
-	limiter.ceiling_db = -1.0
-	AudioServer.add_bus_effect(0, limiter)
+			master_has_limiter = true
+			break
+	if not master_has_limiter:
+		var limiter := AudioEffectLimiter.new()
+		limiter.ceiling_db = -1.0
+		AudioServer.add_bus_effect(0, limiter)
+	# A gentle high-pass on the voice only. Tablet speakers distort on low rumble,
+	# and that rumble is what makes speech sound unclear.
+	var voice_idx := AudioServer.get_bus_index(VOICE)
+	var has_highpass := false
+	for i in AudioServer.get_bus_effect_count(voice_idx):
+		if AudioServer.get_bus_effect(voice_idx, i) is AudioEffectHighPassFilter:
+			has_highpass = true
+			break
+	if not has_highpass:
+		var highpass := AudioEffectHighPassFilter.new()
+		highpass.cutoff_hz = 110.0
+		highpass.resonance = 0.5
+		AudioServer.add_bus_effect(voice_idx, highpass)
 
 
 ## Pushes the saved volumes and the current ducking onto the buses.

@@ -71,3 +71,7 @@ interact={
 [rendering]
 
 textures/vram_compression/import_etc2_astc=true
+
+[audio]
+
+driver/mix_rate=48000

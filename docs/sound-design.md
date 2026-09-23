@@ -28,9 +28,9 @@ Everything plays on one of four buses under Master (`scripts/sound_bus.gd`):
 | Music | the lullaby | -11 dB |
 | Ambience | wind, stream, birds | -7 dB |
 | Effects | chimes, footsteps, lamb, butterflies | -2 dB |
-| Voice | Wonder Light and David | +3 dB |
+| Voice | Wonder Light and David | 0 dB |
 
-The voice clips speak at about -23 dBFS, which the Voice bus lifts to about -20 dBFS. Rough levels
+The voice clips peak at about -1.5 dBFS. The Voice bus is left at 0 dB so those peaks stay under the limiter; an extra boost was making the limiter clamp every loud syllable, which sounds muffled on a tablet speaker. A high-pass at 110 Hz takes the rumble out of the voice for the same reason. Rough levels
 of everything else, in dBFS (RMS, before distance), so you can see what competes with the voice:
 
 | Sound | Level | While somebody is speaking |

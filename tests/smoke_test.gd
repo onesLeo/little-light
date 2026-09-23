@@ -499,7 +499,7 @@ func _initialize() -> void:
 	for i in AudioServer.get_bus_effect_count(0):
 		has_limiter = has_limiter or AudioServer.get_bus_effect(0, i) is AudioEffectLimiter
 	_check(has_limiter, "the master output has a limiter, so a loud moment cannot clip")
-	_check(sound_bus.BASE_DB["Voice"] > sound_bus.BASE_DB["Ambience"] + 8.0, "the voice is set well above the ambience")
+	_check(sound_bus.BASE_DB["Voice"] > sound_bus.BASE_DB["Ambience"] + 6.0, "the voice is set well above the ambience")
 
 	print("-- sound: footsteps, lamb, butterflies --")
 	for p in audio._step_players:

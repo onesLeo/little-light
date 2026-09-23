@@ -17,6 +17,8 @@ There are two layers:
 The clips were generated with the Seed Audio 1.0 text-to-speech model (24 kHz), then trimmed of
 leading silence and saved as mono `.wav` (43 clips: 31 of the story as written plus the "Who is playing?" prompts, and 12 easier lines for younger children).
 Leave about a third of a second after the last word. A tighter trim cuts the sentence off before it finishes.
+Voice clips are imported as uncompressed PCM (`compress/mode=0`). Godot's default Quite OK Audio
+compression is fine for footsteps, but on a tablet speaker it puts a haze on speech.
 Voices differ in how "dry" they sound; if one sounds like it was recorded in a room, try another.
 The tool only exposes speed, loudness and pitch, so any emotion comes from the voice and the wording.
 
