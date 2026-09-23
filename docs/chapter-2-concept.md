@@ -1,6 +1,6 @@
 # Chapter 2 — The King's Camp
 
-The chapter's story is not finished. The place has started: four tents, four banners, four guards and a fire stand on the ridge behind the waterfall. From the Faith Journey, The King's Camp opens that ground and turns the light to the blue hour. Jonathan stands by the fire. He is not a recolour of David: longer straight hair to his shoulders, a thin gold band in it, a longer face, wider eyes, a wine-red tunic and a gold sash. No crown. The look to judge is [jonathan-look.jpg](jonathan-look.jpg). His lines, the gifts, the cord and the verse are still not in the game.
+The chapter's story is not finished. The place has started: four tents, four banners, four guards and a fire stand on the ridge behind the waterfall. From the Faith Journey, The King's Camp opens that ground and turns the light to the blue hour. Jonathan stands by the fire. He is not a recolour of David: longer straight hair to his shoulders, a thin gold band in it, a longer face, wider eyes, a wine-red tunic and a gold sash. No crown. The look to judge is [jonathan-look.jpg](jonathan-look.jpg). His words, the three gifts and the friendship cord are in the camp now. She finds the robe, the bow and the belt, loops a cord three times, and receives 1 Samuel 18:1 and the Friendship charm. The voice on these new lines is a first reading, not Juno and not Jonathan's own voice yet.
 
 ## Where chapter 1 leaves off
 

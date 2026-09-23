@@ -9,7 +9,9 @@ extends RefCounted
 ## test checks that every line below has a clip.
 
 const VERSE_JOSHUA_1_9 := "joshua_1_9"
+const VERSE_SAMUEL_18_1 := "samuel_18_1"
 const CHARM_COURAGE := "courage"
+const CHARM_FRIENDSHIP := "friendship"
 
 ## Charm slots shown as a dashed "?" after the earned charms, for adventures still to come.
 const MYSTERY_SLOTS := 2
@@ -22,6 +24,13 @@ const VERSES := [
 		"text": "Haven't I commanded you? Be strong and of good courage; don't be afraid, neither be dismayed: for Yahweh your God is with you wherever you go.",
 		"why": "The same God who was with Joshua was with David — the Lord who kept him safe from the lion and the bear. That is why this verse lives here.",
 	},
+	{
+		"id": VERSE_SAMUEL_18_1,
+		"ref": "1 Samuel 18:1",
+		"spoken_ref": "First Samuel, chapter eighteen, verse one.",
+		"text": "The soul of Jonathan was knit with the soul of David, and Jonathan loved him as his own soul.",
+		"why": "After the valley, Jonathan gave David what was his. A friend can do that.",
+	},
 ]
 
 const CHARMS := [
@@ -31,6 +40,13 @@ const CHARMS := [
 		"reason": "For staying with David, and breathing God's promise with him.",
 		"spoken": "A Courage charm — for staying with David, and breathing God's promise with him.",
 		"color": Color(0.95, 0.78, 0.35),
+	},
+	{
+		"id": CHARM_FRIENDSHIP,
+		"name": "Friendship",
+		"reason": "For Jonathan giving David what was his.",
+		"spoken": "A Friendship charm, for Jonathan giving David what was his.",
+		"color": Color(0.55, 0.22, 0.28),
 	},
 ]
 

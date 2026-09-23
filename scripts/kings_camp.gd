@@ -40,6 +40,9 @@ func visit() -> void:
 	var line := get_parent().find_child("DialogueLabel", true, false) as Label
 	if line:
 		line.text = "Jonathan is by the fire. His hair is long, and his tunic is red."
+	var story := get_node_or_null("ChapterTwo")
+	if story and story.has_method("begin"):
+		story.begin()
 	var david := get_parent().get_node_or_null("DavidMentor") as Node3D
 	if david:
 		david.global_position = _ground(_clearing + Vector3(1.15, 0.0, -0.35))
@@ -77,6 +80,10 @@ func _build() -> void:
 	for spot in [Vector3(-4.5, 0.0, -0.5), Vector3(4.4, 0.0, -0.2), Vector3(-3.5, 0.0, 3.8), Vector3(3.6, 0.0, 4.0)]:
 		_guard(_ground(here + spot))
 	_place_jonathan(here)
+	var story := Node.new()
+	story.name = "ChapterTwo"
+	story.set_script(load("res://scripts/chapter_two.gd"))
+	add_child(story)
 	var light := OmniLight3D.new()
 	light.name = "FireLight"
 	light.light_color = Color(1.0, 0.62, 0.28)

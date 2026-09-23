@@ -230,16 +230,13 @@ func _refresh() -> void:
 	for child in _charm_row.get_children():
 		_charm_row.remove_child(child)
 		child.queue_free()
-	var slots := JournalContent.CHARMS.size() + JournalContent.MYSTERY_SLOTS
-	var shown := 0
 	for c in JournalContent.CHARMS:
 		if p.is_empty() or not Profiles.has_charm(p["id"], c["id"]):
 			continue
 		_charm_row.add_child(_charm_button(c))
 		if _picked_charm.is_empty():
 			_picked_charm = c["id"]
-		shown += 1
-	for _i in range(shown, slots):
+	for _i in JournalContent.MYSTERY_SLOTS:
 		_charm_row.add_child(_mystery_slot())
 	_colour_button.visible = _colour_screen != null and not _picked_charm.is_empty()
 	_journey_button.visible = _journey != null and not p.is_empty() and int(p["chapters"]) >= 1

@@ -57,6 +57,18 @@ const LINES := {
 	"God had a job for David. He has one for you too. Stay close.": "ez_purpose",
 	"Keep it close. Courage is yours.": "ez_keep_close",
 	"David's staff. He stays with his sheep.": "ez_item_staff",
+	"This is the king's camp. The day is turning blue.": "jn_arrive",
+	"I am Jonathan. David was brave today, because God was with him.": "jn_hello",
+	"Find Jonathan's robe, his bow, and his belt. They are gifts for David.": "jn_find",
+	"A folded robe. Jonathan is giving it to David.": "jn_robe",
+	"A bow with no arrow. It is a gift, not a fight.": "jn_bow",
+	"A belt with one gold square. A friend shares what he has.": "jn_belt",
+	"These were mine. I give them to David, because he is my friend.": "jn_give",
+	"Hold still, and loop the cord. Three slow loops.": "jn_cord",
+	"Friends stay tied together.": "jn_tied",
+	"First Samuel, chapter eighteen, verse one.": "jn_verse_ref",
+	"The soul of Jonathan was knit with the soul of David, and Jonathan loved him as his own soul.": "jn_verse",
+	"A Friendship charm, for Jonathan giving David what was his.": "jn_charm",
 }
 
 static var _cache: Dictionary = {}
