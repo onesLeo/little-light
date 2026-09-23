@@ -162,6 +162,8 @@ Nothing here is more detailed than the meadow's signpost. If a prop needs a patt
 - **David.** Unchanged from chapter 1. The familiar clothes do the introducing.
 - **The guards.** Two. Plain sand and brown, shorter capes or none, staffs held down. They walk a loop that never crosses the path the child needs, and they never turn to face the child as if to stop them.
 - **The lookout.** The cliff edge, one low stone to mark "stand here," and the valley in clear view underneath. The waterfall keeps the bright blue the child already knows, so the place reads as "where I was" even in the new light.
+- **The owl.** One, small, paper, high in a cypress at the back of the clearing. It blinks slowly and sometimes turns its head. It does not fly at the child, and it does not leave the branch. A child should be able to find it and smile, not jump.
+- **The fireflies.** Six or eight. Tiny warm paper dots drifting over the grass at the edge of the clearing, the night version of chapter 1's butterflies. They are dimmer than the lantern and they do not light the ground. Walk toward them and they lift aside, the way the butterflies do, then settle again. No swarm, and none on the path, so the walking colour stays clear.
 
 ### What the camera is looking at
 
@@ -177,13 +179,27 @@ The tabletop camera and the close-up camera stay the ones from chapter 1. The fr
 
 - Black sky, grey fog, or a shadow dark enough to hide the path.
 - A giant, a drawn sword, arrows, armour, or a guard who blocks the way.
-- More than the fire and one lantern as warm lights.
+- More than the fire and one lantern as lights that paint the camp. Fireflies are allowed, and they are specks, not lamps.
+- A screech, a wolf, a branch snap, or anything that makes the child check behind them.
 - Gloss, gradients on the props, or a lineless style. The outline stays.
 - Blue poured over the characters' skin. The world goes blue. The people stay themselves.
 
-## Life in the camp
+## What you hear on the ridge
 
-The two guards above are the camp's answer to chapter 1's lamb, fish and butterflies: something alive, so the ridge is not a set. They are not interactive. A second sketch, at dusk with the campfire glowing, a hanging lantern and both guards, was shown alongside the first daylight sketch. A later sketch pushed the same camp all the way to blue hour. That last sketch is the one to follow, with the colour rules above so the blue stays calm instead of dark. Still a concept, not built.
+The meadow's daytime bed does not come up the hill. Birds and the close stream belong to chapter 1. The ridge keeps the same lullaby, a little quieter, and replaces the rest.
+
+| Sound | What it is like | When it rests |
+|---|---|---|
+| Lullaby | The same music box, a little further away | Ducks while anyone speaks, as it does now |
+| Wind | The same wind, slower and quieter | Stays, very low, under the voice |
+| Crickets | A few soft chirps, not a wall of summer noise. This is the sound that makes the blue hour feel like evening | Ducks with the other ambience |
+| Campfire | A small dry crackle, sitting on the fire itself, louder as you walk up to it | Ducks while anyone speaks |
+| Owl | Two low notes, "hoo-hoo," from the cypress, once every 15 to 25 seconds. Gentle, never a screech, never close to the camera | Silent the whole time somebody is speaking, the way the birds wait in chapter 1 |
+| Valley, from the lookout only | A faint stream, and now and then one far sheep. It says the meadow is still down there | Only while the child is standing at the edge |
+
+The fireflies make no sound. A tick or a chime on each one would turn them into a toy and crowd the voice. The owl is the night bird. The crickets are the bed. The fire is the close, warm sound, matched to the one warm light.
+
+Nothing else. No wolves, no thunder, no armour, no startled wing-clap. If a sound would make a six-year-old look around to see what went wrong, it does not belong here.
 
 ## Open questions
 
