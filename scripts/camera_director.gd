@@ -27,6 +27,10 @@ var _tabletop: Camera3D
 var _closeup: Camera3D
 var _orbit_target: Node3D = null
 var _orbit_angle: float = 0.0
+var _push_in: float = 0.0
+var _shot_distance: float = 1.9
+var _shot_look_height: float = 0.7
+var _camp_shot: bool = false
 
 func _ready() -> void:
 	_tabletop = get_node_or_null(tabletop_camera_path) as Camera3D
@@ -42,6 +46,10 @@ func cut_to_tabletop() -> void:
 ## Closer framing for a dialogue/story beat. Pass the node to look toward
 ## (usually David) so the shot is actually composed on them.
 func cut_to_closeup(look_target: Node3D = null) -> void:
+	_camp_shot = false
+	_push_in = 0.0
+	_shot_distance = closeup_distance
+	_shot_look_height = closeup_look_height
 	if _closeup == null:
 		cut_to_tabletop()
 		return
@@ -53,12 +61,23 @@ func cut_to_closeup(look_target: Node3D = null) -> void:
 	_closeup.current = true
 
 ## True while the close-up is on a target the player can orbit around.
+func move_to_closeup(target: Node3D) -> void:
+	cut_to_closeup(target)
+	_camp_shot = true
+	_shot_distance = 2.7
+	_shot_look_height = 0.94
+	_push_in = 1.0
+	_place_closeup()
+
+
 func is_orbiting() -> bool:
 	return _orbit_target != null and _closeup != null and _closeup.current
 
 func _process(delta: float) -> void:
 	if not is_orbiting():
 		return
+	_push_in = move_toward(_push_in, 0.0, delta * 0.65)
+	_place_closeup()
 	var axis := Input.get_axis("move_left", "move_right")
 	if axis != 0.0:
 		_orbit_angle += axis * orbit_speed * delta
@@ -70,10 +89,10 @@ func _place_closeup() -> void:
 	front.y = 0.0
 	front = front.normalized() if front.length() > 0.001 else Vector3(0.0, 0.0, -1.0)
 	var dir := front.rotated(Vector3.UP, _orbit_angle + closeup_side_angle)
-	var cam := base + dir * closeup_distance + Vector3(0.0, closeup_height, 0.0)
-	var look := base + Vector3(0.0, closeup_look_height, 0.0)
+	var cam := base + dir * (_shot_distance + _push_in * 1.1) + Vector3(0.0, closeup_height, 0.0)
+	var look := base + Vector3(0.0, _shot_look_height, 0.0)
 	var walker := get_node_or_null("../Player") as Node3D
-	if walker:
+	if walker and (not _camp_shot or walker.global_position.distance_to(base) < 4.5):
 		var framed := _frame_around_walker(cam, look, dir, base, walker)
 		cam = framed[0]
 		look = framed[1]

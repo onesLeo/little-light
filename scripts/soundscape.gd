@@ -75,7 +75,7 @@ func _process(delta: float) -> void:
 	_ambience_gain = move_toward(_ambience_gain, 1.0, delta / maxf(ambience_fade_in, 0.01))
 	var fade_db := linear_to_db(maxf(_ambience_gain, 0.0001))
 	_night_gain = move_toward(_night_gain, 0.0 if _night else 1.0, delta / 3.0)
-	_wind.volume_db = wind_db + fade_db
+	_wind.volume_db = wind_db + (6.0 if _night else 0.0) + fade_db
 	_stream.volume_db = stream_db + fade_db + linear_to_db(maxf(_night_gain, 0.0001))
 	_update_ducking(delta)
 	_update_birds(delta)
@@ -114,8 +114,9 @@ func _update_listener() -> void:
 	if _player == null:
 		return
 	var basis := Basis.IDENTITY
-	if _camera:
-		basis = _camera.global_transform.basis.orthonormalized()
+	var active_camera := get_viewport().get_camera_3d()
+	if active_camera:
+		basis = active_camera.global_transform.basis.orthonormalized()
 	_listener.global_transform = Transform3D(basis, _player.global_position + Vector3(0.0, 0.6, 0.0))
 
 

@@ -154,6 +154,9 @@ func _set_button(down: bool) -> void:
 
 
 func _hint() -> String:
+	var camp_story := get_parent().get_node_or_null("KingsCamp/ChapterTwo")
+	if camp_story and camp_story.phase != camp_story.Phase.IDLE:
+		return camp_story.get_action_hint()
 	if _director and _director.has_method("get_action_hint"):
 		return _director.get_action_hint()
 	return ""

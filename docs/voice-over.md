@@ -13,7 +13,7 @@ There are two layers:
 |-----------|-------|-------|
 | Wonder Light (also the verse and item descriptions) | Juno | preset voice, default settings |
 | David | Bram | preset voice, default settings; a dry, young-adult voice. Chosen over Cody, whose recording sounded like it was made in a room and was too young |
-| Jonathan | Julian | preset voice, default settings. A different Higgsfield profile from Juno and from Bram, so the king's son does not sound like the narrator or like David |
+| Jonathan | Petra | User-selected preset voice, default settings. Replaces Julian for both Jonathan lines. |
 
 The clips were generated with the Seed Audio 1.0 text-to-speech model (24 kHz), then trimmed of
 leading silence and saved as mono `.wav` (43 clips: 31 of the story as written plus the "Who is playing?" prompts, and 12 easier lines for younger children).
@@ -67,3 +67,6 @@ block, and the smoke test reports the line.
 - The Juno/Bram set, including the spine / purpose / item recuts, has not yet been heard on a tablet speaker.
 - Emotion is limited to what the voices and punctuation give. A human voice actor would do more.
 - A quiet ambience or music bed under the voice, with ducking, is done (backlog 3.2).
+
+
+The Chapter 2 arrival was regenerated in Juno on 2026-09-23: “This is the king's camp. The day is turning into night.” (`jn_arrive.wav`, mono 24 kHz PCM, Seed Audio job `50c40233-52c9-4109-97a3-27687e3753f1`). Jonathan's two lines were regenerated in the user-selected Petra preset (`0c63637d-2ecb-5bda-9bbe-38894aa9a876`): `jn_hello` (job `b25032c9-657a-4cab-b4a8-db7af32f35f5`) and `jn_give` (job `99c9587a-c9c3-4176-a8d4-061bd16ab53e`). Both use Seed Audio, mono 24 kHz PCM, with a short lead-in and a tail after the last word.

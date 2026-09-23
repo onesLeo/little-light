@@ -6,6 +6,9 @@ extends Node
 
 const JournalContent := preload("res://scripts/journal_content.gd")
 const Profiles := preload("res://scripts/profiles.gd")
+const Cord := preload("res://scripts/friendship_cord.gd")
+const PaperUI := preload("res://scripts/paper_ui.gd")
+
 const Paper := preload("res://scripts/camp_paper.gd")
 
 enum Phase { IDLE, ARRIVE, MEET, FIND, GIVE, CORD, VERSE, CHARM, DONE }
@@ -15,11 +18,17 @@ const CHARM_LINE := "Wonder Light: \"A Friendship charm, for Jonathan giving Dav
 var phase: Phase = Phase.IDLE
 var _found: int = 0
 var _loops: int = 0
-var _hold: float = 0.0
-var _idle: float = 0.0
+var _collected: Array[String] = []
+var _checklist: PanelContainer
+var _checks: Label
+var _cord: Control
+var _camera: Node
+var _player: Node3D
 var _line: Label
 var _prompt: Label
 var _audio: Node
+## Loops already given the chapter-1 tap, so a new loop chimes once.
+var _heard_loops: int = 0
 ## The charm is floating onto the bracelet: Space waits until it has landed.
 var _ceremony: bool = false
 
@@ -30,17 +39,21 @@ func begin() -> void:
 	phase = Phase.ARRIVE
 	_found = 0
 	_loops = 0
+	_collected.clear()
 	var main := get_parent().get_parent()
 	_line = main.find_child("DialogueLabel", true, false) as Label
 	_prompt = main.find_child("PromptLabel", true, false) as Label
 	_audio = main.get_node_or_null("AudioDirector")
+	_camera = main.get_node_or_null("CameraDirector")
+	_player = main.get_node_or_null("Player")
+	_build_ui()
 	# Coming from chapter 1's end card, its "Chapter Complete!" banner must not hang over the camp.
 	var banner := main.find_child("CompleteBanner", true, false) as CanvasItem
 	if banner:
 		banner.visible = false
 	_spawn_gifts()
 	_say(
-		"Wonder Light: \"This is the king's camp. The day is turning blue.\"",
+		"Wonder Light: \"This is the king's camp. The day is turning into night.\"",
 		"Press Space to continue"
 	)
 
@@ -54,30 +67,25 @@ func _input(event: InputEvent) -> void:
 	get_viewport().set_input_as_handled()
 
 
-func _process(delta: float) -> void:
-	if phase != Phase.CORD:
+func _process(_delta: float) -> void:
+	if phase != Phase.CORD or not is_instance_valid(_cord):
 		return
-	var holding := Input.is_action_pressed("ui_accept") or Input.is_key_pressed(KEY_SPACE)
-	if holding:
-		_hold += delta
-		_idle = 0.0
-	else:
-		_hold = maxf(_hold - delta, 0.0)
-		_idle += delta
-	if _hold >= 1.6 or _idle >= 8.0:
-		_loops += 1
-		_hold = 0.0
-		_idle = 0.0
-		_mark_loop()
+	if _cord.loops > _heard_loops:
+		_heard_loops = _cord.loops
 		if _audio and _audio.has_method("play_tap"):
 			_audio.play_tap()
-		if _loops >= 3:
-			phase = Phase.VERSE
-			Profiles.unlock_verse(JournalContent.VERSE_SAMUEL_18_1)
-			_say(
-				"1 Samuel 18:1 (WEB):\n\"The soul of Jonathan was knit with the soul of David, and Jonathan loved him as his own soul.\"",
-				"Press Space to continue"
-			)
+
+
+func _on_cord_completed() -> void:
+	_loops = 3
+	phase = Phase.VERSE
+	Profiles.unlock_verse(JournalContent.VERSE_SAMUEL_18_1)
+	if _audio:
+		_audio.play_success()
+	_say(
+		"1 Samuel 18:1 (WEB):\n\"The soul of Jonathan was knit with the soul of David, and Jonathan loved him as his own soul.\"",
+		"Press Space to continue"
+	)
 
 
 func _advance() -> void:
@@ -94,14 +102,23 @@ func _advance() -> void:
 				"Wonder Light: \"Find Jonathan's robe, his bow, and his belt. They are gifts for David.\"",
 				"Walk up to a gift"
 			)
+			_collect_overlapping.call_deferred()
 		Phase.GIVE:
 			phase = Phase.CORD
 			_loops = 0
+			_heard_loops = 0
+			_cord = Cord.new()
+			get_parent().get_parent().get_node("UI").add_child(_cord)
+			_cord.set_anchors_preset(Control.PRESET_CENTER)
+			_cord.position = _cord.get_viewport_rect().size * 0.5 - Vector2(300, 220)
+			_cord.completed.connect(_on_cord_completed)
 			_say(
 				"Wonder Light: \"Hold still, and loop the cord. Three slow loops.\"",
-				"Hold Space, or just wait"
+				"Hold Space / Enter or the button, then release to tie"
 			)
 		Phase.VERSE:
+			if is_instance_valid(_cord):
+				_cord.queue_free()
 			phase = Phase.CHARM
 			Profiles.unlock_charm(JournalContent.CHARM_FRIENDSHIP)
 			_award_charm()
@@ -118,8 +135,10 @@ func _on_gift(body: Node, area: Area3D) -> void:
 	if phase != Phase.FIND or body.name != "Player" or not area.visible:
 		return
 	area.visible = false
-	area.monitoring = false
+	area.set_deferred("monitoring", false)
+	_collected.append(str(area.name))
 	_found += 1
+	_update_checklist()
 	if _audio and _audio.has_method("play_pickup"):
 		_audio.play_pickup()
 	var light := get_parent().get_parent().get_node_or_null("WonderLight")
@@ -142,6 +161,7 @@ func _on_gift(body: Node, area: Area3D) -> void:
 
 func _spawn_gifts() -> void:
 	for child in get_children():
+		remove_child(child)
 		child.queue_free()
 	var camp: Node = get_parent()
 	var here: Vector3 = camp._clearing
@@ -224,6 +244,13 @@ func _stick(parent: Node3D, from: Vector3, to: Vector3, radius: float, color: Co
 	mi.basis = Basis(side, up, side.cross(up)).orthonormalized()
 
 
+func _collect_overlapping() -> void:
+	for child in get_children():
+		if child is Area3D:
+			for body in child.get_overlapping_bodies():
+				_on_gift(body, child)
+
+
 ## The same paper ceremony as chapter 1: the Friendship charm floats down onto the
 ## Virtue Bracelet in a close-up, with the fanfare and a little confetti.
 func _award_charm() -> void:
@@ -274,12 +301,21 @@ func _finish() -> void:
 		menu.show_end_panel(JournalContent.CHARM_FRIENDSHIP)
 
 
-func _mark_loop() -> void:
-	if _prompt:
-		_prompt.text = "Loop %d of 3" % _loops
-
-
 func _say(text: String, prompt: String) -> void:
+	var close := phase == Phase.MEET or phase == Phase.GIVE
+	if _player:
+		_player.can_move = phase in [Phase.ARRIVE, Phase.FIND, Phase.DONE]
+	if _camera:
+		if close:
+			_camera.move_to_closeup(get_parent().get_node("Jonathan"))
+			prompt += "  •  A / D or arrows: look around"
+		else:
+			_camera.cut_to_tabletop()
+	if _checklist:
+		_checklist.visible = phase in [Phase.FIND, Phase.GIVE]
+	var jon := get_parent().get_node_or_null("Jonathan")
+	if jon:
+		jon.speaking = text.begins_with("Jonathan:")
 	if _line:
 		_line.text = text
 	if _prompt:
@@ -298,3 +334,33 @@ func _pressed(event: InputEvent) -> bool:
 		var pk: int = event.physical_keycode
 		return k == KEY_SPACE or pk == KEY_SPACE or k == KEY_ENTER or pk == KEY_ENTER
 	return false
+
+
+func get_action_hint() -> String:
+	if phase == Phase.CORD:
+		return "RELEASE" if is_instance_valid(_cord) and _cord.ready_to_release else "LOOP"
+	if phase in [Phase.ARRIVE, Phase.MEET, Phase.GIVE, Phase.VERSE, Phase.CHARM]:
+		return "NEXT"
+	return ""
+
+
+func _build_ui() -> void:
+	if is_instance_valid(_cord):
+		_cord.queue_free()
+	if is_instance_valid(_checklist):
+		_checklist.queue_free()
+	_checklist = PanelContainer.new()
+	_checklist.name = "CampGiftChecklist"
+	_checklist.position = Vector2(24, 90)
+	_checklist.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_checklist.add_theme_stylebox_override("panel", PaperUI.panel_style(16, 18))
+	_checks = PaperUI.label("", 23, HORIZONTAL_ALIGNMENT_LEFT)
+	_checklist.add_child(_checks)
+	get_parent().get_parent().get_node("UI").add_child(_checklist)
+	_update_checklist()
+
+
+func _update_checklist() -> void:
+	_checks.text = "Gifts for David  %d / 3" % _found
+	for gift in ["Robe", "Bow", "Belt"]:
+		_checks.text += "\n%s  %s" % ["☑" if gift in _collected else "☐", gift]

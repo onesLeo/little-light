@@ -52,7 +52,7 @@ func _ready() -> void:
 	_build()
 	scale = Vector3.ONE * 1.35
 	visible = false
-	_hoot_player = _sound(SoundLibrary.load_stream(SoundLibrary.OWL), -6.0)
+	_hoot_player = _sound(SoundLibrary.load_stream(SoundLibrary.OWL), 0.0)
 	_flutter_player = _sound(SoundLibrary.load_stream(SoundLibrary.FLUTTER), -10.0)
 	_flutter_player.pitch_scale = 0.7
 
@@ -168,8 +168,8 @@ func _sound(stream: AudioStream, db: float) -> AudioStreamPlayer3D:
 	p.stream = stream
 	p.bus = SoundBus.AMBIENCE
 	p.volume_db = db
-	p.unit_size = 6.0
-	p.max_distance = 40.0
+	p.unit_size = 18.0
+	p.max_distance = 65.0
 	add_child(p)
 	return p
 

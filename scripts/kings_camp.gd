@@ -144,7 +144,12 @@ func visit() -> void:
 		var jon := get_node_or_null("Jonathan") as Node3D
 		if jon:
 			var to_jon := jon.global_position - david.global_position
-			david.rotation.y = atan2(to_jon.x, to_jon.z)
+			david.rotation.y = atan2(-to_jon.x, -to_jon.z)
+			jon.rotation.y = atan2(to_jon.x, to_jon.z)
+			if not david.has_node("CampConversation"):
+				var life := preload("res://scripts/camp_conversation.gd").new()
+				life.name = "CampConversation"
+				david.add_child(life)
 	if _owl and _owl.has_method("arrive"):
 		_owl.arrive(_owl_start())
 	if _fireflies:

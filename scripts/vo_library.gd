@@ -57,7 +57,7 @@ const LINES := {
 	"God had a job for David. He has one for you too. Stay close.": "ez_purpose",
 	"Keep it close. Courage is yours.": "ez_keep_close",
 	"David's staff. He stays with his sheep.": "ez_item_staff",
-	"This is the king's camp. The day is turning blue.": "jn_arrive",
+	"This is the king's camp. The day is turning into night.": "jn_arrive",
 	"I am Jonathan. David was brave today, because God was with him.": "jn_hello",
 	"Find Jonathan's robe, his bow, and his belt. They are gifts for David.": "jn_find",
 	"A folded robe. Jonathan is giving it to David.": "jn_robe",

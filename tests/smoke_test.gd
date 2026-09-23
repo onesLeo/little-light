@@ -675,16 +675,23 @@ func _initialize() -> void:
 	_check(camp.tent_count() >= 4, "the king's camp has its tents on the ridge")
 	_check(camp_walker.global_position.z > 20.0, "the journey can walk up to the camp")
 	var jon := camp.get_node_or_null("Jonathan")
-	_check(jon != null and jon.get_node_or_null("HairBack") != null, "Jonathan has long hair, not David's short cap")
-	var tunic := jon.get_node_or_null("Tunic") as MeshInstance3D if jon else null
-	var tint: Color = tunic.mesh.material.albedo_color if tunic and tunic.mesh else Color.BLACK
-	_check(tint.r > tint.g + 0.2, "Jonathan's tunic is wine red, not David's gold")
-	var tunic_ink := tunic.get_node_or_null("TunicInk") as MeshInstance3D if tunic else null
-	_check(tunic_ink != null and (tunic_ink.material_override as BaseMaterial3D).cull_mode == BaseMaterial3D.CULL_FRONT,
-			"Jonathan's ink rim is drawn from the inside, so it outlines him instead of hiding him")
-	var face := jon.get_node_or_null("Face") as Node3D if jon else null
-	_check(face != null and face.position.y > 1.0 and face.position.y < 1.4 and tunic.position.y < face.position.y - 0.3,
-			"Jonathan is a child's height with his head above his tunic, not a column")
+	_check(jon != null and jon._skeleton != null and jon._skeleton.find_bone("LowerArm_L") >= 0,
+			"Jonathan uses connected organic limbs with a deforming arm rig")
+	var jon_body := jon._body as MeshInstance3D
+	var has_wine_cloth := false
+	var has_own_hair := false
+	for surface in jon_body.mesh.get_surface_count():
+		var material := jon_body.get_active_material(surface)
+		has_wine_cloth = has_wine_cloth or material.resource_name == "J_Tunic"
+		has_own_hair = has_own_hair or material.resource_name == "J_Hair"
+	_check(has_wine_cloth and has_own_hair, "Jonathan keeps his own wine tunic and long-hair materials")
+	_check(jon._outline.skin != null and jon._outline.skeleton == jon._body.skeleton,
+			"Jonathan's skin and inward outline deform on the same skeleton")
+	_check(jon_body.get_aabb().size.y > 1.0 and jon_body.get_aabb().size.y < 1.4,
+			"Jonathan retains David's child-sized organic proportions")
+	_check(jon._blink_shape >= 0 and jon._talk_shape >= 0,
+			"Jonathan's sculpted face supports blinking and speech")
+
 	_check(journey.is_open() == false and director.beat == director.Beat.CAMP and not director._advance_ready,
 			"chapter 1 stands down when the camp opens")
 	_check(not director.complete_banner.visible and not game_menu._end_panel.visible,
