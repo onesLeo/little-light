@@ -63,10 +63,11 @@ Screenshots and measurements were taken at 1152x648 / 1280x720 on Windows with G
 | 5.5 | Stale docs | **Done, by hand** | The README asset table was checked against `main.tscn` (five models, all current) and the docs that named moved files now point at the archive. Nothing checks the docs automatically. |
 | 5.6 | Tests | **Partly done** | One headless smoke test (203 checks: story, input devices, touch, pause, the play area, the lamb, fish, butterflies, where trees and rocks stand, the performance budget, profiles and the Faith Journal, voice-over, the soundscape and Steady Hands) now runs on every pull request and push to `main` through GitHub Actions (`.github/workflows/smoke-test.yml`, Godot 4.7.2 on Linux). It has run on GitHub and passes (about 35 seconds). Still open: nothing verifies how the game looks, so keep the screenshot helper in mind for visual checks. |
 
-## 6. Before releasing to the public (demo)
+## 6. Before sharing a public validation demo
 
-Story content is **not** a blocker: chapter 1 is complete, and a single finished chapter is an
-honest "more to come" demo. These two are the real gate, both **Open**:
+The paid store release now waits for all five journeys in
+[five-journey-roadmap.md](five-journey-roadmap.md). A smaller browser or mobile build may still be
+shared first as a clearly labelled validation demo. These checks remain required before that demo:
 
 | # | Item | Status | Notes |
 |---|------|--------|-------|
@@ -74,11 +75,33 @@ honest "more to come" demo. These two are the real gate, both **Open**:
 | 6.2 | Have a child actually play it once | **Open** | Steady Hands' pacing, the soundscape's volume balance, and the Faith Journal's flow (3.1, 3.2, 3.5) have not been tried by the target audience. |
 | 6.3 | If releasing as a browser build, test the exported build in a real browser | **Open** | See `docs/release-plan.md`. The project has no Web export preset yet, and its default renderer (Forward+) is not what Web export uses — see that doc for what changes. |
 
+## 7. Five-journey first volume
+
+Chapter 2 is implemented and needs real-device playtesting and polish. Chapters 3–5 are designed in
+concept documents but not implemented. Status here describes production readiness, not whether the
+story idea has been written down.
+
+| # | Item | Status | Notes |
+|---|------|--------|-------|
+| 7.1 | Chapter 2: The King's Camp release-quality pass | **Partly done** | Story, camp, checklist, cord activity, Jonathan/David animation, Dylan voice and ending are implemented. Still test Jonathan's revised body and eyes, camera movement, character conversation motion, owl/breeze balance and the cord activity on a real tablet with a child. See [chapter-2-concept.md](chapter-2-concept.md). |
+| 7.2 | Chapter 3 story and value lock | **Open** | Test **Faithfulness / Faithful Heart** with families. Review the final 1 Samuel 16 script so “God sees the heart” remains central and David's faithfulness is not described as earning God's choice. See [chapter-3-concept.md](chapter-3-concept.md). |
+| 7.3 | Chapter 3 environment, cast and activity | **Open** | Build Jesse's Bethlehem courtyard, Samuel, Jesse, younger David and seven lightweight brothers. Prototype Prepare the Welcome before final art. Add the harp, bowl, cloak, anointing, Faithful Heart charm, morning soundscape and new voices. |
+| 7.4 | Chapter 4 biblical and emotional review | **Open** | Review how the flood's violence and judgment are named without depicting destruction. Lock accurate animal-count wording, Noah's Trust framing and Genesis verses. See [chapter-4-concept.md](chapter-4-concept.md). |
+| 7.5 | Chapter 4 ark, animal pairs and rain | **Open** | Build the modular ark, Noah's family, six accessible animal pairs, Two by Two, cutaway rain state, dove, olive leaf and rainbow. Benchmark the animal rigs and test rain audio on low-end tablet hardware before finalising assets. |
+| 7.6 | Chapter 5 story and safety prototype | **Open** | Lock the Jonah verse and storyboard the sea transition so the child never throws Jonah. Test the great-fish silhouette, abstract interior, storm intensity and full Nineveh ending with families. See [chapter-5-concept.md](chapter-5-concept.md). |
+| 7.7 | Chapter 5 fold-out world and reduced motion | **Open** | Build Joppa, ship, layered sea, fish cutaway, shore, Nineveh and shade hill as three lazily activated panels. Add Secure the Cargo, Prayer in the Deep, a reduced-motion mode, storm/underwater audio and the Mercy charm. |
+| 7.8 | Five-stop Faith Journey and progression | **Open** | Replace the current three-stop map with Valley, King's Camp, The Beginning, Noah's Ark and Jonah. Each profile unlocks the next completed journey; unfinished stops use the existing gentle preview treatment. Chapter 3 must visibly read as a turned-back page because it precedes Chapters 1 and 2. |
+| 7.9 | Shared chapter architecture | **Open** | Move repeated checklist, chapter ending, verse-word, activity prompt and lazy-environment behaviour into shared components before three more chapter scripts duplicate Chapter 2. Preserve saved profiles across the migration. |
+| 7.10 | Voice, sound and rights | **Open** | Cast Samuel, Jesse, Noah, Noah's wife, Jonah and the captain; keep Juno/Bram/Dylan consistent. Record every standard and Easy Words line. Document commercial rights and attribution for animal, rain, harbour and ship recordings. |
+| 7.11 | Per-chapter family playtests | **Open** | Test each journey on a real tablet as it becomes playable. Check comprehension, fear, activity pacing, replay requests, speech clarity and whether a child can proceed without reading. Do not wait for all five chapters before testing. |
+| 7.12 | Paid store release gate | **Open** | Complete and test all five journeys, privacy/support pages, store assets, signed Android AAB, iOS build, age declarations and closed beta. Prefer one upfront purchase for the first volume; add in-app billing only if validation proves a free first journey is needed. |
+
 ## Suggested order
 
 1. Try touch and gamepad on real hardware (2.1). The voiceover and the lamb's "baa" have been listened to and are fine.
 2. The trees, stream rocks and cliff wall/ledges (4.3, 4.4, 4.8, 4.9) are done; real overhang geometry in the wall would still need a finer terrain mesh than a heightfield. David's companion sheep moves on its own now too (3.3).
 3. Try Steady Hands, the soundscape (including the new water-splash steps) and the Faith Journal with a child, on a real tablet, and tune them (3.1, 3.2, 3.5).
 4. Run the game on a real tablet and profile it there (5.1, `docs/performance.md`). The repo housekeeping (5.2 to 5.6) is done.
-5. A second chapter is a concept only, not decided or built: see [docs/chapter-2-concept.md](chapter-2-concept.md).
-6. Before a public demo release, clear section 6 above and see [docs/release-plan.md](release-plan.md) for how and where to publish it.
+5. Complete Chapter 2's real-device polish in 7.1, then lock Chapter 3's value and prototype in 7.2–7.3.
+6. Build and test one journey at a time in the order listed in section 7. Refactor shared chapter code before duplicating it three more times.
+7. Before a public validation demo, clear section 6. Before the paid store release, clear all of section 7 and follow [release-plan.md](release-plan.md).

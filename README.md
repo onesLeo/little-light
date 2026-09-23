@@ -103,7 +103,11 @@ little-light-godot/
 
 See [docs/improvement-backlog.md](docs/improvement-backlog.md) for the full review (done and still open): game feel, visual polish, performance and repo hygiene.
 
-A second chapter is only a concept so far, not built: see [docs/chapter-2-concept.md](docs/chapter-2-concept.md).
+Chapter 2, **The King's Camp**, is implemented and documented in
+[docs/chapter-2-concept.md](docs/chapter-2-concept.md). The planned five-journey first volume is in
+[docs/five-journey-roadmap.md](docs/five-journey-roadmap.md), with full concepts for
+[The Beginning](docs/chapter-3-concept.md), [Noah's Ark](docs/chapter-4-concept.md), and
+[Jonah and the Great Fish](docs/chapter-5-concept.md).
 
 Releasing a public demo is only a plan so far, not done: see [docs/release-plan.md](docs/release-plan.md) (a browser build, so nobody has to download a big file).
 
