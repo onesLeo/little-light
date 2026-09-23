@@ -13,6 +13,7 @@ There are two layers:
 |-----------|-------|-------|
 | Wonder Light (also the verse and item descriptions) | Juno | preset voice, default settings |
 | David | Bram | preset voice, default settings; a dry, young-adult voice. Chosen over Cody, whose recording sounded like it was made in a room and was too young |
+| Jonathan | Julian | preset voice, default settings. A different Higgsfield profile from Juno and from Bram, so the king's son does not sound like the narrator or like David |
 
 The clips were generated with the Seed Audio 1.0 text-to-speech model (24 kHz), then trimmed of
 leading silence and saved as mono `.wav` (43 clips: 31 of the story as written plus the "Who is playing?" prompts, and 12 easier lines for younger children).
