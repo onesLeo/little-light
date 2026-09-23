@@ -16,6 +16,11 @@ const SWAY_SHADER := preload("res://assets/shaders/meadow_sway.gdshader")
 @export var stream_clearance: float = 2.6
 ## 0 = different every run.
 @export var seed_override: int = 0
+## Only ground between these heights is dressed (the meadow floor by default).
+@export var ground_y_range: Vector2 = Vector2(-0.05, 0.35)
+## Round spots to leave bare: (x, z, radius) in world space.
+@export var clear_circles: Array[Vector3] = []
+@export var player_path: NodePath = ^"../Player"
 
 var _mat: ShaderMaterial
 var _player: Node3D
@@ -44,7 +49,7 @@ func _ready() -> void:
 	var mat := ShaderMaterial.new()
 	mat.shader = SWAY_SHADER
 	_mat = mat
-	_player = get_parent().get_node_or_null("Player") as Node3D
+	_player = get_node_or_null(player_path) as Node3D
 
 	var tuft_spots := _pick_spots(space, rng, tuft_count)
 	var half := tuft_spots.size() / 2
@@ -69,6 +74,8 @@ func _pick_spots(space: PhysicsDirectSpaceState3D, rng: RandomNumberGenerator, c
 		var p := Vector2(rng.randf_range(area_min.x, area_max.x), rng.randf_range(area_min.y, area_max.y))
 		if _dist_to_polyline(p, PATH_XZ) < path_clearance or _dist_to_polyline(p, STREAM_XZ) < stream_clearance:
 			continue
+		if _in_clear_circle(p):
+			continue
 		var ground: Variant = _flat_ground(space, p)
 		if ground != null:
 			spots.append(ground)
@@ -80,7 +87,7 @@ func _flat_ground(space: PhysicsDirectSpaceState3D, p: Vector2) -> Variant:
 	if hit.is_empty():
 		return null
 	var y: float = hit.position.y
-	if y < -0.05 or y > 0.35 or hit.normal.y < 0.97:
+	if y < ground_y_range.x or y > ground_y_range.y or hit.normal.y < 0.97:
 		return null
 	# Ring check keeps clear of rocks, bushes and trunks.
 	for k in 4:
@@ -91,8 +98,15 @@ func _flat_ground(space: PhysicsDirectSpaceState3D, p: Vector2) -> Variant:
 	return Vector3(p.x, y, p.y)
 
 
+func _in_clear_circle(p: Vector2) -> bool:
+	for c in clear_circles:
+		if p.distance_to(Vector2(c.x, c.y)) < c.z:
+			return true
+	return false
+
+
 func _cast(space: PhysicsDirectSpaceState3D, p: Vector2) -> Dictionary:
-	var q := PhysicsRayQueryParameters3D.create(Vector3(p.x, 20.0, p.y), Vector3(p.x, -5.0, p.y))
+	var q := PhysicsRayQueryParameters3D.create(Vector3(p.x, ground_y_range.y + 20.0, p.y), Vector3(p.x, ground_y_range.x - 5.0, p.y))
 	q.collision_mask = 1
 	return space.intersect_ray(q)
 

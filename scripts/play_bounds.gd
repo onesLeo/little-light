@@ -20,9 +20,10 @@ const NUDGE_LINES := [
 ]
 
 ## Opens the ridge behind the waterfall, where The King's Camp stands.
+## The camp ground behind it is much wider than the ridge top, so the edge moves out to it.
 func open_camp() -> void:
-	center = Vector2(0.0, 14.0)
-	half_extents = Vector2(10.4, 18.0)
+	center = Vector2(-1.0, 21.5)
+	half_extents = Vector2(11.5, 27.0)
 
 var _player: CharacterBody3D
 var _director: Node

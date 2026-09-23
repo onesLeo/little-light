@@ -36,6 +36,9 @@ var _bird_timer: float = 3.0
 var _reply_timer: float = -1.0
 var _music_gain: float = 0.0
 var _ambience_gain: float = 0.0
+## Up on the ridge at the blue hour: no daytime birds, the stream stays down in the valley.
+var _night: bool = false
+var _night_gain: float = 1.0
 
 
 func _ready() -> void:
@@ -71,10 +74,16 @@ func _process(delta: float) -> void:
 	_music.volume_db = linear_to_db(maxf(_music_gain, 0.0001))
 	_ambience_gain = move_toward(_ambience_gain, 1.0, delta / maxf(ambience_fade_in, 0.01))
 	var fade_db := linear_to_db(maxf(_ambience_gain, 0.0001))
+	_night_gain = move_toward(_night_gain, 0.0 if _night else 1.0, delta / 3.0)
 	_wind.volume_db = wind_db + fade_db
-	_stream.volume_db = stream_db + fade_db
+	_stream.volume_db = stream_db + fade_db + linear_to_db(maxf(_night_gain, 0.0001))
 	_update_ducking(delta)
 	_update_birds(delta)
+
+
+## The King's Camp: the meadow's daytime bed does not come up the hill.
+func set_night(on: bool) -> void:
+	_night = on
 
 
 func _make_player(stream: AudioStream, bus: String, volume_db: float) -> AudioStreamPlayer:
@@ -159,7 +168,7 @@ func _update_birds(delta: float) -> void:
 
 ## Birds stay quiet while somebody is speaking, so they never compete with the voice.
 func _call_bird(extra_db: float) -> void:
-	if _player == null or _is_speaking():
+	if _player == null or _is_speaking() or _night:
 		return
 	for bird in _birds:
 		if bird.playing:

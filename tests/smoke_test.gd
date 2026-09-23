@@ -666,8 +666,11 @@ func _initialize() -> void:
 	_check(journey.is_open() and journey._map.texture != null, "the journey opens on the old map, not a blank page")
 	journey._on_stop("ahead")
 	_check("still ahead" in journey._line.text, "a stop further on is a kind line, not a lock")
-	journey._on_stop("camp")
 	var camp: Node = main.get_node("KingsCamp")
+	_check(camp.tent_count() == 0, "the camp is not built while the child is still in the valley")
+	# As after Play again: chapter 1 is waiting for Space when the child jumps to the camp.
+	director._advance_ready = true
+	journey._on_stop("camp")
 	var camp_walker: Node3D = main.get_node("Player")
 	_check(camp.tent_count() >= 4, "the king's camp has its tents on the ridge")
 	_check(camp_walker.global_position.z > 20.0, "the journey can walk up to the camp")
@@ -676,6 +679,49 @@ func _initialize() -> void:
 	var tunic := jon.get_node_or_null("Tunic") as MeshInstance3D if jon else null
 	var tint: Color = tunic.mesh.material.albedo_color if tunic and tunic.mesh else Color.BLACK
 	_check(tint.r > tint.g + 0.2, "Jonathan's tunic is wine red, not David's gold")
+	var tunic_ink := tunic.get_node_or_null("TunicInk") as MeshInstance3D if tunic else null
+	_check(tunic_ink != null and (tunic_ink.material_override as BaseMaterial3D).cull_mode == BaseMaterial3D.CULL_FRONT,
+			"Jonathan's ink rim is drawn from the inside, so it outlines him instead of hiding him")
+	var face := jon.get_node_or_null("Face") as Node3D if jon else null
+	_check(face != null and face.position.y > 1.0 and face.position.y < 1.4 and tunic.position.y < face.position.y - 0.3,
+			"Jonathan is a child's height with his head above his tunic, not a column")
+	_check(journey.is_open() == false and director.beat == director.Beat.CAMP and not director._advance_ready,
+			"chapter 1 stands down when the camp opens")
+	var space_key := InputEventKey.new()
+	space_key.keycode = KEY_SPACE
+	space_key.physical_keycode = KEY_SPACE
+	space_key.pressed = true
+	root.push_input(space_key)
+	var space_up := space_key.duplicate() as InputEventKey
+	space_up.pressed = false
+	root.push_input(space_up)
+	var story: Node = camp.get_node("ChapterTwo")
+	_check(story.phase == story.Phase.MEET and "I am Jonathan" in director.dialogue_label.text,
+			"Space at the camp moves the camp story on, and chapter 1 does not take it")
+	_check(director.beat == director.Beat.CAMP and not ("David needs his stone" in director.dialogue_label.text),
+			"the valley's item hunt never shows up at the camp")
+	for _i in 6:
+		await physics_frame
+	_check(camp_walker.global_position.y > 9.0, "the child stands on the camp ground instead of falling through")
+	var seam_camp: float = camp._ground(Vector3(-2.0, 0.0, 29.62)).y
+	var seam_valley: Dictionary = _terrain_hit(camp_walker.get_world_3d().direct_space_state, -2.0, 29.4)
+	_check(not seam_valley.is_empty() and absf(seam_camp - float(seam_valley["position"].y)) < 0.12,
+			"the camp ground carries on from the valley's ridge without a step")
+	_check(camp.get_node_or_null("Campfire/FireLight") != null and camp.get_node_or_null("TentKing/Lantern") != null,
+			"the fire and one lantern are the warm lights")
+	var guards := 0
+	for child in camp.get_children():
+		if String(child.name).begins_with("Guard"):
+			guards += 1
+	_check(guards == 4, "four guards walk the camp")
+	var owl: Node3D = camp.get_node_or_null("Owl")
+	_check(owl != null and owl.visible and owl.perches.size() == 2, "the owl is in the air when the child arrives, with two branches to sit on")
+	var fireflies: Node3D = camp.get_node_or_null("Fireflies")
+	_check(fireflies != null and fireflies.visible and fireflies.get_child_count() >= 6, "fireflies light up at the edge of the clearing")
+	_check(camp.get_node("CampSounds").is_playing() and main.get_node("Soundscape")._night,
+			"the ridge sounds like evening: crickets and the fire, no daytime birds")
+	var camp_triangles := _triangles_under(camp)
+	_check(camp_triangles <= 80000, "the camp stays light (%d triangles, budget 80000)" % camp_triangles)
 	journey.close()
 	_check(not journey.is_open(), "Back leaves the map")
 

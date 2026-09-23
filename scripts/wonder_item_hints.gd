@@ -34,6 +34,8 @@ func _ready() -> void:
 	if _director:
 		_director.explore_started.connect(_on_explore_started)
 		_director.wonder_item_collected.connect(_on_item_collected)
+		if _director.has_signal("stood_down"):
+			_director.stood_down.connect(func() -> void: _active = false)
 	_build_arrow3d()
 	var ui := main.get_node_or_null("UI")
 	_build_arrow2d(ui if ui else self)

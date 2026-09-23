@@ -3,12 +3,19 @@ extends Node3D
 ## David is the shepherd: short wavy hair, a long golden tunic, a green sash.
 ## Jonathan is a little taller, with straight hair to his shoulders, a longer
 ## face, wider eyes, a wine-red tunic and a gold sash. No crown and no sword.
+## Same big-headed paper-doll proportions as David and the Wonder-Walker, so the
+## three read as friends of one age. Faces -Z.
+
+const Paper := preload("res://scripts/camp_paper.gd")
 
 const SKIN := Color(0.79, 0.52, 0.32)
 const HAIR := Color(0.08, 0.035, 0.02)
 const TUNIC := Color(0.55, 0.18, 0.24)
 const GOLD := Color(0.86, 0.68, 0.28)
-const INK := Color(0.1, 0.06, 0.04)
+const SANDAL := Color(0.22, 0.12, 0.06)
+const EYE_WHITE := Color(0.95, 0.93, 0.88)
+const PUPIL := Color(0.28, 0.14, 0.06)
+const LIPS := Color(0.62, 0.32, 0.28)
 
 
 func _ready() -> void:
@@ -16,7 +23,7 @@ func _ready() -> void:
 	_head()
 
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	var breath := 1.0 + sin(Time.get_ticks_msec() * 0.002) * 0.012
 	var tunic := get_node_or_null("Tunic") as MeshInstance3D
 	if tunic:
@@ -24,84 +31,61 @@ func _process(delta: float) -> void:
 
 
 func _body() -> void:
-	_shape("Tunic", CylinderMesh.new(), TUNIC, Vector3(0, 0.86, 0), Vector3(0.34, 0.72, 0.28))
-	var hem := TorusMesh.new()
-	hem.inner_radius = 0.3
-	hem.outer_radius = 0.36
-	hem.ring_segments = 8
-	hem.rings = 4
-	_shape("Hem", hem, GOLD, Vector3(0, 0.52, 0), Vector3(1, 1, 1))
-	_shape("Sash", BoxMesh.new(), GOLD, Vector3(0, 0.9, -0.02), Vector3(0.46, 0.1, 0.32))
-	var collar := TorusMesh.new()
-	collar.inner_radius = 0.11
-	collar.outer_radius = 0.14
-	collar.ring_segments = 8
-	collar.rings = 4
-	_shape("Collar", collar, GOLD, Vector3(0, 1.26, 0), Vector3(1, 1, 1))
 	for side in [-1.0, 1.0]:
-		_shape("Leg", CapsuleMesh.new(), SKIN, Vector3(0.09 * side, 0.34, 0), Vector3(0.07, 0.36, 0.07))
-		_shape("Sandal", BoxMesh.new(), Color(0.22, 0.12, 0.06), Vector3(0.09 * side, 0.06, -0.02), Vector3(0.1, 0.04, 0.2))
-		_shape("Sleeve", CapsuleMesh.new(), TUNIC, Vector3(0.28 * side, 1.02, 0), Vector3(0.07, 0.34, 0.07))
-		_shape("Hand", SphereMesh.new(), SKIN, Vector3(0.3 * side, 0.78, -0.04), Vector3(0.07, 0.07, 0.07))
+		_shape("Leg", Paper.capsule(0.055, 0.38), SKIN, Vector3(0.075 * side, 0.2, 0.0))
+		_shape("Sandal", Paper.box(Vector3(0.1, 0.045, 0.17)), SANDAL, Vector3(0.075 * side, 0.025, -0.025))
+	_shape("Tunic", Paper.cylinder(0.215, 0.54, 8, 0.15), TUNIC, Vector3(0.0, 0.63, 0.0))
+	_shape("Hem", _ring(0.2, 0.232), GOLD, Vector3(0.0, 0.375, 0.0), Vector3.ZERO, 0.012)
+	_shape("Chest", Paper.sphere(0.15), TUNIC, Vector3(0.0, 0.88, 0.0), Vector3.ZERO, 0.02, Vector3(1.12, 0.55, 0.85))
+	_shape("Sash", Paper.cylinder(0.172, 0.07, 8), GOLD, Vector3(0.0, 0.72, 0.0), Vector3.ZERO, 0.012)
+	# The gold sash also runs over one shoulder.
+	_shape("SashBand", Paper.box(Vector3(0.07, 0.34, 0.3)), GOLD, Vector3(0.0, 0.83, 0.0), Vector3(0.0, 0.0, 0.62), 0.0, Vector3(1.0, 1.0, 1.0))
+	_shape("Collar", _ring(0.07, 0.1), GOLD, Vector3(0.0, 0.94, 0.0), Vector3.ZERO, 0.01)
+	for side in [-1.0, 1.0]:
+		_shape("Sleeve", Paper.capsule(0.052, 0.34), TUNIC, Vector3(0.195 * side, 0.75, 0.0), Vector3(0.0, 0.0, 0.14 * side))
+		_shape("Hand", Paper.sphere(0.052), SKIN, Vector3(0.22 * side, 0.56, -0.01))
+	_shape("Neck", Paper.cylinder(0.05, 0.08, 6), SKIN, Vector3(0.0, 0.97, 0.0), Vector3.ZERO, 0.0)
 
 
 func _head() -> void:
 	# Longer than David's round shepherd face.
-	_shape("Face", SphereMesh.new(), SKIN, Vector3(0, 1.52, 0), Vector3(0.16, 0.21, 0.15))
+	_shape("Face", Paper.sphere(0.165), SKIN, Vector3(0.0, 1.15, 0.0), Vector3.ZERO, 0.02, Vector3(0.95, 1.12, 0.95))
 	# Straight hair to the shoulders. Not David's short wavy cap.
-	_shape("HairCap", SphereMesh.new(), HAIR, Vector3(0, 1.64, 0.02), Vector3(0.175, 0.12, 0.16))
-	_shape("HairSide", CapsuleMesh.new(), HAIR, Vector3(-0.13, 1.4, 0.0), Vector3(0.045, 0.32, 0.05))
-	_shape("HairSide", CapsuleMesh.new(), HAIR, Vector3(0.13, 1.4, 0.0), Vector3(0.045, 0.32, 0.05))
-	_shape("HairBack", CapsuleMesh.new(), HAIR, Vector3(0, 1.38, 0.1), Vector3(0.1, 0.34, 0.05))
-	var band_mesh := TorusMesh.new()
-	band_mesh.inner_radius = 0.15
-	band_mesh.outer_radius = 0.175
-	band_mesh.ring_segments = 8
-	band_mesh.rings = 4
-	_shape("HairBand", band_mesh, GOLD, Vector3(0, 1.66, 0), Vector3(1, 1, 1))
+	_shape("HairCap", Paper.sphere(0.178), HAIR, Vector3(0.0, 1.23, 0.025), Vector3.ZERO, 0.02, Vector3(1.0, 0.72, 1.0))
+	_shape("HairSide", Paper.capsule(0.045, 0.3), HAIR, Vector3(-0.148, 1.08, 0.02))
+	_shape("HairSide", Paper.capsule(0.045, 0.3), HAIR, Vector3(0.148, 1.08, 0.02))
+	_shape("HairBack", Paper.capsule(0.13, 0.36), HAIR, Vector3(0.0, 1.09, 0.1), Vector3.ZERO, 0.02, Vector3(1.0, 1.0, 0.45))
+	_shape("HairBand", _ring(0.168, 0.186), GOLD, Vector3(0.0, 1.265, 0.012), Vector3(0.1, 0.0, 0.0), 0.01)
 	for side in [-1.0, 1.0]:
-		_shape("Eye", SphereMesh.new(), Color(0.95, 0.93, 0.88), Vector3(0.055 * side, 1.56, -0.12), Vector3(0.032, 0.034, 0.02), false)
-		_shape("Pupil", SphereMesh.new(), Color(0.28, 0.14, 0.06), Vector3(0.055 * side, 1.555, -0.135), Vector3(0.016, 0.018, 0.012), false)
-		var brow := _shape("Brow", BoxMesh.new(), HAIR, Vector3(0.055 * side, 1.61, -0.12), Vector3(0.05, 0.012, 0.012), false)
-		brow.rotation.z = -0.25 * side
-	_shape("Nose", SphereMesh.new(), SKIN, Vector3(0, 1.5, -0.145), Vector3(0.025, 0.04, 0.025), false)
-	_shape("Mouth", BoxMesh.new(), Color(0.62, 0.32, 0.28), Vector3(0, 1.42, -0.13), Vector3(0.07, 0.014, 0.012), false)
-	_shape("Smile", SphereMesh.new(), Color(0.62, 0.32, 0.28), Vector3(-0.03, 1.424, -0.128), Vector3(0.012, 0.01, 0.01), false)
-	_shape("Smile", SphereMesh.new(), Color(0.62, 0.32, 0.28), Vector3(0.03, 1.424, -0.128), Vector3(0.012, 0.01, 0.01), false)
+		_shape("Eye", Paper.sphere(0.032, 8), EYE_WHITE, Vector3(0.062 * side, 1.17, -0.142), Vector3.ZERO, 0.008, Vector3(1.0, 1.1, 0.5))
+		_shape("Pupil", Paper.sphere(0.018, 6), PUPIL, Vector3(0.062 * side, 1.165, -0.156), Vector3.ZERO, 0.0, Vector3(1.0, 1.0, 0.5))
+		_shape("Brow", Paper.box(Vector3(0.055, 0.013, 0.013)), HAIR, Vector3(0.062 * side, 1.22, -0.142), Vector3(0.0, 0.0, -0.22 * side), 0.0)
+	_shape("Nose", Paper.sphere(0.022, 6), SKIN, Vector3(0.0, 1.12, -0.16), Vector3.ZERO, 0.0, Vector3(1.0, 1.4, 1.0))
+	_shape("Mouth", Paper.box(Vector3(0.06, 0.012, 0.012)), LIPS, Vector3(0.0, 1.06, -0.148), Vector3.ZERO, 0.0)
+	for side in [-1.0, 1.0]:
+		_shape("Smile", Paper.sphere(0.009, 6), LIPS, Vector3(0.03 * side, 1.064, -0.146), Vector3.ZERO, 0.0)
 
 
-func _shape(part_name: String, mesh: PrimitiveMesh, color: Color, at: Vector3, size: Vector3, outlined: bool = true) -> MeshInstance3D:
-	if mesh is CylinderMesh:
-		(mesh as CylinderMesh).radial_segments = 8
-	elif mesh is SphereMesh:
-		(mesh as SphereMesh).radial_segments = 8
-		(mesh as SphereMesh).rings = 6
-	elif mesh is CapsuleMesh:
-		(mesh as CapsuleMesh).radial_segments = 6
-		(mesh as CapsuleMesh).rings = 2
-	elif mesh is TorusMesh:
-		(mesh as TorusMesh).ring_segments = 8
-		(mesh as TorusMesh).rings = 4
-	mesh.material = _mat(color)
+## A part with its colour on the mesh itself and a thin ink rim.
+func _shape(part_name: String, mesh: PrimitiveMesh, color: Color, at: Vector3, rot: Vector3 = Vector3.ZERO,
+		line: float = 0.016, size: Vector3 = Vector3.ONE) -> MeshInstance3D:
+	mesh.material = Paper.mat(color)
 	var part := MeshInstance3D.new()
 	part.name = part_name
 	part.mesh = mesh
 	part.position = at
+	part.rotation = rot
 	part.scale = size
 	add_child(part)
-	if outlined:
-		var ink := MeshInstance3D.new()
-		ink.name = part_name + "Ink"
-		ink.mesh = mesh
-		ink.material_override = _mat(INK)
-		ink.scale = Vector3(1.08, 1.08, 1.08)
-		part.add_child(ink)
+	if line > 0.0:
+		Paper.outline(part, line)
 	return part
 
 
-func _mat(color: Color) -> StandardMaterial3D:
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = color
-	mat.roughness = 1.0
-	mat.specular_mode = BaseMaterial3D.SPECULAR_DISABLED
-	return mat
+func _ring(inner: float, outer: float) -> TorusMesh:
+	var m := TorusMesh.new()
+	m.inner_radius = inner
+	m.outer_radius = outer
+	m.rings = 4
+	m.ring_segments = 10
+	return m

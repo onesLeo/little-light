@@ -28,6 +28,7 @@ enum Beat {
 	VERSE_REWARD,   # Joshua 1:9 — played before the breath (see _on_advance)
 	CHARM_AWARD,  # Courage charm → Virtue Bracelet ceremony
 	DONE,
+	CAMP,           # on hold: The King's Camp (chapter_two.gd) has the screen
 }
 
 @onready var dialogue_label: Label = %DialogueLabel
@@ -46,6 +47,7 @@ enum Beat {
 signal explore_started
 signal wonder_item_collected(item_name: String)
 signal chapter_finished
+signal stood_down
 
 var beat: Beat = Beat.ARRIVE
 var wonder_items_found: int = 0
@@ -474,6 +476,23 @@ func get_action_hint() -> String:
 func _set_player_move(enabled: bool) -> void:
 	if player and "can_move" in player:
 		player.can_move = enabled
+
+## The King's Camp has taken over, maybe halfway through a replay of this
+## chapter: stop listening for Space, put away the hunt arrows and Steady Hands,
+## so none of the valley's lines can land on top of the camp.
+func stand_down() -> void:
+	if beat == Beat.CAMP:
+		return
+	_close_word_turn()
+	beat = Beat.CAMP
+	_advance_ready = false
+	_near_item = null
+	if steady_hands and steady_hands.has_method("cancel"):
+		steady_hands.cancel()
+	_set_player_move(true)
+	_cut_tabletop()
+	_point_light(null)
+	stood_down.emit()
 
 ## -- CameraDirector / WonderLight helpers -----------------------------
 ## Guarded with has_method() rather than a static type so this still works

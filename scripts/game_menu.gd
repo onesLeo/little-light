@@ -173,6 +173,11 @@ func _open_journey() -> void:
 		_journey.open()
 
 
+## The end-of-chapter card steps aside once the child walks into another story.
+func hide_end_panel() -> void:
+	_end_panel.visible = false
+
+
 ## Forgets who is playing and starts over, which brings back the "Who is playing?" screen.
 func change_player_and_restart() -> void:
 	Profiles.set_active("")

@@ -5,6 +5,7 @@ extends Node
 
 const JournalContent := preload("res://scripts/journal_content.gd")
 const Profiles := preload("res://scripts/profiles.gd")
+const Paper := preload("res://scripts/camp_paper.gd")
 
 enum Phase { IDLE, ARRIVE, MEET, FIND, GIVE, CORD, VERSE, CHARM, DONE }
 
@@ -132,12 +133,13 @@ func _spawn_gifts() -> void:
 		child.queue_free()
 	var camp: Node = get_parent()
 	var here: Vector3 = camp._clearing
-	_gift("Robe", _box(Vector3(0.55, 0.12, 0.4), Color(0.25, 0.38, 0.62)), here + Vector3(-3.0, 0.0, 1.0))
-	_gift("Bow", _bow(), here + Vector3(2.6, 0.0, 1.6))
-	_gift("Belt", _belt(), here + Vector3(0.4, 0.0, -2.0))
+	# Spread across the camp: by the king's tent, out at the lookout, and in the supply corner.
+	_gift("Robe", _robe(), here + Vector3(-5.2, 0.0, 3.0))
+	_gift("Bow", _bow(), here + Vector3(6.0, 0.0, -6.8))
+	_gift("Belt", _belt(), here + Vector3(7.8, 0.0, 8.4))
 
 
-func _gift(gift_name: String, mesh: Mesh, at: Vector3) -> void:
+func _gift(gift_name: String, shown: Node3D, at: Vector3) -> void:
 	var area := Area3D.new()
 	area.name = gift_name
 	area.collision_layer = 0
@@ -147,13 +149,67 @@ func _gift(gift_name: String, mesh: Mesh, at: Vector3) -> void:
 	sphere.radius = 1.15
 	shape.shape = sphere
 	area.add_child(shape)
-	var shown := MeshInstance3D.new()
-	shown.mesh = mesh
 	area.add_child(shown)
 	add_child(area)
 	var ground: Vector3 = get_parent()._ground(at)
 	area.global_position = ground + Vector3(0.0, 0.45, 0.0)
+	# The gift itself rests on the ground, turned a little toward the camera.
+	shown.position = Vector3(0.0, -0.45, 0.0)
+	shown.rotation.y = 0.35
 	area.body_entered.connect(_on_gift.bind(area))
+
+
+## Icons, not tiny copies of real clothes: a folded rectangle of deep blue with one gold edge.
+func _robe() -> Node3D:
+	var root := Node3D.new()
+	Paper.part(root, "Fold", Paper.box(Vector3(0.62, 0.1, 0.46)), Color(0.25, 0.38, 0.62), Vector3(0.0, 0.05, 0.0))
+	Paper.part(root, "Top", Paper.box(Vector3(0.56, 0.08, 0.4)), Color(0.28, 0.42, 0.68), Vector3(0.02, 0.14, -0.01))
+	Paper.part(root, "Edge", Paper.box(Vector3(0.58, 0.085, 0.07)), Color(0.86, 0.68, 0.28), Vector3(0.02, 0.145, 0.17), Vector3.ZERO, Vector3.ONE, 0.0)
+	return root
+
+
+## One curved piece with a single string, propped on a stone. No arrow anywhere near it.
+func _bow() -> Node3D:
+	var root := Node3D.new()
+	Paper.part(root, "Stone", Paper.sphere(0.2, 7), Color(0.58, 0.58, 0.62), Vector3(0.0, 0.08, 0.05), Vector3.ZERO, Vector3(1.4, 0.6, 1.0))
+	var bow := Node3D.new()
+	bow.position = Vector3(0.0, 0.2, 0.0)
+	bow.rotation.x = -0.9
+	root.add_child(bow)
+	var wood := Color(0.52, 0.32, 0.16)
+	var radius := 0.42
+	var steps := 7
+	for i in steps:
+		var a0 := lerpf(-1.15, 1.15, float(i) / steps)
+		var a1 := lerpf(-1.15, 1.15, float(i + 1) / steps)
+		var p0 := Vector3(sin(a0) * radius, 0.0, -cos(a0) * radius + radius)
+		var p1 := Vector3(sin(a1) * radius, 0.0, -cos(a1) * radius + radius)
+		_stick(bow, p0, p1, 0.028, wood)
+	var end_a := Vector3(sin(-1.15) * radius, 0.0, -cos(1.15) * radius + radius)
+	var end_b := Vector3(sin(1.15) * radius, 0.0, -cos(1.15) * radius + radius)
+	_stick(bow, end_a, end_b, 0.007, Color(0.92, 0.88, 0.78), 0.0)
+	return root
+
+
+## A short brown loop with one small gold square.
+func _belt() -> Node3D:
+	var root := Node3D.new()
+	var ring := TorusMesh.new()
+	ring.inner_radius = 0.17
+	ring.outer_radius = 0.24
+	ring.rings = 4
+	ring.ring_segments = 12
+	Paper.part(root, "Loop", ring, Color(0.45, 0.27, 0.13), Vector3(0.0, 0.04, 0.0), Vector3.ZERO, Vector3(1.0, 0.6, 1.0))
+	Paper.part(root, "Buckle", Paper.box(Vector3(0.11, 0.06, 0.11)), Color(0.86, 0.68, 0.28), Vector3(0.0, 0.06, 0.205), Vector3.ZERO, Vector3.ONE, 0.012)
+	return root
+
+
+func _stick(parent: Node3D, from: Vector3, to: Vector3, radius: float, color: Color, line: float = 0.012) -> void:
+	var d := to - from
+	var mi := Paper.part(parent, "Stick", Paper.cylinder(radius, d.length(), 6), color, (from + to) * 0.5, Vector3.ZERO, Vector3.ONE, line)
+	var up := d.normalized()
+	var side := up.cross(Vector3.FORWARD if absf(up.dot(Vector3.FORWARD)) < 0.9 else Vector3.RIGHT).normalized()
+	mi.basis = Basis(side, up, side.cross(up)).orthonormalized()
 
 
 func _mark_loop() -> void:
@@ -180,38 +236,3 @@ func _pressed(event: InputEvent) -> bool:
 		var pk: int = event.physical_keycode
 		return k == KEY_SPACE or pk == KEY_SPACE or k == KEY_ENTER or pk == KEY_ENTER
 	return false
-
-
-func _box(size: Vector3, color: Color) -> BoxMesh:
-	var mesh := BoxMesh.new()
-	mesh.size = size
-	mesh.material = _mat(color)
-	return mesh
-
-
-func _bow() -> TorusMesh:
-	var mesh := TorusMesh.new()
-	mesh.inner_radius = 0.28
-	mesh.outer_radius = 0.34
-	mesh.rings = 4
-	mesh.ring_segments = 8
-	mesh.material = _mat(Color(0.45, 0.28, 0.14))
-	return mesh
-
-
-func _belt() -> TorusMesh:
-	var mesh := TorusMesh.new()
-	mesh.inner_radius = 0.16
-	mesh.outer_radius = 0.22
-	mesh.rings = 4
-	mesh.ring_segments = 8
-	mesh.material = _mat(Color(0.4, 0.24, 0.12))
-	return mesh
-
-
-func _mat(color: Color) -> StandardMaterial3D:
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = color
-	mat.roughness = 1.0
-	mat.specular_mode = BaseMaterial3D.SPECULAR_DISABLED
-	return mat

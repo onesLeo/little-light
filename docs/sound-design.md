@@ -18,6 +18,9 @@ real recordings (see `assets/audio/CREDITS.md`).
 | Wing rustle | when butterflies take off; at most one every 0.4 s | `butterflies.gd` |
 | Soft hush of air | while the child breathes in Steady Hands; swells and rises in pitch with the ring | `steady_hands_minigame.gd` |
 | Chimes, fanfare, cheer | pickups, Steady Hands, the finale (unchanged, made at startup by `chime_synth.gd`) | `audio_director.gd` |
+| Crickets, 12 s loop (a few soft chirps) | at The King's Camp; the valley's birds stop and its stream fades out up there | `camp_sounds.gd` |
+| Campfire crackle, 8 s loop | at The King's Camp, sitting on the fire, louder as you walk up to it | `camp_sounds.gd` |
+| Owl "hoo-hoo" | only while the owl is perched, every 15-25 s, never while somebody is speaking; a soft wing rustle as it lands | `camp_owl.gd` |
 
 ## The mix
 
@@ -26,7 +29,7 @@ Everything plays on one of four buses under Master (`scripts/sound_bus.gd`):
 | Bus | Carries | Base level |
 |-----|---------|-----------|
 | Music | the lullaby | -11 dB |
-| Ambience | wind, stream, birds | -7 dB |
+| Ambience | wind, stream, birds; at the camp crickets, the fire and the owl | -7 dB |
 | Effects | chimes, footsteps, lamb, butterflies | -2 dB |
 | Voice | Wonder Light and David | 0 dB |
 
