@@ -288,7 +288,7 @@ func _enter_beat(next: Beat) -> void:
 				"Well done, Wonder-Walker!"
 			)
 			_advance_ready = false
-			_play_finale()
+			play_finale()
 			chapter_finished.emit()
 
 func _on_advance() -> void:
@@ -559,7 +559,9 @@ func _face_david(target: Node3D) -> void:
 
 ## The chapter-complete moment: applause, a big confetti pop over the
 ## Wonder-Walker, the light celebrating, and a banner that pops in.
-func _play_finale() -> void:
+## The end-of-chapter celebration: a cheer, confetti, Wonder Light's burst and the
+## "Chapter Complete!" banner. The King's Camp uses it too, so both chapters end alike.
+func play_finale() -> void:
 	if audio_director and audio_director.has_method("play_cheer"):
 		audio_director.play_cheer()
 	if confetti and confetti.has_method("burst") and player:

@@ -687,6 +687,8 @@ func _initialize() -> void:
 			"Jonathan is a child's height with his head above his tunic, not a column")
 	_check(journey.is_open() == false and director.beat == director.Beat.CAMP and not director._advance_ready,
 			"chapter 1 stands down when the camp opens")
+	_check(not director.complete_banner.visible and not game_menu._end_panel.visible,
+			"chapter 1's Chapter Complete banner and end card do not hang over the camp")
 	var space_key := InputEventKey.new()
 	space_key.keycode = KEY_SPACE
 	space_key.physical_keycode = KEY_SPACE
@@ -722,6 +724,40 @@ func _initialize() -> void:
 			"the ridge sounds like evening: crickets and the fire, no daytime birds")
 	var camp_triangles := _triangles_under(camp)
 	_check(camp_triangles <= 80000, "the camp stays light (%d triangles, budget 80000)" % camp_triangles)
+
+	print("-- The King's Camp ends the way chapter 1 does --")
+	# A scratch child, so the journal checks further down still see only chapter 1's progress.
+	var valley_kid: String = Profiles.active_id
+	var camp_kid: String = Profiles.create("Camp", "star")
+	Profiles.set_active(camp_kid)
+	var chapters_before := int(Profiles.active()["chapters"])
+	var award: Node3D = main.get_node("CharmAward")
+	story.phase = story.Phase.VERSE
+	story._advance()
+	_check(story.phase == story.Phase.CHARM and story._ceremony and award.charm_id == JournalContent.CHARM_FRIENDSHIP
+			and Profiles.has_charm(Profiles.active_id, JournalContent.CHARM_FRIENDSHIP),
+			"the Friendship charm floats onto the Virtue Bracelet, like the Courage charm")
+	_check(award._charm.get_node_or_null("ChildColouring") != null, "and it shows its own picture, not a plain Courage disc")
+	story._advance()
+	_check(story.phase == story.Phase.CHARM, "Space waits until the charm has landed")
+	for _i in 60:
+		if not story._ceremony:
+			break
+		await create_timer(0.1).timeout
+	_check(not story._ceremony and "keep your charm" in director.prompt_label.text, "once it lands, Space keeps the charm")
+	story._advance()
+	_check(story.phase == story.Phase.DONE and "Friends stay tied together" in director.dialogue_label.text
+			and "Well done" in director.prompt_label.text and director.complete_banner.visible,
+			"the camp ends with the cheer, the confetti and the Chapter Complete banner")
+	_check(int(Profiles.active()["chapters"]) == chapters_before + 1, "and it counts as a finished chapter")
+	await create_timer(game_menu.end_panel_delay + 0.3).timeout
+	_check(game_menu._end_panel.visible and game_menu._journey_button.visible and game_menu._colour_charm_button.visible
+			and game_menu._end_charm == JournalContent.CHARM_FRIENDSHIP,
+			"then the end card offers Play again, the Faith Journey, and colouring the Friendship charm")
+	game_menu.hide_end_panel()
+	Profiles.set_active(valley_kid)
+	Profiles.remove(camp_kid)
+	game_menu._end_charm = JournalContent.CHARM_COURAGE   # back to chapter 1's end card for the checks below
 	journey.close()
 	_check(not journey.is_open(), "Back leaves the map")
 
@@ -889,6 +925,7 @@ func _initialize() -> void:
 	var stamp: Image = CharmArt.render_image(courage, Profiles.charm_colours(kid_id, courage), 64)
 	_check(absf(stamp.get_pixel(32, 6).r - CharmArt.PALETTE[1].r) < 0.01 and absf(stamp.get_pixel(32, 6).b - CharmArt.PALETTE[1].b) < 0.01 and stamp.get_pixel(0, 0).a == 0.0, "the picture can be drawn as an image for the 3D charm")
 	var charm_award: Node3D = main.get_node("CharmAward")
+	charm_award.charm_id = courage
 	charm_award.apply_child_colours()
 	_check(charm_award._charm.get_node_or_null("ChildColouring") != null, "the 3D charm wears the child's colouring")
 	var other_id: String = Profiles.create("Sam", "sun")

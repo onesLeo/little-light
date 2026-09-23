@@ -1,13 +1,16 @@
 extends Node
 ## The King's Camp story. It starts when she walks up from the Faith Journey,
 ## after chapter 1 is already finished, so David's valley is left as it was.
-## Find three gifts, loop a cord three times, then the verse and the charm.
+## Find three gifts, loop a cord three times, then the verse and the charm. It ends
+## the way chapter 1 does: the charm ceremony, the finale and the end-of-chapter card.
 
 const JournalContent := preload("res://scripts/journal_content.gd")
 const Profiles := preload("res://scripts/profiles.gd")
 const Paper := preload("res://scripts/camp_paper.gd")
 
 enum Phase { IDLE, ARRIVE, MEET, FIND, GIVE, CORD, VERSE, CHARM, DONE }
+
+const CHARM_LINE := "Wonder Light: \"A Friendship charm, for Jonathan giving David what was his.\""
 
 var phase: Phase = Phase.IDLE
 var _found: int = 0
@@ -17,6 +20,8 @@ var _idle: float = 0.0
 var _line: Label
 var _prompt: Label
 var _audio: Node
+## The charm is floating onto the bracelet: Space waits until it has landed.
+var _ceremony: bool = false
 
 
 func begin() -> void:
@@ -29,6 +34,10 @@ func begin() -> void:
 	_line = main.find_child("DialogueLabel", true, false) as Label
 	_prompt = main.find_child("PromptLabel", true, false) as Label
 	_audio = main.get_node_or_null("AudioDirector")
+	# Coming from chapter 1's end card, its "Chapter Complete!" banner must not hang over the camp.
+	var banner := main.find_child("CompleteBanner", true, false) as CanvasItem
+	if banner:
+		banner.visible = false
 	_spawn_gifts()
 	_say(
 		"Wonder Light: \"This is the king's camp. The day is turning blue.\"",
@@ -60,6 +69,8 @@ func _process(delta: float) -> void:
 		_hold = 0.0
 		_idle = 0.0
 		_mark_loop()
+		if _audio and _audio.has_method("play_tap"):
+			_audio.play_tap()
 		if _loops >= 3:
 			phase = Phase.VERSE
 			Profiles.unlock_verse(JournalContent.VERSE_SAMUEL_18_1)
@@ -93,16 +104,12 @@ func _advance() -> void:
 		Phase.VERSE:
 			phase = Phase.CHARM
 			Profiles.unlock_charm(JournalContent.CHARM_FRIENDSHIP)
-			_say(
-				"Wonder Light: \"A Friendship charm, for Jonathan giving David what was his.\"",
-				"Press Space to continue"
-			)
+			_award_charm()
 		Phase.CHARM:
+			if _ceremony:
+				return
 			phase = Phase.DONE
-			_say(
-				"Wonder Light: \"Friends stay tied together.\"",
-				"The King's Camp"
-			)
+			_finish()
 		_:
 			pass
 
@@ -113,6 +120,11 @@ func _on_gift(body: Node, area: Area3D) -> void:
 	area.visible = false
 	area.monitoring = false
 	_found += 1
+	if _audio and _audio.has_method("play_pickup"):
+		_audio.play_pickup()
+	var light := get_parent().get_parent().get_node_or_null("WonderLight")
+	if light and light.has_method("celebrate"):
+		light.celebrate()
 	var flavor := {
 		"Robe": "Wonder Light: \"A folded robe. Jonathan is giving it to David.\"",
 		"Bow": "Wonder Light: \"A bow with no arrow. It is a gift, not a fight.\"",
@@ -210,6 +222,56 @@ func _stick(parent: Node3D, from: Vector3, to: Vector3, radius: float, color: Co
 	var up := d.normalized()
 	var side := up.cross(Vector3.FORWARD if absf(up.dot(Vector3.FORWARD)) < 0.9 else Vector3.RIGHT).normalized()
 	mi.basis = Basis(side, up, side.cross(up)).orthonormalized()
+
+
+## The same paper ceremony as chapter 1: the Friendship charm floats down onto the
+## Virtue Bracelet in a close-up, with the fanfare and a little confetti.
+func _award_charm() -> void:
+	_say(CHARM_LINE + "\n(Virtue Bracelet receives the charm.)", "…")
+	var main := get_parent().get_parent()
+	var award := main.get_node_or_null("CharmAward") as Node3D
+	var player := main.get_node_or_null("Player") as Node3D
+	if award == null or player == null or not award.has_method("play_ceremony"):
+		_on_charm_sealed()
+		return
+	_ceremony = true
+	if "can_move" in player:
+		player.can_move = false
+	award.global_position = player.global_position + Vector3(0.35, 1.15, 0.9)
+	var cameras := main.get_node_or_null("CameraDirector")
+	if cameras and cameras.has_method("cut_to_charm"):
+		cameras.cut_to_charm(award)
+	award.ceremony_finished.connect(_on_charm_sealed, CONNECT_ONE_SHOT)
+	award.play_ceremony(JournalContent.CHARM_FRIENDSHIP)
+
+
+## Shown without being read aloud, so the recorded charm line is not cut short.
+func _on_charm_sealed() -> void:
+	_ceremony = false
+	if _line:
+		_line.text = CHARM_LINE + "\n(Friendship charm sealed on the Virtue Bracelet.)"
+	if _prompt:
+		_prompt.text = "Press Space to keep your charm"
+
+
+## Chapter complete: back to the wide view, the cheer and confetti, the banner, and
+## the end-of-chapter card (Play again, Colour my charm, Faith Journey).
+func _finish() -> void:
+	var main := get_parent().get_parent()
+	Profiles.finish_chapter()
+	var cameras := main.get_node_or_null("CameraDirector")
+	if cameras and cameras.has_method("cut_to_tabletop"):
+		cameras.cut_to_tabletop()
+	var player := main.get_node_or_null("Player")
+	if player and "can_move" in player:
+		player.can_move = true
+	_say("Wonder Light: \"Friends stay tied together.\"", "Well done, Wonder-Walker!")
+	var director := main.get_node_or_null("ChapterDirector")
+	if director and director.has_method("play_finale"):
+		director.play_finale()
+	var menu := main.get_node_or_null("GameMenu")
+	if menu and menu.has_method("show_end_panel"):
+		menu.show_end_panel(JournalContent.CHARM_FRIENDSHIP)
 
 
 func _mark_loop() -> void:

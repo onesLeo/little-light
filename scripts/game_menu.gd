@@ -37,6 +37,7 @@ var _book_button: IconButton
 var _end_panel: PanelContainer
 var _play_again_button: Button
 var _colour_charm_button: Button
+var _end_charm: String = JournalContent.CHARM_COURAGE
 var _journey_button: Button
 var _resume_button: Button
 var _read_check: CheckButton
@@ -160,7 +161,7 @@ func _restart() -> void:
 
 func _open_colouring() -> void:
 	if _colour and _colour.has_method("open"):
-		_colour.open(JournalContent.CHARM_COURAGE)
+		_colour.open(_end_charm)
 
 
 func _open_journal() -> void:
@@ -185,8 +186,15 @@ func change_player_and_restart() -> void:
 
 
 func _on_chapter_finished() -> void:
+	show_end_panel(JournalContent.CHARM_COURAGE)
+
+
+## The end-of-chapter card, a moment after the celebration. `charm_id` is the charm the
+## chapter gave, so "Colour my charm" opens that one.
+func show_end_panel(charm_id: String) -> void:
 	await get_tree().create_timer(end_panel_delay).timeout
-	_colour_charm_button.visible = Profiles.has_charm(Profiles.active_id, JournalContent.CHARM_COURAGE)
+	_end_charm = charm_id
+	_colour_charm_button.visible = Profiles.has_charm(Profiles.active_id, charm_id)
 	var finished := 0
 	if not Profiles.active().is_empty():
 		finished = int(Profiles.active()["chapters"])
