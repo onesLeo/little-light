@@ -5,6 +5,7 @@ extends Node3D
 ## opens, the light becomes the blue hour, and she stands at the clearing.
 
 const CAMP := Vector3(-2.0, 0.0, 28.0)
+const ChapterTwo := preload("res://scripts/chapter_two.gd")
 
 var _clearing := Vector3.ZERO
 var _built: bool = false
@@ -37,10 +38,11 @@ func visit() -> void:
 		var ground := _ground(Vector3(-2.0, 0.0, 24.0))
 		player.velocity = Vector3.ZERO
 		player.global_position = ground + Vector3(0.0, 0.2, 0.0)
-	var line := get_parent().find_child("DialogueLabel", true, false) as Label
-	if line:
-		line.text = "Jonathan is by the fire. His hair is long, and his tunic is red."
 	var story := get_node_or_null("ChapterTwo")
+	var mid_story := story != null and story.phase != ChapterTwo.Phase.IDLE and story.phase != ChapterTwo.Phase.DONE
+	var line := get_parent().find_child("DialogueLabel", true, false) as Label
+	if line and not mid_story:
+		line.text = "Jonathan is by the fire. His hair is long, and his tunic is red."
 	if story and story.has_method("begin"):
 		story.begin()
 	var david := get_parent().get_node_or_null("DavidMentor") as Node3D

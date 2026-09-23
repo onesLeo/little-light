@@ -2,7 +2,8 @@ extends CanvasLayer
 ## The Faith Journey: an old paper map of the stories, not a blank page of icons.
 ## The valley, the river and the mountains are the picture. Each story is a small
 ## label sitting on its place. Opened from the end of a chapter, or from the journal,
-## once chapter 1 has been finished. Chapter 2 is drawn, and not playable yet.
+## once chapter 1 has been finished. Tapping "The King's Camp" starts chapter 2;
+## the rest of the path is still ahead and just says so.
 
 signal closed
 
