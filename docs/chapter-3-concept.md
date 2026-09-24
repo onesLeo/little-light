@@ -107,6 +107,8 @@ brothers line one side without blocking the path.
 - New morning ambience and interaction sounds. Tonal cues can use the procedural pipeline in
   `tools/make_sounds.py`; natural footsteps, birds and object foley should use credited CC0 source
   recordings when synthesis does not sound convincing, following the existing lamb/footstep rule.
+- Two new entries in the "who is talking" name tag (`dialogue_view.gd`) for Samuel and Jesse — see
+  **Who is talking**.
 
 ## Asset inventory: models, rigs and props
 
@@ -390,6 +392,40 @@ existing pause/click trimming, per `voice-over.md`.
 Voice casting remains open for Samuel and Jesse. Every final line needs a recorded clip and an Easy
 Words review before implementation is complete.
 
+## Who is talking
+
+Chapter 2 added a name tag on the dialogue bar (`dialogue_view.gd`): a small drawn face plus the
+speaker's name in their own colour, so a child who cannot read yet still knows who is speaking by
+sight, and a parent can follow along by the colour of the words. It follows whichever line is
+currently playing (`AudioDirector.line_started`), so a block with two speakers switches
+automatically as the voice changes. This carries over as-is (**What carries over as-is**), but it
+needs real extension, not just inheritance, for this chapter's two new named speakers:
+
+- **`SPEAKERS`** (`dialogue_view.gd`, currently four entries: Wonder Light, David, Jonathan, Bible)
+  needs two new colour entries — Samuel (cream/grey, matching his robe and hair) and Jesse
+  (brown/olive, matching his), each with its own fill, ink and text colour the way the existing
+  four are defined.
+- **`_draw_face()`**'s match statement needs two new small icons alongside the existing Wonder
+  Light glow, David, Jonathan and open-book cases — Samuel's grey hair and short beard, Jesse's
+  brown hair — drawn at the same tiny scale and stroke weight as the existing four so the set reads
+  as one family of icons, not a mismatched addition.
+- **The speaker-detection list**, currently `["Wonder Light", "David", "Jonathan"]`, needs
+  `"Samuel"` and `"Jesse"` added, and every line in the final script must use an exact
+  `Speaker: "..."` prefix for the tag to pick it up. The **Draft script** table below labels one
+  row "David (younger)" for the reader's clarity only — the actual line in the game must be
+  written `David: "..."`, the same prefix Chapters 1-2 already use, or the tag will not show.
+- **"David" needs no new entry.** Younger David keeps the same tag, colour and drawn face as
+  Chapters 1-2 (same tunic/sash colour), so the child recognises him by the tag as much as by the
+  model — one more thread tying "this is still David" together alongside his face and clothing.
+- **The seven brothers still need no entry.** They have no individual lines (**Voice design**), so
+  there is no tag to draw for them; Jesse and Wonder Light's existing tags cover every line that
+  touches them.
+
+Easy to let slip since it is "just" four lines of data and one new match branch, but it is a real
+piece of the accessibility and readability story Chapter 2 already established, not a
+nice-to-have — worth its own line in **Improve pass before implementation** rather than being
+assumed to come along for free with the rigged models.
+
 ## Draft script (for timing and casting, not final)
 
 A speaker-labelled pass through the eight story beats, wording only — **not** checked against the
@@ -457,3 +493,7 @@ must sound patient and discerning rather than stern or dismissive.
 10. Confirm `journal_content.gd`'s `MYSTERY_SLOTS` math still lands on 5 total charm slots once
     `CHARM_FAITHFUL_HEART` is added (3 earned + `MYSTERY_SLOTS = 2` already matches the five-journey
     roadmap, so this should be a no-op, but verify rather than assume).
+11. Extend `dialogue_view.gd`'s `SPEAKERS`, `_draw_face()` and speaker-detection list for Samuel
+    and Jesse before recording any lines — see **Who is talking**. Confirm every script line uses
+    the exact `Speaker: "..."` prefix so the tag actually appears; this is easy to build correctly
+    and just as easy to silently omit.
