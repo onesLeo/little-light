@@ -6,6 +6,7 @@ const Paper := preload("res://scripts/camp_paper.gd")
 const ChapterFour := preload("res://scripts/chapter_four.gd")
 const Profiles := preload("res://scripts/profiles.gd")
 const Motion := preload("res://scripts/chapter_two_character_motion.gd")
+const ArkPerson := preload("res://scripts/ark_person.gd")
 
 const ORIGIN := Vector3(96.0, 0.0, 8.0)
 const START_LOCAL := Vector3(0.0, 0.2, 8.0)
@@ -24,7 +25,6 @@ var _rope: MeshInstance3D
 var _panel: MeshInstance3D
 var _noah: Node3D
 var _wife: Node3D
-var _hand: Node3D
 
 
 func visit() -> void:
@@ -307,9 +307,20 @@ func _critter(critter_name: String, kind: String, at: Vector3) -> void:
 
 
 func _people() -> void:
-	_noah = _person("Noah", _at(Vector3(2.4, 0.0, -0.4)), Color(0.62, 0.32, 0.16), Color(0.35, 0.28, 0.22), true)
-	_wife = _person("NoahsWife", _at(Vector3(3.6, 0.0, 0.2)), Color(0.28, 0.55, 0.52), Color(0.25, 0.16, 0.1), false)
-	_hand = _noah.get_node("Hand") as Node3D
+	# In front of the crowd, facing the child. The model faces the ark until turned.
+	_noah = _designed("Noah", "noah", Vector3(-0.4, 0.0, 5.6))
+	_wife = _designed("NoahsWife", "wife", Vector3(1.5, 0.0, 5.2))
+
+
+func _designed(person_name: String, who: String, at: Vector3) -> Node3D:
+	var person := Node3D.new()
+	person.name = person_name
+	person.set_script(ArkPerson)
+	person.who = who
+	person.position = _at(at)
+	person.rotation.y = PI
+	add_child(person)
+	return person
 
 
 func _person(person_name: String, at: Vector3, cloth: Color, hair: Color, beard: bool) -> Node3D:
@@ -361,10 +372,10 @@ func set_weather(state: String) -> void:
 
 
 func set_speaking(who: String) -> void:
-	if _noah:
-		_noah.set_meta("speaking", who == "Noah")
-	if _wife:
-		_wife.set_meta("speaking", who == "Noah's wife")
+	if _noah and "speaking" in _noah:
+		_noah.speaking = who == "Noah"
+	if _wife and "speaking" in _wife:
+		_wife.speaking = who == "Noah's wife"
 
 
 func nearest_item(from: Vector3, reach: float) -> String:
