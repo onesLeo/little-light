@@ -46,9 +46,10 @@ rainbow is the sign of God's promise, not a prize Noah earned.
    One who told me what to do."
 4. **Finish one ark panel.** A short fail-free activity places three pegs and draws one rope tight.
    Every action visibly strengthens the same section of the hull.
-5. **Two by Two.** Six representative animal pairs arrive. The child matches each animal to its mate
-   and the pair walks up the ramp. Any attempted match simply waits and offers another visual clue;
-   there is no wrong sound or animal left behind.
+5. **Two by Two.** Six representative animal pairs arrive in small waves. The child guides three
+   animals to their mates; those pairs walk up the ramp, and the other three join the short boarding
+   montage. Any attempted mismatch pauses and offers another visual clue; there is no wrong sound or
+   animal left behind.
 6. **The door closes.** Noah's family enters. God closes the door in the narration; the child does
    not shut anyone out.
 7. **Rain montage.** The camera moves to a warm ark cutaway while rain travels over the paper roof.
@@ -58,6 +59,95 @@ rainbow is the sign of God's promise, not a prize Noah earned.
    without a leaf, then later with an olive leaf. Time passes through turning paper sky layers.
 9. **Dry ground and rainbow.** The family and animals leave into a washed, bright morning. The verse
    is heard and the Trust charm is received.
+
+## User-experience pass
+
+Chapter 4 has the widest story arc and the largest cast so far. Its UX priority is to make the scale
+feel generous without making the child repeat every action the story implies. The full journey
+should still fit the roadmap's **8–12 minute** target on a first playthrough, including spoken lines.
+
+### Pacing budget
+
+| Beat | Target | UX limit |
+|---|---:|---|
+| Arrival and three building items | 1:30–2:00 | The first item is close and acts as the tutorial; hints begin early enough that searching never stalls |
+| Meet Noah and finish one panel | 1:15–1:45 | Three auto-snapping pegs and two short rope pulls; about 40 seconds of direct activity |
+| Two by Two | 1:45–2:15 | Three child-guided pairs; three more pairs board during a short living-world montage |
+| Door and rain transition | 0:45–1:15 | One reassuring line, then a smooth cutaway transition; no long unskippable weather shot |
+| Dove and passing time | 1:00–1:30 | Two immediate send/return cycles separated by a child-triggered paper-sky turn, never real waiting |
+| Dry ground, verse, reflection and charm | 1:30–2:00 | Verse split into short read-aloud pages, then one concise word interaction and reward |
+
+This leaves room for normal walking and a little child hesitation while keeping the likely total near
+9–11 minutes. If a prototype exceeds 12 minutes, reduce repetitions before shortening spoken Bible
+context.
+
+### One control language
+
+Every new action uses the same large context button already used by the earlier chapters. Its label
+changes to match the immediate verb: **PICK UP**, **PLACE**, **PULL**, **RELEASE**, **GUIDE**,
+**OPEN**, **SEND** or **NEXT**. Keyboard and gamepad use the same interaction action; touch never
+requires dragging a small animal or peg precisely.
+
+For Two by Two, pressing **GUIDE** beside an animal makes it follow the Wonder-Walker at a gentle
+pace. Reaching the correct partner completes the match automatically. Do not depend on collision
+nudging: it is unclear on keyboard/gamepad, easy to trigger accidentally and gives no obvious state
+change on touch.
+
+Only the current objective is shown. The building-item checklist fades out before the panel
+activity; the animal-pair counter appears only when Two by Two begins. This avoids stacking two
+checklists and dialogue over an already busy scene.
+
+### Teach, then let the child do it
+
+- **First building item:** begins within the initial camera view. Wonder Light names the picture and
+  the checklist row pulses once.
+- **Pitch jar:** Wonder Light calls it “sticky pitch that keeps water out” the first time; *pitch*
+  alone is unfamiliar to many children.
+- **First peg:** its socket glows softly and the carried peg snaps into a generous target.
+- **First animal pair:** Noah's wife walks beside the child for a few steps and the matching partner
+  answers with a quiet call. The second and third pairs remove that extra guidance.
+- **First mismatch:** the guided animal pauses, looks toward its real mate and calls; Wonder Light
+  says, “This friend is looking for its match.” There is no error sound. After a second mismatch or
+  four idle seconds, the matching silhouette pulses and an edge arrow appears if it is off-screen.
+
+Stage animals in three small waves rather than showing twelve equally active animals at once. This
+keeps the mobile view readable, reduces accidental selection and lets the waiting area feel alive
+without becoming visual noise. Six pairs still appear and enter the ark; the child actively guides
+three representative pairs, while the other three follow during the boarding montage.
+
+### No awkward waiting
+
+The chapter depicts a long wait without making the player wait. After the first dove returns, the
+line begins positively: “The dove came back safe. The water is still too high.” A large **TURN THE
+SKY** / **NEXT** prompt advances paper sky layers, water height and window light. The second send is
+then immediately available. Idle time only plays breathing, animal and water motion; it never gates
+progress.
+
+All story camera holds expose **NEXT** after the spoken line has had time to begin. Replay can show
+the full animation again, but returning from pause or a checkpoint must not force a child to repeat
+the rain montage.
+
+### Verse and meaning
+
+Split Genesis 9:13 across two short read-aloud pages if the final verified wording does not fit at
+the established tablet text size. Follow it with the three tappable words **RAINBOW**, **SIGN** and
+**PROMISE**. Wonder Light explains *covenant* in child language: “God's covenant is a promise God
+chooses to keep.” The words may be tapped in any order, speak when touched, and never mark an answer
+wrong.
+
+### Camera, sound and recovery
+
+- Keep the top-down Two by Two camera centred on the guided animal and its possible destinations,
+  with the normal look-around range available. Do not shrink all twelve animals into one overview.
+- Keep rain visually present but lower its high frequencies and volume before every voice line. The
+  owl lesson from Chapter 2 applies in reverse here: this ambience must remain felt without hiding
+  the words.
+- Save at the end of item finding, panel building, Two by Two, the rain transition and the verse.
+  Resume at the latest completed beat with its environment state restored.
+- The pause menu's **Play again** equivalent for an unfinished chapter should restart the current
+  activity, not silently erase ten minutes of progress.
+- Test every interaction with read-aloud on, Easy Words on, touch-only input and a child who does
+  not read the button label.
 
 ## Band
 
@@ -313,8 +403,9 @@ out and watching it return, so those two need a fuller spec.
 - **The rope pull** is new: a Steady-Hands-style hold-and-release, but instead of a breathing ring
   it visibly draws two rope ends together over the panel, tightening in clearly graduated steps
   (not a smooth analog fill) so a child can see it visibly get tighter each pull rather than
-  guessing when it's "enough." Three or four holds, matching Steady Hands' three-breath structure,
-  fail-free and unrushable the same way.
+  guessing when it's "enough." Use **two short holds** after the three peg placements; three or four
+  adds repetition without teaching anything new. Early release preserves progress, exactly as the
+  friendship cord does, and the button changes from **PULL** to **RELEASE** when a step is ready.
 - **Feedback:** each peg lands with the same wooden-knock sound described in **What you hear around
   the ark**, and the panel visibly strengthens (a colour or texture shift from raw to finished
   timber) as work completes, echoing chapter 2's gift-checklist tick language but expressed on the
@@ -326,11 +417,11 @@ out and watching it return, so those two need a fuller spec.
 - **The core problem this activity solves that the others don't:** every previous matching-style
   interaction in this game is the child bringing one held object to one marked spot. Here, two
   living things must find each other, and neither is being carried. The simplest fail-free version:
-  the child guides one waiting animal (walking beside it, the way the Wonder-Walker already leads
-  through normal movement) toward its silhouette-matched partner, who is standing at the top of the
-  ramp. Touching or gamepad-nudging the animal starts it walking with the child rather than
-  requiring precise contact; wrong pairings simply don't trigger a match (the doc's "any attempted
-  match simply waits and offers another visual clue") rather than producing an error state.
+  the child presses the normal context action beside one waiting animal, changing the button to
+  **GUIDE**, and it walks beside the Wonder-Walker toward its silhouette-matched partner near the
+  ramp. Reaching the correct partner completes the match automatically. Wrong pairings pause and
+  offer the next clue rather than producing an error state. Do not use physical nudging as the
+  input; it is inconsistent across touch, keyboard and gamepad.
 - **The clue layers**, concretely: shape/silhouette first (a sheep and a goat read as different
   silhouettes even in the same palette), then coat pattern or ear shape as the second, non-colour
   cue the Band A requirement calls for. A third optional clue — a matching soft call from each
@@ -344,7 +435,9 @@ out and watching it return, so those two need a fuller spec.
 - **Completion:** once a pair reaches the ramp together, they walk it and enter on their own (no
   further child input needed for that pair), and the checklist-style pair counter ticks — reusing
   the same tick-and-pop language as Chapter 2's and Chapter 3's checklists for continuity across
-  all three chapters.
+  all three chapters. Band A asks the child to guide **three** pairs. The remaining three join the
+  ramp procession during the short completion montage, so all six are present without six rounds
+  of the same input.
 
 ### The dove send-and-return, in detail
 
@@ -359,7 +452,12 @@ and a landing/settle state with its own idle blinks and head turns.
   branch.
 - **First return (no leaf):** the same arc in reverse, landing back at the window sill — reuse the
   landing/settle behaviour (wing fold, a few idle blinks) so the "nothing yet" beat still feels
-  alive rather than being a flat non-event.
+  alive rather than being a flat non-event. Lead with the successful return (“The dove came back
+  safe”) before saying the water is still high, so a young child does not read this as a failed
+  action.
+- **Passage of time:** the child presses **NEXT** to turn two or three paper sky layers and lower the
+  water. This takes a few seconds and has an immediate visual response; there is no timer or idle
+  wait before the second send.
 - **Second return (with the olive leaf):** identical flight technique, with the leaf attached to
   the dove model for this pass. The moment of the leaf becoming visible should get the same kind of
   small warm emphasis Chapter 3's oil ribbon or Chapter 2's charm-float moments get — a soft
@@ -519,19 +617,19 @@ later is a copy, not a rewrite.
 | 1 | Wonder Light | "Long before David, God asked Noah to trust him and build something no one had seen before." | 1. Arrive on the plain |
 | 2 | Wonder Light | "People were hurting one another, and the world was full of violence." | 1. Naming the brokenness, once |
 | 3 | Wonder Light | "Find the mallet, the rope, and the jar of pitch. Bring them to Noah." | 2. Find building items |
-| 4 | Noah | "I cannot see the rain yet. I can trust the One who told me what to do." | 3. Meet Noah |
+| 4 | Noah | "God told me to build this ark. I cannot see the rain yet, but I trust him." | 3. Meet Noah |
 | 5 | Wonder Light | "Let's finish this panel. Three pegs, then draw the rope tight." | 4. Finish one ark panel |
-| 6 | Wonder Light | "Two by two, they're coming. Help each one find its pair." | 5. Two by Two |
-| 7 | Noah's wife | "This way — mind the ramp, it's wide enough for two." | 5. Two by Two, in-scene guidance |
-| 8 | Wonder Light | "Noah's family goes in. Watch — God is about to close the door." | 6. The door closes |
+| 6 | Wonder Light | "Two by two, they're coming. Help these animals find their partners." | 5. Two by Two |
+| 7 | Noah's wife | "This way. Walk together up the wide ramp." | 5. Two by Two, in-scene guidance |
+| 8 | Wonder Light | "Noah's family and the animals are safely inside. God closes the door and keeps them safe." | 6. The door closes |
 | 9 | Wonder Light | "The water covered the land. God kept Noah's family, and every animal, safe inside." | 7. Rain montage |
 | 10 | Wonder Light | "Let's open the window and send the dove." | 8. Dove, first send |
-| 11 | Wonder Light | "Not yet. The water is still too high." | 8. First return, no leaf |
+| 11 | Wonder Light | "The dove came back safe. The water is still too high." | 8. First return, no leaf |
 | 12 | Wonder Light | "Look — an olive leaf. The water is going down." | 8. Second return, with leaf |
 | 13 | Noah | "Dry ground. Thank you for keeping us safe." | 9. Dry ground |
 | 14 | Wonder Light | "Genesis, chapter nine, verse thirteen." | 9. Verse reference |
 | 15 | Wonder Light | "I have set my rainbow in the cloud. It will be the sign of the covenant between me and the earth." | 9. Verse text — **draft wording, verify against WEB before recording** |
-| 16 | Wonder Light | "The rainbow isn't a prize Noah earned. It's God's promise, kept for everyone." | 9. Reflect — protects against "reward" misreading, per Never in the picture |
+| 16 | Wonder Light | "The rainbow is a sign of God's covenant — a promise God chooses to keep." | 9. Reflect — explains covenant and protects against a "reward" misreading |
 | 17 | Wonder Light | "A Trust charm, for believing what you cannot yet see." | 9. Charm |
 | 18 | Wonder Light | "Keep it close. Trust God, even before you see the way through." | 9. Charm, closing |
 
@@ -580,3 +678,13 @@ sound rather than dialogue.
     plank geometry together (**Asset inventory**, **Animation and motion polish**) — both are new,
     chapter-defining pieces without a close existing precedent to fall back on if either turns out
     too expensive for the tablet budget.
+14. Time a complete read-aloud prototype against the **8–12 minute** target. Use three child-guided
+    animal pairs and let three more board in the montage; add repetitions only if children finish
+    too quickly and ask for more.
+15. Test the GUIDE interaction on touch, keyboard and gamepad. It must be explicit context-button
+    input rather than physics nudging, with the first mismatch producing a gentle living-world clue
+    within four seconds.
+16. Add resumable checkpoints at the end of finding, building, matching, rain and verse beats, and
+    verify that resume restores the correct weather, water height, animals and ark state.
+17. Verify the final verse at the established tablet font size, split it into two pages if needed,
+    and child-test **RAINBOW / SIGN / PROMISE** plus the one-sentence covenant explanation.
