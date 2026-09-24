@@ -43,6 +43,8 @@ var _rim: PackedVector2Array = []
 var _sky_clouds: Node3D
 var _cloud_sea: Node3D
 var _birds: Node3D
+var _water: MeshInstance3D
+var _water_level: float = -100.0
 var _time: float = 0.0
 
 
@@ -56,10 +58,13 @@ func _ready() -> void:
 	_build_cloud_sea()
 	_build_sky_clouds()
 	_build_birds()
+	_build_water()
 
 
 func _process(delta: float) -> void:
 	_time += delta
+	if _water and _water.visible:
+		_water.position.y = _water_level + sin(_time * 0.8) * 0.08
 	if _sky_clouds:
 		_sky_clouds.rotation.y += 0.006 * delta
 	if _cloud_sea:
@@ -427,6 +432,55 @@ func _build_birds() -> void:
 			wing.material_override = _flat_mat(ink)
 			wing.position = Vector3(side * 0.38, 0.0, 0.0)
 			pivot.add_child(wing)
+
+
+## -- The flood ------------------------------------------------------------------------
+
+## A calm grey-blue water that rises over the cloud sea while it rains and goes down
+## again after. Never rough: it only breathes up and down a little.
+func _build_water() -> void:
+	var disc := CylinderMesh.new()
+	disc.top_radius = 230.0
+	disc.bottom_radius = 230.0
+	disc.height = 0.2
+	disc.radial_segments = 48
+	disc.rings = 1
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(0.5, 0.6, 0.68)
+	mat.roughness = 0.55
+	mat.metallic_specular = 0.3
+	_water = MeshInstance3D.new()
+	_water.name = "Flood"
+	_water.mesh = disc
+	_water.material_override = mat
+	_water.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_water.visible = false
+	_water.position.y = CLOUD_SEA_Y - 6.0
+	add_child(_water)
+
+
+## Moves the water to `level` (local y) over `seconds`. A level below the cloud sea
+## drains it away and brings the clouds back.
+func set_flood(level: float, seconds: float) -> void:
+	if _water == null:
+		return
+	var low := CLOUD_SEA_Y - 6.0
+	var target := maxf(level, low)
+	if target > low:
+		_water.visible = true
+		if _cloud_sea:
+			_cloud_sea.visible = false
+	var tw := create_tween()
+	tw.tween_property(self, "_water_level", target, maxf(seconds, 0.01)).from(maxf(_water_level, low)).set_trans(Tween.TRANS_SINE)
+	if target <= low:
+		tw.tween_callback(func() -> void:
+			_water.visible = false
+			if _cloud_sea:
+				_cloud_sea.visible = true)
+
+
+func flood_level() -> float:
+	return _water_level if _water and _water.visible else -100.0
 
 
 ## -- Mesh helpers ------------------------------------------------------------------

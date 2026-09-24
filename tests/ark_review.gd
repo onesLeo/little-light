@@ -41,6 +41,10 @@ func _run() -> void:
 	check(Profiles.is_unlocked(kid, Profiles.CHAPTER_ARK), "finishing the camp opens Noah's Ark")
 
 	var ark: Node = main.get_node("NoahsArk")
+	# The game opens the ark from the Faith Journey map, which closes first and unpauses.
+	var journey: Node = main.get_node("FaithJourney")
+	if journey.is_open():
+		journey.close()
 	ark.visit()
 	await settle()
 	var story: Node = ark.get_node("ChapterFour")
@@ -54,22 +58,43 @@ func _run() -> void:
 	check("hurting one another" in story._line.text, "the brokenness is named once")
 	story._advance()
 	check(story.phase == story.Phase.FIND and player.can_move, "finding the tools unlocks walking")
+	check(story._checklist.visible and "0 / 3" in story._checklist._title.text, "a picture list of Noah's tools shows during the hunt")
+	story._hints.hint_delay = 0.05
+	await settle(20)
+	check(story._hints.is_pointing(), "the golden arrow points at a tool when the child is stuck")
+	story._hints.hint_delay = story.HINT_FIND
 
-	for tool_name in ["Mallet", "RopeCoil", "Pitch"]:
+	# Walking onto a glowing tool picks it up, like the gifts in the camp.
+	player.global_position = ark.get_node("Mallet").global_position
+	await settle(2)
+	check("Mallet" in story._found and story._checklist.is_found("Mallet"), "walking onto a tool picks it up and ticks it")
+	for tool_name in ["RopeCoil", "Pitch"]:
 		player.global_position = ark.get_node(tool_name).global_position
 		story._try_collect()
 	check(story.phase == story.Phase.MEET and not ark.get_node("Pitch").visible, "three tools are brought to Noah")
 	check("I trust him" in story._line.text, "Noah says he trusts before he sees the rain")
 	story._advance()
 	check(story.phase == story.Phase.PANEL, "the panel activity starts")
+	check(not story._checklist.visible and ark.get_node("WorkPanel/SocketGlow0").visible, "the list goes away and the first peg socket glows")
 
 	player.global_position = ark.get_node("WorkPanel").global_position
+	check(story.get_action_hint() == "PEG", "on a tablet the gold button says PEG at the bench")
+	var said: String = story._line.text
 	for _i in 3:
 		story._place_peg()
 	check(story._pegs == 3 and ark.get_node("WorkPanel/Peg2") != null, "three pegs land in the panel")
+	check(story._line.text == said and "rope" in story._prompt.text, "the pegs move the prompt on without repeating the line")
+	check(story.get_action_hint() == "PULL", "then the button says PULL")
 	story.add_rope(story.ROPE_STEP)
 	story.add_rope(story.ROPE_STEP)
 	check(story.phase == story.Phase.PAIRS and story._rope_steps == 2, "two rope pulls finish the panel")
+	await settle(2)
+	check(ark.get_node("SheepA/Beacon").visible and not ark.get_node("SheepB").has_node("Beacon"), "gold markers show which animals to lead")
+	player.global_position = ark.get_node("DoveA").global_position
+	story._try_guide()
+	check(story._guide == "DoveA" and ark.get_node("DoveB/Ring").visible, "leading a dove lights a ring under its partner")
+	story._finish_guide()
+	check(not ark.get_node("DoveB/Ring").visible, "the ring goes when the pair boards")
 
 	var sheep: Node3D = ark.get_node("SheepA")
 	story._guide = "SheepA"
@@ -78,22 +103,25 @@ func _run() -> void:
 	check(story._mismatch_said and not bool(sheep.get_meta("aboard")), "a mismatch points to the real mate and boards nobody")
 	sheep.global_position = ark.get_node("SheepB").global_position
 	story._follow(0.05)
-	check(story._matched == 1 and bool(sheep.get_meta("aboard")), "standing with the matching sheep boards the pair")
-	story._guide = "DoveA"
-	story._finish_guide()
+	check(story._matched == 2 and bool(sheep.get_meta("aboard")), "standing with the matching sheep boards the pair")
 	story._guide = "ElephantA"
 	story._finish_guide()
 	check(story._matched == 3 and ark.aboard_count() == 12, "three guided pairs and three montage pairs are aboard")
+	check(ark.get_node("Door").visible and not ark.get_node("SheepA/Beacon").visible, "God closes the door, and the markers are put away")
 	check(ark.get_node("Noah").global_position.z < 5.0
 			and player.global_position.distance_to(ark.get_node("Noah").global_position) > 3.0,
 			"the guest stays outside while the family goes in")
 	story._advance()
 	check(ark.get_node("Rain").visible and "animals with them" in story._line.text, "rain stays on the ark and names who was kept safe")
+	await create_timer(0.3).timeout
+	check(ark.get_node("Mountain/Flood").visible and not ark.get_node("Mountain/CloudSea").visible, "the water rises over the cloud sea while it rains")
 	story._advance()
 	story._send_dove()
 	story._on_dove_back()
 	check(story.phase == story.Phase.SKY and "came back safe" in story._line.text, "the first dove returns safe")
+	var before: String = story._line.text
 	story._turn_sky()
+	check(story._line.text == before and "going down" in story._prompt.text, "the first turn of the sky lets the water go down without repeating the line")
 	story._turn_sky()
 	check(story.phase == story.Phase.LEAF, "turning the sky opens the second send")
 	story._send_dove()

@@ -34,6 +34,10 @@ const BASKET_WALK_FROM := Vector3(-8.8, 0.0, 2.1)
 const BASKET_WALK_TO := Vector3(-6.0, 0.0, 2.6)
 ## Where the ramp meets the plain.
 const RAMP_FOOT_Z := 4.6
+## Flood heights (local): just under the rim while it rains, and halfway down as it recedes.
+const FLOOD_HIGH := -1.1
+const FLOOD_MID := -5.0
+const GLOW := Color(1.0, 0.86, 0.5)
 const RAIN_STREAKS := 160
 const RAIN_HEIGHT := 9.0
 const EARTH := Color(0.64, 0.58, 0.45)
@@ -50,6 +54,12 @@ const MATE_OF := {
 
 var _built: bool = false
 var _time: float = 0.0
+var _mountain: Node3D
+var _glows: Array[MeshInstance3D] = []
+var _beacons: Array[Node3D] = []
+var _beacons_on: bool = false
+var _sockets: Array[MeshInstance3D] = []
+var _door: Node3D
 var _rain: Node3D
 var _rainbow: Node3D
 var _bands: Array[MeshInstance3D] = []
@@ -170,6 +180,7 @@ func _ground() -> void:
 	mountain.name = "Mountain"
 	mountain.position = ORIGIN
 	add_child(mountain)
+	_mountain = mountain
 
 
 func _set_building_light(main: Node) -> void:
@@ -222,6 +233,22 @@ func _set_rain_light(main: Node) -> void:
 	if sun:
 		sun.light_color = Color(0.72, 0.8, 0.94)
 		sun.light_energy = 0.45
+
+
+## After the rain: still grey, but softer and lighter, with pale light through the window.
+func _brighten_waiting(main: Node) -> void:
+	var world := main.get_node_or_null("WorldEnvironment") as WorldEnvironment
+	if world and world.environment:
+		var env := world.environment
+		var sky := env.sky.sky_material as ProceduralSkyMaterial if env.sky else null
+		if sky:
+			sky.sky_top_color = Color(0.5, 0.6, 0.7)
+			sky.sky_horizon_color = Color(0.74, 0.78, 0.82)
+		env.ambient_light_energy = 0.8
+		env.fog_density = 0.004
+	var sun := main.get_node_or_null("Sun") as DirectionalLight3D
+	if sun:
+		sun.light_energy = 0.6
 
 
 func _plain_dressing() -> void:
@@ -286,6 +313,16 @@ func _hull() -> void:
 	var door_z := HULL_Z + Shapes.side_z(0.0, door_y)
 	Paper.part(self, "Entrance", Paper.box(Vector3(2.0, 1.6, 0.14)), Color(0.26, 0.2, 0.16),
 			_at(Vector3(0.0, door_y, door_z + 0.05)), Vector3.ZERO, Vector3.ONE, 0.03)
+	# The door itself, folded up out of sight until God closes it (close_door).
+	_door = Node3D.new()
+	_door.name = "Door"
+	_door.position = _at(Vector3(0.0, door_y + 0.82, door_z + 0.16))
+	_door.scale = Vector3(1.0, 0.01, 1.0)
+	_door.visible = false
+	add_child(_door)
+	var leaf := Paper.part(_door, "Leaf", Paper.box(Vector3(2.2, 1.7, 0.14)), PLANK_B, Vector3(0.0, -0.85, 0.0), Vector3.ZERO, Vector3.ONE, 0.03)
+	for i in 3:
+		Paper.part(leaf, "Batten%d" % i, Paper.box(Vector3(2.1, 0.1, 0.05)), PLANK_DARK, Vector3(0.0, -0.55 + i * 0.55, 0.09), Vector3.ZERO, Vector3.ONE, 0.0)
 	var ramp_top := Vector3(0.0, 1.15, door_z + 0.2)
 	var ramp_foot := Vector3(0.0, 0.05, RAMP_FOOT_Z)
 	var run := ramp_foot - ramp_top
@@ -380,6 +417,20 @@ func _work_station() -> void:
 				Vector3(0.0, -0.53 + i * 0.53, 0.1), Vector3.ZERO, Vector3.ONE, 0.0)
 		Paper.part(_panel, "Socket%d" % i, Paper.cylinder(0.08, 0.08, 8), Color(0.35, 0.22, 0.12),
 				Vector3(-0.7 + i * 0.7, 0.15, 0.12), Vector3(PI / 2.0, 0.0, 0.0), Vector3.ONE, 0.0)
+	for i in 3:
+		var socket_glow := Paper.halo(0.55, GLOW)
+		socket_glow.name = "SocketGlow%d" % i
+		socket_glow.position = Vector3(-0.7 + i * 0.7, 0.15, 0.25)
+		socket_glow.visible = false
+		_panel.add_child(socket_glow)
+		_sockets.append(socket_glow)
+	var spot := Area3D.new()
+	spot.name = "PanelSpot"
+	spot.collision_layer = 0
+	spot.collision_mask = 0
+	spot.monitoring = false
+	spot.position = _at(PANEL + Vector3(0.0, 0.2, 0.0))
+	add_child(spot)
 	_rope = Paper.part(_panel, "PanelRope", Paper.cylinder(0.05, 2.2, 6), Color(0.62, 0.46, 0.24),
 			Vector3(0.0, 0.62, 0.14), Vector3(0.0, 0.0, PI / 2.0), Vector3.ONE, 0.012)
 
@@ -392,10 +443,20 @@ func _items() -> void:
 
 ## Wood, rope and sealed pitch, each with its own clear shape; nothing sharp.
 func _tool(tool_name: String, at: Vector3) -> void:
-	var root := Node3D.new()
+	# An Area3D, so the chapter's golden hint arrow (wonder_item_hints.gd) can point at it.
+	var root := Area3D.new()
 	root.name = tool_name
+	root.collision_layer = 0
+	root.collision_mask = 2
+	root.monitoring = false
 	root.position = at
 	add_child(root)
+	# A soft gold glow that breathes, like the Wonder Items in the valley.
+	var glow := Paper.halo(1.7, GLOW)
+	glow.name = "Glow"
+	glow.position = Vector3(0.0, 0.45, 0.0)
+	root.add_child(glow)
+	_glows.append(glow)
 	# A soft paler ground circle marks each tool from across the plain.
 	Paper.part(root, "Spot", Paper.cylinder(0.62, 0.02, 12), EARTH.lightened(0.2), Vector3(0.0, 0.06, 0.0), Vector3.ZERO, Vector3.ONE, 0.0)
 	match tool_name:
@@ -444,6 +505,7 @@ func _critter(critter_name: String, kind: String, at: Vector3) -> void:
 	root.set_meta("home", root.position)
 	root.set_meta("aboard", false)
 	add_child(root)
+	_critter_marks(root, critter_name, kind)
 	var b := critter_name.ends_with("B")
 	var tilt := 0.25 if b else -0.1
 	match kind:
@@ -586,13 +648,28 @@ func _dove() -> void:
 	leaf.visible = false
 
 
+## "building" (dry daylight), "rain" (rain, water rising over the cloud sea), "waiting"
+## (rain stopped, water still high, soft grey-blue), "receding" (the water going down)
+## and "morning" (dry ground and the rainbow).
 func set_weather(state: String) -> void:
 	if _rain:
 		_rain.visible = state == "rain"
-	if state == "rain":
+	if state in ["rain", "waiting"]:
 		_set_rain_light(get_parent())
+		if state == "waiting":
+			_brighten_waiting(get_parent())
 	elif _built:
 		_set_building_light(get_parent())
+	if _mountain and _mountain.has_method("set_flood"):
+		match state:
+			"rain":
+				_mountain.set_flood(FLOOD_HIGH, 5.0)
+			"waiting":
+				_mountain.set_flood(FLOOD_HIGH, 1.0)
+			"receding":
+				_mountain.set_flood(FLOOD_MID, 3.0)
+			_:
+				_mountain.set_flood(-100.0, 4.0 if state == "morning" else 0.0)
 	if _rainbow:
 		_rainbow.visible = state == "morning"
 	if state == "morning":
@@ -627,6 +704,108 @@ func take_item(tool_name: String) -> void:
 	var tool := get_node_or_null(tool_name) as Node3D
 	if tool:
 		tool.visible = false
+
+
+## The tools still lying on the ground, for the hint arrow.
+func tool_spots() -> Array:
+	var out: Array = []
+	for tool_name in ["Mallet", "RopeCoil", "Pitch"]:
+		var tool := get_node_or_null(tool_name) as Area3D
+		if tool and tool.visible:
+			out.append(tool)
+	return out
+
+
+func panel_spot() -> Area3D:
+	return get_node_or_null("PanelSpot") as Area3D
+
+
+## The next socket to peg glows; -1 puts the glow away.
+func highlight_socket(index: int) -> void:
+	for i in _sockets.size():
+		_sockets[i].visible = i == index
+
+
+## Gold markers over the animals the child can lead, while Two by Two is on.
+func show_beacons(on: bool) -> void:
+	_beacons_on = on
+	for beacon in _beacons:
+		beacon.visible = on and not bool((beacon.get_parent() as Node3D).get_meta("aboard"))
+
+
+## The spot under an animal, for the hint arrow: the guided ones before one is chosen,
+## then the partner of the one being led.
+func guide_spots() -> Array:
+	var out: Array = []
+	for critter_name in GUIDED:
+		var animal := get_node_or_null(critter_name) as Node3D
+		if animal and not bool(animal.get_meta("aboard")):
+			out.append(animal.get_node("%sSpot" % critter_name))
+	return out
+
+
+func mate_spot(critter_name: String) -> Area3D:
+	var mate_name := str(MATE_OF.get(critter_name, ""))
+	var mate := get_node_or_null(mate_name) as Node3D
+	return mate.get_node_or_null("%sSpot" % mate_name) as Area3D if mate else null
+
+
+## A gold ring on the ground under the partner the led animal is looking for.
+func mark_mate(critter_name: String, on: bool) -> void:
+	for other in MATE_OF.values():
+		var animal := get_node_or_null(str(other)) as Node3D
+		if animal:
+			(animal.get_node("Ring") as Node3D).visible = on and other == MATE_OF.get(critter_name, "")
+
+
+## God closes the door: it folds down over the entrance. `false` opens it again.
+func close_door(closed: bool) -> void:
+	if _door == null:
+		return
+	var tw := create_tween()
+	if closed:
+		_door.visible = true
+		_door.scale = Vector3(1.0, 0.01, 1.0)
+		tw.tween_property(_door, "scale:y", 1.0, 1.4).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	else:
+		tw.tween_property(_door, "scale:y", 0.01, 1.0).set_trans(Tween.TRANS_SINE)
+		tw.tween_callback(func() -> void: _door.visible = false)
+
+
+func _critter_marks(root: Node3D, critter_name: String, kind: String) -> void:
+	var spot := Area3D.new()
+	spot.name = "%sSpot" % critter_name
+	spot.collision_layer = 0
+	spot.collision_mask = 0
+	spot.monitoring = false
+	root.add_child(spot)
+	var ring_mesh := TorusMesh.new()
+	ring_mesh.inner_radius = 0.72 if kind in ["elephant", "giraffe"] else 0.48
+	ring_mesh.outer_radius = ring_mesh.inner_radius + 0.12
+	ring_mesh.rings = 24
+	ring_mesh.ring_segments = 4
+	var ring := MeshInstance3D.new()
+	ring.name = "Ring"
+	ring.mesh = ring_mesh
+	ring.material_override = Paper.glow_mat(GLOW)
+	ring.scale = Vector3(1.0, 0.3, 1.0)
+	ring.position.y = 0.05
+	ring.visible = false
+	ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	root.add_child(ring)
+	if critter_name not in GUIDED:
+		return
+	var heights := {"sheep": 1.2, "dove": 0.85, "elephant": 2.0, "giraffe": 2.8, "goat": 1.3, "rabbit": 1.0}
+	var beacon := Node3D.new()
+	beacon.name = "Beacon"
+	beacon.position.y = heights.get(kind, 1.3)
+	beacon.set_meta("y", beacon.position.y)
+	beacon.visible = false
+	root.add_child(beacon)
+	Paper.part(beacon, "Gem", Paper.box(Vector3(0.24, 0.24, 0.24)), GLOW, Vector3.ZERO, Vector3(0.0, 0.0, PI / 4.0), Vector3(1.0, 1.4, 1.0), 0.02)
+	var halo := Paper.halo(0.9, GLOW)
+	beacon.add_child(halo)
+	_beacons.append(beacon)
 
 
 func show_peg(index: int) -> void:
@@ -773,6 +952,17 @@ func _process(delta: float) -> void:
 	for child in get_children():
 		if child is Node3D and child.has_meta("kind") and not bool(child.get_meta("aboard")):
 			_graze(child, delta)
+	var breathe := 1.0 + sin(_time * 3.0) * 0.12
+	for glow in _glows:
+		glow.scale = Vector3.ONE * breathe
+	for beacon in _beacons:
+		var animal := beacon.get_parent() as Node3D
+		var led := _time - float(animal.get_meta("led_at", -10.0)) < 0.6
+		beacon.visible = _beacons_on and not led and not bool(animal.get_meta("aboard"))
+		beacon.rotation.y = _time * 1.6
+		beacon.position.y = float(beacon.get_meta("y")) + sin(_time * 3.0) * 0.08
+	for socket in _sockets:
+		socket.scale = Vector3.ONE * (1.0 + sin(_time * 5.0) * 0.2)
 	if not _family_in:
 		_work(delta)
 

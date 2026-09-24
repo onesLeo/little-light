@@ -6,12 +6,25 @@ const JournalContent := preload("res://scripts/journal_content.gd")
 const Profiles := preload("res://scripts/profiles.gd")
 const WordChip := preload("res://scripts/word_chip.gd")
 const PaperUI := preload("res://scripts/paper_ui.gd")
+const GiftChecklist := preload("res://scripts/gift_checklist.gd")
+const Hints := preload("res://scripts/wonder_item_hints.gd")
+const GameSettings := preload("res://scripts/game_settings.gd")
+const EasyWords := preload("res://scripts/easy_words.gd")
 
 enum Phase { IDLE, ARRIVE, HURT, FIND, MEET, PANEL, PAIRS, DOOR, RAIN, DOVE, SKY, LEAF, DRY, VERSE, WORDS, REFLECT, CHARM, DONE }
 
 const WORD_LABELS: PackedStringArray = ["Rainbow", "Sign", "Promise"]
 const WORD_LINES: PackedStringArray = ["Rainbow.", "Sign.", "Promise."]
 const ROPE_STEP := 1.35
+const TOOLS := ["Mallet", "RopeCoil", "Pitch"]
+## Walking this close to a tool picks it up, as the gifts do in the camp.
+const PICKUP_REACH := 1.4
+## How long before the golden arrow helps: the hunt, the bench, choosing an animal,
+## and finding its partner (the concept's "four idle seconds").
+const HINT_FIND := 14.0
+const HINT_PANEL := 8.0
+const HINT_CHOOSE := 10.0
+const HINT_MATE := 4.0
 const ITEMS := {
 	"Mallet": "A wooden mallet. Noah builds with it.",
 	"RopeCoil": "A coil of rope. It holds the ark together.",
@@ -39,6 +52,8 @@ var _prompt: Label
 var _audio: Node
 var _camera: Node
 var _player: Node3D
+var _checklist: GiftChecklist
+var _hints: Hints
 
 
 func begin() -> void:
@@ -68,6 +83,8 @@ func begin() -> void:
 	if banner:
 		banner.visible = false
 	_build_words(main.get_node("UI"))
+	_build_checklist(main.get_node("UI"))
+	_watch(Phase.IDLE)
 	_say("Wonder Light: \"Long before David, God asked Noah to trust him and build something no one had seen before.\"", "Press Space to continue")
 
 
@@ -98,6 +115,9 @@ func _input(event: InputEvent) -> void:
 
 
 func _process(delta: float) -> void:
+	# Walking onto a glowing tool picks it up; E (or the button) still works from a step away.
+	if phase == Phase.FIND and _player and not get_parent().nearest_item(_player.global_position, PICKUP_REACH).is_empty():
+		_try_collect()
 	if phase != Phase.PANEL or _pegs < 3 or _rope_steps >= 2:
 		_follow(delta)
 		return
@@ -125,16 +145,21 @@ func _advance() -> void:
 			_say("Wonder Light: \"People were hurting one another, and the world was full of violence.\"", "Press Space to continue")
 		Phase.HURT:
 			phase = Phase.FIND
-			_say("Wonder Light: \"Find the mallet, the rope, and the jar of pitch. Bring them to Noah.\"", "Press E near a tool")
+			_watch(phase)
+			_say("Wonder Light: \"Find the mallet, the rope, and the jar of pitch. Bring them to Noah.\"", "Walk to a glowing tool")
 		Phase.MEET:
 			phase = Phase.PANEL
+			get_parent().highlight_socket(0)
+			_watch(phase)
 			_say("Wonder Light: \"Let's finish this panel. Three pegs, then draw the rope tight.\"", "Press E at the panel")
 		Phase.DOOR:
 			phase = Phase.RAIN
+			_watch(phase)
 			get_parent().set_weather("rain")
 			_say("Wonder Light: \"The water covered the land. God kept Noah's family, and the animals with them, safe inside.\"", "Press Space to continue")
 		Phase.RAIN:
 			phase = Phase.DOVE
+			get_parent().set_weather("waiting")
 			_say("Wonder Light: \"Let's open the window and send the dove.\"", "Press E to send the dove")
 		Phase.DRY:
 			phase = Phase.VERSE
@@ -163,13 +188,21 @@ func _try_collect() -> void:
 		return
 	_found.append(tool_name)
 	ark.take_item(tool_name)
-	if _audio and _audio.has_method("play_tap"):
-		_audio.play_tap()
+	if _checklist:
+		_checklist.set_found(_found)
+	if _hints:
+		_hints.found(tool_name)
+	if _audio and _audio.has_method("play_pickup"):
+		_audio.play_pickup()
+	var light := get_parent().get_parent().get_node_or_null("WonderLight")
+	if light and light.has_method("celebrate"):
+		light.celebrate()
 	if _found.size() >= 3:
 		phase = Phase.MEET
+		_watch(phase)
 		_say("Noah: \"God told me to build this ark. I cannot see the rain yet, but I trust him.\"", "Press Space to continue")
 	else:
-		_say("Wonder Light: \"%s\"" % ITEMS[tool_name], "Find %d more" % (3 - _found.size()))
+		_say("Wonder Light: \"%s\"" % ITEMS[tool_name], "Find the other glowing tools")
 
 
 func _place_peg() -> void:
@@ -180,10 +213,13 @@ func _place_peg() -> void:
 		return
 	get_parent().show_peg(_pegs)
 	_pegs += 1
+	get_parent().highlight_socket(_pegs if _pegs < 3 else -1)
+	if _hints:
+		_hints.stop()
 	if _audio and _audio.has_method("play_tap"):
 		_audio.play_tap()
-	if _pegs >= 3:
-		_say("Wonder Light: \"Let's finish this panel. Three pegs, then draw the rope tight.\"", "Hold E to pull the rope")
+	# The line was just said; only the next step changes, so it is not read out again.
+	_set_prompt("Hold E to pull the rope  •  0 / 2" if _pegs >= 3 else "Press E for the next peg  •  %d / 3" % _pegs)
 
 
 func add_rope(delta: float) -> void:
@@ -199,10 +235,14 @@ func add_rope(delta: float) -> void:
 		_audio.play_tap()
 	if _rope_steps >= 2:
 		_begin_pairs()
+	else:
+		_set_prompt("Tighter! Hold E again  •  %d / 2" % _rope_steps)
 
 
 func _begin_pairs() -> void:
 	phase = Phase.PAIRS
+	get_parent().show_beacons(true)
+	_watch(phase)
 	_say("Wonder Light: \"Two by two, they're coming. Help these animals find their partners.\"\nNoah's wife: \"This way. Walk together up the wide ramp.\"", "Press E beside an animal")
 
 
@@ -214,14 +254,18 @@ func _try_guide() -> void:
 		return
 	_guide = critter_name
 	_mismatch_said = false
-	_prompt.text = "Walk to the matching animal"
+	get_parent().mark_mate(_guide, true)
+	_watch(phase)
+	_set_prompt("Walk to the animal that looks the same")
 
 
 func _finish_guide() -> void:
 	var ark := get_parent()
+	ark.mark_mate(_guide, false)
 	ark.board_pair(_guide)
 	_guide = ""
 	_matched += 1
+	_watch(phase)
 	if _audio and _audio.has_method("play_success"):
 		_audio.play_success()
 	if _matched < 3:
@@ -229,7 +273,10 @@ func _finish_guide() -> void:
 		return
 	ark.board_remaining()
 	phase = Phase.DOOR
+	ark.show_beacons(false)
+	_watch(phase)
 	ark.family_inside()
+	ark.close_door(true)
 	ark.keep_guest_outside(_player)
 	_say("Wonder Light: \"Noah's family and the animals are safely inside. God closes the door and keeps them safe.\"", "Press Space to continue")
 
@@ -265,6 +312,7 @@ func _on_dove_back() -> void:
 		ark.show_leaf(true)
 		phase = Phase.DRY
 		ark.set_weather("morning")
+		ark.close_door(false)
 		_say("Wonder Light: \"Look, an olive leaf. The water is going down.\"\nNoah: \"Dry ground. Thank you for keeping us safe.\"", "Press Space to continue")
 
 
@@ -272,8 +320,9 @@ func _turn_sky() -> void:
 	_sky_turns += 1
 	var ark := get_parent()
 	if _sky_turns == 1:
-		ark.set_weather("building")
-		_say("Wonder Light: \"The dove came back safe. The water is still too high.\"", "Press E to turn the sky again")
+		# Days pass: the water goes down a little. The line has been said, so only the prompt moves on.
+		ark.set_weather("receding")
+		_set_prompt("The water is going down. Press E to turn the sky again")
 		return
 	phase = Phase.LEAF
 	_say("Wonder Light: \"Let's open the window and send the dove.\"", "Press E to send the dove")
@@ -354,6 +403,7 @@ func _on_charm_sealed() -> void:
 func _finish() -> void:
 	phase = Phase.DONE
 	_show_words(false)
+	_watch(phase)
 	var main := get_parent().get_parent()
 	Profiles.finish_chapter(Profiles.CHAPTER_ARK)
 	if _camera and _camera.has_method("cut_to_tabletop"):
@@ -370,6 +420,10 @@ func _finish() -> void:
 
 
 func _say(text: String, prompt: String) -> void:
+	if GameSettings.easy_words:
+		text = EasyWords.apply(text)
+	if _checklist:
+		_checklist.visible = phase in [Phase.FIND, Phase.MEET]
 	var ark := get_parent()
 	var speaker := ""
 	if text.begins_with("Noah's wife:"):
@@ -387,8 +441,7 @@ func _say(text: String, prompt: String) -> void:
 			_camera.cut_to_tabletop()
 	if _line:
 		_line.text = text
-	if _prompt:
-		_prompt.text = prompt
+	_set_prompt(prompt)
 	var director := get_parent().get_parent().get_node_or_null("ChapterDirector")
 	if director and director.has_method("_fit_dialogue_panel"):
 		director._fit_dialogue_panel()
@@ -402,3 +455,84 @@ func _pressed(event: InputEvent) -> bool:
 	if event is InputEventKey and event.pressed and not event.echo:
 		return event.keycode == KEY_SPACE or event.physical_keycode == KEY_SPACE or event.keycode == KEY_ENTER or event.physical_keycode == KEY_ENTER
 	return false
+
+
+func _set_prompt(raw: String) -> void:
+	if _prompt:
+		_prompt.text = _device_prompt(raw)
+
+
+## Prompts are written for the keyboard. On a tablet or a gamepad they name that
+## device's buttons instead, as chapters 1 and 2 do.
+func _device_prompt(raw: String) -> String:
+	var input_setup := get_parent().get_parent().get_node_or_null("InputSetup")
+	var mode: String = input_setup.mode if input_setup and "mode" in input_setup else "keyboard"
+	match mode:
+		"touch":
+			return raw.replace("Press Space", "Tap NEXT").replace("Press E", "Tap the gold button") \
+					.replace("Hold E", "Hold the gold button")
+		"gamepad":
+			return raw.replace("Press Space", "Press A").replace("Press E", "Press A").replace("Hold E", "Hold A")
+	return raw
+
+
+## What the on-screen action button says right now ("" = nothing to do), for touch_controls.gd.
+func get_action_hint() -> String:
+	var ark := get_parent()
+	match phase:
+		Phase.IDLE, Phase.DONE:
+			return ""
+		Phase.FIND:
+			return "GRAB" if _player and not ark.nearest_item(_player.global_position, 2.4).is_empty() else ""
+		Phase.PANEL:
+			if _pegs >= 3:
+				return "PULL"
+			var panel := ark.get_node_or_null("WorkPanel") as Node3D
+			return "PEG" if _player and panel and _player.global_position.distance_to(panel.global_position) <= 3.2 else ""
+		Phase.PAIRS:
+			if not _guide.is_empty() or _player == null:
+				return ""
+			return "LEAD" if not ark.nearest_guide(_player.global_position, 2.6).is_empty() else ""
+		Phase.DOVE, Phase.LEAF:
+			return "" if _dove_busy else "SEND"
+		Phase.SKY:
+			return "TURN"
+		Phase.WORDS:
+			return "NEXT" if _words_done else ""
+	return "" if _ceremony else "NEXT"
+
+
+func _build_checklist(ui: Node) -> void:
+	if is_instance_valid(_checklist):
+		_checklist.queue_free()
+	_checklist = GiftChecklist.new(TOOLS, "Tools for Noah", {"RopeCoil": "Rope"})
+	_checklist.name = "ArkToolChecklist"
+	_checklist.position = Vector2(24, 90)
+	_checklist.visible = false
+	ui.add_child(_checklist)
+
+
+## The golden arrow (wonder_item_hints.gd) helps with whatever this step is looking for,
+## after a little while with no progress.
+func _watch(step: Phase) -> void:
+	var ark := get_parent()
+	if _hints == null:
+		_hints = Hints.new()
+		_hints.name = "ArkHints"
+		_hints.main = ark.get_parent()
+		ark.add_child(_hints)
+	_hints.stop()
+	match step:
+		Phase.FIND:
+			_hints.hint_delay = HINT_FIND
+			_hints.watch(ark.tool_spots())
+		Phase.PANEL:
+			_hints.hint_delay = HINT_PANEL
+			_hints.watch([ark.panel_spot()])
+		Phase.PAIRS:
+			if _guide.is_empty():
+				_hints.hint_delay = HINT_CHOOSE
+				_hints.watch(ark.guide_spots())
+			else:
+				_hints.hint_delay = HINT_MATE
+				_hints.watch([ark.mate_spot(_guide)])
