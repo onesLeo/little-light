@@ -25,6 +25,12 @@ func open_camp() -> void:
 	center = Vector2(-1.0, 21.5)
 	half_extents = Vector2(11.5, 27.0)
 
+
+## The ark plain sits far from the valley and the camp, and is built only when that story is chosen.
+func open_ark() -> void:
+	center = Vector2(96.0, 8.0)
+	half_extents = Vector2(18.0, 16.0)
+
 var _player: CharacterBody3D
 var _director: Node
 var _nudge_index: int = 0

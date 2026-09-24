@@ -23,9 +23,10 @@ const DONE_FILL := Color(0.99, 0.95, 0.82)
 ## Where each story sits on the map, as a fraction of the picture. `chapter` is the
 ## Profiles chapter id; the last stop is the path still ahead.
 const STOPS := [
-	{"id": "valley", "chapter": Profiles.CHAPTER_VALLEY, "number": 1, "title": "The valley", "at": Vector2(0.30, 0.76)},
-	{"id": "camp", "chapter": Profiles.CHAPTER_CAMP, "number": 2, "title": "The King's Camp", "at": Vector2(0.545, 0.48)},
-	{"id": "ahead", "chapter": "", "number": 3, "title": "Coming soon", "at": Vector2(0.80, 0.30)},
+	{"id": "valley", "chapter": Profiles.CHAPTER_VALLEY, "number": 1, "title": "The valley", "at": Vector2(0.22, 0.76)},
+	{"id": "camp", "chapter": Profiles.CHAPTER_CAMP, "number": 2, "title": "The King's Camp", "at": Vector2(0.42, 0.50)},
+	{"id": "ark", "chapter": Profiles.CHAPTER_ARK, "number": 3, "title": "Noah's Ark", "at": Vector2(0.64, 0.36)},
+	{"id": "ahead", "chapter": "", "number": 4, "title": "Coming soon", "at": Vector2(0.84, 0.22)},
 ]
 
 var _audio: Node
@@ -180,6 +181,8 @@ func open_to_choose() -> void:
 		line = "Your journey starts in the valley."
 	elif next == Profiles.CHAPTER_CAMP:
 		line = "The King's Camp is next."
+	elif next == Profiles.CHAPTER_ARK:
+		line = "Noah's Ark is next."
 	# The name is on the screen only: the recorded "Hello!" cannot say every child's name.
 	var hello := "Hello, %s! " % p["name"] if not p.is_empty() else "Hello! "
 	_show_map(hello + line, "Hello!\n" + line)
@@ -457,6 +460,13 @@ func _on_stop(id: String) -> void:
 			camp.visit()
 		else:
 			_say("The King's Camp is still being prepared.")
+	elif id == "ark":
+		var ark := get_parent().get_node_or_null("NoahsArk")
+		if ark and ark.has_method("visit"):
+			close()
+			ark.visit()
+		else:
+			_say("Noah's Ark is still being prepared.")
 
 
 ## The story is closed: the button gives a little shake, and a card says which story
