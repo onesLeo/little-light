@@ -89,13 +89,101 @@ feels large without requiring an explorable ship.
 
 ## What is new work
 
-- A large modular ark exterior, ramp and warm cutaway interior.
-- Noah, his wife and lightweight background figures for their sons and wives.
-- Six animal pairs with shared rigs where possible.
-- Building and Two by Two activities.
-- Dry, rainy and renewed environment states.
-- Dove flight, olive leaf and rainbow presentation.
-- Trust charm, dialogue, narration, animal voices and rain soundscape.
+- A large modular ark exterior, ramp and warm cutaway interior (runtime paper-prop construction,
+  the way `kings_camp.gd` builds the ridge — see **Asset inventory** below), plus a five-stop
+  Faith Journey map state (tracked separately as backlog 7.8).
+- Two new rigged character models (Noah, Noah's wife) and one new shared low-cost crowd rig
+  instanced for the six background sons-and-wives figures. See **Asset inventory**.
+- Six animal pairs. Not twelve rigs: sheep and goats can share the existing lamb-style soft-blob
+  quadruped construction with new proportions; rabbits are a smaller variant of the same technique;
+  doves reuse the camp owl's flight rig almost directly; elephants and giraffes need their own new
+  profile curves (very different body plans) but the same soft-blob/profile *technique*, not new
+  tooling. See **Asset inventory**.
+- New paper props for the building activity (mallet, rope coil, pitch jar, three work stations)
+  and for staging (ramp, work area markers, animal waiting circles, window frame) — see **Asset
+  inventory**.
+- Three new interactions, none of which has an existing equivalent: Finish one ark panel (peg + rope
+  tightening), Two by Two (guide a moving pair together), and the dove send-and-return. See **The
+  three new interactions, in detail**.
+- Three environment states (Building, Rain, New morning) on one space, not three separate scenes —
+  see **Where it happens** and **Animation and motion polish** for how the transitions should feel,
+  not just look.
+- Trust charm journal art and a 3D charm. Once Chapter 3's `CHARM_FAITHFUL_HEART` exists,
+  `journal_content.gd`'s `MYSTERY_SLOTS` must drop from 2 to 1 when `CHARM_TRUST` is added (4 earned
+  + 1 mystery slot = 5, matching the five-journey roadmap) — unlike Chapter 3, where the constant
+  needed no change. Worth its own Improve-pass item so the two chapters aren't assumed to behave
+  the same way here.
+- Two new voice profiles (Noah, Noah's wife) and roughly 20-24 new recorded clips, plus their Easy
+  Words duplicates — see **Voice design** and **Draft script**.
+- New morning/rain ambience and interaction sounds. Rain, in particular, has no existing precedent
+  in the codebase (unlike most other new sound in this chapter) and needs its own speech-masking
+  test on a tablet speaker before anything else — see **What you hear around the ark**.
+- Two new entries in the "who is talking" name tag (`dialogue_view.gd`) for Noah and Noah's wife —
+  see **Who is talking**.
+- Idle-life and secondary-motion work beyond the base rigs and props — see **Animation and motion
+  polish**. As with Chapter 3, none of it is a new technique to invent; the codebase now has a real
+  shared conversational-motion module (`chapter_two_character_motion.gd`) built for Chapter 2 that
+  this chapter should reuse directly rather than reinvent.
+
+## Asset inventory: models, rigs and props
+
+The same two-tier approach used for Chapter 3 (and, before that, the King's Camp) applies here,
+plus a third tier this chapter is the first to need: procedurally built quadrupeds.
+
+**Tier 1 — rigged, shape-keyed, camera-ready.** For anyone the child sees in close-up with a
+speaking line, following the David/Jonathan/Samuel pipeline (`generate_wonder_walker_v5.py` base,
+wrapped by a per-character generator script):
+
+- **Noah** — a new `generate_noah_v1.py`. New geometry: grey-brown textured hair and a full beard
+  (fuller than Samuel's short one — Noah reads as a working man, not a visiting elder), broad
+  connected hands with a "measuring/lifting" hand pose available as a shape key, a muted rust robe
+  over cream with a dark work belt. `Blink`/`Talk` shape keys.
+- **Noah's wife** — a new `generate_noahs_wife_v1.py`. New geometry: a female body proportion
+  variant of the same base (the codebase has no existing female rig outside placeholder meshes, so
+  this is genuinely new construction, not a recolour), deep-teal and warm-sand cloth, hair tied
+  back for work. `Blink`/`Talk` shape keys — she has real lines (**Draft script**), so she needs
+  the same facial range as Noah, not a silent-background treatment.
+
+**Tier 2 — lightweight, unrigged, crowd-ready (the camp-guard pipeline).** For the six sons and
+their wives: one new `noahs_family.gd`, built exactly like `camp_guard.gd` and Chapter 3's
+`jesse_sons.gd` — a pivot-hierarchy body with no bones and no face rig, visual variety from small
+`CLOTH`/`SKIN`/`HAIR` colour arrays and a `look` index, each instance carrying supplies, guiding an
+animal or securing the ramp rather than idling in a line. This is the right tier for them: the doc
+is explicit that "the chapter does not need eight close-up faces."
+
+**Tier 3 — animals, a genuinely new construction pattern for this chapter.** The lamb Wonder Item
+already proves the technique: `build_lamb()` (`generate_david_mentor_v4.py`) is a soft-blob body
+(`ww.blob`, fused with `ww.fuse`) plus four simple leg profiles (`ww.profile`) and blob ears/eyes —
+cheap, small, and already tablet-tested. That technique, not the lamb's specific proportions,
+generalises across the six pairs:
+
+| Pair | Built from | Cost |
+|---|---|---|
+| Sheep | The existing lamb soft-blob body, new wool colour/pattern | Near-zero — closest reuse of the existing asset |
+| Goats | Same soft-blob technique, new proportions (leaner body, small horns as blob additions) | Low |
+| Rabbits | Same technique, smaller scale, longer ear blobs | Low |
+| Doves | The camp owl's flight rig (`camp_owl.gd`) reused almost directly: same glide/wingbeat/perch state machine, new (smaller, lighter) proportions and colour | Low — this is the strongest single reuse in the whole chapter |
+| Elephants | New profile curves on the same blob/fuse/profile technique — big body, trunk as a tapered profile, large ear blobs | Higher — genuinely new silhouette, but not new tooling |
+| Giraffes | New profile curves — long neck as an extended profile chain, patch pattern via material | Higher — same reason as elephants |
+
+Each pair needs only one shared build (a "look" or side parameter for the two-of-a-kind variation
+the doc already asks for — ear angle, patch placement), not two full separate models, matching how
+Chapter 2's guards vary from one script.
+
+**New paper props (`camp_paper.gd`-style primitives, not GLB assets):** wooden mallet, rope coil,
+sealed pitch jar, three work-station markers, the ramp, animal-waiting ground circles and water
+bowls, the window frame, and the rainbow's broad paper bands. The ark hull itself (ribs and planks)
+is the one environment piece worth checking against the tablet performance budget early
+(Improve-pass item 3) — it is the largest repeated-geometry structure any chapter has attempted, larger than the camp's tents or Chapter 3's house wall.
+
+**Reused as-is, zero new cost:** ground/rock variants and paper wind/cloth shaders already in
+`kings_camp.gd`, and the `chapter_two_character_motion.gd` conversational-motion module for
+Noah and his wife (see **Animation and motion polish**).
+
+So the honest count: **2 new rigged character models** (Noah, Noah's wife), **1 shared crowd rig**
+for the six sons-and-wives figures, **6 new animal pairs** (2 near-free reuses, 2 low-cost variants,
+2 higher-cost new silhouettes, all on one existing technique), and roughly a dozen new procedural
+props — no new environment GLB.
 
 ## How it looks
 
@@ -164,6 +252,28 @@ the rain montage rather than flying into the storm.
 - **Window:** the one strong rectangle of cool light during the rain, used for the dove activity.
 - **Dry ground:** a simple new sprout and olive branch, not an instant lush jungle.
 
+### Plain and ark geometry, concretely
+
+Following `kings_camp.gd`'s pattern of one clearing centre with everything placed relative to it
+(illustrative distances, to be tuned against the actual camera once built, not final coordinates):
+
+- **The playable footprint stays close to one side of the ark**, not its full length — a strip
+  roughly 10-12m long against the hull, wide enough for the work area, the ramp and the animal
+  waiting circles without crowding, echoing the doc's own "the full vessel extends beyond the
+  frame."
+- **Three work stations** (mallet, rope, pitch) sit outside the animal route, so the building
+  activity and Two by Two never compete for the same ground.
+- **The ramp** is the widest single path any chapter has needed — pairs must never bunch or clip,
+  so it should be noticeably wider than the camp's or courtyard's walking paths, with the animal
+  waiting circles set back far enough from its base that an arriving pair has clear room before
+  its "go" cue.
+- **The window** sits on the hull wall closest to the tabletop camera's rest position, so the dove
+  beat (**The three new interactions, in detail**) doesn't require a camera cut to a wall the child
+  has not been oriented toward.
+- **The interior cutaway** is a separate, simpler footprint (beams, baskets, straw, alcoves) rather
+  than a scaled-down copy of the exterior — it only needs to read as spacious in one held shot, not
+  support free walking the way the exterior does.
+
 ### What the camera is looking at
 
 - **Arrival:** low wide view that establishes the ark's scale without distorting Noah.
@@ -187,36 +297,248 @@ the rain montage rather than flying into the storm.
   representative procession, while narration follows the passage without turning it into arithmetic.
 - A rainbow presented as Noah's reward rather than God's covenant sign.
 
+## The three new interactions, in detail
+
+None of these three has an existing equivalent in the codebase. Steady Hands (hold/release
+breathing) and the friendship cord (hold/release looping) are the closest relatives for the
+building activity; nothing existing resembles guiding a moving pair together or sending a bird
+out and watching it return, so those two need a fuller spec.
+
+### Finish one ark panel, in detail
+
+- **Peg placement** borrows the "carry, then release at a marked spot" language Chapter 3's
+  Prepare the Welcome introduces (a floating-beside-the-walker carry, then an automatic ease-in at
+  each of three marked peg points on one hull panel) — reuse that component rather than building a
+  second placement system from scratch.
+- **The rope pull** is new: a Steady-Hands-style hold-and-release, but instead of a breathing ring
+  it visibly draws two rope ends together over the panel, tightening in clearly graduated steps
+  (not a smooth analog fill) so a child can see it visibly get tighter each pull rather than
+  guessing when it's "enough." Three or four holds, matching Steady Hands' three-breath structure,
+  fail-free and unrushable the same way.
+- **Feedback:** each peg lands with the same wooden-knock sound described in **What you hear around
+  the ark**, and the panel visibly strengthens (a colour or texture shift from raw to finished
+  timber) as work completes, echoing chapter 2's gift-checklist tick language but expressed on the
+  3D object itself rather than only in a UI list.
+- **No fail state, no timer, no wrong order** — pegs and rope can be done in any sequence.
+
+### Two by Two, in detail
+
+- **The core problem this activity solves that the others don't:** every previous matching-style
+  interaction in this game is the child bringing one held object to one marked spot. Here, two
+  living things must find each other, and neither is being carried. The simplest fail-free version:
+  the child guides one waiting animal (walking beside it, the way the Wonder-Walker already leads
+  through normal movement) toward its silhouette-matched partner, who is standing at the top of the
+  ramp. Touching or gamepad-nudging the animal starts it walking with the child rather than
+  requiring precise contact; wrong pairings simply don't trigger a match (the doc's "any attempted
+  match simply waits and offers another visual clue") rather than producing an error state.
+- **The clue layers**, concretely: shape/silhouette first (a sheep and a goat read as different
+  silhouettes even in the same palette), then coat pattern or ear shape as the second, non-colour
+  cue the Band A requirement calls for. A third optional clue — a matching soft call from each
+  animal in a pair, ducked under dialogue like the sheep bleat already is — helps a child who is
+  looking at the UI rather than the animals.
+- **The walk itself** should not be a straight-line slide: reuse `camp_guard.gd`'s "turn toward
+  target, animate a walk phase, arrive and settle" logic, even though the guard's own two-legged
+  pose data doesn't apply — the leg-swing math needs a quadruped adaptation, but the turning and
+  pacing behaviour underneath it is exactly what a guided animal needs, so a pair turns and paces
+  like living things, not tokens sliding along a rail.
+- **Completion:** once a pair reaches the ramp together, they walk it and enter on their own (no
+  further child input needed for that pair), and the checklist-style pair counter ticks — reusing
+  the same tick-and-pop language as Chapter 2's and Chapter 3's checklists for continuity across
+  all three chapters.
+
+### The dove send-and-return, in detail
+
+This is the strongest reuse opportunity in the whole chapter. `camp_owl.gd` already implements
+almost exactly this sequence for a different bird: a state machine (`WAITING`/`FLYING`/`PERCHED`)
+driving a quadratic-bezier glide path (`_t*t*(3.0-2.0*t)` eased position, a midpoint arc lifted
+above the straight line), wingbeats only during takeoff and landing with a long calm glide between,
+and a landing/settle state with its own idle blinks and head turns.
+
+- **Send:** the child opens the window (a simple tap/press, no precision needed) and the dove
+  launches using the same flight-arc technique, exiting through the window rather than gliding to a
+  branch.
+- **First return (no leaf):** the same arc in reverse, landing back at the window sill — reuse the
+  landing/settle behaviour (wing fold, a few idle blinks) so the "nothing yet" beat still feels
+  alive rather than being a flat non-event.
+- **Second return (with the olive leaf):** identical flight technique, with the leaf attached to
+  the dove model for this pass. The moment of the leaf becoming visible should get the same kind of
+  small warm emphasis Chapter 3's oil ribbon or Chapter 2's charm-float moments get — a soft
+  highlight or a small pause on arrival, not a flat swap.
+- **Given the strength of this reuse,** the "observational vs. active" open question in **Decided**
+  /Improve-pass item 6 should lean active-but-simple (child triggers send/watches return) rather
+  than fully observational — the interaction cost of reusing `camp_owl.gd`'s state machine is low
+  enough that making it a real, if tiny, action is close to free.
+
+## Animation and motion polish
+
+Chapter 3's equivalent section made the case from a mostly-doc-level Chapter 2 precedent. That
+precedent is now real code (`chapter_two_character_motion.gd`, added in the actual Chapter 2
+motion-and-pacing polish pass), which makes several of this chapter's risks cheaper to close than
+they were when Chapter 3 was written — the module is intentionally chapter-agnostic (pure
+`RefCounted` functions: `speaking_pulse(time)`, `listening_nod(time)`, `breath(time)`), built
+specifically so a new rig can reuse the same conversational rhythm without copying Jonathan's
+geometry.
+
+**Noah and his wife should drive their idle/conversational motion directly from
+`chapter_two_character_motion.gd`, not a new hand-tuned equivalent.** Their dialogue beats are
+short (**Draft script**), which makes it tempting to skip breathing/nod/gesture motion as
+"not worth it for two lines" — that is exactly backwards, since a short line delivered by a
+motionless rig reads as more robotic than a long one, not less. Reuse `breath()` for idle sway,
+`listening_nod()` while each hears the other, and `speaking_pulse()` to drive a small one-sided
+gesture while talking, the same asymmetric-gesture fix Chapter 2's actual polish pass made to
+Jonathan (the old symmetric two-armed lift "looked robotic"; the fix was a single-handed lead
+gesture) — Noah should get the same asymmetry, not the older, already-rejected pattern.
+
+**Six animal pairs standing in a waiting area is this chapter's version of Chapter 3's seven
+motionless brothers.** Nothing in the current doc specifies idle motion for a pair waiting to be
+guided — only the moment of walking to the ramp. A field of frozen animal models would be the
+stiffest thing in the chapter, worse than the brothers' case because there are more of them and
+they are meant to read as alive, not as a respectful line of people. At minimum: slow breathing
+(scale pulse, the same idea as the lamb's own idle motion), an occasional head turn or ear flick,
+and a tail movement where the species has one — small, cheap, per-instance-randomized motion, not
+a shared synchronized loop (synchronized idle motion across six pairs would itself look
+artificial, like a chorus line rather than living animals).
+
+**Boarding the ramp needs staggered, not uniform, timing.** Once guided together, six pairs
+walking to the ramp on identical cadence will read as a conveyor belt — the same risk Chapter 3
+flagged for the brothers' procession, and the same fix applies: a small randomized per-pair offset
+in when each pair starts its walk and how it paces, rather than firing all six on the same clock.
+
+**The rope-tightening activity needs visibly graduated feedback, not a smooth analog fill.** This
+is already specified in **Finish one ark panel, in detail** — worth repeating here because it is
+the chapter's other hold-and-release mechanic besides Two by Two's animal-guiding, and the whole
+point of graduated steps (versus Steady Hands' continuous breathing ring) is that "getting
+tighter" needs to visibly click forward, or it will feel like nothing is happening across the
+whole hold.
+
+**The three environment-state transitions (Building → Rain → New morning) need to be felt
+crossfades, not hard cuts.** The colour table already commits to three distinct palettes, but
+nothing in the doc says how the game moves between them. Chapter 2 already solved an analogous
+problem — the transition from the valley's daylight into the camp's blue hour when the child first
+climbs the ridge — with its own dedicated lighting/`Environment` crossfade; this chapter's weather
+transitions are a direct relative of that problem and should reuse the same class of technique
+rather than a jump-cut, especially given the storyboarding concern already flagged in Improve-pass
+item 5.
+
+**The rainbow should bloom into place, not appear.** As the visual and emotional climax of the
+chapter (and the widest shot in the doc — **What the camera is looking at**), an instant pop-in
+would undercut the moment more than almost anything else here could. Chapter 3 recommends the same
+fix for its oil ribbon via a `curve_mesh` length/opacity tween; this chapter's rainbow, being
+"broad matte paper bands," is a good fit for each band appearing in sequence over a couple of
+seconds rather than all seven at once — a small, deliberate reveal matching the doc's own "no
+laser across the sky" restraint.
+
+**Puddle reflections in the New morning state should ripple, not sit flat.** "A few shallow
+reflections" (**Colour and weather**) risks reading as a static mirrored texture if left
+unspecified. The meadow's stream already has a subtle animated-water shader; the same family of
+technique, toned down to a still-puddle scale, would keep the wet ground from looking like a
+painted-on effect rather than standing water.
+
+**The dove's motion is already the strongest point in the chapter** — see **The three new
+interactions, in detail** for why `camp_owl.gd`'s existing flight/perch state machine is close to
+a direct reuse. No further note needed here beyond confirming it should stay that grounded rather
+than being redesigned from scratch.
+
 ## What you hear around the ark
 
-| Sound | Behaviour |
-|---|---|
-| Dry wind | Low open-air bed during building; softer near speech |
-| Timber work | Rounded wooden knocks, peg taps and one rope pull; never metallic construction noise |
-| Ark wood | Occasional low creak tied to visible movement |
-| Animals | Sparse, recognisable calls; one pair at a time and silent during dialogue |
-| Footsteps | Dust outside, timber on the ramp and soft straw inside |
-| Rain | Begins with individual roof taps, grows to a broad soft wash, ducks strongly under voice |
-| Water | Low movement outside the cutaway, without crashing waves |
-| Dove | Soft wing flutter leaving and returning; one small coo with the olive leaf |
-| Rainbow | Harp harmonics and one warm chime, no triumphant blast |
-| Music | Wooden percussion, plucked strings and a slow repeated building rhythm |
+| Sound | Behaviour | Likely `sound_library.gd` entry |
+|---|---|---|
+| Dry wind | Low open-air bed during building; softer near speech | `WIND` variant, reused |
+| Timber work | Rounded wooden knocks, peg taps and one rope pull; never metallic construction noise | new `PEG_TAP`, `ROPE_PULL` sfx |
+| Ark wood | Occasional low creak tied to visible movement | new `HULL_CREAK` sfx |
+| Animals | Sparse, recognisable calls; one pair at a time and silent during dialogue | credited CC0 recordings per species (see below) |
+| Footsteps | Dust outside, timber on the ramp and soft straw inside | reuses Chapter 3's `"dust"` surface entry, plus new `"timber"`/`"straw"` entries in `SURFACES` |
+| Rain | Begins with individual roof taps, grows to a broad soft wash, ducks strongly under voice | new `RAIN` ambience — no existing precedent; the one sound in this chapter with genuinely nothing to reuse |
+| Water | Low movement outside the cutaway, without crashing waves | a quieter variant of `STREAM` |
+| Dove | Soft wing flutter leaving and returning; one small coo with the olive leaf | reuses `FLUTTER`, already built for the camp owl |
+| Rainbow | Harp harmonics and one warm chime, no triumphant blast | new `RAINBOW_CHIME` sfx, on the same tonal-cue tier as Chapter 3's `LOW_CHIME` |
+| Music | Wooden percussion, plucked strings and a slow repeated building rhythm | a new arrangement, not a `meadow_lullaby.wav` variant — this chapter is the first to need its own musical identity rather than a relative of the valley's theme |
 
 The rain must be checked on a tablet speaker. Broadband rain easily masks speech, so it should sit
-well below the existing ambience target and lose high-frequency energy during dialogue.
+well below the existing ambience target and lose high-frequency energy during dialogue. Unlike
+Chapter 3, where most new sound could be synthesized with `tools/make_sounds.py`, this chapter
+leans the other way: animal calls, footsteps on straw/timber and rain are all cases where the
+existing sound notes' own caution (synthesized lambs and footsteps sounded false) applies directly
+— budget for credited CC0 source recordings as the default here, not the exception, and confirm
+every one is logged in `assets/audio/CREDITS.md` before it ships.
 
 ## Voice design
 
-- **Wonder Light:** Juno, unchanged. Wonder Light narrates God's instruction rather than inventing a
-  booming disembodied voice for God.
-- **Noah:** older warm male voice, practical and calm. He can sound tired during the work but never
-  fearful or self-righteous.
-- **Noah's wife:** warm adult female voice with two or three purposeful lines.
-- **Family:** background effort sounds only; no six additional speaking profiles are necessary.
+**Exactly two new voice profiles are needed** — the cast grows to seven presets (Juno, Bram, Dylan,
+plus Chapter 3's Samuel and Jesse, plus Noah and Noah's wife here). Noah's wife is the cast's
+**second female voice**, after Juno/Wonder Light — the first time this matters, since every other
+named voice so far has been male.
 
-Noah and his wife need voice auditions. Animal sounds require source and licence documentation in
-`assets/audio/CREDITS.md`; weak synthetic substitutes should not be accepted merely to avoid finding
-appropriate recordings.
+| Role | Voice | Status |
+|---|---|---|
+| Wonder Light | Juno | Existing, unchanged. Narrates God's instruction rather than inventing a booming disembodied voice for God |
+| Noah | **New preset, TBD** | Older warm male, practical and calm; can sound tired during the work but never fearful or self-righteous — must be distinct from Samuel and Jesse (Chapter 3), not just from Bram/Dylan |
+| Noah's wife | **New preset, TBD** | Warm adult female, distinct from Juno; two or three purposeful lines, not a silent-background role |
+| The six sons and wives | — | No dedicated voice. Background effort sounds only (footsteps, cloth, occasional grunt of effort) — no six additional speaking profiles, matching the doc's existing "Decided"-level intent |
+
+**Casting process**, continuing the same comparison discipline used for Samuel and Jesse: generate
+2-3 candidate presets per role, listen against the full existing cast (not just Bram/Dylan), and
+reject anything too close to an existing voice — Noah in particular needs a clear ear-test against
+Samuel, since both are "warm older male" on paper and risk being interchangeable if cast carelessly.
+
+**Clip budget, by precedent.** Chapters 2 and 3 landed in the high-20s/low-30s for new clips each.
+This chapter's dialogue is lighter — Noah gets a few lines, his wife two or three, Wonder Light
+carries the narration around the flood, building and covenant beats — so a **draft script of
+roughly 18-20 standard lines**, plus Easy Words duplicates for the youngest-facing subset, points
+to **20-24 new clips**, the lightest of the three chapters so far. Animal sounds are a separate,
+larger question: they require source and licence documentation in `assets/audio/CREDITS.md`, and
+weak synthetic substitutes should not be accepted merely to avoid finding appropriate recordings —
+see **What you hear around the ark**.
+
+## Who is talking
+
+The same `dialogue_view.gd` name-tag system introduced in Chapter 2 (a small drawn face plus the
+speaker's name in their own colour, following whichever line is currently playing) needs the same
+kind of extension Chapter 3 specified for Samuel and Jesse:
+
+- **`SPEAKERS`** needs two new colour entries — Noah (rust/cream, matching his robe) and Noah's
+  wife (deep teal/warm sand, matching hers).
+- **`_draw_face()`** needs two new small icons — Noah's grey-brown hair and full beard (fuller than
+  Samuel's short one, so the two "older male" tags stay visually distinct at a glance, not just in
+  voice), and Noah's wife's tied-back hair.
+- **The speaker-detection list** needs `"Noah"` and a name for his wife added (the script does not
+  name her in Scripture; pick a placeholder like "Noah's wife" or a chosen name before locking the
+  script, since the exact string must match the `Speaker: "..."` prefix used in every line).
+- **The six sons and wives need no entry**, matching the "no dedicated voice" decision in **Voice
+  design** — there is no tag to draw for a group with no individual lines.
+
+## Draft script (for timing and casting, not final)
+
+A speaker-labelled pass through the nine story beats, wording only — not reviewed for theology or
+checked against the WEB text for Genesis 9:13, and not through an Easy Words pass. Written in the
+same short, present-tense register as the other chapters' scripts, so promoting it into `LINES`
+later is a copy, not a rewrite.
+
+| # | Speaker | Line | Beat |
+|---|---|---|---|
+| 1 | Wonder Light | "Long before David, God asked Noah to trust him and build something no one had seen before." | 1. Arrive on the plain |
+| 2 | Wonder Light | "People were hurting one another, and the world was full of violence." | 1. Naming the brokenness, once |
+| 3 | Wonder Light | "Find the mallet, the rope, and the jar of pitch. Bring them to Noah." | 2. Find building items |
+| 4 | Noah | "I cannot see the rain yet. I can trust the One who told me what to do." | 3. Meet Noah |
+| 5 | Wonder Light | "Let's finish this panel. Three pegs, then draw the rope tight." | 4. Finish one ark panel |
+| 6 | Wonder Light | "Two by two, they're coming. Help each one find its pair." | 5. Two by Two |
+| 7 | Noah's wife | "This way — mind the ramp, it's wide enough for two." | 5. Two by Two, in-scene guidance |
+| 8 | Wonder Light | "Noah's family goes in. Watch — God is about to close the door." | 6. The door closes |
+| 9 | Wonder Light | "The water covered the land. God kept Noah's family, and every animal, safe inside." | 7. Rain montage |
+| 10 | Wonder Light | "Let's open the window and send the dove." | 8. Dove, first send |
+| 11 | Wonder Light | "Not yet. The water is still too high." | 8. First return, no leaf |
+| 12 | Wonder Light | "Look — an olive leaf. The water is going down." | 8. Second return, with leaf |
+| 13 | Noah | "Dry ground. Thank you for keeping us safe." | 9. Dry ground |
+| 14 | Wonder Light | "Genesis, chapter nine, verse thirteen." | 9. Verse reference |
+| 15 | Wonder Light | "I have set my rainbow in the cloud. It will be the sign of the covenant between me and the earth." | 9. Verse text — **draft wording, verify against WEB before recording** |
+| 16 | Wonder Light | "The rainbow isn't a prize Noah earned. It's God's promise, kept for everyone." | 9. Reflect — protects against "reward" misreading, per Never in the picture |
+| 17 | Wonder Light | "A Trust charm, for believing what you cannot yet see." | 9. Charm |
+| 18 | Wonder Light | "Keep it close. Trust God, even before you see the way through." | 9. Charm, closing |
+
+That is 15 Wonder Light lines, 2 Noah, 1 Noah's wife — Wonder Light carrying most of the narration
+as she does in every chapter, while Noah and his wife stay light enough to match **Voice design**'s
+"two or three purposeful lines," and the six sons and wives keep their whole presence in motion and
+sound rather than dialogue.
 
 ## Decided
 
@@ -235,6 +557,26 @@ appropriate recordings.
 3. Benchmark six paired animated species on a low-end Android tablet before final modelling.
 4. Test the warm cutaway and rain mix for fear, visual clarity and speech masking.
 5. Storyboard the passage of time so the full flood arc fits without feeling rushed.
-6. Decide whether the dove interaction is active or observational after testing the chapter length.
+6. Decide whether the dove interaction is active or observational after testing the chapter length
+   — leaning active-but-simple, since reusing `camp_owl.gd`'s flight state machine keeps the cost
+   low either way (**The three new interactions, in detail**).
 7. Audit every animal recording and voice clip for commercial rights and attribution.
 8. Confirm that the rainbow charm remains readable when reduced to the journal icon and bracelet.
+9. Extend `dialogue_view.gd`'s `SPEAKERS`, `_draw_face()` and speaker-detection list for Noah and
+   Noah's wife before recording any lines, and settle on how she is named in a spoken-line prefix
+   — see **Who is talking**.
+10. Build animal idle-life (breathing, head turn, tail flick, randomized per instance) into the
+    waiting-area animals from the start, not as later polish, and give ramp-boarding a staggered
+    per-pair timing rather than a uniform cadence — six frozen or synchronized pairs would be this
+    chapter's most visible rigidity risk. See **Animation and motion polish**.
+11. Reuse `chapter_two_character_motion.gd` directly for Noah and his wife's idle/conversational
+    motion rather than hand-authoring an equivalent, and carry over the asymmetric single-handed
+    gesture fix already applied to Jonathan rather than the symmetric pattern it replaced.
+12. Confirm `journal_content.gd`'s `MYSTERY_SLOTS` drops from 2 to 1 when `CHARM_TRUST` is added
+    (assuming Chapter 3's `CHARM_FAITHFUL_HEART` already exists): 4 earned charms + 1 mystery slot
+    = 5. Verify the build order and the constant rather than assuming this chapter behaves like
+    Chapter 3, where the constant needed no change.
+13. Prototype the rainbow's sequenced-band reveal and benchmark the ark hull's repeated-rib-and-
+    plank geometry together (**Asset inventory**, **Animation and motion polish**) — both are new,
+    chapter-defining pieces without a close existing precedent to fall back on if either turns out
+    too expensive for the tablet budget.
