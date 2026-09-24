@@ -4,6 +4,9 @@ This is the next planned journey after The King's Camp. It is a deliberate look 
 Light turns to an earlier page and shows how David's public story began, when Samuel came to
 Bethlehem and anointed the youngest son of Jesse. The chapter is not built yet.
 
+Implementation readiness and the required build order are tracked in
+[chapter-3-readiness.md](chapter-3-readiness.md).
+
 ## Where chapter 2 leaves off
 
 Chapter 2 ends with Jonathan and David joined in friendship at the king's camp. The child has earned
@@ -30,7 +33,10 @@ front of you, even when nobody is applauding.
 The story must not claim that David earned God's choice by being good enough. The direct truth of the
 passage remains the centre: **God sees the heart.** "Faithful Heart" is the child-facing charm name.
 
-**Verse:** 1 Samuel 16:7 (WEB), using the complete verified wording when the script is locked.
+**Verse:** 1 Samuel 16:7 (WEB), verified against the official World English Bible Classic:
+“But Yahweh said to Samuel, ‘Don't look on his face, or on the height of his stature, because I have
+rejected him; for I don't see as man sees. For man looks at the outward appearance, but Yahweh looks
+at the heart.’” Keep the child-friendly explanation separate from the quotation.
 
 **New charm:** Faithful Heart. A small heart-shaped lamp with one steady flame, readable at journal
 size. The flame means quiet faithfulness; it is not a magical sign that some hearts are better than
@@ -519,7 +525,7 @@ him."), and grouped so promoting it into `LINES` later is a copy, not a rewrite.
 | 13 | Wonder Light | "Let's call David home." | 5. Call David home |
 | 14 | David (younger) | "You called for me?" | 5. David enters — attentive, modest, not anxious or heroic |
 | 15 | Wonder Light | "First Samuel, chapter sixteen, verse seven." | 6. Verse reference |
-| 16 | Wonder Light | "Yahweh doesn't see the way man sees. Man looks at the outward appearance, but Yahweh looks at the heart." | 6. Verse text — **draft wording, verify against WEB before recording** |
+| 16 | Wonder Light | "But Yahweh said to Samuel, 'Don't look on his face, or on the height of his stature, because I have rejected him; for I don't see as man sees. For man looks at the outward appearance, but Yahweh looks at the heart.'" | 6. Verse text — verified WEB wording; split across readable pages if needed |
 | 17 | Wonder Light | "Samuel pours the oil. God has chosen David, the youngest shepherd." | 7. The anointing |
 | 18 | Wonder Light | "David was caring for the sheep when nobody expected him to be called. God saw his heart. God sees you too." | 8. Reflect without making faithfulness the price of being chosen |
 | 19 | Wonder Light | "A Faithful Heart charm, for caring well in quiet places." | 8. Charm |
