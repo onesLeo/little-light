@@ -74,13 +74,26 @@ class IconArt extends Node2D:
 
 	## Design space is a 128x128 unit square; _draw() scales it to canvas_size.
 	const DESIGN := 128.0
-	const BG_TOP := Color("fce29b")
-	const BG_BOTTOM := Color("e8a93a")
-	const GLOW_CORE := Color("fff6dc")
-	const GLOW_MID := Color(1.0, 0.914, 0.659, 0.9)
-	const GLOW_EDGE := Color(1.0, 0.914, 0.659, 0.0)
-	const MOUNTAIN := Color("5a3a10")
-	const MOUNTAIN_INK := Color("3a2408")
+	## A touch richer than the original pastel pair, so the icon holds its own
+	## on a home screen next to more saturated app icons instead of washing out.
+	const BG_TOP := Color("fbdd8e")
+	const BG_BOTTOM := Color("e0972a")
+	const GLOW_CORE := Color("fff8e4")
+	## Falloff steps for the glow, outermost first. More, smaller alpha jumps
+	## read as a soft radial gradient instead of the hard double-ring two flat
+	## circles produce.
+	const GLOW_STEPS := [
+		[36.0, Color(1.0, 0.902, 0.6, 0.10)],
+		[30.0, Color(1.0, 0.902, 0.6, 0.20)],
+		[24.0, Color(1.0, 0.902, 0.6, 0.34)],
+		[18.0, Color(1.0, 0.92, 0.68, 0.55)],
+	]
+	## Back peak (further, drawn first) is muted; front peak (nearer, drawn on
+	## top) is a shade warmer and lighter, so the silhouette reads with a little
+	## depth instead of one flat zigzag shape.
+	const MOUNTAIN_BACK := Color("4a3010")
+	const MOUNTAIN_FRONT := Color("6b4820")
+	const MOUNTAIN_INK := Color("32200a")
 	const WHITE := Color(1, 1, 1, 1)
 
 	func _draw() -> void:
@@ -123,24 +136,34 @@ class IconArt extends Node2D:
 			to_local = func(p: Vector2) -> Vector2:
 				return (p - GLYPH_CENTER) * k + Vector2(canvas_size, canvas_size) * 0.5
 
-		# Glow: layered soft circles standing in for a radial gradient.
+		var glow_center: Vector2 = to_local.call(Vector2(64, 46))
 		if mono:
-			draw_circle(to_local.call(Vector2(64, 46)), 34 * k, WHITE)
+			draw_circle(glow_center, 34 * k, WHITE)
 		else:
-			draw_circle(to_local.call(Vector2(64, 46)), 34 * k, GLOW_EDGE)
-			draw_circle(to_local.call(Vector2(64, 46)), 27 * k, GLOW_MID)
-			draw_circle(to_local.call(Vector2(64, 46)), 14 * k, GLOW_CORE)
+			# Several small alpha steps, outermost first, read as a soft radial
+			# glow rather than the hard double-ring two flat circles produce.
+			for step in GLOW_STEPS:
+				draw_circle(glow_center, step[0] * k, step[1])
+			draw_circle(glow_center, 12 * k, GLOW_CORE)
 
-		# Two valley peaks.
-		var peaks := PackedVector2Array([
-			to_local.call(Vector2(18, 100)), to_local.call(Vector2(46, 62)),
-			to_local.call(Vector2(62, 82)), to_local.call(Vector2(78, 56)),
-			to_local.call(Vector2(110, 100)),
+		# Two overlapping peaks, back one muted and drawn first, front one a
+		# shade warmer and drawn on top, so the silhouette reads with depth
+		# instead of one flat zigzag shape.
+		var back := PackedVector2Array([
+			to_local.call(Vector2(14, 102)), to_local.call(Vector2(50, 58)), to_local.call(Vector2(86, 102)),
+		])
+		var front := PackedVector2Array([
+			to_local.call(Vector2(46, 102)), to_local.call(Vector2(80, 66)), to_local.call(Vector2(116, 102)),
 		])
 		if mono:
-			draw_colored_polygon(peaks, WHITE)
+			draw_colored_polygon(back, WHITE)
+			draw_colored_polygon(front, WHITE)
 		else:
-			draw_colored_polygon(peaks, MOUNTAIN)
-			var outline := peaks.duplicate()
-			outline.append(peaks[0])
-			draw_polyline(outline, MOUNTAIN_INK, 3.0 * k, true)
+			_mountain(back, MOUNTAIN_BACK, k)
+			_mountain(front, MOUNTAIN_FRONT, k)
+
+	func _mountain(tri: PackedVector2Array, color: Color, k: float) -> void:
+		draw_colored_polygon(tri, color)
+		var outline := tri.duplicate()
+		outline.append(tri[0])
+		draw_polyline(outline, MOUNTAIN_INK, 3.0 * k, true)
