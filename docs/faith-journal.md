@@ -42,9 +42,11 @@ The page is an old paper map, `assets/ui/faith_journey_map.jpg`, not a blank she
 
 Each story is a numbered paper label under its place on the map, so the tents and trees stay in view:
 
-- **1 The valley**, on the river and the sheep. Always open.
+- **1 The Valley**, on the river and the sheep. Always open.
 - **2 The King's Camp**, on the tents and the fire. Opens once the valley is finished.
-- **3 Coming soon**, on the pale hill. A tap says "This part of the path is still ahead."
+- **3 The Beginning**, in Bethlehem's warm courtyard. Opens once The King's Camp is finished.
+- **4 Noah's Ark**, shown as a locked preview until Chapter 4 is implemented.
+- **5 Jonah**, shown as a locked preview until Chapter 5 is implemented.
 
 Markers, so she can see where she is and what comes after:
 

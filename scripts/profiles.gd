@@ -32,7 +32,8 @@ static var current_chapter: String = ""
 ## The chapters in the order they are played. Each one opens once the one before it is finished.
 const CHAPTER_VALLEY := "valley"
 const CHAPTER_CAMP := "camp"
-const CHAPTERS := [CHAPTER_VALLEY, CHAPTER_CAMP]
+const CHAPTER_BEGINNING := "beginning"
+const CHAPTERS := [CHAPTER_VALLEY, CHAPTER_CAMP, CHAPTER_BEGINNING]
 
 static var _profiles: Dictionary = {}
 static var _order: Array = []
@@ -56,6 +57,7 @@ static func load_all() -> void:
 		if not cfg.has_section(section) or _profiles.has(str(id)):
 			continue
 		var avatar := str(cfg.get_value(section, "avatar", AVATAR_KINDS[0]))
+		var finished_value: Variant = cfg.get_value(section, "finished") if cfg.has_section_key(section, "finished") else null
 		_profiles[str(id)] = {
 			"id": str(id),
 			"name": clean_name(str(cfg.get_value(section, "name", ""))),
@@ -63,7 +65,7 @@ static func load_all() -> void:
 			"verses": _strings(cfg.get_value(section, "verses", [])),
 			"charms": _strings(cfg.get_value(section, "charms", [])),
 			"chapters": maxi(int(cfg.get_value(section, "chapters", 0)), 0),
-			"finished": _finished_list(cfg.get_value(section, "finished", null), int(cfg.get_value(section, "chapters", 0))),
+			"finished": _finished_list(finished_value, int(cfg.get_value(section, "chapters", 0))),
 			"settings": cfg.get_value(section, "settings", {}) if cfg.get_value(section, "settings", {}) is Dictionary else {},
 			"colours": _colour_lists(cfg.get_value(section, "colours", {})),
 		}

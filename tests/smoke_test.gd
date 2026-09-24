@@ -15,7 +15,10 @@ const CharmArt := preload("res://scripts/charm_art.gd")
 const EasyWords := preload("res://scripts/easy_words.gd")
 const GroundSurface := preload("res://scripts/ground_surface.gd")
 const SoundLibraryFile := preload("res://scripts/sound_library.gd")
-const TEST_PROFILES := "user://smoke_test_profiles.cfg"
+## Keep test saves inside the project cache so headless CI/sandboxes never need
+## access to a developer's real Godot user-data directory.
+const TEST_PROFILES := "res://.godot/smoke_test_profiles.cfg"
+const TEST_LEGACY_PROFILES := "res://.godot/smoke_legacy_profiles.cfg"
 
 var _failures: int = 0
 var _minigame_signal_fired: bool = false
@@ -82,11 +85,13 @@ func _initialize() -> void:
 	var touch_controls: CanvasLayer = main.get_node("TouchControls")
 	var game_menu: CanvasLayer = main.get_node("GameMenu")
 	game_menu.end_panel_delay = 0.05
+	var chapter_three: Node3D = main.get_node("ChapterThree")
 
 	print("-- boot --")
 	_check(director.beat == director.Beat.ARRIVE, "ChapterDirector auto-enters ARRIVE on ready")
 	_check(tabletop_cam.current == true, "tabletop camera is active on ARRIVE")
 	_check(closeup_cam.current == false, "close-up camera is inactive on ARRIVE")
+	_check(not chapter_three.is_built(), "Chapter 3 stays unloaded while an earlier chapter is running")
 
 	print("-- input devices: gamepad, touch, keyboard --")
 	_check(InputMap.has_action("pause"), "pause action is registered")
@@ -714,7 +719,9 @@ func _initialize() -> void:
 	_check(journey._back.visible and not journey._change_player.visible and not journey.is_locked("camp")
 			and journey._marker.visible and journey._marker_stop == "camp",
 			"opened later it has Back, and with the valley done the King's Camp is open and marked as next")
-	journey._on_stop("ahead")
+	_check(journey.STOPS.size() == 5 and journey._stop_data("beginning")["title"] == "The Beginning",
+			"the Faith Journey lays out all five planned stories")
+	journey._on_stop("ark")
 	_check(journey._notice.visible and "still ahead" in journey._notice_body.text, "a stop further on is a kind card, not a dead end")
 	journey._hide_notice()
 
@@ -723,7 +730,9 @@ func _initialize() -> void:
 	var new_kid: String = Profiles.create("New", "sun")
 	Profiles.set_active(new_kid)
 	_check(Profiles.next_chapter(new_kid) == Profiles.CHAPTER_VALLEY and Profiles.is_unlocked(new_kid, Profiles.CHAPTER_VALLEY)
-			and not Profiles.is_unlocked(new_kid, Profiles.CHAPTER_CAMP), "a new child starts at the valley, and the camp is closed")
+			and not Profiles.is_unlocked(new_kid, Profiles.CHAPTER_CAMP)
+			and not Profiles.is_unlocked(new_kid, Profiles.CHAPTER_BEGINNING),
+			"a new child starts at the valley, while Chapters 2 and 3 are closed")
 	journey.close()
 	journey.open_to_choose()
 	_check(journey.is_open() and paused_now() and not journey._back.visible and journey._change_player.visible
@@ -748,11 +757,12 @@ func _initialize() -> void:
 	legacy.set_value("app", "order", ["p1"])
 	legacy.set_value("profile_p1", "name", "Old")
 	legacy.set_value("profile_p1", "chapters", 2)
-	legacy.save("user://smoke-legacy-profiles.cfg")
-	Profiles.use_file("user://smoke-legacy-profiles.cfg")
-	_check(Profiles.has_finished("p1", Profiles.CHAPTER_VALLEY) and Profiles.is_unlocked("p1", Profiles.CHAPTER_CAMP),
-			"a save from before chapters were told apart still has the valley finished")
-	DirAccess.remove_absolute("user://smoke-legacy-profiles.cfg")
+	legacy.save(TEST_LEGACY_PROFILES)
+	Profiles.use_file(TEST_LEGACY_PROFILES)
+	_check(Profiles.has_finished("p1", Profiles.CHAPTER_VALLEY) and Profiles.is_unlocked("p1", Profiles.CHAPTER_CAMP)
+			and not Profiles.is_unlocked("p1", Profiles.CHAPTER_BEGINNING),
+			"an old save keeps the valley finished, opens Chapter 2, and does not skip into Chapter 3")
+	DirAccess.remove_absolute(TEST_LEGACY_PROFILES)
 	Profiles.use_file(TEST_PROFILES)
 	Profiles.set_active(finished_kid)
 	journey.open()
@@ -869,6 +879,7 @@ func _initialize() -> void:
 	var valley_kid: String = Profiles.active_id
 	var camp_kid: String = Profiles.create("Camp", "star")
 	Profiles.set_active(camp_kid)
+	Profiles.finish_chapter(Profiles.CHAPTER_VALLEY)
 	var chapters_before := int(Profiles.active()["chapters"])
 	var award: Node3D = main.get_node("CharmAward")
 	story.phase = story.Phase.VERSE
@@ -896,6 +907,26 @@ func _initialize() -> void:
 			"then the end card offers Play again, the Faith Journey, and colouring the Friendship charm")
 	_check("Friendship" in game_menu._end_title.text and Profiles.current_chapter == Profiles.CHAPTER_CAMP,
 			"it names the Friendship charm, and Play again replays the camp, not the valley")
+	_check(Profiles.next_chapter(camp_kid) == Profiles.CHAPTER_BEGINNING
+			and Profiles.is_unlocked(camp_kid, Profiles.CHAPTER_BEGINNING),
+			"finishing the King's Camp opens The Beginning as the next story")
+	journey.open()
+	journey._on_stop("beginning")
+	await process_frame
+	var courtyard := chapter_three.get_node_or_null("Courtyard")
+	var brothers := 0
+	if courtyard:
+		for child in courtyard.get_children():
+			if String(child.name).trim_prefix("Brother").is_valid_int():
+				brothers += 1
+	_check(chapter_three.is_built() and chapter_three.is_active() and courtyard != null,
+			"the unlocked Chapter 3 stop lazily builds and enters the Bethlehem courtyard")
+	_check(brothers == 7 and courtyard.get_node_or_null("Samuel") != null
+			and courtyard.get_node_or_null("Jesse") != null and courtyard.get_node_or_null("YoungerDavid") != null,
+			"the greybox stages Samuel, Jesse, younger David and all seven brothers")
+	_check(camp_walker.global_position.x > 45.0 and not main.get_node("Soundscape")._night,
+			"Chapter 3 moves the child into a warm morning play space")
+	chapter_three.leave()
 	game_menu.hide_end_panel()
 	Profiles.set_active(valley_kid)
 	Profiles.remove(camp_kid)

@@ -108,6 +108,10 @@ Use temporary read-aloud for the whole prototype. Do not spend voice-generation 
 
 ### Milestone A — safe foundation
 
+**In progress on `feature/chapter-3`:** the stable chapter id, save-compatible unlock order,
+five-stop journey map, lazy courtyard greybox, return flow and regression coverage are implemented.
+The journal reward and shared story-flow extraction remain before this milestone is complete.
+
 - Add Chapter 3 ids and map data with save-compatibility tests.
 - Add the Chapter 3 journal verse/charm data and placeholder charm art without requiring audio yet.
 - Extract the smallest shared chapter behaviors, protected by Chapter 1–2 regression tests.
@@ -149,4 +153,3 @@ Development can start now with **Milestone A**, followed by the greybox in **Mil
 start by generating the three final hero characters or recording the 30–32 final voice clips. The
 foundation and prototype will expose save, pacing and interaction problems while those changes are
 still inexpensive.
-

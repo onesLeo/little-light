@@ -1,4 +1,4 @@
-[gd_scene load_steps=60 format=3]
+[gd_scene load_steps=61 format=3]
 
 [ext_resource type="PackedScene" path="res://assets/wonder_walker_v13.glb" id="1_ww"]
 [ext_resource type="PackedScene" path="res://assets/bethlehem_valley_v7.glb" id="2_valley"]
@@ -36,6 +36,7 @@
 [ext_resource type="Script" path="res://scripts/game_menu.gd" id="25_menu"]
 [ext_resource type="Script" path="res://scripts/faith_journey_screen.gd" id="39_journey"]
 [ext_resource type="Script" path="res://scripts/kings_camp.gd" id="40_camp"]
+[ext_resource type="Script" path="res://scripts/chapter_three.gd" id="41_chapter3"]
 [ext_resource type="Script" path="res://scripts/stream_water_fx.gd" id="26_water"]
 [ext_resource type="Script" path="res://scripts/horizon_backdrop.gd" id="27_horizon"]
 [ext_resource type="Script" path="res://scripts/meadow_dressing.gd" id="28_meadow"]
@@ -159,6 +160,9 @@ script = ExtResource("28_meadow")
 
 [node name="KingsCamp" type="Node3D" parent="."]
 script = ExtResource("40_camp")
+
+[node name="ChapterThree" type="Node3D" parent="."]
+script = ExtResource("41_chapter3")
 
 [node name="Sun" type="DirectionalLight3D" parent="."]
 sky_mode = 1

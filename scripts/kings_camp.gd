@@ -115,6 +115,7 @@ func tent_count() -> int:
 func visit() -> void:
 	# "Play again" from here comes back to the camp, not to the valley.
 	Profiles.current_chapter = Profiles.CHAPTER_CAMP
+	visible = true
 	_build()
 	var main := get_parent()
 	var director := main.get_node_or_null("ChapterDirector")

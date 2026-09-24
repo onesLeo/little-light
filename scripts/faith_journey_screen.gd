@@ -21,11 +21,14 @@ const LOCKED_FILL := Color(0.86, 0.8, 0.68)
 const DONE_FILL := Color(0.99, 0.95, 0.82)
 
 ## Where each story sits on the map, as a fraction of the picture. `chapter` is the
-## Profiles chapter id; the last stop is the path still ahead.
+## Profiles chapter id. Chapters 4 and 5 stay visible as previews until their
+## implementations are ready.
 const STOPS := [
-	{"id": "valley", "chapter": Profiles.CHAPTER_VALLEY, "number": 1, "title": "The valley", "at": Vector2(0.30, 0.76)},
-	{"id": "camp", "chapter": Profiles.CHAPTER_CAMP, "number": 2, "title": "The King's Camp", "at": Vector2(0.545, 0.48)},
-	{"id": "ahead", "chapter": "", "number": 3, "title": "Coming soon", "at": Vector2(0.80, 0.30)},
+	{"id": "valley", "chapter": Profiles.CHAPTER_VALLEY, "number": 1, "title": "The Valley", "at": Vector2(0.20, 0.76)},
+	{"id": "camp", "chapter": Profiles.CHAPTER_CAMP, "number": 2, "title": "The King's Camp", "at": Vector2(0.38, 0.52)},
+	{"id": "beginning", "chapter": Profiles.CHAPTER_BEGINNING, "number": 3, "title": "The Beginning", "at": Vector2(0.58, 0.66)},
+	{"id": "ark", "chapter": "", "number": 4, "title": "Noah's Ark", "at": Vector2(0.72, 0.39)},
+	{"id": "jonah", "chapter": "", "number": 5, "title": "Jonah", "at": Vector2(0.84, 0.20)},
 ]
 
 var _audio: Node
@@ -176,13 +179,18 @@ func open_to_choose() -> void:
 	var p := Profiles.active()
 	var next := Profiles.next_chapter(Profiles.active_id)
 	var line := "Tap a story to begin."
+	var spoken_line := line
 	if next == Profiles.CHAPTER_VALLEY:
 		line = "Your journey starts in the valley."
+		spoken_line = line
 	elif next == Profiles.CHAPTER_CAMP:
 		line = "The King's Camp is next."
+		spoken_line = line
+	elif next == Profiles.CHAPTER_BEGINNING:
+		line = "The Beginning is next."
 	# The name is on the screen only: the recorded "Hello!" cannot say every child's name.
 	var hello := "Hello, %s! " % p["name"] if not p.is_empty() else "Hello! "
-	_show_map(hello + line, "Hello!\n" + line)
+	_show_map(hello + line, "Hello!\n" + spoken_line)
 
 
 ## `spoken` is what Wonder Light reads (one recorded clip per line); by default the line itself.
@@ -451,12 +459,22 @@ func _on_stop(id: String) -> void:
 	if id == "valley":
 		_play_valley()
 	elif id == "camp":
+		var chapter_three := get_parent().get_node_or_null("ChapterThree")
+		if chapter_three and chapter_three.has_method("leave"):
+			chapter_three.leave()
 		var camp := get_parent().get_node_or_null("KingsCamp")
 		if camp and camp.has_method("visit"):
 			close()
 			camp.visit()
 		else:
 			_say("The King's Camp is still being prepared.")
+	elif id == "beginning":
+		var chapter := get_parent().get_node_or_null("ChapterThree")
+		if chapter and chapter.has_method("visit"):
+			close()
+			chapter.visit()
+		else:
+			_say("The Beginning is still being prepared.")
 
 
 ## The story is closed: the button gives a little shake, and a card says which story
