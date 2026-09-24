@@ -93,7 +93,7 @@ const LINES := {
 	"This part of the path is still ahead. New stories will be waiting here.": "wl_path_ahead",
 	"Noah's Ark is next.": "ark_map",
 	"Finish Chapter 2, The King's Camp, first. Then Noah's Ark will open for you.": "ark_locked",
-	# Chapter 4. These ark_ clips are temporary readings until the cast is recorded.
+	# Chapter 4: Wonder Light in Juno, Noah in Arthur, his wife in Helena (docs/voice-over.md).
 	"Long before David, God asked Noah to trust him and build something no one had seen before.": "ark_arrive",
 	"People were hurting one another, and the world was full of violence.": "ark_hurt",
 	"Find the mallet, the rope, and the jar of pitch. Bring them to Noah.": "ark_find",

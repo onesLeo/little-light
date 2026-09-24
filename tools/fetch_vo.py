@@ -52,7 +52,7 @@ CLIPS = {
     "ez_jn_give": ("hf_20260923_221334_78d0e038-3dad-4b0d-944a-3df9bf995fd3.wav", "Dylan", "These were mine. Now they are David's. He is my friend."),
     # Chapter 4 (Noah's Ark), Wonder Light in Juno. Seed Audio 1.0 failed the olive leaf and
     # Genesis 9:13 again and again, so those two are Juno through Seed Speech (MP3; see read_audio).
-    # Noah and his wife follow once their voices are chosen.
+    # Noah in Arthur (the one preset marked "old"), his wife in Helena.
     "ark_map": ("hf_20260924_233009_a809ac8f-7526-4631-a6da-733af7d87ecc.wav", "Juno", "Noah's Ark is next."),
     "ark_locked": ("hf_20260924_233009_364b578e-e227-44eb-9690-1490a362a0b1.wav", "Juno", "Finish Chapter 2, The King's Camp, first. Then Noah's Ark will open for you."),
     "ark_arrive": ("hf_20260924_233009_2223c5cb-7fbc-4fb3-881f-6c8198545d69.wav", "Juno", "Long before David, God asked Noah to trust him and build something no one had seen before."),
@@ -77,6 +77,9 @@ CLIPS = {
     "ark_word_promise": ("hf_20260924_233725_e842db2b-e007-4187-8aa8-73cd8158cfd4.wav", "Juno", "Promise."),
     "ark_charm": ("hf_20260924_233443_7d53496e-3a56-4430-89b8-92a575a49934.wav", "Juno", "A Trust charm. Noah kept building before he could see the rain."),
     "ark_keep": ("hf_20260924_233529_e663cc86-90d6-4906-8769-524b2043456b.wav", "Juno", "Keep it close. Trust God, even before you see the way through."),
+    "ark_noah": ("hf_20260924_232807_00432a3e-7f80-46fc-89ff-c6c9a948b15b.wav", "Arthur", "God told me to build this ark. I cannot see the rain yet, but I trust him."),
+    "ark_dry": ("hf_20260924_234814_07e9880a-2156-420b-86c8-0de7ac1ef2fb.wav", "Arthur", "Dry ground. Thank you for keeping us safe."),
+    "ark_wife": ("hf_20260924_232847_f900dcfa-849c-40ed-87f6-e2e80dddfed2.wav", "Helena", "This way. Walk together up the wide ramp."),
 }
 
 LEAD_SECONDS = 0.06
