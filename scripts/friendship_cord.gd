@@ -3,8 +3,9 @@ extends Control
 signal completed
 
 const PaperUI := preload("res://scripts/paper_ui.gd")
-## One loop takes about as long as one Steady Hands breath, so it cannot be rushed.
-const HOLD_SECONDS := 4.0
+## Long enough to feel deliberate, short enough that three loops do not become
+## an idle wait. Total active hold time is about 7.5 seconds.
+const HOLD_SECONDS := 2.5
 ## Short and wide: it sits above the dialogue bar, and must stay clear of the child standing
 ## in the middle of the camp view.
 const PANEL := Vector2(640, 118)

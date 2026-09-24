@@ -52,7 +52,9 @@ func _ready() -> void:
 	_build()
 	scale = Vector3.ONE * 1.35
 	visible = false
-	_hoot_player = _sound(SoundLibrary.load_stream(SoundLibrary.OWL), 0.0)
+	# The synthetic call is soft and short; a small lift keeps it audible across
+	# the clearing without competing with dialogue (which always suppresses it).
+	_hoot_player = _sound(SoundLibrary.load_stream(SoundLibrary.OWL), 3.0)
 	_flutter_player = _sound(SoundLibrary.load_stream(SoundLibrary.FLUTTER), -10.0)
 	_flutter_player.pitch_scale = 0.7
 

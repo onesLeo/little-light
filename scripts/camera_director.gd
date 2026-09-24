@@ -31,6 +31,7 @@ var _push_in: float = 0.0
 var _shot_distance: float = 1.9
 var _shot_look_height: float = 0.7
 var _camp_shot: bool = false
+var _shot_time: float = 0.0
 
 func _ready() -> void:
 	_tabletop = get_node_or_null(tabletop_camera_path) as Camera3D
@@ -64,6 +65,7 @@ func cut_to_closeup(look_target: Node3D = null) -> void:
 func move_to_closeup(target: Node3D) -> void:
 	cut_to_closeup(target)
 	_camp_shot = true
+	_shot_time = 0.0
 	_shot_distance = 2.7
 	_shot_look_height = 0.94
 	_push_in = 1.0
@@ -76,6 +78,7 @@ func is_orbiting() -> bool:
 func _process(delta: float) -> void:
 	if not is_orbiting():
 		return
+	_shot_time += delta
 	_push_in = move_toward(_push_in, 0.0, delta * 0.65)
 	_place_closeup()
 	var axis := Input.get_axis("move_left", "move_right")
@@ -88,7 +91,10 @@ func _place_closeup() -> void:
 	var front := -_orbit_target.global_transform.basis.z
 	front.y = 0.0
 	front = front.normalized() if front.length() > 0.001 else Vector3(0.0, 0.0, -1.0)
-	var dir := front.rotated(Vector3.UP, _orbit_angle + closeup_side_angle)
+	# The camp conversation gets a very small automatic arc, like turning a
+	# storybook page toward both friends. Player look input remains additive.
+	var story_arc := sin(_shot_time * 0.42) * 0.055 if _camp_shot else 0.0
+	var dir := front.rotated(Vector3.UP, _orbit_angle + closeup_side_angle + story_arc)
 	var cam := base + dir * (_shot_distance + _push_in * 1.1) + Vector3(0.0, closeup_height, 0.0)
 	var look := base + Vector3(0.0, _shot_look_height, 0.0)
 	var walker := get_node_or_null("../Player") as Node3D

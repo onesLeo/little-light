@@ -7,7 +7,7 @@ var main: Node
 var visual: bool = false
 
 func _initialize() -> void:
-	visual = "--visual" in OS.get_cmdline_user_args()
+	visual = "--visual" in OS.get_cmdline_user_args() or OS.get_environment("CAMP_VISUAL") == "1"
 	DirAccess.remove_absolute("res://.godot/camp-review-profile.cfg")
 	Profiles.use_file("res://.godot/camp-review-profile.cfg")
 	Profiles.set_active(Profiles.create("Camp Review", "star"))
@@ -56,8 +56,26 @@ func _run() -> void:
 	camera._place_closeup()
 	check(main.get_node("CloseUpCamera").position.distance_to(camera_start) > 0.2, "look-around changes the view")
 	camera._orbit_angle = 0
+	camera._shot_time = 0.0
 	camera._place_closeup()
+	var arc_start: Vector3 = main.get_node("CloseUpCamera").position
+	camera._shot_time = 3.7
+	camera._place_closeup()
+	check(main.get_node("CloseUpCamera").position.distance_to(arc_start) > 0.03, "camp close-up has a gentle automatic arc")
+	camera._shot_time = 0.0
+	camera._place_closeup()
+	# Fix the visual-review frame at the same open-eye speaking pose each run;
+	# otherwise blink/gesture timing makes before-and-after images misleading.
+	jon._blink = 2.8
+	jon._talk = 1.0
+	jon._process(0.0)
 	await shot("jonathan")
+	if visual:
+		camera._shot_time = 3.7
+		camera._place_closeup()
+		await shot("jonathan-arc")
+		camera._shot_time = 0.0
+		camera._place_closeup()
 	check(jon._body.skin != null and jon._outline.skin != null, "organic body and outline are skinned")
 	var elbow_at: Vector3 = jon._skeleton.get_bone_global_pose(jon._skeleton.find_bone("LowerArm_L")).origin
 	var shoulder_at: Vector3 = jon._skeleton.get_bone_global_pose(jon._skeleton.find_bone("UpperArm_L")).origin
@@ -67,6 +85,11 @@ func _run() -> void:
 	jon._talk = 1.0
 	jon._process(0.05)
 	check(not jon._skeleton.get_bone_pose_rotation(left_arm).is_equal_approx(first_pose), "conversation bends the sculpted elbow")
+	for arm_name in ["LowerArm_L", "LowerArm_R"]:
+		var arm_bone: int = jon._skeleton.find_bone(arm_name)
+		var rest_rotation: Quaternion = jon._rest_rotations[arm_name]
+		var gesture_angle: float = (rest_rotation.inverse() * jon._skeleton.get_bone_pose_rotation(arm_bone)).get_angle()
+		check(gesture_angle < 0.15, "%s uses a restrained speaking gesture" % arm_name)
 	jon._blink = -0.10
 	jon._process(0.0)
 	check(jon._body.get_blend_shape_value(jon._blink_shape) > 0.95, "sculpted eyes blink")
@@ -92,6 +115,7 @@ func _run() -> void:
 	story._advance()
 	var cord: Control = story._cord
 	var hold: float = cord.HOLD_SECONDS
+	check(hold <= 2.5, "three friendship loops do not become a long idle wait")
 	cord.set_process(false)
 	cord.step(10.0, true)
 	check(cord.progress == 0.0, "opening key cannot draw a loop")
@@ -119,6 +143,7 @@ func _run() -> void:
 	await settle()
 	check(story._found == 0 and story.get_node_or_null("Bow") != null, "replay resets gifts with stable names")
 	check(camp.get_node("Owl")._hoot_player.unit_size == 18.0, "owl reaches across the clearing")
+	check(camp.get_node("Owl")._hoot_player.volume_db == 3.0, "owl call is lifted above the camp ambience")
 	if visual:
 		await comparison(jon, david, camp)
 	print("CAMP REVIEW PASSED" if failures == 0 else "CAMP REVIEW FAILED")

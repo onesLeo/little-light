@@ -1,5 +1,6 @@
 extends Node
 ## Animate David's fused model and its outline together; his lamb stays planted.
+const CharacterMotion := preload("res://scripts/chapter_two_character_motion.gd")
 var _time: float = 0.0
 var _parts: Array[Node3D] = []
 var _rest: Array[Transform3D] = []
@@ -16,9 +17,11 @@ func _process(delta: float) -> void:
 	var story := main.get_node_or_null("KingsCamp/ChapterTwo")
 	if jon == null or story == null or story.phase == story.Phase.IDLE:
 		return
-	var listening: bool = jon.speaking and main.get_node("AudioDirector").is_speaking()
-	var nod := maxf(sin(_time * 2.5), 0.0) * (0.035 if listening else 0.012)
-	var basis := Basis.from_euler(Vector3(nod, sin(_time * 0.8) * 0.025, sin(_time * 1.1) * 0.012))
+	var audio: Node = main.get_node("AudioDirector")
+	var listening: bool = jon.speaking and audio.is_speaking()
+	var nod := CharacterMotion.listening_nod(_time) * (0.026 if listening else 0.006)
+	var breath := CharacterMotion.breath(_time)
+	var basis := Basis.from_euler(Vector3(nod, sin(_time * 0.72) * 0.018, breath * 0.007))
 	var pivot := Vector3(0, 0.55, 0)
 	for i in _parts.size():
-		_parts[i].transform = Transform3D(basis, pivot - basis * pivot + Vector3(0, sin(_time * 1.8) * 0.003, 0)) * _rest[i]
+		_parts[i].transform = Transform3D(basis, pivot - basis * pivot + Vector3(0, breath * 0.004, 0)) * _rest[i]

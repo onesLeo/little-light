@@ -20,7 +20,7 @@ real recordings (see `assets/audio/CREDITS.md`).
 | Chimes, fanfare, cheer | pickups, Steady Hands, the finale (unchanged, made at startup by `chime_synth.gd`) | `audio_director.gd` |
 | Crickets, 12 s loop (a few soft chirps) | at The King's Camp; the valley's birds stop and its stream fades out up there | `camp_sounds.gd` |
 | Campfire crackle, 8 s loop | at The King's Camp, sitting on the fire, louder as you walk up to it | `camp_sounds.gd` |
-| Owl "hoo-hoo" | only while the owl is perched, every 15-25 s, never while somebody is speaking; a soft wing rustle as it lands | `camp_owl.gd` |
+| Owl "hoo-hoo" | only while the owl is perched, every 15-25 s, never while somebody is speaking; a soft wing rustle as it lands; the call carries a +3 dB local lift so it remains audible across the clearing | `camp_owl.gd` |
 
 ## The mix
 
