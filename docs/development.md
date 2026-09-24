@@ -26,6 +26,16 @@ It starts the real main scene without a window and checks the story beats, input
 area, the living world, where trees and rocks stand, a triangle budget, who is playing, the Faith Journal and colouring the charm, the voice-over, the soundscape and Steady Hands. It prints `SMOKE TEST PASSED`
 when every check is OK and exits with code 1 otherwise. It takes about a minute.
 
+For a repeatable visual pass with the real Forward+ renderer, run this without `--headless`:
+
+```bash
+godot --path . --script tests/chapter_visual_review.gd --resolution 1280x720
+```
+
+It captures every major Chapter 1 beat to `.godot/chapter-visual-review/`, including the item
+handoff, Steady Hands, the clarified resolution, the verse, and the charm. It uses a scratch child
+profile, so it does not change the profiles or journals saved on the device.
+
 **On GitHub** the same test runs on every pull request and on every push to `main`
 (`.github/workflows/smoke-test.yml`). It downloads Godot 4.7.2 for Linux, so it also catches
 problems that Windows hides, such as a file referenced with the wrong letter case. The log is kept

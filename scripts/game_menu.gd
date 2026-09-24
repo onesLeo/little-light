@@ -2,13 +2,15 @@ extends CanvasLayer
 ## Pause menu, read-aloud toggle, Faith Journal button and the end-of-chapter "Play again" panel.
 ##
 ## - Pause: Esc / P / gamepad Start, or the round button top-right. Offers
-##   Resume, the Faith Journal, read-aloud on/off, volume, "Play again from the start"
-##   and "Change player".
+##   Resume, the Faith Journal, the Faith Journey map, read-aloud on/off, volume,
+##   "Start this chapter again" and "Change player".
 ## - Book button (top-right): opens the Faith Journal (journal_screen.gd).
-## - The end panel also offers "Colour my charm" (colour_screen.gd).
+## - The end panel also offers "Colour my charm" (colour_screen.gd) and the
+##   "Faith Journey" map (faith_journey_screen.gd), where the next chapter is chosen.
 ## - Read-aloud button (speaker icon): turns text-to-speech on or off.
 ## - After the chapter finishes, a "Play again" / "Keep exploring" panel
-##   appears once the confetti has had a moment.
+##   appears once the confetti has had a moment. "Play again" replays the chapter
+##   just finished (Profiles.current_chapter), not the whole journey.
 ## Built entirely in code so it needs no scene edits beyond adding this node.
 
 const GameSettings := preload("res://scripts/game_settings.gd")
@@ -27,14 +29,19 @@ var _audio: Node
 var _director: Node
 var _journal: CanvasLayer
 var _colour: CanvasLayer
+var _journey: CanvasLayer
 var _root: Control
 var _pause_layer: Control
 var _pause_button: IconButton
 var _speaker_button: IconButton
 var _book_button: IconButton
 var _end_panel: PanelContainer
+var _end_title: Label
+var _end_token: int = 0
 var _play_again_button: Button
 var _colour_charm_button: Button
+var _end_charm: String = JournalContent.CHARM_COURAGE
+var _journey_button: Button
 var _resume_button: Button
 var _read_check: CheckButton
 var _easy_check: CheckButton
@@ -101,6 +108,7 @@ func _ready() -> void:
 	_director = main.get_node_or_null("ChapterDirector")
 	_journal = main.get_node_or_null("JournalScreen")
 	_colour = main.get_node_or_null("ColourScreen")
+	_journey = main.get_node_or_null("FaithJourney")
 
 	_root = Control.new()
 	_root.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -125,8 +133,9 @@ func _ready() -> void:
 
 func _input(event: InputEvent) -> void:
 	if InputMap.has_action("pause") and event.is_action_pressed("pause") and not event.is_echo():
-		# The "Who is playing?" screen, the journal and the colouring page handle their own way out.
-		if Profiles.picker_open or (_journal != null and _journal.is_open()) or (_colour != null and _colour.is_open()):
+		# The "Who is playing?" screen, the journal, the colouring page and the
+		# Faith Journey map handle their own way out.
+		if Profiles.picker_open or (_journal != null and _journal.is_open()) or (_colour != null and _colour.is_open()) or (_journey != null and _journey.is_open()):
 			return
 		set_paused(not get_tree().paused)
 		get_viewport().set_input_as_handled()
@@ -144,7 +153,11 @@ func set_paused(paused: bool) -> void:
 		get_viewport().gui_release_focus()
 
 
+## Loads the scene again. With a child still playing, the chapter they were on starts over
+## (Profiles.current_chapter); with nobody, "Who is playing?" and then the map come first.
 func _restart() -> void:
+	if Profiles.active_id.is_empty():
+		Profiles.current_chapter = ""
 	get_tree().paused = false
 	if _audio and _audio.has_method("stop_speech"):
 		_audio.stop_speech()
@@ -155,7 +168,7 @@ func _restart() -> void:
 
 func _open_colouring() -> void:
 	if _colour and _colour.has_method("open"):
-		_colour.open(JournalContent.CHARM_COURAGE)
+		_colour.open(_end_charm)
 
 
 func _open_journal() -> void:
@@ -163,16 +176,63 @@ func _open_journal() -> void:
 		_journal.open()
 
 
+func _open_journey() -> void:
+	if _journey and _journey.has_method("open"):
+		_journey.open()
+
+
+## The end-of-chapter card steps aside once the child walks into another story.
+func hide_end_panel() -> void:
+	_end_token += 1
+	_end_panel.visible = false
+	_set_dialogue_visible(true)
+
+
+## The story's dialogue bar only repeats the last line while the end card is up, so it
+## steps aside and the card has the bottom of the screen to itself.
+func _set_dialogue_visible(on: bool) -> void:
+	var bar := get_parent().get_node_or_null("UI/Panel") as CanvasItem
+	if bar:
+		bar.visible = on
+
+
 ## Forgets who is playing and starts over, which brings back the "Who is playing?" screen.
 func change_player_and_restart() -> void:
 	Profiles.set_active("")
+	Profiles.current_chapter = ""
 	_restart()
 
 
 func _on_chapter_finished() -> void:
+	show_end_panel(JournalContent.CHARM_COURAGE)
+
+
+## The end-of-chapter card, a moment after the celebration. `charm_id` is the charm the
+## chapter gave, so "Colour my charm" opens that one.
+func show_end_panel(charm_id: String) -> void:
+	_end_token += 1
+	var token := _end_token
 	await get_tree().create_timer(end_panel_delay).timeout
-	_colour_charm_button.visible = Profiles.has_charm(Profiles.active_id, JournalContent.CHARM_COURAGE)
+	if token != _end_token:
+		return
+	_end_charm = charm_id
+	_colour_charm_button.visible = Profiles.has_charm(Profiles.active_id, charm_id)
+	_journey_button.visible = _journey != null
+	var charm_name := "Courage"
+	for c in JournalContent.CHARMS:
+		if c["id"] == charm_id:
+			charm_name = str(c.get("name", charm_name))
+	_end_title.text = "You earned the %s charm!" % charm_name
+	_set_dialogue_visible(false)
 	_end_panel.visible = true
+	# The card is only as tall as what is on it: no empty paper under the buttons.
+	_end_panel.reset_size()
+	_end_panel.pivot_offset = _end_panel.size * 0.5
+	_end_panel.scale = Vector2(0.85, 0.85)
+	_end_panel.modulate.a = 0.0
+	var tw := create_tween().set_parallel(true)
+	tw.tween_property(_end_panel, "scale", Vector2.ONE, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_property(_end_panel, "modulate:a", 1.0, 0.2)
 	_play_again_button.grab_focus()
 
 
@@ -247,6 +307,10 @@ func _build_pause_panel() -> void:
 	journal_button.pressed.connect(_open_journal)
 	vbox.add_child(journal_button)
 
+	var map_button := _make_button("Faith Journey map")
+	map_button.pressed.connect(_open_journey)
+	vbox.add_child(map_button)
+
 	_read_check = CheckButton.new()
 	_read_check.text = "Read the story aloud"
 	_read_check.add_theme_font_size_override("font_size", 24)
@@ -270,7 +334,7 @@ func _build_pause_panel() -> void:
 	_sounds_slider = _add_slider_row(vbox, "Sounds", _on_sounds_changed)
 	_voice_slider = _add_slider_row(vbox, "Voices", _on_voice_changed)
 
-	var restart := _make_button("Play again from the start")
+	var restart := _make_button("Start this chapter again")
 	restart.pressed.connect(_restart)
 	vbox.add_child(restart)
 
@@ -298,40 +362,56 @@ func _add_slider_row(parent: Control, text: String, on_change: Callable) -> HSli
 	return slider
 
 
+## The end-of-chapter card, centred under the "Chapter Complete!" banner: what was earned,
+## then the two big choices (play this chapter again, or go on along the Faith Journey), then
+## the small ones. It grows to fit what is on it.
 func _build_end_panel() -> void:
 	_end_panel = PanelContainer.new()
-	_end_panel.add_theme_stylebox_override("panel", _panel_style())
+	_end_panel.add_theme_stylebox_override("panel", PaperUI.panel_style(28, 26))
 	_end_panel.anchor_left = 0.5
 	_end_panel.anchor_right = 0.5
-	_end_panel.anchor_top = 1.0
-	_end_panel.anchor_bottom = 1.0
+	_end_panel.anchor_top = 0.62
+	_end_panel.anchor_bottom = 0.62
 	_end_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_end_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	_end_panel.offset_top = -290.0
-	_end_panel.offset_bottom = -290.0
+	_end_panel.grow_vertical = Control.GROW_DIRECTION_BOTH
 	_end_panel.visible = false
 	_root.add_child(_end_panel)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 18)
-	_end_panel.add_child(row)
-	_play_again_button = _make_button("Play again")
-	_play_again_button.custom_minimum_size = Vector2(200.0, 62.0)
+	var column := VBoxContainer.new()
+	column.alignment = BoxContainer.ALIGNMENT_CENTER
+	column.add_theme_constant_override("separation", 18)
+	_end_panel.add_child(column)
+	_end_title = _label("You earned a charm!", 32)
+	column.add_child(_end_title)
+
+	var big_row := HBoxContainer.new()
+	big_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	big_row.add_theme_constant_override("separation", 18)
+	column.add_child(big_row)
+	_play_again_button = PaperUI.button("Play again", Vector2(270.0, 70.0), 28)
 	_play_again_button.pressed.connect(_restart)
-	row.add_child(_play_again_button)
-	var journal_button := _make_button("My journal")
-	journal_button.custom_minimum_size = Vector2(200.0, 62.0)
+	big_row.add_child(_play_again_button)
+	_journey_button = PaperUI.button("Faith Journey", Vector2(270.0, 70.0), 28)
+	_journey_button.pressed.connect(_open_journey)
+	big_row.add_child(_journey_button)
+
+	var small_row := HBoxContainer.new()
+	small_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	small_row.add_theme_constant_override("separation", 14)
+	column.add_child(small_row)
+	var journal_button := PaperUI.button("My journal", Vector2(190.0, 54.0), 22, PAPER)
 	journal_button.pressed.connect(_open_journal)
-	row.add_child(journal_button)
-	_colour_charm_button = _make_button("Colour my charm")
-	_colour_charm_button.custom_minimum_size = Vector2(290.0, 62.0)
+	small_row.add_child(journal_button)
+	_colour_charm_button = PaperUI.button("Colour my charm", Vector2(230.0, 54.0), 22, PAPER)
 	_colour_charm_button.pressed.connect(_open_colouring)
-	row.add_child(_colour_charm_button)
-	var keep := _make_button("Keep exploring")
-	keep.custom_minimum_size = Vector2(240.0, 62.0)
+	small_row.add_child(_colour_charm_button)
+	var keep := PaperUI.button("Keep exploring", Vector2(210.0, 54.0), 22, PAPER)
 	keep.pressed.connect(func() -> void:
-		_end_panel.visible = false
+		hide_end_panel()
+		var banner := get_parent().find_child("CompleteBanner", true, false) as CanvasItem
+		if banner:
+			banner.visible = false
 		get_viewport().gui_release_focus())
-	row.add_child(keep)
+	small_row.add_child(keep)
 
 
 ## -- Settings sync -----------------------------------------------------------

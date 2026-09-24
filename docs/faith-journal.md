@@ -8,15 +8,20 @@ Backlog item 3.5. Each child on a tablet has their own name, picture and journal
    One big button per child (picture and first name)
    and a dashed **New** button. A new child types a name (up to 12 letters), picks one of six paper pictures
    (lamb, star, sun, cloud, heart, olive branch) and taps **Let's go**. Up to **4 children** fit on one tablet.
-   A child also says **How old they are**: "8 or younger" turns on Easy words, ten lines of the story shown
+   A child also says **How old they are**: "8 or younger" turns on Easy words, twelve lines of the story shown
    and read aloud in simpler wording (`scripts/easy_words.gd`); "9 or older" keeps the story exactly as
    written. It can be switched later in the pause menu, and is kept with the child.
-2. **The story** starts once a child is chosen. *Play again* keeps the same child; the pause menu's
+2. **The Faith Journey map** comes next, before any story (see below). The child taps where their story
+   starts; a bouncing **Start here** tag shows them where. *Play again* keeps the same child and replays
+   the chapter just played (chapter 2's Play again goes back to the camp, not to the valley); a different
+   chapter is chosen on the map. The pause menu's **Start this chapter again** does the same, and
    **Change player** brings the first screen back.
 3. **The Faith Journal** opens from the round book button (top right, next to the speaker and pause), from the
    pause menu, and from the end-of-chapter panel (**My journal**). It shows:
    - **Verses** the child has earned, each with a **Hear it** button that reads it aloud in the recorded voice
-     (the same clips as the story).
+     (the same clips as the story). Under Joshua 1:9 a short note tells a parent why that verse lives in
+     David's story: the same God who was with Joshua was with David — the Lord who kept him safe from
+     the lion and the bear.
    - **Charms** the child has earned. Tapping one reads its line and shows why it was earned. The charms not
      earned yet are dashed circles with a "?" and "Not yet". There are two spare slots for chapters to come.
 4. **Colour my charm.** A charm can be coloured: **Colour my charm** in the journal (next to the note under the charms)
@@ -26,7 +31,28 @@ Backlog item 3.5. Each child on a tablet has their own name, picture and journal
    wrong tap, and there is no freehand drawing, so a finger on a tablet cannot make a mess. Each colour is saved at
    once. The coloured charm then shows in the journal, and on the face of the 3D charm when the ceremony plays again.
 5. **What is earned:** the verse (Joshua 1:9) when the story reaches it, the Courage charm when its ceremony
-   starts, and a finished-chapter count when the chapter ends.
+   starts, and, when the chapter ends, a finished-chapter count and which chapter it was (`finished` in the
+   profile; saves from before that count as having finished the valley).
+
+## Faith Journey
+
+The map is the hub of the game. It opens straight after **Who is playing?**, and later from the journal, the pause menu (**Faith Journey map**) and the end-of-chapter card. The journal keeps what she earned. The journey shows where she can go next (`scripts/faith_journey_screen.gd`).
+
+The page is an old paper map, `assets/ui/faith_journey_map.jpg`, not a blank sheet with icons on it. Mountains run across the top, a river comes down into the green valley, and the path climbs to the tents of The King's Camp, then fades toward a paler hill. The sketch with the markers is [faith-journey-sketch.jpg](faith-journey-sketch.jpg), and the moving version is [faith-journey-sketch.mp4](faith-journey-sketch.mp4).
+
+Each story is a numbered paper label under its place on the map, so the tents and trees stay in view:
+
+- **1 The valley**, on the river and the sheep. Always open.
+- **2 The King's Camp**, on the tents and the fire. Opens once the valley is finished.
+- **3 Coming soon**, on the pale hill. A tap says "This part of the path is still ahead."
+
+Markers, so she can see where she is and what comes after:
+
+- The next story she has not finished has a gold **Start here** tag (**Next story** once she has finished one) bobbing over it, with gold rings spreading out from its spot.
+- A finished story has a gold seal with a tick.
+- A story that is not open yet is a paler label with a small padlock. Tapping it gives the label a little shake and brings up a paper card: **Not yet!** "Finish Chapter 1, The valley, first. Then The King's Camp will open for you." Its gold button goes straight to that story (**Play Chapter 1**, or **Back to my story** when she is already playing it); **OK** closes the card. Wonder Light reads the card aloud. Nothing is marked wrong.
+
+When the map is the first stop, Wonder Light greets the child by name ("Hello, Maya! Your journey starts in the valley.") and there is no **Back**, because no story has started behind it yet; **Change player** sits in the corner instead. Opened later, Wonder Light reads "One story at a time" and **Back** closes it. Each child has their own path, because it follows that child's finished chapters. Emptying the journal folds it back.
 
 ## For grown-ups
 

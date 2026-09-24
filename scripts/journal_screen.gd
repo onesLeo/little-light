@@ -27,6 +27,8 @@ var _charm_row: HBoxContainer
 var _note: Label
 var _colour_screen: CanvasLayer
 var _colour_button: Button
+var _journey_button: Button
+var _journey: CanvasLayer
 var _picked_charm: String = ""
 var _close_button: Button
 var _grownups_button: Button
@@ -41,6 +43,7 @@ func _ready() -> void:
 	layer = 12
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_audio = get_parent().get_node_or_null("%AudioDirector")
+	_journey = get_parent().get_node_or_null("FaithJourney")
 	_colour_screen = get_parent().get_node_or_null("ColourScreen")
 	if _colour_screen and _colour_screen.has_signal("closed"):
 		_colour_screen.closed.connect(_on_colouring_closed)
@@ -160,6 +163,10 @@ func _build() -> void:
 	_colour_button = PaperUI.button("Colour my charm", Vector2(290.0, 60.0), 26)
 	_colour_button.pressed.connect(_colour_picked_charm)
 	note_row.add_child(_colour_button)
+	_journey_button = PaperUI.button("Faith Journey", Vector2(250.0, 60.0), 26)
+	_journey_button.visible = false
+	_journey_button.pressed.connect(_open_journey)
+	note_row.add_child(_journey_button)
 
 	_grownups_button = PaperUI.button("For grown-ups", Vector2(230.0, 48.0), 22, PaperUI.PAPER_DEEP)
 	_grownups_button.size_flags_horizontal = Control.SIZE_SHRINK_END
@@ -223,18 +230,22 @@ func _refresh() -> void:
 	for child in _charm_row.get_children():
 		_charm_row.remove_child(child)
 		child.queue_free()
-	var slots := JournalContent.CHARMS.size() + JournalContent.MYSTERY_SLOTS
-	var shown := 0
 	for c in JournalContent.CHARMS:
 		if p.is_empty() or not Profiles.has_charm(p["id"], c["id"]):
 			continue
 		_charm_row.add_child(_charm_button(c))
 		if _picked_charm.is_empty():
 			_picked_charm = c["id"]
-		shown += 1
-	for _i in range(shown, slots):
+	for _i in JournalContent.MYSTERY_SLOTS:
 		_charm_row.add_child(_mystery_slot())
 	_colour_button.visible = _colour_screen != null and not _picked_charm.is_empty()
+	_journey_button.visible = _journey != null and not p.is_empty()
+
+
+func _open_journey() -> void:
+	if _journey and _journey.has_method("open"):
+		close()
+		_journey.open()
 
 
 func _verse_card(v: Dictionary) -> Control:
@@ -252,6 +263,13 @@ func _verse_card(v: Dictionary) -> Control:
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	body.custom_minimum_size.x = 640.0
 	text_column.add_child(body)
+	if v.has("why") and not str(v["why"]).is_empty():
+		var why := PaperUI.label(str(v["why"]), 20, HORIZONTAL_ALIGNMENT_LEFT)
+		why.name = "WhyNote"
+		why.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		why.modulate = Color(0.35, 0.28, 0.18, 1.0)
+		why.custom_minimum_size.x = 640.0
+		text_column.add_child(why)
 	var hear := PaperUI.button("Hear it", Vector2(170.0, 60.0), 26)
 	hear.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	hear.pressed.connect(_hear.bind(JournalContent.verse_dialogue(v["id"])))

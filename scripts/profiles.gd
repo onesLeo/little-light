@@ -7,6 +7,7 @@ extends RefCounted
 ##
 ## A profile is a Dictionary:
 ##   id, name, avatar (one of AVATAR_KINDS), verses (ids), charms (ids), chapters (times finished),
+##   finished (the chapter ids they have finished at least once, see CHAPTERS),
 ##   settings (that child's read-aloud and volume choices; empty means "as the tablet has them"),
 ##   colours (charm id -> the paints they chose for its regions, see charm_art.gd).
 
@@ -24,6 +25,14 @@ static var path: String = DEFAULT_PATH
 static var active_id: String = ""
 ## True while the "Who is playing?" screen is up, so the pause key leaves the game alone.
 static var picker_open: bool = false
+## The chapter the story is on: "" (none yet, so the Faith Journey map comes first), or one of
+## CHAPTERS. Like active_id it outlives a scene reload, so "Play again" replays this chapter.
+static var current_chapter: String = ""
+
+## The chapters in the order they are played. Each one opens once the one before it is finished.
+const CHAPTER_VALLEY := "valley"
+const CHAPTER_CAMP := "camp"
+const CHAPTERS := [CHAPTER_VALLEY, CHAPTER_CAMP]
 
 static var _profiles: Dictionary = {}
 static var _order: Array = []
@@ -54,6 +63,7 @@ static func load_all() -> void:
 			"verses": _strings(cfg.get_value(section, "verses", [])),
 			"charms": _strings(cfg.get_value(section, "charms", [])),
 			"chapters": maxi(int(cfg.get_value(section, "chapters", 0)), 0),
+			"finished": _finished_list(cfg.get_value(section, "finished", null), int(cfg.get_value(section, "chapters", 0))),
 			"settings": cfg.get_value(section, "settings", {}) if cfg.get_value(section, "settings", {}) is Dictionary else {},
 			"colours": _colour_lists(cfg.get_value(section, "colours", {})),
 		}
@@ -84,6 +94,7 @@ static func save() -> void:
 		cfg.set_value(section, "verses", p["verses"])
 		cfg.set_value(section, "charms", p["charms"])
 		cfg.set_value(section, "chapters", p["chapters"])
+		cfg.set_value(section, "finished", p["finished"])
 		cfg.set_value(section, "settings", p["settings"])
 		cfg.set_value(section, "colours", p["colours"])
 	cfg.save(path)
@@ -101,6 +112,14 @@ static func _colour_lists(values: Variant) -> Dictionary:
 				list.append(clampi(int(n), -1, CharmArt.PALETTE.size() - 1))
 			out[str(charm_id)] = list
 	return out
+
+
+## A saved "finished" list made safe. Saves from before chapters were told apart only have a count:
+## any finished chapter then was the valley, since it came first.
+static func _finished_list(values: Variant, times: int) -> Array:
+	if values is Array:
+		return _strings(values).filter(func(id: String) -> bool: return id in CHAPTERS)
+	return [CHAPTER_VALLEY] if times > 0 else []
 
 
 static func _strings(values: Variant) -> Array:
@@ -195,6 +214,7 @@ static func create(display_name: String, avatar: String) -> String:
 		"verses": [],
 		"charms": [],
 		"chapters": 0,
+		"finished": [],
 		"settings": {},
 		"colours": {},
 	}
@@ -260,12 +280,35 @@ static func set_charm_colours(id: String, charm_id: String, colours: Array) -> v
 	save()
 
 
-static func finish_chapter() -> void:
+## Counts a finished chapter for the child playing and remembers which one it was.
+static func finish_chapter(chapter_id: String = CHAPTER_VALLEY) -> void:
 	var p := active()
 	if p.is_empty():
 		return
 	p["chapters"] = int(p["chapters"]) + 1
+	if chapter_id in CHAPTERS and not (p["finished"] as Array).has(chapter_id):
+		(p["finished"] as Array).append(chapter_id)
 	save()
+
+
+static func has_finished(id: String, chapter_id: String) -> bool:
+	return get_profile(id).get("finished", []).has(chapter_id)
+
+
+## A chapter opens once the one before it is finished. The first is always open.
+static func is_unlocked(id: String, chapter_id: String) -> bool:
+	var at := CHAPTERS.find(chapter_id)
+	if at <= 0:
+		return at == 0
+	return has_finished(id, CHAPTERS[at - 1])
+
+
+## The first chapter this child has not finished yet, or "" when every chapter is done.
+static func next_chapter(id: String) -> String:
+	for chapter_id in CHAPTERS:
+		if not has_finished(id, chapter_id):
+			return chapter_id
+	return ""
 
 
 ## Keeps the read-aloud and volume choices of the child playing now.
@@ -288,6 +331,7 @@ static func erase_progress(id: String) -> void:
 	p["charms"] = []
 	p["colours"] = {}
 	p["chapters"] = 0
+	p["finished"] = []
 	save()
 
 

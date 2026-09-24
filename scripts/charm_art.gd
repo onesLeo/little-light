@@ -44,8 +44,16 @@ static func _star(center: Vector2, outer: float, inner: float) -> PackedVector2A
 
 
 ## The regions of a charm's picture, back to front, in unit coordinates.
-static func regions(_charm_id: String) -> Array:
+static func regions(charm_id: String) -> Array:
 	var c := MEDAL_CENTER
+	if charm_id == "friendship":
+		return [
+			PackedVector2Array([Vector2(0.27, 0.62), Vector2(0.15, 0.97), Vector2(0.31, 0.89), Vector2(0.41, 0.99), Vector2(0.5, 0.66)]),
+			PackedVector2Array([Vector2(0.73, 0.62), Vector2(0.85, 0.97), Vector2(0.69, 0.89), Vector2(0.59, 0.99), Vector2(0.5, 0.66)]),
+			_circle(Vector2(0.4, 0.42), 0.16),
+			_circle(Vector2(0.6, 0.42), 0.16),
+			_circle(c, 0.045, 16),
+		]
 	return [
 		PackedVector2Array([Vector2(0.27, 0.62), Vector2(0.15, 0.97), Vector2(0.31, 0.89), Vector2(0.41, 0.99), Vector2(0.5, 0.66)]),
 		PackedVector2Array([Vector2(0.73, 0.62), Vector2(0.85, 0.97), Vector2(0.69, 0.89), Vector2(0.59, 0.99), Vector2(0.5, 0.66)]),

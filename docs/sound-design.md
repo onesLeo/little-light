@@ -18,6 +18,9 @@ real recordings (see `assets/audio/CREDITS.md`).
 | Wing rustle | when butterflies take off; at most one every 0.4 s | `butterflies.gd` |
 | Soft hush of air | while the child breathes in Steady Hands; swells and rises in pitch with the ring | `steady_hands_minigame.gd` |
 | Chimes, fanfare, cheer | pickups, Steady Hands, the finale (unchanged, made at startup by `chime_synth.gd`) | `audio_director.gd` |
+| Crickets, 12 s loop (a few soft chirps) | at The King's Camp; the valley's birds stop and its stream fades out up there | `camp_sounds.gd` |
+| Campfire crackle, 8 s loop | at The King's Camp, sitting on the fire, louder as you walk up to it | `camp_sounds.gd` |
+| Owl "hoo-hoo" | only while the owl is perched, every 15-25 s, never while somebody is speaking; a soft wing rustle as it lands; the call carries a +3 dB local lift so it remains audible across the clearing | `camp_owl.gd` |
 
 ## The mix
 
@@ -26,11 +29,11 @@ Everything plays on one of four buses under Master (`scripts/sound_bus.gd`):
 | Bus | Carries | Base level |
 |-----|---------|-----------|
 | Music | the lullaby | -11 dB |
-| Ambience | wind, stream, birds | -7 dB |
+| Ambience | wind, stream, birds; at the camp crickets, the fire and the owl | -7 dB |
 | Effects | chimes, footsteps, lamb, butterflies | -2 dB |
-| Voice | Wonder Light and David | +3 dB |
+| Voice | Wonder Light and David | 0 dB |
 
-The voice clips speak at about -23 dBFS, which the Voice bus lifts to about -20 dBFS. Rough levels
+The voice clips peak at about -1.5 dBFS. The Voice bus is left at 0 dB so those peaks stay under the limiter; an extra boost was making the limiter clamp every loud syllable, which sounds muffled on a tablet speaker. A high-pass at 110 Hz takes the rumble out of the voice for the same reason. Rough levels
 of everything else, in dBFS (RMS, before distance), so you can see what competes with the voice:
 
 | Sound | Level | While somebody is speaking |

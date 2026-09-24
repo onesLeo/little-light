@@ -1,4 +1,4 @@
-[gd_scene load_steps=57 format=3]
+[gd_scene load_steps=60 format=3]
 
 [ext_resource type="PackedScene" path="res://assets/wonder_walker_v13.glb" id="1_ww"]
 [ext_resource type="PackedScene" path="res://assets/bethlehem_valley_v7.glb" id="2_valley"]
@@ -34,6 +34,8 @@
 [ext_resource type="Script" path="res://scripts/input_setup.gd" id="23_input"]
 [ext_resource type="Script" path="res://scripts/touch_controls.gd" id="24_touch"]
 [ext_resource type="Script" path="res://scripts/game_menu.gd" id="25_menu"]
+[ext_resource type="Script" path="res://scripts/faith_journey_screen.gd" id="39_journey"]
+[ext_resource type="Script" path="res://scripts/kings_camp.gd" id="40_camp"]
 [ext_resource type="Script" path="res://scripts/stream_water_fx.gd" id="26_water"]
 [ext_resource type="Script" path="res://scripts/horizon_backdrop.gd" id="27_horizon"]
 [ext_resource type="Script" path="res://scripts/meadow_dressing.gd" id="28_meadow"]
@@ -41,6 +43,7 @@
 [ext_resource type="Script" path="res://scripts/lamb_life.gd" id="30_lamb"]
 [ext_resource type="Script" path="res://scripts/butterflies.gd" id="31_fly"]
 [ext_resource type="Script" path="res://scripts/soundscape.gd" id="32_soundscape"]
+[ext_resource type="Script" path="res://scripts/foreground_fade.gd" id="38_foreground"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
 radius = 0.35
@@ -154,6 +157,9 @@ script = ExtResource("27_horizon")
 [node name="MeadowDressing" type="Node3D" parent="."]
 script = ExtResource("28_meadow")
 
+[node name="KingsCamp" type="Node3D" parent="."]
+script = ExtResource("40_camp")
+
 [node name="Sun" type="DirectionalLight3D" parent="."]
 sky_mode = 1
 transform = Transform3D(0.866, -0.354, 0.354, 0, 0.707, 0.707, -0.5, -0.612, 0.612, 4, 12, 6)
@@ -173,13 +179,13 @@ shadow_enabled = false
 
 [node name="TabletopCamera" type="Camera3D" parent="."]
 unique_name_in_owner = true
-transform = Transform3D(1, 0, 0, 0, 0.737, 0.676, 0, -0.676, 0.737, 0, 9.5, 15)
+transform = Transform3D(1, 0, 0, 0, 0.737, 0.676, 0, -0.676, 0.737, 0, 8.7, 14.1)
 current = true
-fov = 42.0
+fov = 40.0
 near = 0.1
 far = 200.0
 script = ExtResource("8_cam")
-offset = Vector3(0, 9.5, 11)
+offset = Vector3(0, 8.7, 10.1)
 look_height = 0.7
 follow_speed = 6.0
 
@@ -389,6 +395,9 @@ script = ExtResource("25_menu")
 [node name="JournalScreen" type="CanvasLayer" parent="."]
 script = ExtResource("33_journal")
 
+[node name="FaithJourney" type="CanvasLayer" parent="."]
+script = ExtResource("39_journey")
+
 [node name="ColourScreen" type="CanvasLayer" parent="."]
 script = ExtResource("35_colour")
 
@@ -422,6 +431,7 @@ theme_override_constants/margin_bottom = 12
 [node name="VBox" type="VBoxContainer" parent="UI/Panel/Margin"]
 layout_mode = 2
 theme_override_constants/separation = 8
+alignment = 1
 
 [node name="DialogueLabel" type="Label" parent="UI/Panel/Margin/VBox"]
 unique_name_in_owner = true
@@ -491,3 +501,6 @@ script = ExtResource("34_foliage")
 
 [node name="ScreenShape" type="Node" parent="."]
 script = ExtResource("36_shape")
+
+[node name="ForegroundFade" type="Node" parent="."]
+script = ExtResource("38_foreground")

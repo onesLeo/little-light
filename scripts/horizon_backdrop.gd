@@ -15,6 +15,8 @@ extends Node3D
 @export var cloud_drift_speed: float = 0.004   ## radians per second around the valley
 
 var _cloud_root: Node3D
+var _hill_mat: StandardMaterial3D
+var _cloud_mat: StandardMaterial3D
 
 
 func _ready() -> void:
@@ -27,6 +29,16 @@ func _process(delta: float) -> void:
 		_cloud_root.rotation.y += cloud_drift_speed * delta
 
 
+## The King's Camp's blue hour: the far hills step toward violet-blue and the
+## clouds go a soft grey-blue. They are painted (unshaded), so the light alone
+## would leave them in daytime colours.
+func set_blue_hour() -> void:
+	if _hill_mat:
+		_hill_mat.albedo_color = Color(0.5, 0.56, 0.86)
+	if _cloud_mat:
+		_cloud_mat.albedo_color = Color(0.72, 0.76, 0.94, 0.85)
+
+
 ## -- Hills -------------------------------------------------------------------
 
 func _build_hills() -> void:
@@ -36,6 +48,7 @@ func _build_hills() -> void:
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.vertex_color_use_as_albedo = true
 	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	_hill_mat = mat
 	for i in layers.size():
 		var layer: Dictionary = layers[i]
 		var mi := MeshInstance3D.new()
@@ -96,6 +109,7 @@ func _build_clouds() -> void:
 	mat.billboard_mode = BaseMaterial3D.BILLBOARD_FIXED_Y
 	mat.albedo_texture = _cloud_texture()
 	mat.disable_fog = true
+	_cloud_mat = mat
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hill_seed + 100
 	for i in cloud_count:

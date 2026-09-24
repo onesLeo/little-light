@@ -1,8 +1,16 @@
-# Release plan — public demo, not yet done
+# Release plan — validation builds before a five-journey store release
 
-A plan, not a done thing: nothing here is built. The goal, as decided, is a **free demo / portfolio
-piece** — enough to show people the idea and Chapter 1, with a note that more is coming. It is not
-a paid app-store release, so it doesn't need several chapters first (see
+> **Updated direction:** the first paid app-store release waits for five finished journeys. See
+> [five-journey-roadmap.md](five-journey-roadmap.md). The browser build below remains useful as a
+> free, clearly labelled research demo while the remaining journeys are developed; it is no longer
+> the complete release target.
+
+The audience, free/paid offer, launch funnel and promotional-video plan are in
+[marketing-and-launch-plan.md](marketing-and-launch-plan.md).
+
+A plan, not a done thing: the near-term goal is a **free validation demo / portfolio piece** — enough
+to let target families try the idea while the five-journey first volume is built. It is not the paid
+app-store release (see
 [docs/improvement-backlog.md](improvement-backlog.md) section 6 for the two real gates: a real
 tablet test and a real child playing it).
 
@@ -82,7 +90,7 @@ page, since parents specifically look for that.
 
 ## Not part of this plan
 
-- A paid app-store listing (Google Play / Apple App Store) — a different, heavier process
-  (accounts, review, signing, store assets) that only makes sense once there's more than one
-  chapter and a decision to actually sell or list it.
-- Chapter 2, or any more story content — per the earlier decision, not required for a demo release.
+- A paid app-store listing (Google Play / Apple App Store) — this follows the five-journey release
+  gate and has its own work for accounts, review, signing, store assets and real-device testing.
+- Completing Journeys 3–5 — they are required for the paid store release, but not for an earlier
+  validation demo used to test the concept with families.

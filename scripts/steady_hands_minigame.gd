@@ -296,6 +296,27 @@ func _finish_breath() -> void:
 	)
 
 
+## Put away without counting as finished (the child left for another story).
+func cancel() -> void:
+	if not active:
+		return
+	active = false
+	set_process(false)
+	if _wonder_light and _wonder_light.has_method("set_breath"):
+		_wonder_light.set_breath(0.0)
+	if _david:
+		_david.scale = _david_base_scale
+	_tween_crouch(0.0, 0.6)
+	_kill_tween(_tween)
+	_kill_tween(_air_tween)
+	_air.stop()
+	if _breath:
+		_breath.visible = false
+	if _dots:
+		_dots.visible = false
+	_set_breath_text("")
+
+
 func _set_breath_text(text: String) -> void:
 	if _breath_label and text != _label_text:
 		_label_text = text

@@ -26,6 +26,9 @@ var _david: Node3D
 var _audio: Node
 var _confetti: Node
 var _running: bool = false
+var _tween: Tween
+## Which charm the ceremony is for: Courage (chapter 1) or Friendship (The King's Camp).
+var charm_id: String = JournalContent.CHARM_COURAGE
 var _rest_charm_pos: Vector3 = Vector3(0.0, 0.08, 0.12)
 
 func _ready() -> void:
@@ -85,10 +88,13 @@ func apply_child_colours() -> void:
 		_face = null
 		_face_mat = null
 	var id := Profiles.active_id
-	var charm_id := JournalContent.CHARM_COURAGE
-	if id.is_empty() or not Profiles.has_coloured_charm(id, charm_id):
+	var coloured := not id.is_empty() and Profiles.has_coloured_charm(id, charm_id)
+	# The Courage charm is a plain gold disc until it is coloured. Any other charm shows its
+	# picture (in plain paper and ink) so it reads as itself, not as a second Courage charm.
+	if not coloured and charm_id == JournalContent.CHARM_COURAGE:
 		return
-	var picture := ImageTexture.create_from_image(CharmArt.render_image(charm_id, Profiles.charm_colours(id, charm_id), 128))
+	var colours: Array = Profiles.charm_colours(id, charm_id) if coloured else []
+	var picture := ImageTexture.create_from_image(CharmArt.render_image(charm_id, colours, 128))
 	var quad := QuadMesh.new()
 	quad.size = Vector2(0.15, 0.15)
 	quad.orientation = PlaneMesh.FACE_Y
@@ -108,11 +114,15 @@ func apply_child_colours() -> void:
 	_charm.add_child(_face)
 
 
-## Play the award ceremony. Safe to call once per chapter end.
-func play_ceremony() -> void:
-	if _running:
+## Play the award ceremony for a charm. Safe to call once per chapter end.
+func play_ceremony(for_charm: String = JournalContent.CHARM_COURAGE) -> void:
+	if _running and for_charm == charm_id:
 		return
+	# A different charm while one is still settling: start over with the new one.
+	if _tween and _tween.is_valid():
+		_tween.kill()
 	_running = true
+	charm_id = for_charm
 	visible = true
 	apply_child_colours()
 	_charm_mat.emission_energy_multiplier = 0.0
@@ -120,6 +130,7 @@ func play_ceremony() -> void:
 	_charm.scale = Vector3(0.35, 0.35, 0.35)
 
 	var tw := create_tween()
+	_tween = tw
 	tw.set_parallel(false)
 	# Float in + grow.
 	tw.tween_property(_charm, "position", _rest_charm_pos, snap_duration).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)

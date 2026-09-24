@@ -17,11 +17,17 @@ identically and tuned here instead of being edited by hand. Output is mono, 16-b
                                pitched up, dried out and cleaned so it sounds small and close
   sfx/flutter.wav              butterflies taking off
   sfx/breath_loop.wav          a soft hush of air for Steady Hands; the game follows the breathing ring with its volume
+  ambience/crickets.wav        12 s seamless loop for The King's Camp: a few soft chirps, not a wall of summer noise
+  ambience/campfire.wav        8 s seamless loop: a small, dry crackle over a low warm hush
+  sfx/owl_hoot.wav             the camp owl: two low, soft notes, "hoo-hoo"
+
+    python tools/make_sounds.py --camp   renders only the three King's Camp sounds
 """
 import math
 import os
 import random
 import struct
+import sys
 import wave
 
 SR = 22050
@@ -480,6 +486,110 @@ def render_flutter():
     return out
 
 
+# -- The King's Camp (chapter 2) -----------------------------------------------------------------
+# Their own random source, so adding them never changes the sounds above.
+
+camp_rng = random.Random(23)
+
+
+def camp_noise(n):
+    return [camp_rng.uniform(-1.0, 1.0) for _ in range(n)]
+
+
+def render_owl():
+    """Two low, round notes with a breath of air in them, a little night-air echo after."""
+    out = [0.0] * int(0.25 * SR)
+    for f0, f1, dur, amp in ((392.0, 370.0, 0.34, 1.0), (0.0, 0.0, 0.16, 0.0), (370.0, 330.0, 0.56, 0.9)):
+        m = int(dur * SR)
+        if amp == 0.0:
+            out += [0.0] * m
+            continue
+        breath = biquad(biquad(camp_noise(m), "bp", f0 * 2.0, 1.2), "lp", 1800.0)
+        phase = 0.0
+        for j in range(m):
+            t = j / SR
+            f = f0 + (f1 - f0) * (t / dur) + 2.5 * math.sin(TAU * 5.0 * t)
+            phase += TAU * f / SR
+            att = min(1.0, t / 0.07)
+            rel = min(1.0, (dur - t) / 0.16)
+            env = att * att * max(0.0, rel) ** 1.5
+            v = math.sin(phase) + 0.18 * math.sin(2.0 * phase) + 0.05 * math.sin(3.0 * phase)
+            out.append((v + breath[j] * 0.35) * env * amp)
+    out += [0.0] * int(0.6 * SR)
+    return reverb(out, wet=0.22, room=1.3)
+
+
+def cricket_chirp(freq, pulses, amp):
+    """One chirp: a few very short buzzes of a high tone."""
+    pulse = int(0.016 * SR)
+    gap = int(0.02 * SR)
+    out = []
+    for _ in range(pulses):
+        for j in range(pulse):
+            t = j / SR
+            env = math.sin(math.pi * j / pulse) ** 2
+            out.append((math.sin(TAU * freq * t) + 0.25 * math.sin(TAU * freq * 2.0 * t)) * env * amp)
+        out += [0.0] * gap
+    return out
+
+
+def render_crickets():
+    n = 12 * SR
+    out = [0.0] * n
+    # Three crickets, each with its own pitch and pace, resting between runs of chirps.
+    for freq, pace, amp in ((4300.0, 0.9, 0.9), (4750.0, 1.25, 0.6), (3950.0, 1.6, 0.45)):
+        t = camp_rng.uniform(0.0, 2.0)
+        while t < 12.0:
+            run = camp_rng.randint(3, 7)
+            for _ in range(run):
+                chirp_amp = amp * camp_rng.uniform(0.75, 1.0)
+                add_at(out, int(t * SR), cricket_chirp(freq * camp_rng.uniform(0.99, 1.01), camp_rng.choice((2, 3, 3, 4)), chirp_amp), wrap=True)
+                t += pace * camp_rng.uniform(0.85, 1.15)
+            t += camp_rng.uniform(1.5, 3.5)
+    # Soften the edge of the tone so it is gentle on small speakers.
+    return biquad(out, "lp", 6500.0)
+
+
+def render_campfire():
+    n = 8 * SR
+    fade = SR
+    lead = SR // 2
+    raw = camp_noise(n + fade + lead)
+    hush = biquad(biquad(raw, "lp", 420.0), "lp", 600.0)
+    air = biquad(biquad(raw, "bp", 1800.0, 0.6), "lp", 3500.0)
+    hush = make_loop(hush[lead:], n, fade)
+    air = make_loop(air[lead:], n, fade)
+    out = [0.0] * n
+    for i in range(n):
+        t = i / SR
+        swell = 0.8 + 0.2 * math.sin(TAU * t / 8.0 + 1.0) + 0.1 * math.sin(TAU * t / 2.0)
+        out[i] = hush[i] * 1.4 * swell + air[i] * 0.18 * swell
+    # Crackles: tiny dry clicks, sometimes in little clusters, now and then one soft pop.
+    t = 0.0
+    while t < 8.0:
+        cluster = camp_rng.choice((1, 1, 1, 2, 3, 4))
+        for _ in range(cluster):
+            m = int(camp_rng.uniform(0.002, 0.007) * SR)
+            click = biquad(camp_noise(m + int(0.03 * SR)), "hp", camp_rng.uniform(1500.0, 3500.0))
+            amp = camp_rng.uniform(0.25, 1.0)
+            decay = camp_rng.uniform(0.004, 0.012)
+            burst = [v * amp * math.exp(-(j / SR) / decay) for j, v in enumerate(click)]
+            add_at(out, int(t * SR), burst, wrap=True)
+            t += camp_rng.uniform(0.01, 0.05)
+        if camp_rng.random() < 0.12:
+            m = int(0.05 * SR)
+            pop = biquad(camp_noise(m), "bp", camp_rng.uniform(500.0, 900.0), 1.5)
+            add_at(out, int(t * SR), [v * 1.2 * math.exp(-(j / SR) / 0.015) for j, v in enumerate(pop)], wrap=True)
+        t += camp_rng.uniform(0.06, 0.45)
+    return out
+
+
+def render_camp():
+    save("ambience/crickets.wav", render_crickets(), 0.35, loop=True)
+    save("ambience/campfire.wav", render_campfire(), 0.55, loop=True)
+    save("sfx/owl_hoot.wav", render_owl(), 0.55)
+
+
 # -- Render everything ---------------------------------------------------------------------------
 
 def main():
@@ -508,7 +618,12 @@ def main():
     save("sfx/bleat_1.wav", lamb, min(peak_of(lamb), 0.90))
     save("sfx/flutter.wav", render_flutter(), 0.40)
     save("sfx/breath_loop.wav", render_breath(), 0.50, loop=True)
+    render_camp()
 
 
 if __name__ == "__main__":
-    main()
+    if "--camp" in sys.argv:
+        print("rendering to", os.path.normpath(OUT))
+        render_camp()
+    else:
+        main()

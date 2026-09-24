@@ -1,7 +1,10 @@
 extends Node
 ## Beat walker for David & Goliath P0.2 vertical slice.
-## Arrive → Explore (3 Wonder Items) → Meet David (Band A) → Steady Hands
-## → Off-screen resolution → Reflect → Joshua 1:9 + "Don't. Be. Afraid." → Courage charm award.
+## Arrive → Explore (3 Wonder Items) → Meet David (Band A) → Joshua 1:9
+## → Steady Hands (breathe the promise) → Off-screen resolution → Reflect
+## → Courage charm award.
+## Spine: hear the word → she taps the three words → breathe it → watch David walk → keep it.
+## Courage comes from God being with David, not from feeling calm.
 ## No violence shown. Wonder-Walker is a guest, not David.
 ## The story waits at the start until the "Who is playing?" screen has a child (profile_screen.gd);
 ## the verse, the charm and the finished chapter go into that child's Faith Journal.
@@ -10,6 +13,9 @@ const Profiles := preload("res://scripts/profiles.gd")
 const JournalContent := preload("res://scripts/journal_content.gd")
 const GameSettings := preload("res://scripts/game_settings.gd")
 const EasyWords := preload("res://scripts/easy_words.gd")
+const PaperUI := preload("res://scripts/paper_ui.gd")
+const WordChip := preload("res://scripts/word_chip.gd")
+const DialogueView := preload("res://scripts/dialogue_view.gd")
 
 enum Beat {
 	ARRIVE,
@@ -21,13 +27,15 @@ enum Beat {
 	STEADY_DONE,    # David's thank-you after minigame
 	RESOLUTION,
 	REFLECT,
-	VERSE_REWARD,
+	VERSE_REWARD,   # Joshua 1:9 — played before the breath (see _on_advance)
 	CHARM_AWARD,  # Courage charm → Virtue Bracelet ceremony
 	DONE,
+	CAMP,           # on hold: The King's Camp (chapter_two.gd) has the screen
 }
 
 @onready var dialogue_label: Label = %DialogueLabel
 @onready var prompt_label: Label = %PromptLabel
+@onready var dialogue_panel: PanelContainer = get_node_or_null("../UI/Panel") as PanelContainer
 @onready var player: CharacterBody3D = %Player
 @onready var steady_hands: Node = %SteadyHands
 @onready var camera_director: Node = %CameraDirector
@@ -41,15 +49,21 @@ enum Beat {
 signal explore_started
 signal wonder_item_collected(item_name: String)
 signal chapter_finished
+signal stood_down
 
 var beat: Beat = Beat.ARRIVE
 var wonder_items_found: int = 0
 const WONDER_ITEMS_NEEDED: int = 3
 
 const ITEM_FLAVOR := {
-	"WonderItem_Stone": "A stone, just right for a sling.",
-	"WonderItem_Staff": "Worn smooth from long days watching sheep.",
-	"WonderItem_Lamb": "Baa! This little one wandered off again.",
+	"WonderItem_Stone": "A small stone. God can use even a small thing.",
+	"WonderItem_Staff": "A shepherd's staff. David stays with his sheep.",
+	"WonderItem_Lamb": "A lamb David is keeping safe. That is his job.",
+}
+const ITEM_LABELS := {
+	"WonderItem_Stone": "stone",
+	"WonderItem_Staff": "staff",
+	"WonderItem_Lamb": "little lamb",
 }
 
 var _advance_ready: bool = false
@@ -57,6 +71,20 @@ var _prompt_raw: String = ""
 var _last_nudge_ms: int = -100000
 var _near_item: Area3D = null
 var _items_collected: Dictionary = {}
+
+## Her turn after Joshua 1:9. She taps each word and hears that word. Nothing is
+## marked wrong, and the breath does not start until all three have been tapped.
+const WORD_LABELS: PackedStringArray = ["Don't", "Be", "Afraid"]
+const WORD_LINES: PackedStringArray = ["Don't.", "Be.", "Afraid."]
+var _word_phase: String = "" ## "", verse (page one), listen, tap, done
+
+## Joshua 1:9 comes in two short pages instead of one wall of text. Page one: the verse and what
+## "Yahweh" means. Page two: the three words to say with David, then her turn to tap them.
+const VERSE_PAGE_ONE := "Joshua 1:9 (WEB):\n\"Haven't I commanded you? Be strong and of good courage; don't be afraid, neither be dismayed: for Yahweh your God is with you wherever you go.\"\nWonder Light: \"Yahweh is God's name. It means He is with you.\""
+const VERSE_PAGE_TWO := "Wonder Light: \"This verse has three special words. Can you say them with me?\nDon't. Be. Afraid.\""
+var _word_said: Array[bool] = [false, false, false]
+var _word_row: HBoxContainer
+var _word_buttons: Array[Button] = []
 
 func _ready() -> void:
 	dialogue_label.text = ""
@@ -72,16 +100,48 @@ func _ready() -> void:
 			if child is Area3D:
 				child.body_entered.connect(_on_wonder_item_entered.bind(child))
 				child.body_exited.connect(_on_wonder_item_exited.bind(child))
+	if audio_director and audio_director.has_signal("speech_finished"):
+		audio_director.speech_finished.connect(_on_speech_finished)
+	_build_word_buttons()
+	_build_dialogue_view()
 	_start_story()
 
 
-## Starts the story, or waits for the "Who is playing?" screen when nobody is playing yet.
+## Starts the story. Nobody playing yet: the "Who is playing?" screen comes first, then the Faith
+## Journey map, where the child picks a chapter. A reload for "Play again" goes straight back into
+## the chapter they were on (Profiles.current_chapter).
 func _start_story() -> void:
 	var picker := get_node_or_null("../ProfileScreen")
 	if Profiles.active_id.is_empty() and picker != null:
-		picker.profile_chosen.connect(func(_id: String) -> void: _enter_beat(Beat.ARRIVE), CONNECT_ONE_SHOT)
+		picker.profile_chosen.connect(func(_id: String) -> void: _open_journey_first(), CONNECT_ONE_SHOT)
+		return
+	match Profiles.current_chapter:
+		Profiles.CHAPTER_VALLEY:
+			_enter_beat(Beat.ARRIVE)
+		Profiles.CHAPTER_CAMP:
+			var camp := get_node_or_null("../KingsCamp")
+			if camp and camp.has_method("visit"):
+				camp.visit.call_deferred()
+			else:
+				_enter_beat(Beat.ARRIVE)
+		_:
+			_open_journey_first.call_deferred()
+
+
+## The Faith Journey map as the first stop, before any chapter. Without it (a trimmed scene), the
+## valley starts as before.
+func _open_journey_first() -> void:
+	var journey := get_node_or_null("../FaithJourney")
+	if journey and journey.has_method("open_to_choose"):
+		journey.open_to_choose()
 	else:
-		_enter_beat(Beat.ARRIVE)
+		begin_valley()
+
+
+## Chapter 1 from its first line, in the scene as it is (the map uses it when nothing has started yet).
+func begin_valley() -> void:
+	Profiles.current_chapter = Profiles.CHAPTER_VALLEY
+	_enter_beat(Beat.ARRIVE)
 
 func _is_continue_pressed(event: InputEvent) -> bool:
 	# ui_accept (Space/Enter) plus raw key fallback — unhandled path can miss Space
@@ -96,6 +156,14 @@ func _is_continue_pressed(event: InputEvent) -> bool:
 
 
 func _input(event: InputEvent) -> void:
+	# During her word turn, Space or NEXT must not skip the three words.
+	if beat == Beat.VERSE_REWARD and _word_phase != "done" and _is_continue_pressed(event):
+		if _word_phase == "verse":
+			_verse_page_two()
+		else:
+			_open_word_turn()
+		get_viewport().set_input_as_handled()
+		return
 	# Prefer _input over _unhandled_input so dialogue UI cannot swallow Space.
 	if _advance_ready and _is_continue_pressed(event):
 		_advance_ready = false
@@ -106,6 +174,8 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 func _enter_beat(next: Beat) -> void:
+	if next != Beat.VERSE_REWARD:
+		_close_word_turn()
 	beat = next
 	if audio_director and audio_director.has_method("play_vo"):
 		audio_director.play_vo(Beat.keys()[next])
@@ -115,7 +185,7 @@ func _enter_beat(next: Beat) -> void:
 			_cut_tabletop()
 			_point_light(null)
 			_show(
-				"Wonder Light: \"Ooh, look at that! A little valley, all made of paper and light.\"",
+				"Wonder Light: \"This is David's valley. He looks after sheep. God looks after him.\"",
 				"Press Space to continue"
 			)
 			_advance_ready = true
@@ -125,8 +195,8 @@ func _enter_beat(next: Beat) -> void:
 			_cut_tabletop()
 			_point_light(null)
 			_show(
-				"Wonder Light: \"Three Wonder Items are hidden on the hillside. Find them!\"",
-				"Walk near an item and press E  (%d / %d)" % [wonder_items_found, WONDER_ITEMS_NEEDED]
+				"Wonder Light: \"David needs his stone, his staff, and his little lamb. Find them for him!\"",
+				_explore_prompt(false)
 			)
 			_advance_ready = false
 			explore_started.emit()
@@ -142,7 +212,7 @@ func _enter_beat(next: Beat) -> void:
 			_cut_closeup(david_mentor)
 			_point_light(david_mentor)
 			_show(
-				"David: \"Oh! Hello there. Are you lost too?\"\nDavid: \"Everyone's scared of the big giant. But someone has to be brave.\"",
+				"(You bring David the stone, staff, and little lamb.)\nDavid: \"Oh! Hello there. Are you lost too?\"\nDavid: \"Everyone's scared of the big giant. But God gave me these sheep to keep safe.\"\nDavid: \"The Lord kept me safe from the lion and the bear. He will keep me safe now.\"",
 				"Press Space to continue"
 			)
 			_advance_ready = true
@@ -152,17 +222,32 @@ func _enter_beat(next: Beat) -> void:
 			_cut_closeup(david_mentor)
 			_point_light(david_mentor)
 			_show(
-				"Wonder Light: \"David is scared too. But he's still going to try.\"\nDavid: \"Thanks. Will you stay close while I get ready?\"",
+				"Wonder Light: \"God gave David a job: keep the sheep safe. That's why he will go.\"\nDavid: \"Thanks. Will you stay close while I get ready?\"",
 				"Press Space to continue"
 			)
 			_advance_ready = true
+
+		Beat.VERSE_REWARD:
+			# The word is given before the breath and the walk, so courage has a
+			# source: God is with David. The child says the three words *with* him.
+			Profiles.unlock_verse(JournalContent.VERSE_JOSHUA_1_9)
+			_cut_closeup(david_mentor)
+			_point_light(david_mentor)
+			_celebrate_light()
+			_word_phase = "verse"
+			_word_said = [false, false, false]
+			_restyle_words()
+			if _word_row:
+				_word_row.visible = false
+			_show(VERSE_PAGE_ONE, "Press Space to continue   ● ○")
+			_advance_ready = false
 
 		Beat.STEADY_INTRO:
 			_set_player_move(false)
 			_cut_closeup(david_mentor)
 			_point_light(david_mentor)
 			_show(
-				"Wonder Light: \"Let's help David get calm and steady. Breathe in... and out.\"\nDavid: \"In... and out. Just like counting sheep.\"",
+				"Wonder Light: \"Let's breathe God's promise with David. In: God is with you. Out: don't be afraid.\"\nDavid: \"In... and out. Just like counting sheep.\"",
 				"Press Space to begin Steady Hands"
 			)
 			_advance_ready = true
@@ -181,7 +266,7 @@ func _enter_beat(next: Beat) -> void:
 			_cut_closeup(david_mentor)
 			_celebrate_light()
 			_show(
-				"David: \"I feel steady now. Thank you for staying with me.\"",
+				"David: \"I still feel small. But I'm not alone. Thank you for staying.\"",
 				"Press Space to continue"
 			)
 			_advance_ready = true
@@ -192,7 +277,7 @@ func _enter_beat(next: Beat) -> void:
 			_cut_closeup(david_mentor)
 			_point_light(david_mentor)
 			_show(
-				"Wonder Light: \"David walked out to the valley. And when it was over, the whole camp was cheering his name.\"",
+				"Wonder Light: \"David took the small stone. God can use even a small thing.\"\nWonder Light: \"David walked out to the valley. When it was over, the camp cheered his name.\"\nWonder Light: \"David trusted God, faced Goliath with his sling, and defeated him. The people were safe.\"",
 				"Press Space to continue"
 			)
 			_advance_ready = true
@@ -201,18 +286,8 @@ func _enter_beat(next: Beat) -> void:
 			_cut_tabletop()
 			_point_light(null)
 			_show(
-				"Wonder Light: \"Being brave doesn't mean you're not scared. It means you go anyway.\"",
+				"Wonder Light: \"Being brave doesn't mean you're not scared. It means you go with God anyway.\"\nWonder Light: \"God had a job for David. He has one for you too. Stay close, and remember the words.\"",
 				"Press Space to continue"
-			)
-			_advance_ready = true
-
-		Beat.VERSE_REWARD:
-			Profiles.unlock_verse(JournalContent.VERSE_JOSHUA_1_9)
-			_cut_tabletop()
-			_celebrate_light()
-			_show(
-				"Joshua 1:9 (WEB):\n\"Haven't I commanded you? Be strong and of good courage; don't be afraid, neither be dismayed: for Yahweh your God is with you wherever you go.\"\n\nWonder Light: \"This verse has three special words. Can you say them with me?\nDon't. Be. Afraid.\"",
-				"Press Space for your Courage charm"
 			)
 			_advance_ready = true
 
@@ -222,7 +297,7 @@ func _enter_beat(next: Beat) -> void:
 			_advance_ready = false
 			_celebrate_light()
 			_show(
-				"Wonder Light: \"A Courage charm — for staying with David when he was scared.\"\n(Virtue Bracelet receives the charm.)",
+				"Wonder Light: \"A Courage charm — for staying with David, and breathing God's promise with him.\"\n(Virtue Bracelet receives the charm.)",
 				"…"
 			)
 			if charm_award and camera_director and camera_director.has_method("cut_to_charm"):
@@ -236,22 +311,22 @@ func _enter_beat(next: Beat) -> void:
 			else:
 				# Fallback if node missing — still allow advance.
 				_show(
-					"Wonder Light: \"A Courage charm — for staying with David when he was scared.\"",
+					"Wonder Light: \"A Courage charm — for staying with David, and breathing God's promise with him.\"",
 					"Press Space to keep your charm"
 				)
 				_advance_ready = true
 
 		Beat.DONE:
-			Profiles.finish_chapter()
+			Profiles.finish_chapter(Profiles.CHAPTER_VALLEY)
 			_set_player_move(true)
 			_cut_tabletop()
 			_point_light(null)
 			_show(
-				"Chapter complete — courage over fear.",
+				"Wonder Light: \"God was with David. God is with you.\"",
 				"Well done, Wonder-Walker!"
 			)
 			_advance_ready = false
-			_play_finale()
+			play_finale("Chapter 1 Complete!")
 			chapter_finished.emit()
 
 func _on_advance() -> void:
@@ -261,6 +336,15 @@ func _on_advance() -> void:
 		Beat.MEET_DAVID_A:
 			_enter_beat(Beat.MEET_DAVID_B)
 		Beat.MEET_DAVID_B:
+			_enter_beat(Beat.VERSE_REWARD)
+		Beat.VERSE_REWARD:
+			if _word_phase == "verse":
+				_verse_page_two()
+				return
+			if not _words_complete():
+				_open_word_turn()
+				return
+			_close_word_turn()
 			_enter_beat(Beat.STEADY_INTRO)
 		Beat.STEADY_INTRO:
 			_enter_beat(Beat.STEADY_PLAY)
@@ -269,8 +353,6 @@ func _on_advance() -> void:
 		Beat.RESOLUTION:
 			_enter_beat(Beat.REFLECT)
 		Beat.REFLECT:
-			_enter_beat(Beat.VERSE_REWARD)
-		Beat.VERSE_REWARD:
 			_enter_beat(Beat.CHARM_AWARD)
 		Beat.CHARM_AWARD:
 			_enter_beat(Beat.DONE)
@@ -287,7 +369,7 @@ func _on_wonder_item_entered(body: Node3D, area: Area3D) -> void:
 		return
 	_near_item = area
 	if beat == Beat.EXPLORE:
-		_set_prompt("Press E to collect  (%d / %d)" % [wonder_items_found, WONDER_ITEMS_NEEDED])
+		_set_prompt(_explore_prompt(true))
 
 func _on_wonder_item_exited(body: Node3D, area: Area3D) -> void:
 	if body != player:
@@ -295,7 +377,7 @@ func _on_wonder_item_exited(body: Node3D, area: Area3D) -> void:
 	if _near_item == area:
 		_near_item = null
 	if beat == Beat.EXPLORE:
-		_set_prompt("Walk near an item and press E  (%d / %d)" % [wonder_items_found, WONDER_ITEMS_NEEDED])
+		_set_prompt(_explore_prompt(false))
 
 func _try_collect_near_item() -> void:
 	if beat != Beat.EXPLORE:
@@ -324,18 +406,54 @@ func _try_collect_near_item() -> void:
 		if outline:
 			outline.visible = false
 	_near_item = null
-	_set_prompt("Collected!  (%d / %d)" % [wonder_items_found, WONDER_ITEMS_NEEDED])
+	_set_prompt(_explore_prompt(false))
 	_celebrate_light()
 	if wonder_items_found >= WONDER_ITEMS_NEEDED:
-		# Brief pause then meet David.
-		await get_tree().create_timer(0.8).timeout
+		# Hold the wide shot for a moment and let Wonder Light lead the eye to
+		# David. This makes the scavenger hunt visibly pay off before the cut.
+		_set_player_move(false)
+		_set_prompt("Everything is ready — let's bring it to David!")
+		_point_light(david_mentor)
+		await get_tree().create_timer(1.35).timeout
 		_enter_beat(Beat.MEET_DAVID_A)
+
+
+## The hunt is not an arbitrary counter: every prompt names what the child is
+## finding for David, and collected things remain visibly checked off.
+func _explore_prompt(near_item: bool) -> String:
+	var parts: PackedStringArray = []
+	for item_name in ["WonderItem_Stone", "WonderItem_Staff", "WonderItem_Lamb"]:
+		var mark := "✓" if _items_collected.has(item_name) else "—"
+		parts.append("%s %s" % [ITEM_LABELS[item_name].capitalize(), mark])
+	var action := "Press E to collect" if near_item else "Find these for David"
+	return "%s   %s   (%d / %d)" % [action, "  ".join(parts), wonder_items_found, WONDER_ITEMS_NEEDED]
 
 func _show(dialogue: String, prompt: String) -> void:
 	_say(dialogue)
 	if camera_director and camera_director.has_method("is_orbiting") and camera_director.is_orbiting():
 		prompt += "   [A / D: look around]"
 	_set_prompt(prompt)
+	call_deferred("_fit_dialogue_panel")
+
+
+## Short lines no longer sit at the top of a mostly empty 200 px panel. Long
+## story beats (especially Joshua 1:9) still grow enough to wrap comfortably.
+func _fit_dialogue_panel() -> void:
+	if dialogue_panel == null:
+		return
+	var dialogue_height := dialogue_label.get_combined_minimum_size().y
+	var prompt_height := prompt_label.get_combined_minimum_size().y
+	var wanted := dialogue_height + prompt_height + 44.0
+	var viewport_height := get_viewport().get_visible_rect().size.y
+	var max_height := maxf(116.0, minf(240.0, viewport_height * 0.38))
+	var height := clampf(wanted, 116.0, max_height)
+	dialogue_panel.offset_top = dialogue_panel.offset_bottom - height
+	if _word_row:
+		# A very long line (Joshua 1:9) makes the bar taller than `height`: go by what it needs.
+		var bar_top := dialogue_panel.offset_bottom - maxf(height, dialogue_panel.get_combined_minimum_size().y)
+		# Clear of the speaker's name tag, which sits on the bar's top edge (dialogue_view.gd).
+		_word_row.offset_bottom = bar_top - 64.0
+		_word_row.offset_top = _word_row.offset_bottom - 96.0
 
 ## Shows a line of story text and reads it aloud (if the player has read-aloud on). With "Easy words" on for the
 ## child playing, lines that have an easier version (easy_words.gd) are swapped for it. Returns what was shown.
@@ -365,15 +483,18 @@ func show_nudge(text: String) -> void:
 	if beat == prev_beat and dialogue_label.text == shown:
 		dialogue_label.text = prev_dialogue
 		_set_prompt(prev_prompt)
+		call_deferred("_fit_dialogue_panel")
 
 ## Prompts are authored with keyboard wording ("Press Space", "press E") and
 ## rewritten for whichever device the player last used.
 func _set_prompt(raw: String) -> void:
 	_prompt_raw = raw
 	prompt_label.text = _localize_prompt(raw)
+	call_deferred("_fit_dialogue_panel")
 
 func _on_device_changed(_mode: String) -> void:
 	prompt_label.text = _localize_prompt(_prompt_raw)
+	call_deferred("_fit_dialogue_panel")
 
 func _localize_prompt(raw: String) -> String:
 	var input_setup := get_node_or_null("../InputSetup")
@@ -395,13 +516,30 @@ func get_action_hint() -> String:
 		return "GRAB" if _near_item != null else ""
 	if steady_hands and "active" in steady_hands and steady_hands.active:
 		return "BREATHE"
-	if _advance_ready:
+	if _advance_ready or (beat == Beat.VERSE_REWARD and _word_phase == "verse"):
 		return "NEXT"
 	return ""
 
 func _set_player_move(enabled: bool) -> void:
 	if player and "can_move" in player:
 		player.can_move = enabled
+
+## The King's Camp has taken over, maybe halfway through a replay of this
+## chapter: stop listening for Space, put away the hunt arrows and Steady Hands,
+## so none of the valley's lines can land on top of the camp.
+func stand_down() -> void:
+	if beat == Beat.CAMP:
+		return
+	_close_word_turn()
+	beat = Beat.CAMP
+	_advance_ready = false
+	_near_item = null
+	if steady_hands and steady_hands.has_method("cancel"):
+		steady_hands.cancel()
+	_set_player_move(true)
+	_cut_tabletop()
+	_point_light(null)
+	stood_down.emit()
 
 ## -- CameraDirector / WonderLight helpers -----------------------------
 ## Guarded with has_method() rather than a static type so this still works
@@ -468,13 +606,16 @@ func _face_david(target: Node3D) -> void:
 
 ## The chapter-complete moment: applause, a big confetti pop over the
 ## Wonder-Walker, the light celebrating, and a banner that pops in.
-func _play_finale() -> void:
+## The end-of-chapter celebration: a cheer, confetti, Wonder Light's burst and the
+## "Chapter Complete!" banner. The King's Camp uses it too, so both chapters end alike.
+func play_finale(title: String = "Chapter Complete!") -> void:
 	if audio_director and audio_director.has_method("play_cheer"):
 		audio_director.play_cheer()
 	if confetti and confetti.has_method("burst") and player:
 		confetti.burst(player.global_position + Vector3(0.0, 2.8, 0.0), 220, 1.4, 6.5, 0.95)
 	_celebrate_light()
 	if complete_banner:
+		complete_banner.text = title
 		complete_banner.visible = true
 		complete_banner.modulate.a = 0.0
 		complete_banner.pivot_offset = complete_banner.size * 0.5
@@ -495,3 +636,133 @@ func _on_charm_ceremony_finished() -> void:
 		"Press Space to keep your charm"
 	)
 	_advance_ready = true
+
+
+## The speaker's name tag and face over the dialogue bar, shared by both chapters (dialogue_view.gd).
+func _build_dialogue_view() -> void:
+	var ui := get_node_or_null("../UI")
+	if ui == null or dialogue_panel == null:
+		return
+	var view := DialogueView.new()
+	view.name = "DialogueView"
+	view.setup(dialogue_panel, dialogue_label, audio_director)
+	ui.add_child(view)
+
+
+func _build_word_buttons() -> void:
+	var ui := get_node_or_null("../UI")
+	if ui == null:
+		return
+	_word_row = HBoxContainer.new()
+	_word_row.name = "WordTurn"
+	_word_row.visible = false
+	_word_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	# Room between the words so each one's glow stays its own.
+	_word_row.add_theme_constant_override("separation", 40)
+	# Anchored to the bottom and kept just above the dialogue bar (see _fit_dialogue_panel),
+	# so the long Joshua 1:9 text is never hidden under the words.
+	_word_row.anchor_left = 0.06
+	_word_row.anchor_right = 0.72
+	_word_row.anchor_top = 1.0
+	_word_row.anchor_bottom = 1.0
+	_word_row.offset_bottom = -300.0
+	_word_row.offset_top = -396.0
+	_word_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ui.add_child(_word_row)
+	for i in WORD_LABELS.size():
+		var chip := WordChip.new(WORD_LABELS[i], Vector2(200, 96), 36)
+		chip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		chip.pressed.connect(press_word.bind(i))
+		_word_row.add_child(chip)
+		_word_buttons.append(chip)
+
+
+## The second page of Joshua 1:9: the three words, then (once she has heard them) her turn.
+func _verse_page_two() -> void:
+	if beat != Beat.VERSE_REWARD or _word_phase != "verse":
+		return
+	_show(VERSE_PAGE_TWO, "Listen   ○ ●")
+	_begin_word_listen()
+
+
+func _begin_word_listen() -> void:
+	_word_phase = "listen"
+	_word_said = [false, false, false]
+	_restyle_words()
+	if _word_row:
+		_word_row.visible = false
+	if audio_director and audio_director.has_method("is_speaking") and audio_director.is_speaking():
+		return
+	_open_word_turn()
+
+
+func _on_speech_finished() -> void:
+	if beat == Beat.VERSE_REWARD and _word_phase == "listen":
+		_open_word_turn()
+
+
+func _open_word_turn() -> void:
+	if beat != Beat.VERSE_REWARD or _word_phase == "done":
+		return
+	_word_phase = "tap"
+	if _word_row:
+		_word_row.visible = true
+	_advance_ready = false
+	_set_prompt("Tap each word")
+	_restyle_words()
+
+
+func _close_word_turn() -> void:
+	_word_phase = ""
+	if _word_row:
+		_word_row.visible = false
+
+
+func _words_complete() -> bool:
+	for said in _word_said:
+		if not said:
+			return false
+	return true
+
+
+## Tap one of the three words. Plays that word, and can be tapped again to hear
+## it once more. Any order counts. The breath stays locked until each one has
+## been tapped at least once.
+func press_word(index: int) -> void:
+	if beat != Beat.VERSE_REWARD:
+		return
+	if index < 0 or index >= WORD_LINES.size():
+		return
+	if _word_phase == "verse":
+		_verse_page_two()
+	if _word_phase == "listen" or _word_phase == "":
+		_open_word_turn()
+	if audio_director and audio_director.has_method("play_line"):
+		audio_director.play_line(WORD_LINES[index])
+	_word_said[index] = true
+	_restyle_words()
+	_pulse_word(index)
+	if _words_complete() and _word_phase != "done":
+		_word_phase = "done"
+		_advance_ready = true
+		_set_prompt("Press Space to breathe with David")
+		if audio_director and audio_director.has_method("play_success"):
+			audio_director.play_success()
+
+
+## Lit words stay lit; the next word to tap breathes gently (word_chip.gd).
+func _restyle_words() -> void:
+	var next := _word_said.find(false) if _word_phase == "tap" else -1
+	for i in _word_buttons.size():
+		var chip := _word_buttons[i] as WordChip
+		chip.set_lit(i < _word_said.size() and _word_said[i])
+		chip.set_beckon(i == next)
+
+
+func _pulse_word(index: int) -> void:
+	if index < 0 or index >= _word_buttons.size():
+		return
+	(_word_buttons[index] as WordChip).pop()
+	if wonder_light and wonder_light.has_method("celebrate"):
+		wonder_light.celebrate()
+

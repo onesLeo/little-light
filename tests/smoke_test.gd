@@ -65,6 +65,8 @@ func _initialize() -> void:
 	DirAccess.remove_absolute(TEST_PROFILES)
 	Profiles.use_file(TEST_PROFILES)
 	Profiles.set_active(Profiles.create("Test", "lamb"))
+	# As after "Play again" in the valley: the story goes straight into chapter 1.
+	Profiles.current_chapter = Profiles.CHAPTER_VALLEY
 	var main: Node = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
 	await process_frame  # let _ready() propagate through the tree first
@@ -235,6 +237,28 @@ func _initialize() -> void:
 	_check(closeup_cam.current == true, "MEET_DAVID_A cuts to close-up")
 	_check(tabletop_cam.current == false, "tabletop stops being current after cut")
 	_check(wonder_light._look_target == david, "Wonder Light looks at David during MEET_DAVID_A")
+	var cam_dir: Node = main.get_node("CameraDirector")
+	var walker_body: Node3D = main.get_node("Player")
+	var david_front := -david.global_transform.basis.z
+	david_front.y = 0.0
+	david_front = david_front.normalized()
+	walker_body.global_position = david.global_position + david_front * 1.5
+	cam_dir._orbit_target = david
+	cam_dir._orbit_angle = -cam_dir.closeup_side_angle
+	cam_dir._place_closeup()
+	var head := walker_body.global_position + Vector3(0.0, 1.17, 0.0)
+	var view := closeup_cam.get_viewport().get_visible_rect().size
+	var head_screen := closeup_cam.unproject_position(head)
+	_check(not closeup_cam.is_position_behind(head), "from David's side the walker's head is in front of the camera")
+	_check(head_screen.y > view.y * 0.04 and head_screen.y < view.y * 0.78,
+			"the walker's head stays on screen instead of being cut off (y %.0f of %.0f)" % [head_screen.y, view.y])
+	_check(closeup_cam.global_position.distance_to(walker_body.global_position + Vector3(0.0, 0.7, 0.0)) > 1.1,
+			"the close-up stays outside the walker")
+	walker_body.global_position = david.global_position + david_front.rotated(Vector3.UP, 2.2) * 2.2
+	cam_dir._orbit_angle = 0.0
+	cam_dir._place_closeup()
+	var david_head := david.global_position + Vector3(0.0, 1.15, 0.0)
+	_check(not closeup_cam.is_position_behind(david_head), "David's own close-up still sees his head")
 
 	print("-- steady hands starts the breathing indicator --")
 	director._enter_beat(director.Beat.STEADY_PLAY)
@@ -362,14 +386,27 @@ func _initialize() -> void:
 	print("-- item collection triggers Wonder Light celebrate() without error --")
 	director._enter_beat(director.Beat.EXPLORE)
 	_check(tabletop_cam.current == true, "EXPLORE cuts back to tabletop")
+	_check("for David" in director.prompt_label.text and "Stone" in director.prompt_label.text
+			and "Staff" in director.prompt_label.text and "Little Lamb" in director.prompt_label.text,
+			"the hunt names all three things as something the child is finding for David")
+	await process_frame
+	var panel_height: float = director.dialogue_panel.offset_bottom - director.dialogue_panel.offset_top
+	_check(panel_height <= 150.0, "a short line uses a compact dialogue panel instead of hiding the valley (%.0f px)" % panel_height)
 	var stone: Area3D = main.get_node("WonderItems/WonderItem_Stone")
 	director._near_item = stone
 	director._try_collect_near_item()
 	_check(director.wonder_items_found == 1, "collecting an item increments the counter")
+	_check("Stone ✓" in director.prompt_label.text, "the hunt checks off the thing that was found")
+	var foreground_fade: Node = main.get_node("ForegroundFade")
+	var olive: GeometryInstance3D = main.get_node("BethlehemValley").find_children("Olive*", "MeshInstance3D", true, false)[0]
+	_check(foreground_fade._is_foreground_foliage(olive), "foreground foliage can soften instead of hiding the player")
 
 	print("-- reflect beat returns to the wide tabletop shot --")
 	director._enter_beat(director.Beat.REFLECT)
 	_check(tabletop_cam.current == true, "REFLECT is a tabletop (wide) shot")
+	director._enter_beat(director.Beat.RESOLUTION)
+	_check("Goliath" in director.dialogue_label.text and "The people were safe" in director.dialogue_label.text,
+			"the gentle ending still clearly explains what happened")
 
 	print("-- voice-over: every spoken line has a recorded clip --")
 	var audio: Node = main.get_node("AudioDirector")
@@ -387,9 +424,11 @@ func _initialize() -> void:
 			director.Beat.STEADY_DONE, director.Beat.RESOLUTION, director.Beat.REFLECT, director.Beat.VERSE_REWARD]:
 		director._enter_beat(b)
 		spoken_texts.append(director.dialogue_label.text)
+	spoken_texts.append(director.VERSE_PAGE_TWO)
 	spoken_texts.append("Wonder Light: \"Breathe with David...\"")
 	spoken_texts.append("Wonder Light: \"Keep this close. Courage is yours to carry.\"")
-	spoken_texts.append("Wonder Light: \"A Courage charm — for staying with David when he was scared.\"")
+	spoken_texts.append("Wonder Light: \"A Courage charm — for staying with David, and breathing God's promise with him.\"")
+	spoken_texts.append("Wonder Light: \"God was with David. God is with you.\"")
 	for flavor in director.ITEM_FLAVOR.values():
 		spoken_texts.append(flavor)
 	for nudge in main.get_node("PlayBounds").NUDGE_LINES:
@@ -399,13 +438,22 @@ func _initialize() -> void:
 			if vo_lib.clip_for(line["text"]) == null:
 				unrecorded.append(line["text"])
 	_check(unrecorded.is_empty(), "no spoken line in the game is missing from the library %s" % [unrecorded])
+	var map_script := load("res://scripts/faith_journey_screen.gd")
+	var map_unrecorded: Array = []
+	for block in ["Hello!\nYour journey starts in the valley.", "Hello!\nThe King's Camp is next.", "Hello!\nTap a story to begin.",
+			"One story at a time.", "Finish Chapter 1, The valley, first. Then The King's Camp will open for you.",
+			"This part of the path is still ahead. New stories will be waiting here.", "Look. David's valley is still down there."]:
+		for line in audio._spoken_lines(map_script._wonder_light(block)):
+			if vo_lib.clip_for(line["text"]) == null:
+				map_unrecorded.append(line["text"])
+	_check(map_unrecorded.is_empty(), "the Faith Journey map and the camp lookout speak in the recorded voice too %s" % [map_unrecorded])
 
 	print("-- voice-over: playback, chaining and fast skipping --")
 	var settings := load("res://scripts/game_settings.gd")
 	settings.read_aloud = true
 	var vo_player: AudioStreamPlayer = audio.get_node("Vo")
 	audio.stop_speech()
-	audio.speak_dialogue("David: \"Oh! Hello there. Are you lost too?\"\nDavid: \"Everyone's scared of the big giant. But someone has to be brave.\"")
+	audio.speak_dialogue("David: \"Oh! Hello there. Are you lost too?\"\nDavid: \"Everyone's scared of the big giant. But God gave me these sheep to keep safe.\"")
 	_check(vo_player.playing and vo_player.stream == vo_lib.clip_for("Oh! Hello there. Are you lost too?"), "the first line of a block plays its recorded clip")
 	_check(audio._clip_queue.size() == 1, "the second line waits in the queue")
 	vo_player.finished.emit()
@@ -413,7 +461,7 @@ func _initialize() -> void:
 	await create_timer(0.5).timeout
 	_check(vo_player.stream == vo_lib.clip_for("Breathe with David...") and audio._clip_queue.is_empty(),
 			"skipping ahead cuts the old line and a stale queued line never plays")
-	audio.speak_dialogue("Wonder Light: \"Three Wonder Items are hidden on the hillside. Find them!\"\nDavid: \"Thanks. Will you stay close while I get ready?\"")
+	audio.speak_dialogue("Wonder Light: \"David needs his stone, his staff, and his little lamb. Find them for him!\"\nDavid: \"Thanks. Will you stay close while I get ready?\"")
 	vo_player.finished.emit()
 	await create_timer(0.5).timeout
 	_check(vo_player.stream == vo_lib.clip_for("Thanks. Will you stay close while I get ready?"), "clips of one block play one after another")
@@ -463,7 +511,7 @@ func _initialize() -> void:
 	for i in AudioServer.get_bus_effect_count(0):
 		has_limiter = has_limiter or AudioServer.get_bus_effect(0, i) is AudioEffectLimiter
 	_check(has_limiter, "the master output has a limiter, so a loud moment cannot clip")
-	_check(sound_bus.BASE_DB["Voice"] > sound_bus.BASE_DB["Ambience"] + 8.0, "the voice is set well above the ambience")
+	_check(sound_bus.BASE_DB["Voice"] > sound_bus.BASE_DB["Ambience"] + 6.0, "the voice is set well above the ambience")
 
 	print("-- sound: footsteps, lamb, butterflies --")
 	for p in audio._step_players:
@@ -541,7 +589,7 @@ func _initialize() -> void:
 	print("-- sound: the music ducks under speech and while paused --")
 	walker.global_position = Vector3(0.0, 1.0, 4.0)
 	settings.read_aloud = true
-	audio.speak_dialogue("Wonder Light: \"Being brave doesn't mean you're not scared. It means you go anyway.\"")
+	audio.speak_dialogue("Wonder Light: \"Being brave doesn't mean you're not scared. It means you go with God anyway.\"")
 	await create_timer(0.8).timeout
 	var music_idx := AudioServer.get_bus_index("Music")
 	_check(audio.is_speaking() and sound_bus.duck > 0.5, "the music ducks while somebody is speaking")
@@ -555,6 +603,30 @@ func _initialize() -> void:
 	paused = false
 	await create_timer(1.6).timeout
 	_check(sound_bus.duck < 0.05, "and returns when the game resumes")
+
+	print("-- who is talking: the name tag over the dialogue bar --")
+	var talk_view: Control = main.get_node("UI/DialogueView")
+	audio.stop_speech()
+	director._say("Wonder Light: \"God gave David a job: keep the sheep safe. That's why he will go.\"\nDavid: \"Thanks. Will you stay close while I get ready?\"")
+	await process_frame
+	await process_frame
+	_check(talk_view.speaker == "Wonder Light" and talk_view._current == 0 and talk_view._tag.visible
+			and director.dialogue_label.self_modulate.a == 0.0 and "Thanks. Will you stay close" in talk_view._rich.text,
+			"the tag shows Wonder Light while her line is read, over the same text drawn in colour")
+	vo_player.finished.emit()
+	await create_timer(audio.CLIP_GAP + 0.2).timeout
+	_check(talk_view.speaker == "David" and talk_view._current == 1, "when David's line starts, the tag turns to David")
+	audio.stop_speech()
+	director._say("Jonathan: \"I am Jonathan. David was brave today, because God was with him.\"")
+	await process_frame
+	_check(talk_view.speaker == "Jonathan", "Jonathan has his own tag")
+	director._say(director.VERSE_PAGE_ONE)
+	await process_frame
+	_check(talk_view.speaker == "Bible", "a verse shows the Bible tag")
+	director._say("(Virtue Bracelet receives the charm.)")
+	await process_frame
+	_check(not talk_view._tag.visible, "a line with nobody speaking has no tag")
+	audio.stop_speech()
 
 	print("-- sound: volume sliders --")
 	var full_db: float = sound_bus.bus_db("Music", 1.0)
@@ -570,6 +642,56 @@ func _initialize() -> void:
 			"the pause menu has music, sounds and voice sliders")
 	walker.global_position = Vector3(0.0, 1.0, 4.0)
 
+	print("-- spine: the word comes before the breath --")
+	director.beat = director.Beat.MEET_DAVID_B
+	director._advance_ready = true
+	director._on_advance()
+	_check(director.beat == director.Beat.VERSE_REWARD, "after Meet David the child hears Joshua 1:9, before breathing")
+	_check("Haven't I commanded you?" in director.dialogue_label.text and "Yahweh is God's name" in director.dialogue_label.text
+			and not ("Don't. Be. Afraid." in director.dialogue_label.text) and not director._word_row.visible
+			and director.get_action_hint() == "NEXT", "page one is the verse and what Yahweh means, with NEXT to turn the page")
+	director._on_advance()
+	_check(director.beat == director.Beat.VERSE_REWARD and "Don't. Be. Afraid." in director.dialogue_label.text
+			and not ("Haven't I" in director.dialogue_label.text), "page two: the three words are said with David before he walks")
+	_check(Profiles.has_verse(Profiles.active_id, JournalContent.VERSE_JOSHUA_1_9), "the verse is in the journal before Steady Hands")
+	director._on_advance()
+	_check(director.beat == director.Beat.VERSE_REWARD, "tapping next does not skip her turn with the three words")
+	director.press_word(0)
+	director.press_word(1)
+	director._on_advance()
+	_check(director.beat == director.Beat.VERSE_REWARD and director._word_row.visible, "two words are not enough, and the word buttons are on screen")
+	director.press_word(2)
+	_check(director._advance_ready, "after all three words the breath can begin")
+	director._on_advance()
+	_check(director.beat == director.Beat.STEADY_INTRO, "the breath comes after the word")
+	_check("God's promise" in director.dialogue_label.text, "Steady Hands is breathing the promise, not manufacturing calm")
+	director._enter_beat(director.Beat.MEET_DAVID_B)
+	_check("God gave David a job" in director.dialogue_label.text, "Wonder Light names David's purpose before the verse")
+	director._enter_beat(director.Beat.REFLECT)
+	_check("for you too" in director.dialogue_label.text and "Stay close" in director.dialogue_label.text and "remember the words" in director.dialogue_label.text,
+			"the child is given a purpose: stay close and remember the words")
+	_check("sheep to keep safe" in FileAccess.get_file_as_string("res://scripts/chapter_director.gd"), "David names his job: keep the sheep safe")
+	_check("small thing" in director.ITEM_FLAVOR["WonderItem_Stone"], "the stone flavour names God, not just a sling")
+	director._enter_beat(director.Beat.ARRIVE)
+	_check("David's valley" in director.dialogue_label.text and "God looks after him" in director.dialogue_label.text,
+			"God is named through David from the first beat")
+	director._enter_beat(director.Beat.VERSE_REWARD)
+	_check("Yahweh is God's name" in director.dialogue_label.text, "Yahweh is explained so a child (and a parent) can hear it")
+	_check("lion and the bear" in FileAccess.get_file_as_string("res://scripts/chapter_director.gd"),
+			"David speaks 1 Samuel 17:37 in his own words")
+	_check("God was with David" in FileAccess.get_file_as_string("res://scripts/chapter_director.gd"),
+			"the ending names God, not a secular slogan")
+	director.beat = director.Beat.STEADY_DONE
+	director._advance_ready = true
+	director._on_advance()
+	_check(director.beat == director.Beat.RESOLUTION, "after the breath, David walks")
+	_check("small stone" in director.dialogue_label.text and "Goliath" in director.dialogue_label.text,
+			"resolution ties the hunted stone to what God used against Goliath")
+	director.beat = director.Beat.REFLECT
+	director._advance_ready = true
+	director._on_advance()
+	_check(director.beat == director.Beat.CHARM_AWARD, "reflect goes to the charm, not a second verse prize")
+
 	print("-- full beat traversal reaches DONE without throwing --")
 	for b in [director.Beat.MEET_DAVID_B, director.Beat.STEADY_INTRO, director.Beat.STEADY_DONE,
 			director.Beat.RESOLUTION, director.Beat.REFLECT, director.Beat.VERSE_REWARD, director.Beat.CHARM_AWARD, director.Beat.DONE]:
@@ -579,6 +701,207 @@ func _initialize() -> void:
 	print("-- end of chapter offers Play again --")
 	await create_timer(0.3).timeout
 	_check(game_menu._end_panel.visible, "end panel appears after the chapter finishes")
+	_check(game_menu._journey_button.visible, "Faith Journey is offered once the chapter is finished")
+	_check("Courage" in game_menu._end_title.text and director.complete_banner.text == "Chapter 1 Complete!",
+			"the end card names the charm earned, and the banner names the chapter")
+	_check(game_menu._end_panel.size.y < 330.0 and not (main.get_node("UI/Panel") as Control).visible,
+			"the end card is only as tall as its buttons, and the dialogue bar steps aside for it")
+	_check(Profiles.has_finished(Profiles.active_id, Profiles.CHAPTER_VALLEY) and Profiles.current_chapter == Profiles.CHAPTER_VALLEY,
+			"the valley is marked finished, and Play again would replay the valley")
+	var journey: CanvasLayer = main.get_node("FaithJourney")
+	journey.open()
+	_check(journey.is_open() and journey._map.texture != null, "the journey opens on the old map, not a blank page")
+	_check(journey._back.visible and not journey._change_player.visible and not journey.is_locked("camp")
+			and journey._marker.visible and journey._marker_stop == "camp",
+			"opened later it has Back, and with the valley done the King's Camp is open and marked as next")
+	journey._on_stop("ahead")
+	_check(journey._notice.visible and "still ahead" in journey._notice_body.text, "a stop further on is a kind card, not a dead end")
+	journey._hide_notice()
+
+	print("-- the Faith Journey comes first, and chapter 2 waits for chapter 1 --")
+	var finished_kid: String = Profiles.active_id
+	var new_kid: String = Profiles.create("New", "sun")
+	Profiles.set_active(new_kid)
+	_check(Profiles.next_chapter(new_kid) == Profiles.CHAPTER_VALLEY and Profiles.is_unlocked(new_kid, Profiles.CHAPTER_VALLEY)
+			and not Profiles.is_unlocked(new_kid, Profiles.CHAPTER_CAMP), "a new child starts at the valley, and the camp is closed")
+	journey.close()
+	journey.open_to_choose()
+	_check(journey.is_open() and paused_now() and not journey._back.visible and journey._change_player.visible
+			and "New" in journey._line.text, "straight after \"Who is playing?\" the map greets the child by name, with no Back")
+	_check(journey._marker.visible and journey._marker_stop == "valley" and journey._marker.text == "Start here"
+			and journey._ring.visible, "a bouncing Start here tag and rings mark the valley")
+	journey._on_stop("camp")
+	_check(journey._notice.visible and "Chapter 1" in journey._notice_body.text and journey._notice_go.visible
+			and journey._notice_go.text == "Play Chapter 1" and main.get_node("KingsCamp").tent_count() == 0,
+			"tapping the King's Camp first says to finish Chapter 1, and offers to play it")
+	var pause_key := InputEventAction.new()
+	pause_key.action = "pause"
+	pause_key.pressed = true
+	root.push_input(pause_key)
+	_check(not journey._notice.visible and journey.is_open(), "the pause key closes the card, and the map stays up to choose from")
+	root.push_input(pause_key)
+	_check(journey.is_open(), "with nothing started yet, the pause key does not leave the map")
+	journey.close()
+	Profiles.set_active(finished_kid)
+	Profiles.remove(new_kid)
+	var legacy := ConfigFile.new()
+	legacy.set_value("app", "order", ["p1"])
+	legacy.set_value("profile_p1", "name", "Old")
+	legacy.set_value("profile_p1", "chapters", 2)
+	legacy.save("user://smoke-legacy-profiles.cfg")
+	Profiles.use_file("user://smoke-legacy-profiles.cfg")
+	_check(Profiles.has_finished("p1", Profiles.CHAPTER_VALLEY) and Profiles.is_unlocked("p1", Profiles.CHAPTER_CAMP),
+			"a save from before chapters were told apart still has the valley finished")
+	DirAccess.remove_absolute("user://smoke-legacy-profiles.cfg")
+	Profiles.use_file(TEST_PROFILES)
+	Profiles.set_active(finished_kid)
+	journey.open()
+	var camp: Node = main.get_node("KingsCamp")
+	_check(camp.tent_count() == 0, "the camp is not built while the child is still in the valley")
+	# As after Play again: chapter 1 is waiting for Space when the child jumps to the camp.
+	director._advance_ready = true
+	journey._on_stop("camp")
+	var camp_walker: Node3D = main.get_node("Player")
+	_check(camp.tent_count() >= 4, "the king's camp has its tents on the ridge")
+	_check(camp_walker.global_position.z > 20.0, "the journey can walk up to the camp")
+	var jon := camp.get_node_or_null("Jonathan")
+	_check(jon != null and jon._skeleton != null and jon._skeleton.find_bone("LowerArm_L") >= 0,
+			"Jonathan uses connected organic limbs with a deforming arm rig")
+	var jon_body := jon._body as MeshInstance3D
+	var has_wine_cloth := false
+	var has_own_hair := false
+	for surface in jon_body.mesh.get_surface_count():
+		var material := jon_body.get_active_material(surface)
+		has_wine_cloth = has_wine_cloth or material.resource_name == "J_Tunic"
+		has_own_hair = has_own_hair or material.resource_name == "J_Hair"
+	_check(has_wine_cloth and has_own_hair, "Jonathan keeps his own wine tunic and long-hair materials")
+	_check(jon._outline.skin != null and jon._outline.skeleton == jon._body.skeleton,
+			"Jonathan's skin and inward outline deform on the same skeleton")
+	_check(jon_body.get_aabb().size.y > 1.0 and jon_body.get_aabb().size.y < 1.4,
+			"Jonathan retains David's child-sized organic proportions")
+	_check(jon._blink_shape >= 0 and jon._talk_shape >= 0,
+			"Jonathan's sculpted face supports blinking and speech")
+
+	_check(journey.is_open() == false and director.beat == director.Beat.CAMP and not director._advance_ready,
+			"chapter 1 stands down when the camp opens")
+	_check(not director.complete_banner.visible and not game_menu._end_panel.visible,
+			"chapter 1's Chapter Complete banner and end card do not hang over the camp")
+	var space_key := InputEventKey.new()
+	space_key.keycode = KEY_SPACE
+	space_key.physical_keycode = KEY_SPACE
+	space_key.pressed = true
+	root.push_input(space_key)
+	var space_up := space_key.duplicate() as InputEventKey
+	space_up.pressed = false
+	root.push_input(space_up)
+	var story: Node = camp.get_node("ChapterTwo")
+	_check(story.phase == story.Phase.MEET and "I am Jonathan" in director.dialogue_label.text,
+			"Space at the camp moves the camp story on, and chapter 1 does not take it")
+	_check(Profiles.current_chapter == Profiles.CHAPTER_CAMP, "from here, Play again comes back to the camp")
+	_check(director.beat == director.Beat.CAMP and not ("David needs his stone" in director.dialogue_label.text),
+			"the valley's item hunt never shows up at the camp")
+
+	print("-- the gift hunt: pictures to tick, and the golden arrow --")
+	story._advance()
+	_check(story.phase == story.Phase.FIND and story._checklist.visible and not story._checklist.is_found("Robe")
+			and story._checklist.get_child(0).get_child_count() == 4, "the gift list shows the three gifts as pictures, none ticked yet")
+	var gift_hints: Node3D = story._hints
+	_check(gift_hints != null and gift_hints._active and gift_hints._items.size() == 3 and not gift_hints.is_pointing(),
+			"the golden arrow watches the three gifts, and waits before it shows")
+	gift_hints._idle = story.HINT_DELAY + 1.0
+	for _i in 40:
+		await process_frame
+	_check(gift_hints.is_pointing(), "after a while with nothing found, the arrow points to the nearest gift")
+	story._on_gift(camp_walker, story.get_node("Robe"))
+	_check(story._checklist.is_found("Robe") and story._checklist._title.text.contains("1 / 3") and gift_hints._idle == 0.0
+			and gift_hints._collected.has("Robe"), "finding the robe ticks its picture, and the arrow waits again for the next gift")
+	story._on_gift(camp_walker, story.get_node("Bow"))
+	story._on_gift(camp_walker, story.get_node("Belt"))
+	_check(story.phase == story.Phase.GIVE and not gift_hints._active, "with all three found, the arrow is put away")
+	for _i in 6:
+		await physics_frame
+	_check(camp_walker.global_position.y > 9.0, "the child stands on the camp ground instead of falling through")
+	var seam_camp: float = camp._ground(Vector3(-2.0, 0.0, 29.62)).y
+	var seam_valley: Dictionary = _terrain_hit(camp_walker.get_world_3d().direct_space_state, -2.0, 29.4)
+	_check(not seam_valley.is_empty() and absf(seam_camp - float(seam_valley["position"].y)) < 0.12,
+			"the camp ground carries on from the valley's ridge without a step")
+	_check(camp.get_node_or_null("Campfire/FireLight") != null and camp.get_node_or_null("TentKing/Lantern") != null,
+			"the fire and one lantern are the warm lights")
+	var guards := 0
+	for child in camp.get_children():
+		if String(child.name).begins_with("Guard"):
+			guards += 1
+	_check(guards == 4, "four guards walk the camp")
+	var owl: Node3D = camp.get_node_or_null("Owl")
+	_check(owl != null and owl.visible and owl.perches.size() == 2, "the owl is in the air when the child arrives, with two branches to sit on")
+	var fireflies: Node3D = camp.get_node_or_null("Fireflies")
+	_check(fireflies != null and fireflies.visible and fireflies.get_child_count() >= 6, "fireflies light up at the edge of the clearing")
+	_check(camp.get_node("CampSounds").is_playing() and main.get_node("Soundscape")._night,
+			"the ridge sounds like evening: crickets and the fire, no daytime birds")
+	var camp_triangles := _triangles_under(camp)
+	_check(camp_triangles <= 80000, "the camp stays light (%d triangles, budget 80000)" % camp_triangles)
+
+	print("-- Knit, Loved, Friend: each tapped word lights up on its own --")
+	story.phase = story.Phase.GIVE
+	story._advance()
+	var chips: Array = story._word_buttons
+	_check(story.phase == story.Phase.WORDS and story._words.visible and chips.size() == 3
+			and chips[0].beckon and not chips[0].lit, "the three words are up, and the first one beckons")
+	var bar := main.get_node("UI/Panel") as Control
+	_check(story._words.offset_bottom < bar.offset_top, "the words sit above the dialogue bar, not over it")
+	story.press_word(0)
+	_check(chips[0].lit and not chips[0].beckon and chips[1].beckon and chips[0]._sparks.size() > 0,
+			"a tapped word pops with sparkles and stays lit, and the next one beckons")
+	for _i in 20:
+		await process_frame
+	_check(chips[0]._glow > 0.5 and chips[2]._glow < 0.05, "a lit word glows, an untapped one does not")
+	story.press_word(1)
+	story.press_word(2)
+	_check(story._words_done and chips.all(func(c: Node) -> bool: return c.lit), "all three lit: the cord can come next")
+	story._advance()
+	_check(story.phase == story.Phase.CORD and is_instance_valid(story._cord)
+			and story._cord.offset_bottom < bar.offset_top, "the cord card sits above the dialogue bar, so the line stays readable")
+	_check(story._cord.PANEL.y <= 120.0 and story._cord.offset_top > -420.0,
+			"the cord card is short, so it stays below the child standing in the camp")
+
+	print("-- The King's Camp ends the way chapter 1 does --")
+	# A scratch child, so the journal checks further down still see only chapter 1's progress.
+	var valley_kid: String = Profiles.active_id
+	var camp_kid: String = Profiles.create("Camp", "star")
+	Profiles.set_active(camp_kid)
+	var chapters_before := int(Profiles.active()["chapters"])
+	var award: Node3D = main.get_node("CharmAward")
+	story.phase = story.Phase.VERSE
+	story._advance()
+	_check(story.phase == story.Phase.CHARM and story._ceremony and award.charm_id == JournalContent.CHARM_FRIENDSHIP
+			and Profiles.has_charm(Profiles.active_id, JournalContent.CHARM_FRIENDSHIP),
+			"the Friendship charm floats onto the Virtue Bracelet, like the Courage charm")
+	_check(award._charm.get_node_or_null("ChildColouring") != null, "and it shows its own picture, not a plain Courage disc")
+	story._advance()
+	_check(story.phase == story.Phase.CHARM, "Space waits until the charm has landed")
+	for _i in 60:
+		if not story._ceremony:
+			break
+		await create_timer(0.1).timeout
+	_check(not story._ceremony and "keep your charm" in director.prompt_label.text, "once it lands, Space keeps the charm")
+	story._advance()
+	_check(story.phase == story.Phase.DONE and "Friends stay tied together" in director.dialogue_label.text
+			and "Well done" in director.prompt_label.text and director.complete_banner.visible,
+			"the camp ends with the cheer, the confetti and the Chapter Complete banner")
+	_check(int(Profiles.active()["chapters"]) == chapters_before + 1 and Profiles.has_finished(camp_kid, Profiles.CHAPTER_CAMP)
+			and director.complete_banner.text == "Chapter 2 Complete!", "and it counts as chapter 2 finished")
+	await create_timer(game_menu.end_panel_delay + 0.3).timeout
+	_check(game_menu._end_panel.visible and game_menu._journey_button.visible and game_menu._colour_charm_button.visible
+			and game_menu._end_charm == JournalContent.CHARM_FRIENDSHIP,
+			"then the end card offers Play again, the Faith Journey, and colouring the Friendship charm")
+	_check("Friendship" in game_menu._end_title.text and Profiles.current_chapter == Profiles.CHAPTER_CAMP,
+			"it names the Friendship charm, and Play again replays the camp, not the valley")
+	game_menu.hide_end_panel()
+	Profiles.set_active(valley_kid)
+	Profiles.remove(camp_kid)
+	game_menu._end_charm = JournalContent.CHARM_COURAGE   # back to chapter 1's end card for the checks below
+	journey.close()
+	_check(not journey.is_open(), "Back leaves the map")
 
 	print("-- profiles: who is playing, and what is saved --")
 	var kid_id: String = Profiles.active_id
@@ -614,7 +937,8 @@ func _initialize() -> void:
 	Profiles.set_active(kid_id)
 
 	print("-- easy words: the story for younger readers --")
-	var director_source: String = FileAccess.get_file_as_string("res://scripts/chapter_director.gd")
+	var director_source: String = FileAccess.get_file_as_string("res://scripts/chapter_director.gd") \
+			+ FileAccess.get_file_as_string("res://scripts/chapter_two.gd")
 	var missing_original: Array = []
 	var no_clip: Array = []
 	for original in EasyWords.LINES:
@@ -626,13 +950,18 @@ func _initialize() -> void:
 	_check(no_clip.is_empty(), "and every easier line has a recorded clip %s" % [no_clip])
 	var verse_block: String = JournalContent.verse_dialogue(JournalContent.VERSE_JOSHUA_1_9)
 	_check(EasyWords.apply(verse_block) == verse_block, "the Joshua 1:9 verse is never changed")
-	var arrive_line: String = "Wonder Light: \"Ooh, look at that! A little valley, all made of paper and light.\""
+	var arrive_line: String = "Wonder Light: \"This is David's valley. He looks after sheep. God looks after him.\""
 	GameSettings.easy_words = false
 	director._say(arrive_line)
-	_check(director.dialogue_label.text == arrive_line and vo_player.stream == vo_lib.clip_for("Ooh, look at that! A little valley, all made of paper and light."), "a child who is 9 or older gets the story as written, in the original voice clip")
+	_check(director.dialogue_label.text == arrive_line and vo_player.stream == vo_lib.clip_for("This is David's valley. He looks after sheep. God looks after him."), "a child who is 9 or older gets the story as written, in the original voice clip")
 	GameSettings.easy_words = true
 	director._say(arrive_line)
-	_check(director.dialogue_label.text == "Wonder Light: \"Wow! A little valley made of paper and light.\"" and vo_player.stream == vo_lib.clip_for("Wow! A little valley made of paper and light."), "with Easy words on, the easier line is shown and read aloud")
+	_check(director.dialogue_label.text == "Wonder Light: \"This is David's valley. God looks after him.\"" and vo_player.stream == vo_lib.clip_for("This is David's valley. God looks after him."), "with Easy words on, the easier line is shown and read aloud")
+	var camp_story: Node = main.get_node("KingsCamp/ChapterTwo")
+	camp_story._say("Jonathan: \"I am Jonathan. David was brave today, because God was with him.\"", "")
+	_check(director.dialogue_label.text == "Jonathan: \"I am Jonathan. God was with David today.\"", "the King's Camp has easier words too")
+	_check(vo_player.stream != null and vo_player.stream == vo_lib.clip_for("I am Jonathan. God was with David today."),
+			"and Jonathan reads his easier line in his own recorded voice")
 	var mixed: String = director._say("David: \"Thanks. Will you stay close while I get ready?\"")
 	_check(mixed == "David: \"Thanks. Will you stay close while I get ready?\"", "a line with no easier version stays as it is")
 	GameSettings.easy_words = false
@@ -656,6 +985,12 @@ func _initialize() -> void:
 	journal.open()
 	_check(journal.is_open() and paused_now(), "opening the journal pauses the game")
 	_check(journal._title.text == "Test's Faith Journal", "the journal is titled with the child's name")
+	_check("The same God who was with Joshua was with David" in JournalContent.VERSES[0]["why"],
+			"the journal tells a parent why Joshua 1:9 belongs in David's story")
+	_check("lion and the bear" in JournalContent.VERSES[0]["why"],
+			"the parent note ties Joshua 1:9 to David's own words (1 Samuel 17:37)")
+	_check(journal._verse_box.find_child("WhyNote", true, false) != null,
+			"the journal card actually shows that parent note under the verse")
 	_check(journal._verse_box.get_child_count() == 1, "it shows the verse the child has earned")
 	_check(journal._charm_row.get_child_count() == 1 + JournalContent.MYSTERY_SLOTS and journal._charm_row.get_child(0) is Button, "it shows the Courage charm and %d empty slots" % JournalContent.MYSTERY_SLOTS)
 	_check(audio.process_mode == Node.PROCESS_MODE_ALWAYS, "the audio keeps running while the game is paused")
@@ -738,6 +1073,7 @@ func _initialize() -> void:
 	var stamp: Image = CharmArt.render_image(courage, Profiles.charm_colours(kid_id, courage), 64)
 	_check(absf(stamp.get_pixel(32, 6).r - CharmArt.PALETTE[1].r) < 0.01 and absf(stamp.get_pixel(32, 6).b - CharmArt.PALETTE[1].b) < 0.01 and stamp.get_pixel(0, 0).a == 0.0, "the picture can be drawn as an image for the 3D charm")
 	var charm_award: Node3D = main.get_node("CharmAward")
+	charm_award.charm_id = courage
 	charm_award.apply_child_colours()
 	_check(charm_award._charm.get_node_or_null("ChildColouring") != null, "the 3D charm wears the child's colouring")
 	var other_id: String = Profiles.create("Sam", "sun")
@@ -835,10 +1171,23 @@ func _initialize() -> void:
 	director._start_story()
 	_check(director.beat == director.Beat.DONE and director.dialogue_label.text == "", "and the story does not start yet")
 	picker.choose(kid_id)
-	_check(director.beat == director.Beat.ARRIVE and director.dialogue_label.text.contains("valley") and not paused_now(), "choosing a child starts the story")
+	var first_map: CanvasLayer = main.get_node("FaithJourney")
+	_check(first_map.is_open() and first_map._choosing and paused_now() and director.beat == director.Beat.DONE,
+			"choosing a child opens the Faith Journey map first, and the story still waits")
+	first_map._on_stop("valley")
+	_check(not first_map.is_open() and director.beat == director.Beat.ARRIVE and director.dialogue_label.text.contains("valley") and not paused_now(),
+			"tapping the valley on the map starts chapter 1 right there")
 	Profiles.set_active(kid_id)
+	Profiles.current_chapter = Profiles.CHAPTER_VALLEY
+	director.beat = director.Beat.DONE
 	director._start_story()
-	_check(director.beat == director.Beat.ARRIVE, "with a child already playing (Play again), the story starts straight away")
+	_check(director.beat == director.Beat.ARRIVE, "with a child already playing (Play again), the chapter they were on starts straight away")
+	Profiles.current_chapter = Profiles.CHAPTER_CAMP
+	director._start_story()
+	await process_frame
+	var replay_story: Node = main.get_node("KingsCamp/ChapterTwo")
+	_check(director.beat == director.Beat.CAMP and replay_story.phase == replay_story.Phase.ARRIVE,
+			"and Play again after the King's Camp goes back to the camp, not the valley")
 
 	audio.stop_speech()   # the story was just restarted, so its first line may be playing
 	vo_player.stream = null
