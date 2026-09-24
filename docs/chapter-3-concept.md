@@ -40,23 +40,22 @@ others.
 
 1. **Turn back the page.** The Faith Journey folds from the blue-hour camp into a warm Bethlehem
    morning. Wonder Light clearly names this as an earlier day.
-2. **Explore Jesse's hillside home.** David is away with the sheep. The family is preparing to
-   welcome Samuel.
-3. **Find three signs of David's quiet work:** his small harp, the water bowl he fills for the sheep,
-   and his simple shepherd's cloak. These are discoveries, not proof that David deserves to be king.
-4. **Prepare the welcome.** Place a cushion, a cup of water and an oil lamp for Samuel. Each object
+2. **Explore Jesse's hillside home.** David is away with the sheep. His small harp, the water bowl
+   for the sheep and his simple shepherd's cloak are optional discoveries in the courtyard. Wonder
+   Light comments on each one, but they are not a second checklist and do not gate the story.
+3. **Prepare the welcome.** Place a cushion, a cup of water and an oil lamp for Samuel. Each object
    snaps gently into a clear silhouette; there is no wrong placement or timer.
-5. **Meet Samuel and Jesse.** Jesse's seven older sons pass before Samuel. They are presented with
+4. **Meet Samuel and Jesse.** Jesse's seven older sons pass before Samuel. They are presented with
    dignity. Nobody is mocked for being tall, strong or older.
-6. **Call David home.** A soft bell or Wonder Light guides the child's gaze toward the sheep path.
+5. **Call David home.** A soft bell or Wonder Light guides the child's gaze toward the sheep path.
    David enters from the field.
-7. **Hear the Word.** Samuel speaks the heart of 1 Samuel 16:7. Wonder Light explains in easy words:
+6. **Hear the Word.** Wonder Light reads 1 Samuel 16:7 and explains in easy words:
    "People notice the outside first. God sees who you are inside."
-8. **The anointing.** Samuel performs it. The child watches rather than pouring the oil or choosing
+7. **The anointing.** Samuel performs it. The child watches rather than pouring the oil or choosing
    the king. A narrow gold ribbon of oil and a warm breeze make the moment readable without turning
    it into magic.
-9. **Receive the Faithful Heart charm.** The reflection connects David's unseen work to a child's
-   small acts of care: "God sees the kind and faithful things nobody else notices."
+8. **Receive the Faithful Heart charm.** The reflection connects David's ordinary work to a child's
+   small acts of care without claiming that David earned God's choice.
 
 ## Band
 
@@ -89,9 +88,10 @@ brothers line one side without blocking the path.
 - A Bethlehem courtyard environment (runtime paper-prop construction, the way `kings_camp.gd`
   builds the ridge — see **Asset inventory** below) and a five-stop Faith Journey map state
   (tracked separately as backlog 7.8).
-- Two new rigged character models (Samuel, Jesse), one added shape key and hair swap on the
-  existing David model (younger David), and one new shared low-cost crowd rig instanced seven
-  times (the brothers). Not seven new models — see **Asset inventory**.
+- Three new rigged character models (Samuel, Jesse and younger David) built from the shared
+  Wonder-Walker/Jonathan rig, and one new shared low-cost crowd rig instanced seven times (the
+  brothers). The current adult David mesh is rigless, so a shape key alone cannot give younger
+  David the natural walk-in this scene needs — see **Asset inventory**.
 - Eleven new small paper props: harp, water bowl, cloak, cushion, cup, oil lamp, Samuel's oil
   horn, the welcome table, the house wall and doorway, the awning, and the sheep-fold fence.
   Background sheep reuse the existing lamb/companion-sheep mesh.
@@ -102,23 +102,23 @@ brothers line one side without blocking the path.
 - Faithful Heart journal art and a 3D charm (`journal_content.gd`'s `MYSTERY_SLOTS` already
   budgets for this: 3 earned charms + 2 mystery slots = 5, matching the five-journey roadmap, so
   no journal layout change is needed beyond the new entry).
-- Two new voice profiles (Samuel, Jesse) and roughly 35-40 new recorded clips, plus their Easy
+- Two new voice profiles (Samuel, Jesse) and roughly 30-32 new recorded clips, including their Easy
   Words duplicates — see **Voice design** and **Draft script**.
-- New morning ambience and interaction sounds, most of them synthesizable with the same
-  procedural pipeline already used for wind/stream/crickets/campfire/owl (`tools/make_sounds.py`),
-  so this chapter carries little of the licensing burden flagged for chapters 4-5 (backlog 7.10).
+- New morning ambience and interaction sounds. Tonal cues can use the procedural pipeline in
+  `tools/make_sounds.py`; natural footsteps, birds and object foley should use credited CC0 source
+  recordings when synthesis does not sound convincing, following the existing lamb/footstep rule.
 
 ## Asset inventory: models, rigs and props
 
 The codebase already has two different ways to build a character, and this chapter should use
 both rather than defaulting to the expensive one for everyone.
 
-**Tier 1 — rigged, shape-keyed, camera-ready (the David/Jonathan pipeline).** `jonathan_v1.glb`
-was not modelled from scratch: `art/blender/scripts/characters/generate_jonathan.py` loads
-David's base construction (`generate_david_mentor_v4.py`, itself built on the shared
-Wonder-Walker rig in `generate_wonder_walker_v5.py`), then swaps in new hair, sash, materials and
-a slightly narrower/longer face, and adds `Blink`/`Talk` shape keys for the dialogue camera. This
-tier is for anyone the child sees in close-up with a speaking line:
+**Tier 1 — rigged, shape-keyed, camera-ready (the Wonder-Walker/Jonathan pipeline).**
+`jonathan_v1.glb` uses the shared Wonder-Walker skeleton, then changes hair, sash, materials and
+face proportions and adds `Blink`/`Talk` shape keys for the dialogue camera. The current
+`david_mentor_v13.glb` is a joined, rigless mesh with a `Crouch` shape key; it can pose in place but
+does not contain the natural walk cycle this chapter needs. This tier is for anyone the child sees
+walking or speaking in close-up:
 
 - **Samuel** — a new `generate_samuel_v1.py` wrapping the same base build. New geometry: short
   grey textured hair (a capped, not swept-long, hair mesh — closer to David's own hair shape than
@@ -130,12 +130,11 @@ tier is for anyone the child sees in close-up with a speaking line:
   robe palette, a somewhat heavier torso profile (sturdy, older), and short greying hair with no
   beard change needed if a plain hair cap reads as "father" clearly enough — confirm in the
   side-by-side sketch pass (Improve-pass item 4). `Blink`/`Talk` shape keys.
-- **Younger David — not a new model.** He needs to read as "clearly the David from Chapters 1-2"
-  (Decided), so the cheapest and most consistent option is one added `Young` shape key on the
-  existing `david_mentor_v13.glb` (rounder cheeks, slightly shorter proportions — the same
-  mechanism already used for his `Crouch` key in Steady Hands) plus a shorter-hair mesh swap, not
-  a second rig. This also means his walk cycle, camera framing and touch collision need no new
-  work.
+- **Younger David — a new rigged variant, not a reshape of the adult GLB.** Build him on the same
+  skeleton as Jonathan, then match the current David's face language, skin, robe palette and ink
+  outline closely enough to be immediately recognisable. Shorter proportions, rounder cheeks and
+  shorter hair make the age difference clear. Give him `Blink`/`Talk` and a restrained walk cycle;
+  reuse the existing David framing only after a side-by-side camera check.
 
 **Tier 2 — lightweight, unrigged, crowd-ready (the camp-guard pipeline).** The four King's Camp
 guards (`scripts/camp_guard.gd`) are not GLB models at all: a pure-GDScript pivot hierarchy built
@@ -156,7 +155,7 @@ and flags — not GLB assets):**
 
 | Prop | Built from | Reuses |
 |---|---|---|
-| Harp | A small curved frame plus 5 thin `curve_mesh` strings | The same `curve_mesh` technique as Jonathan's hair band |
+| Harp | An angled low-poly frame plus 5 thin cylinder strings | `camp_paper.gd` primitives |
 | Water bowl | A shallow cylinder cap with a flat disc "water" surface | — |
 | Shepherd's cloak | A folded box, the same icon language as the robe gift in Chapter 2 | `gift_checklist.gd`'s "Robe" drawing, adapted |
 | Cushion | A rounded box | — |
@@ -172,9 +171,9 @@ and flags — not GLB assets):**
 in `kings_camp.gd`/the valley pack, and the lamb/companion-sheep mesh for the two or three
 background fold sheep (non-interactive, so no new collision or pickup logic).
 
-So the honest count for "how many models": **2 new rigged character models** (Samuel, Jesse),
-**1 shape key + hair swap** added to the existing David model, **1 shared crowd rig** instanced 7
-times, and **11 new small procedural props** — no new environment GLB, following Chapter 2's
+So the honest count for "how many models": **3 new rigged character models** (Samuel, Jesse and
+younger David), **1 shared crowd rig** instanced 7 times, and **11 new small procedural props** —
+no new environment GLB, following Chapter 2's
 precedent of building the space at runtime rather than importing a sculpted terrain.
 
 ## How it looks
@@ -266,7 +265,7 @@ metres, to be tuned against the actual camera once built, not final coordinates)
 - **David's three signs** (harp, water bowl, cloak) sit in the open middle ground, in clear sight
   lines the way the camp's gifts do, not tucked behind the house or the brothers.
 - **Sheep path** enters from the brightest, most open edge, so David's later entrance reads as
-  "coming from outside the family group," matching the doc's staging beat 6.
+  "coming from outside the family group," matching the doc's staging beat 5.
 
 ### What the camera is looking at
 
@@ -298,11 +297,14 @@ spec rather than being waved at as "a signature activity."
 
 ### Prepare the Welcome, in detail
 
-- **Pickup and carry** reuse the existing Wonder Item pickup (the same touch/gamepad handling the
-  robe/bow/belt already use), so nothing new is needed to lift the cushion, cup or lamp.
-- **Placement** is new: three marked spots on the welcome table, each a dashed ground-ring decal —
-  visually the same "dashed circle, not yet done" language `gift_checklist.gd` already draws for
-  an unfound gift, just moved from a 2D checklist onto the 3D table. A ring only accepts its own
+- **Selection** reuses the existing proximity/touch input from the Chapter 2 gifts, but carrying is
+  new. Those gifts disappear and are respawned beside David; they do not attach to or follow the
+  child. Here the selected cushion, cup or lamp remains visible, floating gently beside Wonder
+  Light until it reaches the table. This avoids an object looking glued to the walker's hand while
+  still making the action read as carrying.
+- **Placement** is new: three marked spots on the welcome table, each drawn as a simple dashed ring
+  made from small flat mesh segments. It borrows the unfinished dashed-circle language from
+  `gift_checklist.gd`, but needs new 3D geometry and placement state. A ring only accepts its own
   object (the cushion ring cannot take the cup), so "no wrong placement" is true by construction,
   not by an error message the child has to parse.
 - **The motion:** walking into a ring while carrying its matching object triggers an automatic
@@ -310,9 +312,10 @@ spec rather than being waved at as "a signature activity."
   ending in a distinct sound per object (a soft cloth-set thud for the cushion, a small ceramic
   click for the cup, a gentle chime for the lamp — three different sounds, so a child listening
   without looking still knows which one just landed).
-- **A checklist** mirrors `gift_checklist.gd` exactly (same panel, same tick-and-pop animation),
-  relabelled "Getting ready for Samuel" with the cushion/cup/lamp icons instead of robe/bow/belt —
-  cheap to build since it is the same component with new art and new data, not new logic.
+- **A checklist** reuses the `gift_checklist.gd` layout and tick-and-pop animation, relabelled
+  "Getting ready for Samuel" with cushion/cup/lamp icons. Refactor the component to accept a title
+  and item data instead of copying the Chapter 2 script. David's harp, bowl and cloak remain
+  optional observations, so this is the chapter's only three-item checklist.
 - **No fail state, no order requirement, no timer.** All three can be placed in any order; nothing
   the child can do here is wrong, matching Steady Hands' and the friendship cord's own rules.
 - **Completion** (all three placed) is the cue that starts the seven-brothers procession, giving
@@ -322,13 +325,13 @@ spec rather than being waved at as "a signature activity."
 
 - Built on `jesse_sons.gd` (see **Asset inventory**): seven lightweight instances standing in the
   courtyard line before the scene starts.
-- On cue, each brother in turn takes a few steps forward into the light in front of Samuel, holds
-  for a beat, and steps back — the same kind of pivot-rotation walk the camp guards already do,
-  just triggered in a fixed sequence instead of a patrol loop.
-- **Pacing:** roughly 1.5-2s in front, a short pause, then return — about 12-14 seconds for all
-  seven, brisk enough to hold a six-year-old's attention across a beat with no interaction, while
-  still showing every brother individually, as the doc's Decided section requires. This is a
-  number to verify against a real playtest (Improve-pass item 2), not a fixed budget.
+- On cue, the line advances through one patch of light. Each brother takes two short steps forward,
+  holds for a beat, then begins returning as the next brother moves. This uses the same
+  pivot-rotation walk as the camp guards, triggered in a fixed overlapping sequence.
+- **Pacing:** target 8-10 seconds for all seven, roughly one second of clear focus apiece with
+  overlapping returns. Every brother remains individually visible without asking the child to
+  watch seven complete walk-out/walk-back loops. Verify this against a real playtest (Improve-pass
+  item 2); slow it only if children cannot count or distinguish the seven figures.
 - **The camera stays still** (per "What the camera is looking at") — only the brothers move, which
   keeps the beat calm and keeps the respectful side-on framing intact for all seven rather than
   re-composing seven times.
@@ -343,20 +346,19 @@ spec rather than being waved at as "a signature activity."
 | Morning air | Soft breeze with occasional awning cloth; ducks under speech | `WIND` variant, reused |
 | Birds | Sparse doves and small hillside birds, gentler than Chapter 1 | new `DOVES` ambience |
 | Sheep | Two or three distant bleats, never over dialogue | reuses the existing `BLEAT_COUNT` bleat |
-| Courtyard life | One clay-cup touch, sandals on dust and a faint wooden stool movement | new `"dust"` entry in `SURFACES` (footsteps already support a surface-keyed sound; this just adds a third alongside `path`/`water`) |
+| Courtyard life | One clay-cup touch, sandals on dust and a faint wooden stool movement | new `"dust"` entry in `SURFACES` (grass remains the default; `path` and `water` are the two named entries today) |
 | Harp | A short five-note motif when the harp is found; it becomes the chapter's music motif | new `HARP_MOTIF` sfx |
 | Welcome activity | Soft cloth placement, cup set-down and lamp chime, each distinct | new `CLOTH_SET`, `CUP_SET`, `LAMP_CHIME` sfx |
-| Brothers | Sandal steps and cloth movement; no muttering crowd loop | reuses footstep/cloth sounds already built for the guards |
+| Brothers | Sandal steps and cloth movement; no muttering crowd loop | reuse or retune the credited real footsteps; add cloth only if it reads cleanly |
 | Anointing | Quiet oil pour, one warm low chime and the coordinated breeze | new `OIL_POUR`, `LOW_CHIME` sfx |
-| Music | Lullaby instrumentation led by plucked harp and soft frame drum, no royal brass | a variant of `music/meadow_lullaby.wav`, not a new track |
+| Music | Lullaby theme rearranged for plucked harp and soft frame drum, no royal brass | a new rendered arrangement based on `music/meadow_lullaby.wav` |
 
 The existing ducking rules apply. Sheep and birds wait during speech. The anointing sound must remain
-below Samuel's words rather than functioning as a victory fanfare. Every new sound above is short
-foley or a simple tonal cue — the same tier as `campfire.wav`, `owl_hoot.wav` and `crickets.wav`,
-all of which `tools/make_sounds.py` already synthesizes rather than sourcing as licensed samples.
-The same tool should be extended for these rather than sourcing outside audio, keeping Chapter 3
-free of the rights/attribution question backlog 7.10 raises for chapters 4-5's animal, rain and
-harbour recordings.
+below Samuel's words rather than functioning as a victory fanfare. Extend `tools/make_sounds.py`
+for the harp motif, chime and ambience layers that survive an in-game listening test. The current
+sound notes record that synthesized lambs and footsteps sounded false, so natural birds, dust
+steps, cloth, cup and oil should use credited CC0 recordings when synthesis has the same problem.
+Any sourced file must be added to `assets/audio/CREDITS.md` and checked on a tablet speaker.
 
 ## Voice design
 
@@ -379,7 +381,7 @@ Samuel and Jesse in isolation — always compare them to each other and to the e
 
 **Clip budget, by precedent.** Chapter 1 shipped 31 story lines; Chapter 2 added roughly 26 more
 across its story, map and Easy Words lines. The draft script below (including the verse reference
-and verse text) runs to 20 standard lines — 15 Wonder Light, 2 Jesse, 2 David, 1 Samuel — plus Easy
+and verse text) runs to 20 standard lines — 15 Wonder Light, 2 Jesse, 1 David, 2 Samuel — plus Easy
 Words duplicates for the youngest-facing subset (roughly 10-12 of those lines) — **call it 30-32
 new clips**, a shade under Chapter 2's scale, which fits a chapter with one fewer new speaking
 character carrying dialogue. All Seed Audio, mono 24kHz PCM, trimmed with `tools/fetch_vo.py`'s
@@ -390,7 +392,7 @@ Words review before implementation is complete.
 
 ## Draft script (for timing and casting, not final)
 
-A speaker-labelled pass through the nine story beats, wording only — **not** checked against the
+A speaker-labelled pass through the eight story beats, wording only — **not** checked against the
 WEB text for 1 Samuel 16:7, not through an Easy Words pass, and not reviewed for theology (that is
 Improve-pass item 7). Written in short, present-tense sentences to match the existing cast's
 register (compare `vo_library.gd`'s "This is David's valley. He looks after sheep. God looks after
@@ -399,32 +401,31 @@ him."), and grouped so promoting it into `LINES` later is a copy, not a rewrite.
 | # | Speaker | Line | Beat |
 |---|---|---|---|
 | 1 | Wonder Light | "We are turning back the page. This is Bethlehem, before the valley — David's family, getting ready for a guest." | 1. Turn back the page |
-| 2 | Wonder Light | "Find David's harp, his water bowl, and his shepherd's cloak. They show the quiet work he does every day." | 3. Find three signs |
-| 3 | Wonder Light | "A small harp. David plays it while he watches the sheep." | 3. Harp found |
-| 4 | Wonder Light | "A bowl of water, filled for the sheep. Nobody told him to. He just does it." | 3. Water bowl found |
-| 5 | Wonder Light | "A plain shepherd's cloak, made for outdoor work, not for a palace." | 3. Cloak found |
-| 6 | Wonder Light | "Samuel is coming. Let's get the cushion, the cup and the lamp ready for him." | 4. Prepare the welcome |
-| 7 | Jesse | "Samuel! Welcome to our home." | 5. Meet Samuel and Jesse |
-| 8 | Wonder Light | "Jesse has seven sons. Samuel looks at each one." | 5. Brothers pass |
-| 9 | Samuel | "Not this one. Yahweh does not see the way people see." | 7. Samuel speaks the heart of the verse, in-scene |
-| 10 | Wonder Light | "People notice the outside first. God sees who you are, inside." | 7. Easy-words explanation (already in the outline) |
-| 11 | Jesse | "There is still the youngest. He's out with the sheep." | 6. Call David home |
-| 12 | Wonder Light | "Let's call David home." | 6. Call David home |
-| 13 | David (younger) | "Coming! Did I do something wrong?" | 6. David enters — curious, a little worried, not heroic |
-| 14 | Wonder Light | "No. Samuel has something for you." | 6-7 transition |
-| 15 | Wonder Light | "First Samuel, chapter sixteen, verse seven." | 7. Verse reference |
-| 16 | Wonder Light | "Yahweh doesn't see the way man sees. Man looks at the outward appearance, but Yahweh looks at the heart." | 7. Verse text — **draft wording, verify against WEB before recording** |
-| 17 | Wonder Light | "Samuel pours the oil. It's a sign: God has chosen David's heart." | 8. The anointing |
-| 18 | Wonder Light | "God saw the kind, faithful things David did when nobody was watching. He sees yours too." | 9. Reflect |
-| 19 | Wonder Light | "A Faithful Heart charm, for the quiet work nobody else was watching." | 9. Charm |
-| 20 | Wonder Light | "Keep it close. Faithfulness is yours to carry." | 9. Charm, closing |
+| 2 | Wonder Light | "David is out with the sheep. You may notice the things he uses to care for them while we get ready for Samuel." | 2. Optional courtyard discoveries |
+| 3 | Wonder Light | "A small harp. David plays it while he watches the sheep." | 2. Optional harp discovery |
+| 4 | Wonder Light | "A bowl of water for the sheep. David cares for them every day." | 2. Optional water-bowl discovery |
+| 5 | Wonder Light | "A plain shepherd's cloak, made for work outside." | 2. Optional cloak discovery |
+| 6 | Wonder Light | "Samuel is coming. Let's get the cushion, the cup and the lamp ready for him." | 3. Prepare the welcome |
+| 7 | Jesse | "Samuel! Welcome to our home." | 4. Meet Samuel and Jesse |
+| 8 | Wonder Light | "Jesse's seven older sons come forward, one by one." | 4. Brothers pass |
+| 9 | Samuel | "Yahweh has not chosen these." | 4. Brothers have passed; calm, never dismissive |
+| 10 | Wonder Light | "Samuel waits. The one God has chosen is not here yet." | 4-5. The missing son |
+| 11 | Samuel | "Are all your children here?" | 5. Samuel asks for the missing son |
+| 12 | Jesse | "The youngest is still caring for the sheep." | 5. Call David home |
+| 13 | Wonder Light | "Let's call David home." | 5. Call David home |
+| 14 | David (younger) | "You called for me?" | 5. David enters — attentive, modest, not anxious or heroic |
+| 15 | Wonder Light | "First Samuel, chapter sixteen, verse seven." | 6. Verse reference |
+| 16 | Wonder Light | "Yahweh doesn't see the way man sees. Man looks at the outward appearance, but Yahweh looks at the heart." | 6. Verse text — **draft wording, verify against WEB before recording** |
+| 17 | Wonder Light | "Samuel pours the oil. God has chosen David, the youngest shepherd." | 7. The anointing |
+| 18 | Wonder Light | "David was caring for the sheep when nobody expected him to be called. God saw his heart. God sees you too." | 8. Reflect without making faithfulness the price of being chosen |
+| 19 | Wonder Light | "A Faithful Heart charm, for caring well in quiet places." | 8. Charm |
+| 20 | Wonder Light | "Keep it close. Be faithful with the small things in front of you." | 8. Charm, closing |
 
-That is 15 Wonder Light lines, 2 Jesse, 2 David, 1 Samuel — light enough that Jesse and Samuel stay
+That is 15 Wonder Light lines, 2 Jesse, 1 David and 2 Samuel — light enough that Jesse and Samuel stay
 "used for only a few short lines" as the Voice design section already commits to, while Wonder
 Light continues to carry most of the explanation, as she does in Chapters 1 and 2. Line 9 is the
-one place Samuel's tone most needs a real read-through with a candidate voice before locking —
-it is the line most likely to sound stern or dismissive if mis-cast, which is exactly what the
-doc's "Never in the picture" list warns against.
+one place Samuel's tone most needs a real read-through with a candidate voice before locking: it
+must sound patient and discerning rather than stern or dismissive.
 
 ## Decided
 
@@ -440,19 +441,19 @@ doc's "Never in the picture" list warns against.
 1. Test **Faithfulness**, **Faithful Heart** and the easy-word explanation with parents and children;
    keep "God sees the heart" even if the charm name changes.
 2. Storyboard the seven-brother sequence so it is clear without becoming repetitive or expensive.
-3. Prototype Prepare the Welcome with touch and verify that placing three objects feels different
-   from collecting three Wonder Items.
+3. Prototype Prepare the Welcome with touch, including the visible Wonder Light carry state, and
+   verify that placing three objects feels different from collecting three Wonder Items.
 4. Design Samuel and younger David side by side with the current David model before generating any
-   final assets.
+   final assets; verify younger David's rig and walk before committing to close-up shots.
 5. Record temporary voices and time the whole chapter before commissioning final voice clips.
 6. Test whether the anointing is understandable without a crown or magical glow.
 7. Review the complete script for biblical wording, age clarity and the difference between God's
    grace and David's faithfulness.
 8. Build `jesse_sons.gd` early, on the camp-guard pattern, since its pacing (Improve-pass item 2)
    sets the time budget for a beat the child cannot speed up or skip.
-9. Read candidate Samuel takes specifically against draft line 9 ("Not this one. Yahweh does not
-   see the way people see.") before locking his voice — it is the line most likely to read as
-   stern or dismissive if the casting choice is wrong.
+9. Read candidate Samuel takes specifically against draft line 9 ("Yahweh has not chosen these.")
+   before locking his voice — it is the line most likely to read as stern or dismissive if the
+   casting choice is wrong.
 10. Confirm `journal_content.gd`'s `MYSTERY_SLOTS` math still lands on 5 total charm slots once
     `CHARM_FAITHFUL_HEART` is added (3 earned + `MYSTERY_SLOTS = 2` already matches the five-journey
     roadmap, so this should be a no-op, but verify rather than assume).
