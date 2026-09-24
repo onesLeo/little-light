@@ -109,6 +109,11 @@ brothers line one side without blocking the path.
   recordings when synthesis does not sound convincing, following the existing lamb/footstep rule.
 - Two new entries in the "who is talking" name tag (`dialogue_view.gd`) for Samuel and Jesse — see
   **Who is talking**.
+- Idle-life and secondary-motion work beyond the base rigs and props: crowd idle glances for the
+  brothers, conversational nods/gestures for the three speaking characters, breathing placement
+  rings, an unfurling oil ribbon, ambient doves and cloth sway for Samuel/Jesse — see **Animation
+  and motion polish**. None of it is a new technique, but all of it is easy to omit unless it is
+  planned in from the start.
 
 ## Asset inventory: models, rigs and props
 
@@ -341,6 +346,69 @@ spec rather than being waved at as "a signature activity."
   brother (for example a single shared line like "Not this one" spoken once by Wonder Light over
   the first pass, not repeated seven times) — see **Draft script**.
 
+## Animation and motion polish
+
+The courtyard risks reading stiffer than Chapters 1-2 if the following are left as later polish
+rather than built in from the start. None of this is a new technique to invent — each point below
+is already proven somewhere else in the game, just not yet specified for this chapter.
+
+**The seven brothers need an idle layer, not only a procession.** "The seven brothers, staged"
+above only covers their one ~8-10s cued beat. For the rest of the scene — exploring, then working
+through Prepare the Welcome — they are simply standing in a line, potentially for 30-60s. Seven
+motionless figures in the background would be the most rigid thing in the chapter by contrast with
+everything else moving. `camp_guard.gd` already solves this for its own standing crowd: an idle
+glance cycle (`_look_from`/`_look_to`, a randomized pause, then a settle-legs blend back to rest)
+between patrol legs. `jesse_sons.gd` should carry the same idle-glance/weight-shift behaviour
+while waiting, not just the forward-and-back procession step. The procession itself should also
+avoid uniform timing — if all seven step at identical cadence it reads as a conveyor belt, not
+seven different young men. `camp_guard.gd` gives each guard a randomized phase offset
+(`_phase = randf() * TAU`); the brothers' procession sequence should vary each one's step timing
+slightly around the ~1.1s-per-brother average, rather than firing on a fixed metronome.
+
+**Samuel, Jesse and younger David need conversational motion, not just `Blink`/`Talk`.** Chapter
+2's actual playtest polish — not just its own concept doc — added "Jonathan blinks, nods and
+gestures while his recording plays, and David shifts and nods as he listens." That is what keeps a
+dialogue beat from feeling like two puppets reading subtitles at each other. This chapter's
+**Asset inventory** only commits the three new rigs to `Blink`/`Talk` shape keys, which is
+necessary but not sufficient. Each speaking character needs the same nod/gesture/weight-shift
+treatment during their own lines, and whoever is listening needs small reactive motion too, rather
+than standing frozen while someone else's line plays.
+
+**The placement rings should breathe, not just react.** The Prepare the Welcome rings currently
+only have a reaction — the 0.6s ease-in tween once an object lands. Until then they are static
+dashed-ring geometry, and they are the most-looked-at object during the whole activity.
+`word_chip.gd` already has the fix for this elsewhere in the game: "the next word breathes," a
+slow idle pulse that invites a tap without a label. The empty rings should use the same
+breathing-pulse language rather than sitting inert until touched.
+
+**The anointing oil should unfurl, not appear.** "A narrow gold ribbon of oil" is staged carefully
+camera-wise, but nothing above specifies how it appears on screen. If it simply pops into
+existence it will be the stiffest single moment in the chapter's most important beat — the
+opposite of the calm pacing every other interaction here commits to. The harp already uses a
+`curve_mesh` for its strings, the same technique used for Jonathan's hair band; the oil ribbon is
+a natural fit for the same approach, animating its length and opacity over roughly 1.5-2s so it
+unfurls rather than snapping in.
+
+**The courtyard needs visible ambient life beyond the sheep.** Chapter 1 has butterflies; Chapter
+2 has fireflies and an owl with its own glide-and-perch animation. This chapter gives only sheep
+as visible ambient life — doves and birds exist solely in the sound table below, with no on-screen
+counterpart. Next to either previous chapter, a courtyard with only audio-implied birds will read
+as noticeably emptier and stiller. Even one or two doves drifting between the roof edge and the
+olive tree, using the drift-and-settle motion already built for the fireflies, would close this
+gap cheaply.
+
+**Younger David's walk should read younger, not just look younger.** Now that he is correctly a
+separate rigged model rather than a reshaped adult (**Asset inventory**), his walk cycle is a real
+opportunity the doc doesn't yet use: age read through motion, not only through face and height. A
+slightly quicker cadence and lighter weight than adult David's established walk — rather than the
+same gait timing on a smaller rig — would make "younger David" felt as much as seen, and keep his
+entrance from reading as a costume change on the same character.
+
+**Samuel and Jesse's robes need their own secondary motion.** Jonathan's shoulder sash is a
+dedicated ribbon mesh with its own subtle sway. Samuel and Jesse's robes don't yet commit to
+equivalent secondary cloth motion; standing in the same scene family as Jonathan without it, both
+would read visibly stiffer by direct comparison.
+
 ## What you hear in Bethlehem
 
 | Sound | Behaviour | Likely `sound_library.gd` entry |
@@ -497,3 +565,11 @@ must sound patient and discerning rather than stern or dismissive.
     and Jesse before recording any lines — see **Who is talking**. Confirm every script line uses
     the exact `Speaker: "..."` prefix so the tag actually appears; this is easy to build correctly
     and just as easy to silently omit.
+12. Build `jesse_sons.gd`'s idle-glance layer alongside its procession step, not after — a static
+    crowd is easy to miss until the scene is actually played, not read. Give the procession's
+    per-brother timing a randomized offset rather than a fixed cadence, the same way
+    `camp_guard.gd` already varies its guards — see **Animation and motion polish**.
+13. Confirm Samuel, Jesse and younger David each ship with conversational nod/gesture motion
+    during their own lines and small reactive motion while listening, not just `Blink`/`Talk` —
+    compare against Chapter 2's actual playtest-polish pass, not just its concept doc, before
+    calling this chapter's dialogue beats done.
