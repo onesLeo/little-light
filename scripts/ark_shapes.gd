@@ -14,10 +14,10 @@ const KEEL := 0.3
 const RINGS := 30
 const SIDE_STEPS := 12
 
-const PLANK_A := Color(0.74, 0.5, 0.27)
-const PLANK_B := Color(0.65, 0.42, 0.21)
-const BILGE := Color(0.5, 0.31, 0.16)
-const DECK_COLOR := Color(0.8, 0.62, 0.38)
+const PLANK_A := Color(0.66, 0.5, 0.35)
+const PLANK_B := Color(0.58, 0.43, 0.3)
+const BILGE := Color(0.46, 0.35, 0.26)
+const DECK_COLOR := Color(0.72, 0.6, 0.45)
 
 static var _vertex_mat: StandardMaterial3D
 static var _sheet_mats: Dictionary = {}

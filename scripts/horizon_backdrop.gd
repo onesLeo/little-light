@@ -33,6 +33,7 @@ func _process(delta: float) -> void:
 ## clouds go a soft grey-blue. They are painted (unshaded), so the light alone
 ## would leave them in daytime colours.
 func set_blue_hour() -> void:
+	visible = true
 	if _hill_mat:
 		_hill_mat.albedo_color = Color(0.5, 0.56, 0.86)
 	if _cloud_mat:
@@ -41,6 +42,8 @@ func set_blue_hour() -> void:
 
 func set_daylight() -> void:
 	# Restore the shared backdrop when leaving the King's Camp for another story.
+	# Noah's mountaintop hides it; any other story shows it again.
+	visible = true
 	if _hill_mat:
 		_hill_mat.albedo_color = Color.WHITE
 	if _cloud_mat:

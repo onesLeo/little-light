@@ -1,16 +1,20 @@
 extends Node3D
 ## Noah's Ark, built the first time it is visited so the valley and the camp
-## do not pay for it. A curved plank hull with its house finished at one end and bare
-## ribs still going up at the other, a work bench, six animal pairs, and three weather
-## states, all in the camp's paper-diorama style.
+## do not pay for it. The ark stands on a mountaintop above a sea of clouds
+## (ark_mountain.gd): a curved plank hull with its house finished at one end and bare
+## ribs still going up at the other, a work bench, six animal pairs that wander and
+## graze, a family at work, and three weather states, all in the camp's paper style.
 
 const Paper := preload("res://scripts/camp_paper.gd")
 const ChapterFour := preload("res://scripts/chapter_four.gd")
 const Profiles := preload("res://scripts/profiles.gd")
-const Motion := preload("res://scripts/chapter_two_character_motion.gd")
+const Mountain := preload("res://scripts/ark_mountain.gd")
 const Shapes := preload("res://scripts/ark_shapes.gd")
+const ArkPerson := preload("res://scripts/ark_person.gd")
 
-const ORIGIN := Vector3(96.0, 0.0, 8.0)
+## The mountaintop is lifted well above the valley and the camp, whose ground lies
+## hidden under the cloud sea.
+const ORIGIN := Vector3(96.0, 40.0, 8.0)
 const START_LOCAL := Vector3(-1.2, 0.2, 7.0)
 const CAMERA_OFFSET := Vector3(0.0, 5.4, 10.0)
 const CAMERA_LOOK := 2.6
@@ -20,15 +24,23 @@ const HULL_Z := -5.8
 const PANEL := Vector3(5.3, 0.0, 0.1)
 ## The house window the dove leaves from.
 const WINDOW := Vector3(1.6, 4.35, 0.0)
+## The plank carriers' circle beside the timber stack: centre, radius, and the angle
+## between the two of them (a 1.8 m plank on a 1.8 m circle).
+const CARRY_CENTER := Vector3(11.6, 0.0, 2.2)
+const CARRY_RADIUS := 1.8
+const CARRY_GAP := PI / 3.0
+## The basket carrier's walk between the food and the animal path.
+const BASKET_WALK_FROM := Vector3(-8.8, 0.0, 2.1)
+const BASKET_WALK_TO := Vector3(-6.0, 0.0, 2.6)
 ## Where the ramp meets the plain.
 const RAMP_FOOT_Z := 4.6
 const RAIN_STREAKS := 160
 const RAIN_HEIGHT := 9.0
-const EARTH := Color(0.64, 0.48, 0.29)
-const PLANK_LIGHT := Color(0.8, 0.6, 0.35)
-const PLANK_DARK := Color(0.45, 0.28, 0.15)
-const PLANK_A := Color(0.74, 0.5, 0.27)
-const PLANK_B := Color(0.65, 0.42, 0.21)
+const EARTH := Color(0.64, 0.58, 0.45)
+const PLANK_LIGHT := Color(0.72, 0.59, 0.43)
+const PLANK_DARK := Color(0.42, 0.31, 0.22)
+const PLANK_A := Color(0.66, 0.5, 0.35)
+const PLANK_B := Color(0.58, 0.43, 0.3)
 const SKIN := Color(0.86, 0.66, 0.5)
 const GUIDED := ["SheepA", "DoveA", "ElephantA"]
 const MATE_OF := {
@@ -45,7 +57,8 @@ var _rope: MeshInstance3D
 var _panel: MeshInstance3D
 var _noah: Node3D
 var _wife: Node3D
-var _hand: Node3D
+## True once the family has gone into the ark and stops working outside.
+var _family_in: bool = false
 
 
 func visit() -> void:
@@ -122,7 +135,7 @@ func _build() -> void:
 	_rainbow = Node3D.new()
 	_rainbow.name = "Rainbow"
 	add_child(_rainbow)
-	var colours := [Color(0.84, 0.36, 0.3), Color(0.93, 0.66, 0.3), Color(0.94, 0.84, 0.44), Color(0.5, 0.72, 0.44), Color(0.4, 0.58, 0.8)]
+	var colours := [Color(0.84, 0.52, 0.48), Color(0.9, 0.72, 0.5), Color(0.92, 0.86, 0.6), Color(0.6, 0.76, 0.58), Color(0.56, 0.68, 0.84)]
 	for i in colours.size():
 		var band := MeshInstance3D.new()
 		band.name = "Band%d" % i
@@ -153,38 +166,43 @@ func _ground() -> void:
 	body.add_child(shape)
 	body.position = _at(Vector3(0.0, -0.5, 2.0))
 	add_child(body)
-	# The sand runs on to the horizon, well past where the child can walk.
-	Paper.part(self, "Earth", Paper.box(Vector3(160.0, 0.08, 120.0)), EARTH,
-			_at(Vector3(0.0, 0.02, -8.0)), Vector3.ZERO, Vector3.ONE, 0.0)
+	var mountain := Mountain.new()
+	mountain.name = "Mountain"
+	mountain.position = ORIGIN
+	add_child(mountain)
 
 
 func _set_building_light(main: Node) -> void:
-	# Chapter 2 leaves the shared world at blue hour; the ark opens in warm daylight.
+	# Chapter 2 leaves the shared world at blue hour; the mountaintop opens in a calm,
+	# soft daylight: a pale blue sky, gentle sun and a light haze that fades the far peaks.
 	var world := main.get_node_or_null("WorldEnvironment") as WorldEnvironment
 	if world and world.environment:
 		var env := world.environment
 		if env.sky:
 			var sky := env.sky.sky_material as ProceduralSkyMaterial
 			if sky:
-				sky.sky_top_color = Color(0.43, 0.67, 0.86)
-				sky.sky_horizon_color = Color(0.91, 0.82, 0.66)
-				sky.ground_horizon_color = Color(0.7, 0.61, 0.47)
-				sky.ground_bottom_color = Color(0.42, 0.36, 0.3)
-			env.ambient_light_color = Color(0.9, 0.82, 0.7)
-			env.ambient_light_energy = 0.7
-			env.fog_light_color = Color(0.82, 0.74, 0.6)
-			env.fog_density = 0.0015
+				sky.sky_top_color = Color(0.58, 0.73, 0.86)
+				sky.sky_horizon_color = Color(0.87, 0.89, 0.88)
+				sky.ground_horizon_color = Color(0.84, 0.87, 0.88)
+				sky.ground_bottom_color = Color(0.72, 0.76, 0.8)
+		env.ambient_light_color = Color(0.84, 0.86, 0.86)
+		env.ambient_light_energy = 0.8
+		env.fog_light_color = Color(0.84, 0.88, 0.9)
+		env.fog_density = 0.0035
 	var sun := main.get_node_or_null("Sun") as DirectionalLight3D
 	if sun:
-		sun.light_color = Color(1.0, 0.88, 0.7)
-		sun.light_energy = 1.05
+		sun.light_color = Color(1.0, 0.95, 0.86)
+		sun.light_energy = 0.95
 	var fill := main.get_node_or_null("FillLight") as DirectionalLight3D
 	if fill:
-		fill.light_color = Color(0.76, 0.84, 0.94)
-		fill.light_energy = 0.35
-	var backdrop := main.get_node_or_null("HorizonBackdrop")
-	if backdrop and backdrop.has_method("set_daylight"):
-		backdrop.set_daylight()
+		fill.light_color = Color(0.8, 0.86, 0.94)
+		fill.light_energy = 0.3
+	# The valley's ring of hills would stand in the middle of the cloud sea.
+	var backdrop := main.get_node_or_null("HorizonBackdrop") as Node3D
+	if backdrop:
+		if backdrop.has_method("set_daylight"):
+			backdrop.set_daylight()
+		backdrop.visible = false
 
 
 func _set_rain_light(main: Node) -> void:
@@ -194,8 +212,8 @@ func _set_rain_light(main: Node) -> void:
 		if env.sky:
 			var sky := env.sky.sky_material as ProceduralSkyMaterial
 			if sky:
-				sky.sky_top_color = Color(0.32, 0.4, 0.52)
-				sky.sky_horizon_color = Color(0.56, 0.62, 0.7)
+				sky.sky_top_color = Color(0.4, 0.46, 0.55)
+				sky.sky_horizon_color = Color(0.62, 0.66, 0.72)
 		env.ambient_light_color = Color(0.66, 0.72, 0.84)
 		env.ambient_light_energy = 0.75
 		env.fog_light_color = Color(0.5, 0.56, 0.66)
@@ -207,38 +225,13 @@ func _set_rain_light(main: Node) -> void:
 
 
 func _plain_dressing() -> void:
-	# A worn path gives the child a clear line from the timber stack up to the ramp.
+	# A worn earth path through the grass gives the child a clear line up to the ramp.
 	Paper.part(self, "WornPath", Paper.box(Vector3(3.6, 0.035, 12.0)), EARTH.lightened(0.12),
 			_at(Vector3(0.0, 0.075, 7.0)), Vector3.ZERO, Vector3.ONE, 0.0)
-	# Sun-baked patches break up the flat earth.
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 41
-	for i in 14:
-		var at := Vector3(rng.randf_range(-17.0, 17.0), 0.07, rng.randf_range(-14.0, 17.0))
-		if absf(at.x) < 9.0 and at.z < 1.0:
-			continue
-		Paper.part(self, "Patch%d" % i, Paper.cylinder(1.0, 0.02, 9), EARTH.darkened(0.08) if i % 2 == 0 else EARTH.lightened(0.07),
-				_at(at), Vector3(0.0, rng.randf() * TAU, 0.0), Vector3(rng.randf_range(1.0, 2.6), 1.0, rng.randf_range(0.7, 1.6)), 0.0)
-	# Low paper dunes on the horizon leave the ark in view.
-	var dunes := [
-		Vector4(-16.0, -12.0, 6.5, 2.2), Vector4(-8.0, -16.0, 5.3, 1.6),
-		Vector4(10.0, -16.0, 6.0, 1.9), Vector4(17.0, -10.0, 5.4, 1.8),
-		Vector4(-27.0, 2.0, 7.0, 2.6), Vector4(-25.0, 16.0, 6.0, 2.0),
-		Vector4(27.0, 4.0, 7.0, 2.4), Vector4(26.0, 18.0, 6.0, 2.1),
-	]
-	for i in dunes.size():
-		var d: Vector4 = dunes[i]
-		Paper.part(self, "Dune%d" % i, Paper.sphere(1.0, 9), EARTH.darkened(0.06) if i % 2 == 0 else EARTH,
-				_at(Vector3(d.x, 0.0, d.y)), Vector3.ZERO, Vector3(d.z, d.w, 2.6), 0.03)
-	# Olive scrub and a few rocks show scale without cluttering the animal route.
-	for i in 12:
-		var side := -1.0 if i % 2 == 0 else 1.0
-		var x := side * (9.5 + float((i * 5) % 7))
-		var z := 13.0 - float(i) * 2.2
-		_scrub("Scrub%d" % i, _at(Vector3(x, 0.0, z)), 0.8 + float(i % 3) * 0.25)
+	# A few grey rocks at the edges of the work area.
 	for i in 6:
 		var side := -1.0 if i % 2 == 0 else 1.0
-		Paper.part(self, "Rock%d" % i, Paper.sphere(0.45, 6), Color(0.66, 0.6, 0.52),
+		Paper.part(self, "Rock%d" % i, Paper.sphere(0.45, 6), Color(0.66, 0.65, 0.6),
 				_at(Vector3(side * (8.0 + i * 1.3), 0.12, 9.0 - i * 3.4)), Vector3(0.0, i * 0.9, 0.2), Vector3(1.3, 0.6, 1.0), 0.025)
 	# The stack of squared timbers, where the plank carriers are fetching from.
 	for layer in 3:
@@ -249,20 +242,8 @@ func _plain_dressing() -> void:
 	# Food baskets and sacks, organised by Noah's wife beside the animal path.
 	var baskets := [Vector3(-7.4, 0.0, -0.6), Vector3(-6.6, 0.0, -1.3), Vector3(-7.9, 0.0, 0.4), Vector3(-6.3, 0.0, -0.1)]
 	for i in baskets.size():
-		_basket("Basket%d" % i, _at(baskets[i]), [Color(0.86, 0.66, 0.28), Color(0.52, 0.62, 0.3), Color(0.74, 0.34, 0.24), Color(0.9, 0.82, 0.6)][i])
+		_basket("Basket%d" % i, _at(baskets[i]), [Color(0.82, 0.7, 0.44), Color(0.56, 0.62, 0.42), Color(0.72, 0.48, 0.4), Color(0.88, 0.82, 0.66)][i])
 	Paper.part(self, "Sack", Paper.sphere(0.36, 7), Color(0.84, 0.76, 0.6), _at(Vector3(-8.3, 0.3, -0.9)), Vector3.ZERO, Vector3(1.0, 0.9, 0.9), 0.02)
-
-
-func _scrub(scrub_name: String, at: Vector3, size: float) -> void:
-	var root := Node3D.new()
-	root.name = scrub_name
-	root.position = at
-	add_child(root)
-	Paper.part(root, "Stem", Paper.cylinder(0.05, 0.5 * size, 5, 0.03), Color(0.42, 0.34, 0.22), Vector3(0.0, 0.25 * size, 0.0), Vector3.ZERO, Vector3.ONE, 0.015)
-	for k in 3:
-		var a := TAU * k / 3.0
-		Paper.part(root, "Leaf%d" % k, Paper.sphere(0.3 * size, 6), Color(0.5, 0.56, 0.32) if k != 1 else Color(0.44, 0.5, 0.29),
-				Vector3(cos(a) * 0.18 * size, 0.55 * size + k * 0.06, sin(a) * 0.18 * size), Vector3.ZERO, Vector3(1.2, 0.8, 1.0), 0.02)
 
 
 func _basket(basket_name: String, at: Vector3, food: Color) -> void:
@@ -303,7 +284,7 @@ func _hull() -> void:
 	# The door, low in the side, and a wide shallow ramp up to it.
 	var door_y := 1.95
 	var door_z := HULL_Z + Shapes.side_z(0.0, door_y)
-	Paper.part(self, "Entrance", Paper.box(Vector3(2.0, 1.6, 0.14)), Color(0.24, 0.15, 0.09),
+	Paper.part(self, "Entrance", Paper.box(Vector3(2.0, 1.6, 0.14)), Color(0.26, 0.2, 0.16),
 			_at(Vector3(0.0, door_y, door_z + 0.05)), Vector3.ZERO, Vector3.ONE, 0.03)
 	var ramp_top := Vector3(0.0, 1.15, door_z + 0.2)
 	var ramp_foot := Vector3(0.0, 0.05, RAMP_FOOT_Z)
@@ -330,18 +311,18 @@ func _hull() -> void:
 ## curved ribs of the part still being built at the stern end.
 func _upper_works() -> void:
 	var deck := Shapes.DECK
-	Paper.part(self, "House", Paper.box(Vector3(8.6, 2.1, 4.2)), Color(0.86, 0.66, 0.4),
+	Paper.part(self, "House", Paper.box(Vector3(8.6, 2.1, 4.2)), Color(0.8, 0.72, 0.58),
 			_at(Vector3(-1.7, deck + 0.95, HULL_Z)), Vector3.ZERO, Vector3.ONE, 0.035)
 	for i in 9:
 		Paper.part(self, "HouseSeam%d" % i, Paper.box(Vector3(0.05, 2.0, 0.03)), PLANK_DARK,
 				_at(Vector3(-5.6 + i * 0.97, deck + 0.95, HULL_Z + 2.12)), Vector3.ZERO, Vector3.ONE, 0.0)
-	Paper.part(self, "Roof", Paper.ridge_tent(5.2, 9.4, 1.5), Color(0.62, 0.36, 0.2),
+	Paper.part(self, "Roof", Paper.ridge_tent(5.2, 9.4, 1.5), Color(0.56, 0.42, 0.35),
 			_at(Vector3(-1.7, deck + 2.0, HULL_Z)), Vector3(0.0, PI / 2.0, 0.0), Vector3.ONE, 0.04)
 	for x in [-5.0, -3.0, -0.6]:
 		Paper.part(self, "Porthole", Paper.box(Vector3(0.6, 0.5, 0.06)), Color(0.3, 0.2, 0.12),
 				_at(Vector3(x, deck + 1.25, HULL_Z + 2.13)), Vector3.ZERO, Vector3.ONE, 0.02)
 	# The window the dove leaves from: the one bright rectangle on the house.
-	Paper.part(self, "Window", Paper.box(Vector3(1.0, 0.8, 0.06)), Color(0.98, 0.9, 0.66),
+	Paper.part(self, "Window", Paper.box(Vector3(1.0, 0.8, 0.06)), Color(0.95, 0.9, 0.76),
 			_at(Vector3(WINDOW.x, WINDOW.y, HULL_Z + 2.13)), Vector3.ZERO, Vector3.ONE, 0.03)
 	Paper.part(self, "WindowSill", Paper.box(Vector3(1.3, 0.1, 0.3)), PLANK_DARK,
 			_at(Vector3(WINDOW.x, WINDOW.y - 0.45, HULL_Z + 2.22)), Vector3.ZERO, Vector3.ONE, 0.015)
@@ -444,7 +425,7 @@ func _animals() -> void:
 	_critter("DoveB", "dove", Vector3(3.0, 0.0, 3.1))
 	_critter("ElephantA", "elephant", Vector3(6.0, 0.0, 4.0))
 	_critter("ElephantB", "elephant", Vector3(7.8, 0.0, 6.8))
-	_critter("GoatA", "goat", Vector3(-8.0, 0.0, 3.0))
+	_critter("GoatA", "goat", Vector3(-9.6, 0.0, 4.4))
 	_critter("GoatB", "goat", Vector3(-5.5, 0.0, 1.0))
 	_critter("RabbitA", "rabbit", Vector3(8.0, 0.0, 5.0))
 	_critter("RabbitB", "rabbit", Vector3(6.0, 0.0, 2.8))
@@ -474,7 +455,7 @@ func _critter(critter_name: String, kind: String, at: Vector3) -> void:
 			for side in [-1.0, 1.0]:
 				Paper.part(root, "Ear", Paper.box(Vector3(0.14, 0.05, 0.07)), Color(0.25, 0.2, 0.18), Vector3(side * 0.17, 0.64, 0.4), Vector3(0.0, 0.0, side * (0.5 if b and side > 0.0 else 0.2)), Vector3.ONE, 0.0)
 		"goat":
-			var coat := Color(0.66, 0.5, 0.34)
+			var coat := Color(0.64, 0.55, 0.43)
 			_legs(root, 0.13, 0.12, 0.4, Color(0.4, 0.3, 0.2))
 			Paper.part(root, "Body", Paper.sphere(0.3, 8), coat, Vector3(0.0, 0.52, 0.0), Vector3.ZERO, Vector3(0.9, 0.8, 1.3), 0.02)
 			Paper.part(root, "Head", Paper.sphere(0.14, 8), coat.lightened(0.1), Vector3(0.0, 0.76, 0.38), Vector3.ZERO, Vector3(0.9, 1.0, 1.3), 0.015)
@@ -508,7 +489,7 @@ func _critter(critter_name: String, kind: String, at: Vector3) -> void:
 			for side in [-1.0, 1.0]:
 				Paper.part(root, "Ear", Paper.sphere(0.3, 7), Color(0.7, 0.62, 0.64), Vector3(side * 0.36, 1.1, 0.5), Vector3(0.0, side * (0.5 + tilt), 0.0), Vector3(0.25, 1.0, 0.9), 0.02)
 		"giraffe":
-			var coat := Color(0.92, 0.74, 0.38)
+			var coat := Color(0.86, 0.75, 0.53)
 			_legs(root, 0.16, 0.18, 0.9, coat.darkened(0.08), 0.06)
 			Paper.part(root, "Body", Paper.sphere(0.3, 8), coat, Vector3(0.0, 1.0, 0.0), Vector3.ZERO, Vector3(0.95, 0.8, 1.3), 0.02)
 			Paper.part(root, "Neck", Paper.cylinder(0.09, 1.1, 6, 0.07), coat, Vector3(0.0, 1.6, 0.3), Vector3(0.3, 0.0, 0.0), Vector3.ONE, 0.018)
@@ -517,7 +498,7 @@ func _critter(critter_name: String, kind: String, at: Vector3) -> void:
 				Paper.part(root, "Ossicone", Paper.cylinder(0.025, 0.14, 5), Color(0.45, 0.3, 0.18), Vector3(side * 0.05, 2.28, 0.46), Vector3(0.0, 0.0, side * 0.15), Vector3.ONE, 0.0)
 			var spots := [Vector3(0.2, 1.05, 0.1), Vector3(-0.2, 1.0, -0.15), Vector3(0.15, 0.95, -0.25)] if not b else [Vector3(-0.2, 1.05, 0.12), Vector3(0.21, 0.98, -0.1), Vector3(-0.12, 1.12, -0.28)]
 			for k in spots.size():
-				Paper.part(root, "Spot%d" % k, Paper.sphere(0.09, 6), Color(0.62, 0.4, 0.2), spots[k], Vector3.ZERO, Vector3(0.6, 1.0, 1.0), 0.0)
+				Paper.part(root, "Spot%d" % k, Paper.sphere(0.09, 6), Color(0.6, 0.47, 0.34), spots[k], Vector3.ZERO, Vector3(0.6, 1.0, 1.0), 0.0)
 
 
 func _legs(root: Node3D, half_x: float, half_z: float, height: float, color: Color, radius: float = 0.045) -> void:
@@ -527,12 +508,21 @@ func _legs(root: Node3D, half_x: float, half_z: float, height: float, color: Col
 
 
 func _people() -> void:
-	# Noah works at the bench beside the unfinished ribs; his wife keeps the food and the path.
-	_noah = _person("Noah", _at(Vector3(3.5, 0.0, -0.3)), Color(0.6, 0.3, 0.17), Color(0.56, 0.5, 0.44), true, Color(0.93, 0.87, 0.74))
-	_noah.rotation.y = 0.5
-	_wife = _person("NoahsWife", _at(Vector3(-6.9, 0.0, 1.0)), Color(0.18, 0.46, 0.46), Color(0.25, 0.16, 0.1), false, Color(0.86, 0.74, 0.54), "bun")
-	_wife.rotation.y = 0.3
-	_hand = _noah.get_node("Hand") as Node3D
+	# In front of the crowd, facing the child, either side of the path up to the ramp.
+	# The models face the ark until turned.
+	_noah = _designed("Noah", "noah", Vector3(-2.3, 0.0, 5.3))
+	_wife = _designed("NoahsWife", "wife", Vector3(2.2, 0.0, 5.0))
+
+
+func _designed(person_name: String, who: String, at: Vector3) -> Node3D:
+	var person := Node3D.new()
+	person.name = person_name
+	person.set_script(ArkPerson)
+	person.who = who
+	person.position = _at(at)
+	person.rotation.y = PI
+	add_child(person)
+	return person
 
 
 func _person(person_name: String, at: Vector3, cloth: Color, hair: Color, beard: bool, under: Color = Color(0.9, 0.84, 0.7), style: String = "") -> Node3D:
@@ -567,7 +557,7 @@ func _person(person_name: String, at: Vector3, cloth: Color, hair: Color, beard:
 ## Noah's sons and their wives, working in pairs: two carry a plank, two sort the
 ## food, two steady the ramp.
 func _family() -> void:
-	var colours := [Color(0.55, 0.4, 0.28), Color(0.46, 0.55, 0.4), Color(0.72, 0.52, 0.34), Color(0.5, 0.4, 0.56), Color(0.66, 0.46, 0.3), Color(0.36, 0.5, 0.6)]
+	var colours := [Color(0.56, 0.46, 0.36), Color(0.5, 0.56, 0.46), Color(0.66, 0.56, 0.44), Color(0.52, 0.48, 0.56), Color(0.62, 0.5, 0.4), Color(0.44, 0.52, 0.58)]
 	var spots := [Vector3(8.4, 0.0, 1.2), Vector3(10.2, 0.0, 1.2), Vector3(-9.2, 0.0, -0.8), Vector3(-8.8, 0.0, 1.3), Vector3(2.4, 0.0, 3.6), Vector3(2.2, 0.0, 1.4)]
 	var hair := [Color(0.3, 0.2, 0.12), Color(0.22, 0.14, 0.08), Color(0.4, 0.26, 0.14)]
 	for i in colours.size():
@@ -577,7 +567,7 @@ func _family() -> void:
 		person.set_meta("home", person.position)
 	# The plank rides between the first two on their shoulders, so it travels with them.
 	var carrier := get_node("Family0") as Node3D
-	Paper.part(carrier, "CarriedPlank", Paper.box(Vector3(2.6, 0.12, 0.34)), PLANK_LIGHT, Vector3(0.9, 1.1, 0.0), Vector3.ZERO, Vector3.ONE, 0.02)
+	Paper.part(carrier, "CarriedPlank", Paper.box(Vector3(0.34, 0.12, 2.6)), PLANK_LIGHT, Vector3(0.0, 1.1, 0.9), Vector3.ZERO, Vector3.ONE, 0.02)
 	_basket("HeldBasket", Vector3.ZERO, Color(0.86, 0.66, 0.28))
 	var held := get_node("HeldBasket") as Node3D
 	held.reparent(get_node("Family3"), false)
@@ -613,10 +603,10 @@ func set_weather(state: String) -> void:
 
 
 func set_speaking(who: String) -> void:
-	if _noah:
-		_noah.set_meta("speaking", who == "Noah")
-	if _wife:
-		_wife.set_meta("speaking", who == "Noah's wife")
+	if _noah and "speaking" in _noah:
+		_noah.speaking = who == "Noah"
+	if _wife and "speaking" in _wife:
+		_wife.speaking = who == "Noah's wife"
 
 
 func nearest_item(from: Vector3, reach: float) -> String:
@@ -674,6 +664,9 @@ func follow(critter_name: String, target: Vector3, delta: float) -> void:
 		return
 	var next := animal.global_position.move_toward(target, 3.2 * delta)
 	animal.global_position = next
+	# Wherever the child leaves it, that becomes its new spot to graze around.
+	animal.set_meta("led_at", _time)
+	animal.set_meta("home", Vector3(next.x, (animal.get_meta("home") as Vector3).y, next.z))
 	var flat := target - animal.global_position
 	flat.y = 0.0
 	if flat.length() > 0.05:
@@ -732,6 +725,7 @@ func _board_one(critter_name: String, side: float) -> void:
 
 
 func family_inside() -> void:
+	_family_in = true
 	if _noah:
 		_noah.position = _at(Vector3(-1.0, 0.0, -4.8))
 	if _wife:
@@ -774,24 +768,71 @@ func _process(delta: float) -> void:
 		for drop in _rain.get_children():
 			var d := drop as Node3D
 			d.position.y -= 9.0 * delta
-			if d.position.y < 0.0:
+			if d.position.y < ORIGIN.y:
 				d.position.y += RAIN_HEIGHT
-	_live(_noah, 0.0)
-	_live(_wife, 1.4)
 	for child in get_children():
 		if child is Node3D and child.has_meta("kind") and not bool(child.get_meta("aboard")):
-			var bob := sin(_time * 1.6 + float(str(child.name).hash()) * 0.001) * 0.03
-			child.position.y = (child.get_meta("home") as Vector3).y + bob
+			_graze(child, delta)
+	if not _family_in:
+		_work(delta)
 
 
-func _live(person: Node3D, offset: float) -> void:
-	if person == null:
+## An animal left alone ambles in a small loop around its spot, turning as it goes,
+## and now and then dips its head to graze. The one the child is leading is left alone.
+func _graze(animal: Node3D, delta: float) -> void:
+	var seed := float(absi(str(animal.name).hash()) % 997) * 0.013
+	var head := animal.get_node_or_null("Head") as Node3D
+	if head:
+		var rest: Vector3 = head.get_meta("rest", head.position)
+		head.set_meta("rest", rest)
+		var dip := clampf(sin(_time * 0.45 + seed * 3.0) * 2.0 - 1.1, 0.0, 1.0)
+		head.position = rest + Vector3(0.0, -0.14 * dip + sin(_time * 2.2 + seed) * 0.012, 0.06 * dip)
+	if _time - float(animal.get_meta("led_at", -10.0)) < 0.6:
 		return
-	var body := person.get_node_or_null("Body") as Node3D
-	if body:
-		body.position.y = 0.7 + Motion.breath(_time + offset) * 0.015
-	var hand := person.get_node_or_null("Hand") as Node3D
-	if hand:
-		var talking := bool(person.get_meta("speaking", false))
-		hand.rotation.x = -0.7 * Motion.speaking_pulse(_time + offset) if talking else 0.0
-		hand.rotation.z = 0.15 if talking else 0.0
+	var kind := str(animal.get_meta("kind"))
+	var home: Vector3 = animal.get_meta("home")
+	var reach := 0.5 if kind in ["elephant", "giraffe"] else 0.32
+	var t := _time * 0.2 + seed
+	var target := home + Vector3(sin(t), 0.0, sin(t * 0.73 + 1.1)) * reach
+	var step := Vector3(target.x - animal.position.x, 0.0, target.z - animal.position.z)
+	var moved := animal.position.move_toward(Vector3(target.x, home.y, target.z), 0.3 * delta)
+	var hop := 0.0
+	if kind in ["rabbit", "dove"]:
+		hop = maxf(sin(_time * 5.0 + seed * 7.0), 0.0) * (0.07 if kind == "rabbit" else 0.04)
+	animal.position = Vector3(moved.x, home.y + hop, moved.z)
+	if step.length() > 0.02:
+		animal.rotation.y = lerp_angle(animal.rotation.y, atan2(step.x, step.z), 1.5 * delta)
+
+
+## The family keeps working: two carry a plank round the timber stack, one walks a
+## basket between the food and the path, and the others bend, straighten and look about.
+func _work(delta: float) -> void:
+	var tail := get_node_or_null("Family0") as Node3D
+	var lead := get_node_or_null("Family1") as Node3D
+	if tail and lead:
+		var a := _time * 0.22
+		var lead_at := CARRY_CENTER + Vector3(cos(a + CARRY_GAP), 0.0, sin(a + CARRY_GAP)) * CARRY_RADIUS
+		var tail_at := CARRY_CENTER + Vector3(cos(a), 0.0, sin(a)) * CARRY_RADIUS
+		lead.position = _at(lead_at) + Vector3(0.0, absf(sin(_time * 4.2)) * 0.03, 0.0)
+		tail.position = _at(tail_at) + Vector3(0.0, absf(sin(_time * 4.2 + 1.2)) * 0.03, 0.0)
+		# The one behind faces the one ahead, so the plank on its shoulder runs between them.
+		var ahead := lead.position - tail.position
+		tail.rotation.y = atan2(ahead.x, ahead.z)
+		lead.rotation.y = atan2(-sin(a + CARRY_GAP), cos(a + CARRY_GAP))
+	var walker := get_node_or_null("Family3") as Node3D
+	if walker:
+		var s := (1.0 - cos(_time * 0.3)) * 0.5
+		var was := walker.position
+		walker.position = _at(BASKET_WALK_FROM.lerp(BASKET_WALK_TO, s)) + Vector3(0.0, absf(sin(_time * 4.0)) * 0.025, 0.0)
+		var going := walker.position - was
+		if Vector2(going.x, going.z).length() > 0.0005:
+			walker.rotation.y = lerp_angle(walker.rotation.y, atan2(going.x, going.z), 4.0 * delta)
+	for i in [2, 4, 5]:
+		var person := get_node_or_null("Family%d" % i) as Node3D
+		if person == null:
+			continue
+		var home_yaw: float = person.get_meta("yaw", person.rotation.y)
+		person.set_meta("yaw", home_yaw)
+		person.rotation.x = maxf(sin(_time * 0.6 + i), 0.0) * 0.28
+		person.rotation.y = home_yaw + sin(_time * 0.35 + i * 2.0) * 0.5
+		person.rotation.z = sin(_time * 1.1 + i) * 0.03

@@ -45,6 +45,8 @@ func _run() -> void:
 	await settle()
 	var story: Node = ark.get_node("ChapterFour")
 	var player: Node3D = main.get_node("Player")
+	check(ark.get_node("Noah").find_child("NoahBody", true, false) != null, "Noah in the scene is the designed model")
+	check(ark.get_node("NoahsWife").find_child("NoahsWifeBody", true, false) != null, "his wife in the scene is her own model")
 	check("Long before David" in story._line.text, "arrival names the long work")
 	check(not player.can_move, "arrival holds still")
 	check(not ark.get_node("Rain").visible, "the plain starts dry")
@@ -82,7 +84,9 @@ func _run() -> void:
 	story._guide = "ElephantA"
 	story._finish_guide()
 	check(story._matched == 3 and ark.aboard_count() == 12, "three guided pairs and three montage pairs are aboard")
-	check(player.global_position.z > 10.0 and ark.get_node("Noah").global_position.z < 5.0, "the guest stays outside while the family goes in")
+	check(ark.get_node("Noah").global_position.z < 5.0
+			and player.global_position.distance_to(ark.get_node("Noah").global_position) > 3.0,
+			"the guest stays outside while the family goes in")
 	story._advance()
 	check(ark.get_node("Rain").visible and "animals with them" in story._line.text, "rain stays on the ark and names who was kept safe")
 	story._advance()
