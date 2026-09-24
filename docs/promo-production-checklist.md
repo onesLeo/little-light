@@ -188,6 +188,45 @@ that only after the shot list is approved so it does not encode discarded shots.
 8. **Export the vertical master:** then create 16:9 and 1:1 versions with manual crop review.
 9. **Make variants from the approved master:** change only the opening hook and CTA first.
 
+## Rough generation budget
+
+Pricing checked on 24 September 2026. Higgsfield changes plans, model prices and unlimited-model
+coverage, so confirm the amount displayed on the Generate button before every paid run.
+
+| Production approach | Likely generation spend | What it covers |
+|---|---:|---|
+| Lean hybrid test | **US$15–30** | Mostly real gameplay, a few still/reference iterations, and roughly two attempts at a short generated opening or Marketing Studio master |
+| Recommended first campaign | **US$30–50** | Storyboard references, 2–3 attempts for the 15-second master/support motion, plus a few hook/end-card variants |
+| Polished 15 s + 30 s package | **US$60–100** | Several master attempts, support transitions for both formats and selected variants |
+| Mostly AI-generated trailer | **US$100–200+** | Multiple character/location shots with retries; not recommended because it costs more and proves less about the actual game |
+
+Useful current reference points from Higgsfield's own published examples:
+
+- Starter is listed at **US$15/month with 200 credits**.
+- A 15-second Marketing Studio video is listed at **89.2 credits, about US$4.50 per attempt**;
+  three attempts are about **US$13.40**.
+- A 15-second 1080p Seedance 2.5 video generated through a connected agent is listed at **270
+  credits**; at the stated standard conversion that example is about **US$13.50 per attempt**.
+- A 30-second connected-agent cinematic take is listed at **540 credits, about US$27 per attempt**.
+- API pricing is separate and can be cheaper for small support shots; Higgsfield currently lists
+  Seedance 2.5 from **US$0.0738 per generated second**, with price varying by configuration.
+
+For Little Light, do not generate a full 30 seconds three times. Record the real 30-second gameplay
+edit locally, then generate only the 2–5 second book opening, logo motion or transition that the edit
+actually needs. Set a **US$50 first-video ceiling**, require the displayed credit cost before each
+run, and stop after three unsuccessful versions to revise the storyboard instead of spending through
+prompt changes.
+
+These figures exclude paid advertising, app-store fees and outside editing labor. Editing from the
+game captures and repository assets does not itself consume Higgsfield credits.
+
+Pricing references:
+
+- [Higgsfield credits and plan examples](https://higgsfield.ai/blog/credits-vs-unlimited-ai-video-generation)
+- [Higgsfield Marketing Studio production example](https://higgsfield.ai/blog/how-studios-scale-ai-video-production)
+- [Higgsfield connected-agent generation examples](https://higgsfield.ai/blog/generate-ai-videos-from-chatgpt)
+- [Higgsfield API rates](https://higgsfield.ai/blog/higgsfield-api)
+
 ## First 15-second edit
 
 | Time | Source | Concrete action |
