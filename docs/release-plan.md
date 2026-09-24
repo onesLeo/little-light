@@ -5,6 +5,9 @@
 > free, clearly labelled research demo while the remaining journeys are developed; it is no longer
 > the complete release target.
 
+The audience, free/paid offer, launch funnel and promotional-video plan are in
+[marketing-and-launch-plan.md](marketing-and-launch-plan.md).
+
 A plan, not a done thing: the near-term goal is a **free validation demo / portfolio piece** — enough
 to let target families try the idea while the five-journey first volume is built. It is not the paid
 app-store release (see
