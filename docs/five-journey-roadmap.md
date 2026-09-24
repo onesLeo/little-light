@@ -70,27 +70,30 @@ finishes the work.
 ## Journey 5 — Jonah and the Great Fish
 
 Full visual, story, sound and implementation concept: [chapter-5-concept.md](chapter-5-concept.md).
+Experience and acceptance notes: [chapter-5-polish.md](chapter-5-polish.md).
 
 The Bible calls the creature a **great fish**, so that is the chapter title. Store descriptions may
 say "the story often called Jonah and the whale" so families can recognise it without changing the
 wording inside the game.
 
-The journey begins at Joppa's harbour. Jonah runs from God's instruction, a stylised paper storm
-rises, and the great fish carries him safely through the deep. The storm and sea remain storybook
-images rather than a frightening survival sequence. Jonah prays, is released onto the shore, and
-takes the road toward Nineveh. A brief final scene must include God's mercy toward Nineveh so the
-chapter does not reduce the story to escaping from a fish.
+The journey begins on a quiet quay at Joppa. Jonah looks toward a ship going the other way from
+Nineveh. A stylised paper storm rises. The child secures Jonah's bag, message and lamp, stays on the
+deck, and watches the sailors come through safely. The great fish keeps Jonah safe. Prayer is a
+lifted paper page, not a place the child enters. Jonah is released onto the shore, and the child
+carries the message with him to Nineveh. The plant, God's question and the city are the last picture,
+so the chapter does not end at the fish.
 
-**Value: Mercy.** God gives Jonah another chance, and God also cares about the people Jonah does not
-want to forgive.
+**Value: Mercy.** God gives Jonah another chance, God keeps the sailors safe, and God cares about
+the people Jonah does not want to forgive.
 
-Possible Wonder Items are Jonah's travel bag, a rolled message and a small oil lamp. The signature
-activity can be **Prayer in the Deep**: bring three short prayer phrases toward a warm light while
-the great fish moves slowly through the water. Afterward, the child lays the message on the road to
-Nineveh. The Mercy charm could be a dark wave opening around a small warm light.
+Wonder Items are Jonah's travel bag, a rolled message and a small oil lamp. They are also the cargo.
+The signature activity is **Prayer in the Deep**: tap Call, Hear and Go toward Wonder Light. One
+more word, Care, waits at the plant. The Mercy charm is a small warm light between two dark-blue
+waves.
 
-The verse choice remains open. Jonah 2:2 supports prayer and rescue; Jonah 4:2 more directly names
-God's mercy. It should be chosen after both versions are tested for length and clarity with children.
+The played verse is the mercy clause of Jonah 4:2 (WEB). Jonah 4:11 and, if it passes a read-aloud
+test, Jonah 2:2 live in the Faith Journal. Jonah 2:10 and Jonah's wish to die are not on the default
+read-aloud path.
 
 ## Faith Journey map
 
