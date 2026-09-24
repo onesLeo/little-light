@@ -102,3 +102,24 @@ so in a block with two speakers it changes as the voice changes. In the bar, eac
 their colour, stage directions are softer, and while a block is read the line being spoken stays in
 full ink and the others step back a little, so a parent can point along. The story still writes plain
 text to `DialogueLabel`; the view draws the same text over it with the same font and wrapping.
+
+## Chapter 4, Noah's Ark (2026-09-24)
+
+The first chapter 4 clips were stand-in readings (22 kHz, not Juno), and Noah's wife sounded almost
+like Wonder Light. They are being recast in the house voices:
+
+| Character | Voice | Notes |
+|-----------|-------|-------|
+| Wonder Light, the verse, the three words, the map lines | Juno | 24 clips, all generated |
+| Noah | to choose | auditioned: Gideon, Arthur (the one preset marked "old"), Desmond |
+| Noah's wife | to choose | auditioned: Helena, Marisol, Nora |
+
+Seed Audio 1.0 failed "Look, an olive leaf. The water is going down." and Genesis 9:13 every time
+(four tries each, no reason given), so those two are Juno through the Seed Speech engine, which only
+writes MP3. `tools/fetch_vo.py` decodes them with `pip install miniaudio`.
+
+To bring the new takes in, replacing the stand-ins:
+
+    python tools/fetch_vo.py --only ark_ --force
+
+then import in Godot and run the smoke test and `tests/ark_review.gd`.
