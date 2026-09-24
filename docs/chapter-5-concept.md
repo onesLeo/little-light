@@ -3,16 +3,18 @@
 This is the fifth planned journey and the ending of the first store-release volume. The familiar
 name is often "Jonah and the whale," but the Bible says that God appointed a great fish. The game
 uses **Great Fish** in its title and dialogue; parent-facing store text may mention the familiar name
-once for recognition. The chapter is not built yet.
+once for recognition. The chapter is not built yet. Experience, timing and acceptance notes are in
+[chapter-5-polish.md](chapter-5-polish.md).
 
 ## Where chapter 4 leaves off
 
-Chapter 4 ends under the rainbow with the Trust charm. On the Faith Journey, the rainbow's blue band
-becomes a coastline. A small ship waits at Joppa while the road God asked Jonah to take points in the
-other direction.
+Chapter 4 ends under the rainbow with the Trust charm. The handoff is one camera move: the rainbow's
+blue band widens into the sea, the ark settles into a distant paper silhouette, and a small ship is
+already waiting at Joppa. The road God asked Jonah to take points the other way.
 
-Wonder Light says, "Noah trusted God before he could see the rain. Jonah heard God too—but Jonah ran
-the other way."
+Movement stays locked through Wonder Light's first line, the same way Chapter 2 locks the camp
+arrival. She names the place first. She names the choice only after the sign, Jonah and the ship are
+in frame: "This is Joppa." Then, "Nineveh is that way. Jonah is looking at the ship."
 
 ## The story: Jonah and God's mercy
 
@@ -30,64 +32,78 @@ mercy for Jonah, mercy for frightened sailors, and mercy for Nineveh.
 
 **Value:** Mercy.
 
-**Verse:** still to be locked after read-aloud testing. Jonah 2:2 supports prayer and rescue; Jonah
-4:2 directly names God's gracious and merciful character but is longer. The final chapter may use a
-short verse in the activity and the longer passage in the Faith Journal.
+**Verse:** World English Bible, confirmed against [Jonah 4](https://ebible.org/eng-web/JON04.htm) and
+[Jonah 2](https://ebible.org/eng-web/JON02.htm) before recording. The played quotation is only the
+mercy clause of Jonah 4:2, because the rest of that verse is Jonah's complaint and the next verse
+asks to die. That request is never spoken or shown. The clause is recorded exactly: "you are a
+gracious God and merciful, slow to anger, and abundant in loving kindness." Wonder Light's meaning
+is a separate card. Jonah 4:11 stays in the journal as the full question. Jonah 2:2 may join it
+after a read-aloud test. Jonah 2:10 is not on the default read-aloud path. See
+[chapter-5-polish.md](chapter-5-polish.md).
 
 **New charm:** Mercy. A small warm light held safely between two curved dark-blue waves. It must read
 as shelter and another chance, not as Jonah trapped in teeth.
 
 ## The story, and what the child does
 
-1. **Arrive at Joppa.** The harbour is busy but gentle. Wonder Light shows the road marker for
-   Nineveh and the ship leaving the other way.
-2. **Find Jonah's three travelling things:** his small bag, a rolled message naming Nineveh and an
-   oil lamp. The message keeps turning toward the road while Jonah keeps looking toward the ship.
-3. **Meet Jonah.** Jonah admits that he does not want to go. The story does not make him a comic
-   coward; his reluctance is real and his choice is wrong.
-4. **Board the ship.** The child walks up the gangway after Jonah. Sailors secure the bag, rope and
-   lamp while the coast folds away behind them.
-5. **Storm tableau.** The ship rises and falls slowly between layered paper waves. The child secures
-   three loose pieces of cargo by dragging them into outlined spaces. This gives the child a safe,
-   constructive action while the adults speak. There is no steering challenge or failure state.
-6. **Jonah enters the sea.** The child does not push or throw him. Wonder Light narrates the sailors'
-   reluctance; Jonah steps behind a foreground wave, the storm quiets, and the great fish silhouette
-   rises beneath a warm point of light.
-7. **Prayer in the Deep.** A calm paper cutaway shows Jonah on a dry curved platform inside an
-   abstract blue chamber. The child guides three lights carrying the ideas **Call**, **Hear** and
-   **Go** toward Wonder Light. Each part adds a note to Jonah's prayer.
-8. **Another chance.** The fish releases Jonah onto a bright shore without a comic spit sound or
-   humiliating animation. The rolled message opens toward Nineveh.
-9. **Walk to Nineveh.** The child and Jonah follow a short road to the city gate. Jonah gives the
-   warning; a paper-page montage shows families turning away from harm.
-10. **God cares for Nineveh.** Outside the city, the shade plant grows and later withers. Wonder
-    Light gives the final question in age-clear language: Jonah cared about the plant; God cared
-    about a whole city of people.
-11. **Receive the Mercy charm.** The reflection names both directions of mercy: "God gave Jonah
-    another chance. God cared for the people Jonah did not want to forgive."
+1. **Arrive at Joppa.** The quay is quiet, so the sign, Jonah and the ship read in that order.
+   Walking is locked for the first line. Wonder Light names Joppa, then the two directions.
+2. **Find Jonah's three travelling things:** his small bag, a rolled message and an oil lamp. These
+   are the only cargo later. The message turns inland once and can say "Nineveh." The sign says the
+   same word. Jonah keeps looking toward the ship.
+3. **Meet Jonah.** Jonah admits that he does not want to go. His reluctance is real and his choice
+   is wrong. He is not a comic coward.
+4. **Board the ship.** One short gangway walk. The bag, message and lamp sit on the deck beside
+   Jonah. The coast folds away.
+5. **Storm tableau.** The captain speaks as the paper waves begin to rise. The child places the same
+   three things into outlined spaces on the deck, by a drag or by a tap, with keyboard and gamepad
+   too. About seven seconds of stillness eases the next piece into place. There is no fail state.
+6. **Jonah enters the sea.** The child does not push or throw him, and the child stays on the deck.
+   Jonah admits he was running. Wonder Light says this is Jonah's story and God still keeps him safe.
+   Jonah steps behind a foreground wave. Waves, wind and rain ease down together. The captain says
+   the crew is safe. The great fish then rises past the stern, larger than the ship, and the ship
+   stays outside it.
+7. **Prayer in the Deep.** A lit paper page lifts in front of the child. Jonah is on a dry curved
+   platform in an abstract blue room. The child taps **Call**, **Hear** and **Go**. Each word is
+   spoken and drifts toward Wonder Light. The same short idle assist completes a waiting light.
+8. **Another chance.** The fish lets Jonah come forward onto a bright shore. No spit sound and no
+   humiliating animation. The message opens toward Nineveh.
+9. **Walk to Nineveh.** The child carries the message and walks with Jonah for a short road to the
+   gate. Jonah's warning is understandable: turn back, God sees. Families answer by a hand opening
+   and people turning toward each other.
+10. **God cares for Nineveh.** The shade hill is in the same view as the city. The plant grows, then
+    folds leaf by leaf. Jonah says he wanted the plant to stay, and he does not cheer up on cue.
+    Wonder Light asks whether God should care about a whole city. The child taps **Care**. The camera
+    rests on the living city.
+11. **Receive the Mercy charm.** The reflection names both directions of mercy. The first time this
+    profile earns the fifth charm, a volume page shows all five charms and the lit Faith Journey.
 
 ## Band
 
-Band A uses three large cargo outlines and three prayer lights with spoken words and distinct icons.
-The sea sequence advances even if the child stops touching the screen.
+Band A is the volume-1 chapter. It uses three cargo outlines and three prayer lights, each with a
+spoken word and its own icon, plus one Care light at the plant. Cargo and prayer idle-assist one
+step after about seven seconds. The story beats around them wait for the child. Touch, keyboard and
+gamepad can all finish both activities.
 
 Band B may later let the child choose which part of the story shows mercy—Jonah's rescue, the
-sailors' safety or Nineveh's forgiveness. Every choice receives a true explanation; none is marked
-wrong because all three belong to the theme.
+sailors' safety or Nineveh's forgiveness. Every choice would receive a true explanation. Band B is
+not a build task for this volume. Every child gets Band A.
 
 ## Where it happens
 
 This chapter uses one fold-out paper world with three connected panels rather than three unrelated
 levels:
 
-1. **Joppa and the ship:** sun-warmed harbour on the left.
-2. **The deep and shore:** layered blue paper sea in the centre, with the fish cutaway appearing only
-   during prayer.
-3. **Nineveh and the shade hill:** pale stone city and dusty road on the right.
+1. **Joppa and the ship:** a quiet sun-warmed quay on the left.
+2. **The deep and shore:** layered blue paper sea in the centre. One shared strip of that sea also
+   belongs to the ship, so the fish can rise past the stern without a camera cut. The prayer cutaway
+   is a page lifted in front of the deck, not a place the child enters.
+3. **Nineveh and the shade hill:** pale stone city and dusty road on the right, close enough to share
+   one view.
 
 Only the active panel carries full animation and collision. The others flatten into distant
-story-page silhouettes. This controls memory and helps the child understand that the story has
-moved to a new place.
+story-page silhouettes. The coast-folding transition covers a panel change so it does not feel like
+a load. This controls memory and helps the child understand that the story has moved.
 
 ## What carries over as-is
 
@@ -150,9 +166,9 @@ and for Nineveh's families:
 
 - **The three sailors** — one new `sailors.gd`, built like `camp_guard.gd`, Chapter 3's
   `jesse_sons.gd` and Chapter 4's `noahs_family.gd`: pivot-hierarchy bodies, no bones, variety from
-  small `CLOTH`/`SKIN`/`HAIR` colour arrays. Three named roles (captain, deck hand, rope-handler)
-  are just three `look` indices with slightly different held-prop attachments (a coil of rope, a
-  line), not three separate builds.
+  small `CLOTH`/`SKIN`/`HAIR` colour arrays. The deck hand and rope-handler are two `look` indices
+  with a rope coil as the prop difference. The captain shares that body and gets his own head,
+  because he speaks and his dialogue icon has to separate him from Jonah, Samuel and Noah.
 - **Nineveh's families** — the same crowd-rig technique, but used differently: the doc's "families
   turning away from harm" montage doesn't need continuous walk-cycle animation the way the sailors
   or Chapter 3's brothers do. A cheaper, appropriate build here is 2-3 fixed *poses* per instance
@@ -199,7 +215,8 @@ Light's amber glow is the thread through every state.
 
 ### The first view
 
-The camera begins above Joppa's quay. The eye should land in this order:
+The camera begins above Joppa's quiet quay. The valley's high tabletop follow is the wrong default
+for a deck, so this chapter adds its own shots. The opening eye should land in this order:
 
 1. The Nineveh road sign pointing inland.
 2. Jonah standing between the road and the ship.
@@ -224,41 +241,47 @@ void or flashing white lightning.
 
 ### Characters
 
-**Jonah.** A middle-aged traveller with a strong nose, short dark curls and a compact beard. His
-clothes are dusty indigo over muted ochre, distinct from David, Jonathan and Noah. His connected rig
-needs expressive shoulders and hands because much of the story is reluctance, prayer and honest
-frustration. He is serious and sometimes stubborn, never a slapstick figure.
+**Jonah.** A middle-aged traveller with a stronger nose bridge, short dark curls and a compact beard,
+at the same paper proportions as David and Jonathan. His clothes are dusty indigo over muted ochre.
+His connected rig needs five readable hand poses: arms at his sides, hands on the rail, open prayer
+hands, arms folded under the plant, and hands open toward the city. He is serious and sometimes
+stubborn. He does not become a joke, and he does not smile the lesson away at the end.
 
-**The sailors.** Three figures are enough to represent the crew: an older captain, a younger deck
-hand and a broad rope-handler. Their clothing uses sea green, cream and rust. They work together and
-show concern for Jonah. No ethnic caricature, pirate styling, eye patches or comic panic.
+**The sailors.** Three figures are enough: an older captain with his own head, a younger deck hand
+and a broad rope-handler. Their clothing uses sea green, cream and rust. They keep a small work idle
+during dialogue and cargo. They work together and show concern for Jonah. No ethnic caricature,
+pirate styling, eye patches or comic panic.
 
 **The people of Nineveh.** Small family and market groups in varied muted colours. They are people
 capable of responding, not a faceless evil crowd. A single close family can carry the change while
 the rest of the city shifts through tableau poses.
 
 **The great fish.** A huge rounded paper silhouette, closer to a gentle whale-like fish shape than a
-monster but without insisting on a biological species. It has a small calm eye, broad fins and no
-visible teeth. Its outline moves slowly beneath the layered water. The cutaway is abstract blue
-paper space: no ribs, stomach texture, slime or digestive imagery.
+monster but without insisting on a biological species. It is larger than the ship, with a small calm
+eye, broad fins and no visible teeth. The eye does not stare into the camera. The ship stays outside
+the silhouette. The cutaway is a dry abstract blue paper room: no ribs, stomach texture, slime or
+digestive imagery.
 
-**Wonder-Walker and Wonder Light.** The Wonder-Walker helps with safe tasks but never causes Jonah's
-fall or controls God's mercy. Wonder Light stays visible as a small warm guide in the deep.
+**Wonder-Walker and Wonder Light.** The Wonder-Walker helps with safe tasks, stays on the deck, and
+never causes Jonah's step into the sea or controls God's mercy. Wonder Light is already visible as
+a small warm guide when the prayer page starts to lift.
 
 ### The world, piece by piece
 
-- **Joppa quay:** broad stone steps, two mooring posts, folded nets and one clear gangway. Nets never
-  block the child or resemble traps.
+- **Joppa quay:** broad stone steps, two mooring posts, folded nets and one clear gangway. Keep it
+  quiet. Nets never block the child or resemble traps. Market crowds belong to Nineveh.
 - **Ship:** one mast, cream sail, low cabin and enough deck width for movement. The rail stays high
   and the child cannot fall overboard.
 - **Sea:** three or four long paper bands moving at different speeds. During the storm they rise but
   never cover the whole screen.
-- **Fish cutaway:** appears as if the top paper layer has lifted to reveal a protected blue chamber.
+- **Fish cutaway:** a lit paper page lifts in front of the deck and reveals a protected blue chamber.
+  Wonder-Walker is still standing with the sailors.
 - **Shore:** smooth wet sand, a few shells and the open Nineveh road.
 - **Nineveh:** rose gate, cloth shades, clay water jars and families. Avoid exotic excess or an evil
   colour code.
-- **Shade hill:** a small overlook outside the city, with one fast-growing broad-leaf plant. Its
-  withering is shown as folding leaves, not rot or infestation.
+- **Shade hill:** a small overlook in the same view as the city, with one fast-growing broad-leaf
+  plant. Its withering is folding leaves. The worm in Jonah 4:7 stays off the played scene. The last
+  frame favours the living city, with the folded plant still visible.
 
 ### World geometry, concretely
 
@@ -276,9 +299,9 @@ coordinates):
 - **The fish's rise point** sits just past the ship's stern, in the same sightline the camera holds
   after Jonah "steps behind a foreground wave" — so the reveal doesn't require a camera cut to find
   it, the same discipline Chapter 4 applied to the ark's window/dove sightline.
-- **The prayer chamber** is a separate, small, enclosed footprint (per **Asset inventory**'s
-  cutaway note) — it only needs to hold Jonah, Wonder Light and three guided lights in one
-  intimate, static composition, not support walking.
+- **The prayer chamber** is a page in front of the deck, not a floor the child walks into. It holds
+  Jonah, Wonder Light and three guided lights in one intimate composition. The child taps from the
+  deck.
 - **Nineveh's gate and shade hill** sit close enough together that the "final question" beat
   (Jonah under the plant, city visible below) doesn't need a panel change mid-reflection.
 
@@ -290,22 +313,27 @@ coordinates):
   than copying every wave.
 - **Jonah and the sea:** Jonah disappears behind a foreground wave; the camera stays with the sailors
   until the water settles, then looks down at the fish silhouette.
-- **Prayer:** intimate side view with Jonah and Wonder Light, no looming fish anatomy.
-- **Release:** exterior shore view; the fish opens behind a wave and Jonah comes forward safely.
+- **Prayer:** the lifted page, with Jonah and Wonder Light inside it and no looming fish anatomy.
+- **Release:** exterior shore view; Jonah comes forward from behind a wave.
 - **Nineveh:** city gate and responding families, with Jonah part of the scene rather than a giant
-  preacher above them.
-- **Final question:** Jonah beneath the plant with Nineveh visible below.
+  preacher above them. This is the warmest, longest hold in the chapter.
+- **Final question:** Jonah beneath the plant with Nineveh visible. The last frame favours the city.
 
 ### Never in the picture
 
 - The player or sailors throwing Jonah, a button labelled "Throw," or a fall viewed from above.
+- The child inside the sea or the fish, or the ship shown swallowed.
 - Jonah drowning, gasping underwater or being chased.
-- Teeth, tongue, stomach walls, bones, slime or digestion jokes.
-- Screaming sailors, lightning flashes, violent camera shake or a capsizing ship.
+- Teeth, tongue, stomach walls, bones, slime, digestion jokes or a spit sound. Jonah 2:10 stays off
+  the default read-aloud path.
+- Jonah asking to die, from Jonah 4:3 or 4:8.
+- A worm, rot or infestation on the plant.
+- Screaming sailors, crying children, lightning flashes, violent camera shake or a capsizing ship.
 - Nineveh shown as a monstrous or ethnically caricatured city.
-- Jonah reduced to a coward joke or the fish treated as punishment alone.
-- The story ending when Jonah leaves the fish; Nineveh and God's mercy must remain.
+- Jonah reduced to a coward joke, or made cheerfully converted in the last shot.
+- The story ending when Jonah leaves the fish; Nineveh and God's mercy remain.
 - God voiced as a booming character invented for spectacle.
+- A shipped line left on system text-to-speech, or an activity panel left over the verse.
 
 ## The two new interactions, in detail
 
@@ -318,16 +346,15 @@ inventing a new one.
 This is close to a direct reuse of Chapter 3's Prepare the Welcome, not a new system:
 
 - **Carry and place** reuse that component's "floating beside the walker" carry state and
-  automatic ease-in at a marked spot exactly as specified there — three cargo pieces, three
-  outlined spaces on deck, no wrong placement possible by construction (an outline only accepts its
-  matching piece).
+  automatic ease-in at a marked spot exactly as specified there. The three pieces are the bag, the
+  message and the lamp already found. Each outline shows that object's icon and accepts only its
+  match. Colour is not the only cue.
 - **What's different here, and worth naming:** the ship is rising and falling the whole time
-  (**Colour and atmosphere**'s storm state), so the placement outlines need to stay visually locked
-  to the deck rather than to a fixed screen position — a small but real difference from the
-  courtyard's static table, worth a specific check during implementation rather than assuming the
-  component ports over with zero changes.
-- **No fail state, no timer, no order requirement** — matching every other placement activity in
-  the game so far.
+  (**Colour and atmosphere**'s storm state), so the outlines are parented to the deck rather than
+  drawn as a screen panel. They stay below the dialogue bar and never cover a face or a verse.
+  Touch may drag. Touch, keyboard and gamepad may also tap a piece and then tap its outline.
+- **No fail state, no timer, no order requirement.** About seven seconds without a touch eases the
+  next piece into place. The story beats around the activity do not skip themselves.
 - **Purpose, per the doc:** this activity exists to give the child "a safe, constructive action
   while the adults speak," not to be a puzzle — its low novelty is a feature, not a gap. Spending
   new engineering effort here would be effort spent on the wrong problem.
@@ -339,36 +366,31 @@ This is new, but it should extend `word_chip.gd` rather than replace it:
 - **The three prayer lights** (Call, Hear, Go) reuse `word_chip.gd`'s established language almost
   entirely: the next light breathes to invite a tap, a tapped light pops with a ring and sparkles,
   and a lit light keeps its own soft glow — the same behaviour already proven for Chapter 1's
-  "Don't. Be. Afraid." and Chapter 2's Knit/Loved/Friend.
+  "Don't. Be. Afraid." and Chapter 2's Knit/Loved/Friend. The spoken clip is that single word, and
+  the label matches it: "Call." "Hear." "Go."
 - **What's genuinely new** is the "guide toward Wonder Light" motion after a tap: once lit, a light
-  should drift from where the child tapped it toward Wonder Light's position over roughly a second,
-  rather than simply changing colour in place — this is what makes the activity read as *prayer
-  reaching toward someone* rather than a third instance of the same verse-word tap. A short eased
-  drift (the same quadratic-bezier language used for the dove and the fish, not a new curve type)
-  keeps the visual vocabulary consistent across chapters rather than adding a fourth kind of motion
-  curve to the codebase.
-- **Order and pacing:** the doc's beat list implies Call, then Hear, then Go — but per **Band**,
-  "the sea sequence advances even if the child stops touching the screen," so this activity should
-  auto-advance on a gentle timer if the child doesn't tap, the same idle-assist principle Steady
-  Hands already uses (a breath completes on its own after 7 idle seconds) rather than leaving the
-  scene stalled.
-- **No fail state.** A light cannot be mis-tapped since there is only one correct next light at a
-  time, following the same "next word breathes" cueing `word_chip.gd` already uses to make the
-  correct action obvious without instruction text.
+  drifts toward Wonder Light over roughly a second. The lights live on the lifted page, already lit
+  with Wonder Light's amber glow. A short eased drift uses the same quadratic-bezier language as the
+  dove and the fish.
+- **Order and pacing:** Call, then Hear, then Go. If the child does not tap, the next light completes
+  on its own after about seven idle seconds, the same principle as Steady Hands. That assist does
+  not skip the shore, the road or the verse.
+- **Care** is a fourth chip later, at the plant, not part of this trio and not a second three-word
+  game. Its clip is "Care."
+- **No fail state.** Only the next light breathes. Dismiss and free the page before any verse card.
 
 ## Animation and motion polish
 
 This chapter carries the same rigidity risks the last two named, plus one the earlier chapters
 didn't have to solve: an actual accessibility motion setting, not just a calm default.
 
-**Reduced motion needs a real toggle, not just a calm default.** The doc requires it explicitly
-("A reduced-motion setting should also reduce wave travel and remove any deck tilt while keeping
-the narrative intact" — **What you hear across the journey**), and nothing like it exists anywhere
-in the codebase yet. The pattern to follow already exists, though: `GameSettings.read_aloud` and
-`GameSettings.easy_words` are simple boolean settings, each with its own `CheckBox` in the pause
+**Reduced motion needs a real toggle, not just a calm default.** It reduces wave travel, removes
+deck tilt and ducks wind and rain while the fish rise, the prayer and the mercy ending stay. Nothing
+like it exists in the codebase yet. The pattern to follow already exists, though: `GameSettings.read_aloud`
+and `GameSettings.easy_words` are simple boolean settings, each with its own `CheckBox` in the pause
 menu (`game_menu.gd`) and its own persisted value. A `GameSettings.reduced_motion` toggle, wired
 the same way, is the concrete shape of this work — not a new settings architecture, just one more
-flag through the existing one.
+flag through the existing one. Build it before prototyping the deck.
 
 **Jonah needs more than the shared module's baseline, and that should be named as a real
 requirement, not assumed away.** `chapter_two_character_motion.gd`'s `breath()`/`listening_nod()`/
@@ -419,7 +441,7 @@ for cloth lift in wind) rather than leaving "principles" undefined.
 
 | Sound | Behaviour | Likely `sound_library.gd` entry |
 |---|---|---|
-| Harbour | Small waves, rope against wood, sparse gulls and one distant market bed | `STREAM`-family water, new `GULLS` ambience |
+| Harbour | Small waves, rope against wood, one gull crossing once. No market bed here | `STREAM`-family water, one `GULLS` pass |
 | Ship | Timber creak, sail cloth and calm hull water; positioned around the deck | reuses Chapter 4's `HULL_CREAK`-style sfx |
 | Storm | Wind and rain rise slowly; no thunder crack near the listener | `WIND` variant plus Chapter 4's new `RAIN` ambience, both reused rather than re-authored |
 | Cargo activity | Rope wrap, wood set-down and cloth bundle, each soft and distinct | new `ROPE_WRAP`, reuses Chapter 4's `PEG_TAP`-style wood sound, new `CLOTH_BUNDLE` |
@@ -429,17 +451,20 @@ for cloth lift in wind) rather than leaving "principles" undefined.
 | Shore | Gentle surf, wet footsteps and one returning seabird | reuses harbour water and a new `"wet_sand"` `SURFACES` entry |
 | Nineveh | Soft market movement that falls silent for Jonah's message | new `MARKET` ambience |
 | Shade plant | Leaf unfurl, dry fold and a small reflective harp phrase | new `LEAF_UNFURL`, `LEAF_FOLD` sfx |
-| Music | Plucked oud-like strings at Joppa, deep pad in prayer, warmer strings at Nineveh | a new arrangement per panel, the third chapter running its own musical identity after Chapter 4 |
+| Music | The volume's plucked strings and pads. Prayer sits lower. Nineveh is the warmest | a new arrangement per panel, using the existing instrument family |
 
 The storm mix needs strict loudness and frequency limits. Voice must remain at least as clear as it
-is in Chapters 1 and 2. As with Chapter 4's rain, gulls, market ambience and the fish's water swell
-are cases where the project's own synthesis caution applies — budget for credited CC0 source
-recordings rather than assuming synthesis will read as convincing, and log every one in
-`assets/audio/CREDITS.md`.
+is in Chapters 1 and 2. Footsteps change with the ground: quay stone, deck wood, wet sand, dusty
+road. The three finds use the usual pickup chime once each. The message unrolls once and shares a
+"Nineveh." clip with the road sign. Activity sounds go silent before the verse card. As with Chapter
+4's rain, gulls, market ambience and the fish's water swell are cases where the project's own
+synthesis caution applies — budget for credited CC0 source recordings rather than assuming synthesis
+will read as convincing, and log every one in `assets/audio/CREDITS.md`.
 
-A reduced-motion setting should also reduce wave travel and remove any deck tilt while keeping the
-narrative intact — see **Animation and motion polish** for the concrete `GameSettings` shape this
-should take.
+A reduced-motion setting reduces wave travel, removes deck tilt and ducks wind and rain, while
+keeping the narrative intact — see **Animation and motion polish** for the concrete `GameSettings`
+shape this should take. The full mix checklist is in
+[chapter-5-polish.md](chapter-5-polish.md).
 
 ## Voice design
 
@@ -453,7 +478,7 @@ presets (Juno, Bram, Dylan, Samuel, Jesse, Noah, Noah's wife, Jonah, Captain) ra
 |---|---|---|
 | Wonder Light | Juno | Existing, unchanged. Narrates God's direction and the dangerous transitions |
 | Jonah | **New preset, TBD** | Adult male, warmth under reluctance, capable of prayer without theatrical booming — must not resemble Dylan's Jonathan or Bram's David, and needs the widest emotional range of any new voice so far (avoidance, fear, prayer, obedience, frustration) without ever becoming frightening |
-| Captain | **New preset, TBD** | Older male, two short compassionate lines — needs a clear ear-test against Samuel and Noah, the cast's other "older male" voices, following the same distinctness discipline Chapter 4 applied to Noah against Samuel |
+| Captain | **New preset, TBD** | Older male, exactly two compassionate lines: the storm, and "We are safe." Needs a clear ear-test against Samuel and Noah, the cast's other older male voices |
 | Nineveh | **Decision needed, default: none** | The doc allows "one adult and one child acknowledgement," but per the pattern above, defaulting to Wonder Light narrating Nineveh's response (as she already does for Jesse's brothers and Noah's family) is the cheaper, more consistent choice unless a real-child playtest specifically asks for Nineveh's own voice |
 
 **Casting process**, continuing the same discipline as every prior chapter: 2-3 candidate presets
@@ -461,16 +486,16 @@ per role, auditioned against the *entire* existing cast (Juno, Bram, Dylan, Samu
 Noah's wife), not just the two or three most similar voices — this chapter's cast is now large
 enough that a new voice needs to be checked against everyone, not just its closest neighbours.
 
-**Clip budget, by precedent.** The draft script below runs to 19 standard lines — 14 Wonder Light,
-4 Jonah, 1 Captain — close to Chapter 4's 18-line scale despite this chapter having more story
-beats (11, versus Chapter 4's 9): most of the extra beats are carried by Wonder Light narrating
-transitions rather than by new dialogue, and Nineveh's default of no dedicated voice
-(**Who is talking**) keeps the speaking cast small. Plus Easy Words duplicates for the
-youngest-facing subset, **call it 22-26 new clips**.
+**Clip budget, by precedent.** The draft script below runs to 22 spoken lines — 15 Wonder Light,
+5 Jonah, 2 Captain — plus five short word clips: "Call." "Hear." "Go." "Care." "Nineveh." Easy
+Words duplicates for the safety line, the plant question and the two charm lines bring the new-clip
+range to about 30. Every shipped line is recorded. A missing clip must not drop its dialogue block
+onto system text-to-speech.
 
 Jonah needs the most voice testing of the new cast because the same profile must carry avoidance,
-fear, prayer, obedience and frustration without becoming frightening. Easy Words variants are
-required for the storm explanation and God's final question.
+admission, prayer, the warning and frustration without becoming frightening. Direct those five lines
+separately. Easy Words variants are required for the safety line, the plant question and the charm
+lines. Drafts are in [chapter-5-polish.md](chapter-5-polish.md).
 
 ## Who is talking
 
@@ -489,77 +514,102 @@ The same `dialogue_view.gd` extension pattern as Chapters 3 and 4:
 
 ## Draft script (for timing and casting, not final)
 
-A speaker-labelled pass through the eleven story beats, wording only — not reviewed for theology,
-not checked against either candidate verse (Jonah 2:2 / Jonah 4:2), and not through an Easy Words
-pass. Written in the same short, present-tense register as the other chapters' scripts.
+A speaker-labelled pass through the eleven story beats, in the same short present-tense register as
+the other chapters. Word taps are extra clips, not extra rows: "Call." "Hear." "Go." "Care." and
+"Nineveh." The mercy clause of Jonah 4:2 is a verse card, not one of these lines. Easy Words drafts
+are in [chapter-5-polish.md](chapter-5-polish.md). A Bible-story reviewer still needs to accept the
+compressions listed under **Decided**.
 
 | # | Speaker | Line | Beat |
 |---|---|---|---|
-| 1 | Wonder Light | "Noah trusted God before he could see the rain. Jonah heard God too — but Jonah ran the other way." | 1. Arrive at Joppa |
-| 2 | Wonder Light | "Nineveh is that way. Jonah's ship is going the other way." | 1. Road and ship |
+| 1 | Wonder Light | "This is Joppa." | 1. Arrive |
+| 2 | Wonder Light | "Nineveh is that way. Jonah is looking at the ship." | 1. The choice, after the picture |
 | 3 | Wonder Light | "Find Jonah's bag, his message, and his lamp." | 2. Find travelling things |
 | 4 | Jonah | "I know where God wants me to go. I don't want to go there." | 3. Meet Jonah |
-| 5 | Wonder Light | "Let's help secure the cargo before the storm." | 5. Secure the Cargo |
+| 5 | Wonder Light | "The waves are rising. Let's secure Jonah's things." | 5. Cargo, as the storm begins |
 | 6 | Captain | "Hold on. This storm isn't like the others." | 5. Storm tableau |
 | 7 | Jonah | "This storm is because of me. I was running from God." | 6. Jonah admits it |
-| 8 | Wonder Light | "The sailors didn't want to. But the sea grew calm." | 6. Jonah enters the sea |
-| 9 | Wonder Light | "God appointed a great fish to keep Jonah safe." | 6. The fish rises |
-| 10 | Wonder Light | "Call. Hear. Go. Let's pray with Jonah." | 7. Prayer in the Deep |
-| 11 | Jonah | "You heard me. Thank you for another chance." | 7-8. Prayer, then release |
-| 12 | Wonder Light | "The fish set Jonah safely on the shore." | 8. Another chance |
-| 13 | Wonder Light | "Now Jonah goes to Nineveh, just as God asked." | 9. Walk to Nineveh |
-| 14 | Jonah | "Nineveh — forty days, and this will all change." | 9. The warning |
-| 15 | Wonder Light | "The people of Nineveh listened. They turned away from harm." | 9. Families respond |
-| 16 | Wonder Light | "Jonah cared about the plant. God cared about a whole city of people." | 10. The final question |
-| 17 | Wonder Light | "God gave Jonah another chance. God cared for the people Jonah did not want to forgive." | 11. Reflect |
-| 18 | Wonder Light | "A Mercy charm, for another chance, and for a city God would not give up on." | 11. Charm |
-| 19 | Wonder Light | "Keep it close. Mercy is for the person who needs a second chance, and for the ones we'd rather not forgive." | 11. Charm, closing |
+| 8 | Wonder Light | "This is Jonah's story. God still keeps him safe." | 6. Immediately after the admission |
+| 9 | Wonder Light | "The sailors didn't want to let him go. Then the sea grew calm." | 6. Jonah enters the sea |
+| 10 | Captain | "We are safe." | 6. Sailors' mercy |
+| 11 | Wonder Light | "God appointed a great fish to keep Jonah safe." | 6. The fish rises |
+| 12 | Wonder Light | "Call. Hear. Go. Let's pray with Jonah." | 7. Prayer in the Deep |
+| 13 | Jonah | "You heard me. Thank you for another chance." | 7-8. Prayer, then release |
+| 14 | Wonder Light | "The fish set Jonah safely on the shore." | 8. Another chance |
+| 15 | Wonder Light | "Carry the message. Now Jonah goes to Nineveh, just as God asked." | 9. Walk to Nineveh |
+| 16 | Jonah | "Nineveh, turn back. God sees what you are doing." | 9. The warning |
+| 17 | Wonder Light | "The people of Nineveh listened. They turned away from harm." | 9. Families respond |
+| 18 | Jonah | "I wanted the plant to stay." | 10. The plant |
+| 19 | Wonder Light | "Jonah cared about one plant. Should God care about a whole city?" | 10. The question |
+| 20 | Wonder Light | "God gave Jonah another chance. God cared for the people Jonah did not want to forgive." | 11. Reflect |
+| 21 | Wonder Light | "A Mercy charm, for another chance, and for a city God would not give up on." | 11. Charm |
+| 22 | Wonder Light | "Keep it close. Mercy is for the person who needs a second chance, and for the ones we'd rather not forgive." | 11. Charm, closing |
 
-That is 14 Wonder Light lines, 4 Jonah, 1 Captain — heavier on Jonah than Chapter 4 was on Noah,
-matching this chapter's higher beat count and Jonah's wider required emotional range, and
-consistent with **Voice design**'s default of no dedicated Nineveh voice (its beats are carried by
-Wonder Light, lines 9 and 15). Line 4 and line 7 are the two places that range is most
-load-bearing and worth the earliest possible read-through with a candidate voice.
+That is 15 Wonder Light lines, 5 Jonah, 2 Captain. Nineveh still has no dedicated voice. Lines 4, 7,
+16 and 18 are the ones that need the earliest read-through, because they carry refusal, admission,
+the warning and frustration. Line 8 follows line 7 immediately, so the admission does not hang as a
+threat to the child.
 
 ## Decided
 
 - The title and dialogue say Great Fish; store metadata may mention the familiar whale title once.
-- Mercy is the value and includes both Jonah and Nineveh.
-- The child never throws Jonah or controls a dangerous act.
-- The inside of the fish is abstract, calm and non-anatomical.
-- The story continues through Nineveh and God's final lesson; rescue is not the ending.
-- The chapter closes the first five-journey volume.
+- Mercy is the value and includes Jonah, the sailors and Nineveh.
+- The child never throws Jonah, never enters the sea or the fish, and never controls a dangerous act.
+- The bag, message and lamp are the cargo. They stay visible as they move through the chapter.
+- The inside of the fish is a lit paper page in front of the deck: abstract, calm and non-anatomical.
+- The plant folds. The worm is not staged. Jonah's wish to die is not spoken.
+- Jonah is still unhappy about the plant at the end. The lesson is not a tidy conversion.
+- The story continues through Nineveh. The city gets the warmest, longest picture. The fish is the middle.
+- The played scripture is the mercy clause of Jonah 4:2. The full question and any prayer passage live in the journal.
+- The chapter closes the first five-journey volume. The volume page plays once per profile, with no store prompt.
+- Acceptance detail lives in [chapter-5-polish.md](chapter-5-polish.md).
 
 ## Improve pass before implementation
 
-1. Lock the verse after testing Jonah 2:2 and Jonah 4:2 aloud with the target age group.
-2. Have a Bible-story reviewer check what is narrated, what is compressed and how the ending of
-   Jonah remains an open question rather than a falsely tidy conversion for Jonah.
+1. Read the Jonah 4:2 mercy clause and the plant question aloud with the target age group. Keep Jonah
+   2:2 in the journal only if "Sheol" is clear enough. Do not put Jonah 2:10 or Jonah 4:3 on the
+   default read-aloud path.
+2. Have a Bible-story reviewer check the compressions: the worm omitted from the picture, the
+   death-wish lines omitted, the warning shortened, the storm framed as Jonah's story rather than a
+   threat to the child, and Jonah left honestly unhappy at the end.
 3. Prototype deck movement with reduced motion enabled and test it with motion-sensitive adults and
-   children.
-4. Storyboard the sea transition so Jonah's danger is understood without showing drowning or making
-   the child responsible.
-5. Test the fish silhouette and cutaway with children for fear, confusion and accidental comedy.
-6. Time the harbour, storm, prayer, Nineveh and plant beats; cut dialogue before cutting the mercy
-   ending.
-7. Audition Jonah and Captain voices against the full existing cast (Juno, Bram, Dylan, Samuel,
-   Jesse, Noah, Noah's wife), not just the first three — the cast is large enough now that a new
-   voice can collide with any of them, not only the most obvious neighbours.
-8. Test the entire chapter on tablet speakers; storm and water must never mask narration.
-9. Decide the first-volume completion reward after all five charms can be viewed together. It should
-   celebrate the journey without adding an unrelated currency or store prompt.
+   children. Reduced motion also ducks wind and rain.
+4. Storyboard the sea transition: Jonah steps behind a wave, the child stays on the deck, the sailors
+   are shown safe, and the fish rises past the stern with the ship still outside it.
+5. Test the fish silhouette, the prayer page and the folding plant with children for fear, sadness,
+   confusion and accidental comedy. Ask whether the child can say that God gave Jonah another chance
+   and still cared about the city.
+6. Time a full play against the minute budget in [chapter-5-polish.md](chapter-5-polish.md). If it
+   runs long, shorten the gangway and extra narration before cutting the sailors, the road, Nineveh,
+   the plant question, Care or the charm.
+7. Audition Jonah and the Captain against the full existing cast (Juno, Bram, Dylan, Samuel, Jesse,
+   Noah, Noah's wife). The captain's two lines have to clear Samuel and Noah. Direct Jonah's five
+   lines separately.
+8. Test the entire chapter on tablet speakers at about half volume: voices only, ambience only, sound
+   muted, and read-aloud off. Storm and water must never mask narration.
+9. Play the first-time volume page with all five charms visible. It celebrates the journey and does
+   not add a currency or a store prompt. A replay of this chapter shows the ordinary end card.
 10. Build `GameSettings.reduced_motion` on the existing `read_aloud`/`easy_words` pattern (its own
     `CheckBox` in `game_menu.gd`, its own persisted value) before prototyping deck movement
-    (Improve-pass item 3) — the setting needs to exist before it can be tested.
+    (Improve-pass item 3).
 11. Extend `dialogue_view.gd`'s `SPEAKERS`, `_draw_face()` and speaker-detection list for Jonah and
-    the Captain before recording any lines — see **Who is talking**.
-12. Settle the Nineveh-voice decision (**Voice design**) before locking the script or the speaker
-    tag list — it changes the clip budget, the cast size and whether `dialogue_view.gd` needs a
-    third new entry.
+    the Captain before recording any lines — see **Who is talking**. Every script line uses the
+    exact `Speaker: "..."` prefix.
+12. Keep Nineveh on Wonder Light's voice for volume 1 (**Voice design**). Reopen a Nineveh voice only
+    if a family playtest asks for one.
 13. Confirm `journal_content.gd`'s `MYSTERY_SLOTS` drops to 0 once this chapter's `CHARM_MERCY` is
-    added, assuming Chapters 3 and 4's charms already exist (5 earned charms + 0 mystery slots = 5)
-    — the same kind of check Chapters 3 and 4 each needed, with a different answer each time, so
-    it is worth verifying fresh here rather than assuming a pattern.
-14. Build idle life into the sailors during Jonah's dialogue beats and Secure the Cargo, and use a
-    real cross-fade (not a hard snap) between Nineveh's tableau poses — see **Animation and motion
-    polish**.
+    added, after checking whatever Chapters 3 and 4 actually shipped (5 earned charms + 0 mystery
+    slots = 5). Verify the count. Do not assume it.
+14. Build idle life into the sailors during Jonah's dialogue and Secure the Cargo, and cross-fade
+    Nineveh's tableau poses over about half a second — see **Animation and motion polish**.
+15. Follow [chapter-5-polish.md](chapter-5-polish.md) for the time budget, scenery, camera shots,
+    Jonah's hand poses, input paths, sound, verse card and the definition of polished.
+16. Give Secure the Cargo a tap-then-tap path for touch, keyboard and gamepad, and parent the
+    outlines to the deck so they cannot cover the dialogue or the verse.
+17. Add a headless chapter review that can reach the charm with idle assist, confirms the verse card
+    appears with no activity panel left up, and confirms reduced motion leaves the deck level.
+18. When the chapter script exists, extend the smoke test so every new clip loads and every Easy
+    Words original remains a substring of that script.
+19. Light Joppa and Nineveh with a daytime sun. In the storm, darken the sky and the waves and keep
+    faces paper-warm.
+20. Approve Jonah's close-up poses and the captain's face before recording voice.
