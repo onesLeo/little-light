@@ -144,6 +144,9 @@ Use this simple decision table:
 
 ## Higgsfield promotional-video plan
 
+The concrete game-side asset list, capture commands, character sheets and shot IDs are in
+[promo-production-checklist.md](promo-production-checklist.md).
+
 Higgsfield can support the campaign through Cinema Studio, Marketing Studio and motion/ad
 variation workflows. Its own game-trailer guidance recommends locking character and location
 references and writing a shot list before generation. Marketing Studio can then reuse the same
@@ -202,4 +205,3 @@ Higgsfield references:
 5. Recruit the first 10 families and record the baseline completion/replay signals.
 6. Publish the public preview page only after the private pilot resolves its largest problems.
 7. Revisit packaging and price when at least 10 parents have answered after observing play.
-
