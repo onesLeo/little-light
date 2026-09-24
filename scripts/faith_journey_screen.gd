@@ -13,6 +13,7 @@ signal closed
 
 const Profiles := preload("res://scripts/profiles.gd")
 const PaperUI := preload("res://scripts/paper_ui.gd")
+const MapArkSketch := preload("res://scripts/map_ark_sketch.gd")
 
 const MAP_PATH := "res://assets/ui/faith_journey_map.jpg"
 const MAP_ASPECT := 16.0 / 9.0
@@ -24,8 +25,8 @@ const DONE_FILL := Color(0.99, 0.95, 0.82)
 ## Profiles chapter id; the last stop is the path still ahead.
 const STOPS := [
 	{"id": "valley", "chapter": Profiles.CHAPTER_VALLEY, "number": 1, "title": "The valley", "at": Vector2(0.22, 0.76)},
-	{"id": "camp", "chapter": Profiles.CHAPTER_CAMP, "number": 2, "title": "The King's Camp", "at": Vector2(0.42, 0.50)},
-	{"id": "ark", "chapter": Profiles.CHAPTER_ARK, "number": 3, "title": "Noah's Ark", "at": Vector2(0.64, 0.36)},
+	{"id": "camp", "chapter": Profiles.CHAPTER_CAMP, "number": 2, "title": "The King's Camp", "at": Vector2(0.545, 0.50)},
+	{"id": "ark", "chapter": Profiles.CHAPTER_ARK, "number": 3, "title": "Noah's Ark", "at": MapArkSketch.ANCHOR},
 	{"id": "ahead", "chapter": "", "number": 4, "title": "Coming soon", "at": Vector2(0.84, 0.22)},
 ]
 
@@ -34,6 +35,7 @@ var _paused_by_me: bool = false
 ## True when the map is the first stop and no story has started behind it yet.
 var _choosing: bool = false
 var _map: TextureRect
+var _ark_sketch: Control
 var _line: Label
 var _back: Button
 var _change_player: Button
@@ -264,6 +266,11 @@ func _build() -> void:
 		_map.texture = load(MAP_PATH)
 	add_child(_map)
 
+	# The valley and the camp are painted into the map; the ark is inked on top in the same hand.
+	_ark_sketch = MapArkSketch.new()
+	_ark_sketch.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(_ark_sketch)
+
 	var title := PaperUI.label("Faith Journey", 40)
 	title.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	title.offset_top = 18.0
@@ -422,6 +429,7 @@ func _layout() -> void:
 	if view.x < 1.0 or view.y < 1.0:
 		return
 	var fitted := _fitted_map(view)
+	_ark_sketch.fit(fitted)
 	for stop in _stops:
 		var at: Vector2 = stop["at"]
 		var button: Button = stop["button"]
