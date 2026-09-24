@@ -52,7 +52,7 @@ transitions and different crops.
 | G09 | 2 | Find and collect one gift; checklist row checks off | checklist visible | footsteps + chime | capture needed |
 | G10 | 2 | Draw and release one friendship-cord loop | activity UI | activity sound | capture needed |
 | G11 | 2 | Friendship charm/verse completion | normal UI | voice + charm sound | capture needed |
-| G12 | shared | Five-stop Faith Journey map | normal UI | soft music | capture needed after map text review |
+| G12 | shared | Faith Journey map | normal UI | soft music | **blocked** — the map has 3 stops today (`faith_journey_screen.gd`'s `STOPS`: Valley, King's Camp, a generic "Coming soon"), not five; capture only after backlog 7.8 (the five-stop map rebuild) ships, or re-scope this shot to the current 3-stop map and drop "five-stop" from the caption |
 
 For every important shot, capture two versions where practical:
 
