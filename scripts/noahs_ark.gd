@@ -8,6 +8,7 @@ const Profiles := preload("res://scripts/profiles.gd")
 const Motion := preload("res://scripts/chapter_two_character_motion.gd")
 
 const ORIGIN := Vector3(96.0, 0.0, 8.0)
+const START_LOCAL := Vector3(0.0, 0.2, 8.0)
 const GUIDED := ["SheepA", "DoveA", "ElephantA"]
 const MATE_OF := {
 	"SheepA": "SheepB", "DoveA": "DoveB", "ElephantA": "ElephantB",
@@ -46,10 +47,16 @@ func visit() -> void:
 	var player := main.get_node_or_null("Player") as CharacterBody3D
 	if player:
 		player.velocity = Vector3.ZERO
-		player.global_position = _at(Vector3(0.0, 0.2, 12.0))
+		player.global_position = _at(START_LOCAL)
 		var cam := main.get_node_or_null("TabletopCamera") as Camera3D
 		if cam and "offset" in cam:
+			cam.offset = Vector3(0.0, 7.4, 8.4)
+			if "look_height" in cam:
+				cam.set("look_height", 0.9)
+			cam.fov = 35.0
 			cam.global_position = player.global_position + cam.offset
+			cam.look_at(player.global_position + Vector3(0.0, 0.9, 0.0), Vector3.UP)
+		_set_building_light(main)
 		var light := main.get_node_or_null("WonderLight") as Node3D
 		if light and "hover_offset" in light:
 			light.global_position = player.global_position + light.hover_offset
@@ -63,6 +70,7 @@ func _build() -> void:
 		return
 	_built = true
 	_ground()
+	_plain_dressing()
 	_hull()
 	_items()
 	_animals()
@@ -105,31 +113,145 @@ func _ground() -> void:
 	body.add_child(shape)
 	body.position = _at(Vector3(0.0, -0.5, 2.0))
 	add_child(body)
-	Paper.part(self, "Earth", Paper.box(Vector3(40.0, 0.08, 36.0)), Color(0.78, 0.62, 0.38),
+	Paper.part(self, "Earth", Paper.box(Vector3(40.0, 0.08, 36.0)), Color(0.69, 0.59, 0.44),
 			_at(Vector3(0.0, 0.02, 2.0)), Vector3.ZERO, Vector3.ONE, 0.0)
 
 
+func _set_building_light(main: Node) -> void:
+	# Chapter 2 leaves the shared world at blue hour; the ark opens in daylight.
+	var world := main.get_node_or_null("WorldEnvironment") as WorldEnvironment
+	if world and world.environment:
+		var env := world.environment
+		if env.sky:
+			var sky := env.sky.sky_material as ProceduralSkyMaterial
+			if sky:
+				sky.sky_top_color = Color(0.43, 0.67, 0.86)
+				sky.sky_horizon_color = Color(0.91, 0.82, 0.66)
+				sky.ground_horizon_color = Color(0.7, 0.61, 0.47)
+				sky.ground_bottom_color = Color(0.42, 0.36, 0.3)
+			env.ambient_light_color = Color(0.88, 0.81, 0.68)
+			env.ambient_light_energy = 0.9
+			env.fog_light_color = Color(0.79, 0.7, 0.56)
+			env.fog_density = 0.0015
+	var sun := main.get_node_or_null("Sun") as DirectionalLight3D
+	if sun:
+		sun.light_color = Color(1.0, 0.9, 0.73)
+		sun.light_energy = 1.0
+	var fill := main.get_node_or_null("FillLight") as DirectionalLight3D
+	if fill:
+		fill.light_color = Color(0.76, 0.84, 0.94)
+		fill.light_energy = 0.4
+	var backdrop := main.get_node_or_null("HorizonBackdrop")
+	if backdrop and backdrop.has_method("set_daylight"):
+		backdrop.set_daylight()
+
+
+func _plain_dressing() -> void:
+	# A worn path gives the child a clear line from the tools to the hull.
+	Paper.part(self, "WornPath", Paper.box(Vector3(3.4, 0.035, 17.0)), Color(0.75, 0.63, 0.46),
+			_at(Vector3(0.0, 0.075, 3.0)), Vector3(0.0, 0.025, 0.0), Vector3.ONE, 0.0)
+	# Low paper dunes break up the empty horizon while leaving the ark in view.
+	var dunes := [
+		Vector4(-15.0, -10.0, 5.5, 1.7), Vector4(-8.0, -13.0, 4.3, 1.2),
+		Vector4(10.0, -13.0, 5.0, 1.5), Vector4(16.0, -9.0, 4.4, 1.4),
+	]
+	for i in dunes.size():
+		var d: Vector4 = dunes[i]
+		Paper.part(self, "Dune%d" % i, Paper.sphere(1.0, 7),
+				Color(0.75, 0.66, 0.52) if i % 2 == 0 else Color(0.79, 0.70, 0.57),
+				_at(Vector3(d.x, d.w * 0.35, d.y)), Vector3.ZERO, Vector3(d.z, d.w, 2.1), 0.0)
+	# Sparse olive scrub shows scale without cluttering the animal route.
+	for i in 9:
+		var side := -1.0 if i % 2 == 0 else 1.0
+		var x := side * (8.0 + float((i * 3) % 7))
+		var z := 10.0 - float(i) * 2.4
+		Paper.part(self, "ScrubStem%d" % i, Paper.cylinder(0.035, 0.42, 5), Color(0.42, 0.38, 0.24),
+				_at(Vector3(x, 0.22, z)), Vector3(0.0, 0.0, 0.12 * side), Vector3.ONE, 0.0)
+		Paper.part(self, "ScrubLeaf%d" % i, Paper.sphere(0.22, 6), Color(0.48, 0.53, 0.32),
+				_at(Vector3(x + side * 0.12, 0.42, z)), Vector3.ZERO, Vector3(1.4, 0.7, 0.8), 0.0)
+
+
 func _hull() -> void:
-	Paper.part(self, "Hull", Paper.box(Vector3(14.0, 3.2, 5.0)), Color(0.62, 0.4, 0.22),
-			_at(Vector3(0.0, 1.7, -7.0)), Vector3.ZERO, Vector3.ONE, 0.04)
+	Paper.part(self, "Keel", Paper.box(Vector3(11.8, 1.4, 11.2)), Color(0.48, 0.29, 0.15),
+			_at(Vector3(0.0, 0.72, -4.0)), Vector3.ZERO, Vector3.ONE, 0.035)
+	Paper.part(self, "Hull", Paper.box(Vector3(13.0, 2.0, 10.8)), Color(0.66, 0.43, 0.23),
+			_at(Vector3(0.0, 1.75, -4.0)), Vector3.ZERO, Vector3.ONE, 0.035)
+	Paper.part(self, "Deck", Paper.box(Vector3(12.6, 0.20, 10.1)), Color(0.76, 0.56, 0.32),
+			_at(Vector3(0.0, 2.72, -4.0)), Vector3.ZERO, Vector3.ONE, 0.025)
+	for side in [-1.0, 1.0]:
+		for row in 3:
+			Paper.part(self, "HullPlank", Paper.box(Vector3(0.22, 0.48, 10.1)),
+					Color(0.53, 0.33, 0.17) if row % 2 == 0 else Color(0.72, 0.49, 0.27),
+					_at(Vector3(side * 6.52, 0.68 + row * 0.58, -4.0)), Vector3.ZERO, Vector3.ONE, 0.012)
+	for i in 6:
+		var rib_z := -9.0 + float(i) * 1.9
+		var rib := Paper.part(self, "Rib%d" % i, _ark_rib_mesh(0.34),
+				Color(0.48, 0.29, 0.15) if i % 2 == 0 else Color(0.56, 0.35, 0.18),
+				_at(Vector3(0.0, 0.0, rib_z)), Vector3.ZERO, Vector3.ONE, 0.025)
+		rib.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	Paper.part(self, "Entrance", Paper.box(Vector3(2.0, 1.9, 0.12)), Color(0.27, 0.17, 0.10),
+			_at(Vector3(0.0, 1.62, 1.40)), Vector3.ZERO, Vector3.ONE, 0.025)
+	Paper.part(self, "Ramp", Paper.box(Vector3(3.2, 0.16, 6.4)), Color(0.72, 0.51, 0.29),
+			_at(Vector3(0.0, 0.95, 4.2)), Vector3(-0.19, 0.0, 0.0), Vector3.ONE, 0.02)
 	for i in 5:
-		Paper.part(self, "Rib%d" % i, Paper.box(Vector3(0.18, 3.4, 5.2)), Color(0.48, 0.3, 0.16),
-				_at(Vector3(-5.0 + i * 2.4, 1.8, -7.0)), Vector3.ZERO, Vector3.ONE, 0.02)
-	Paper.part(self, "Ramp", Paper.box(Vector3(2.2, 0.16, 6.0)), Color(0.7, 0.5, 0.28),
-			_at(Vector3(4.2, 0.7, -3.2)), Vector3(-0.35, 0.0, 0.0), Vector3.ONE, 0.02)
+		Paper.part(self, "RampCleat", Paper.box(Vector3(3.0, 0.10, 0.10)), Color(0.45, 0.29, 0.16),
+				_at(Vector3(0.0, 0.78 + i * 0.055, 1.8 + i * 0.95)), Vector3(-0.19, 0.0, 0.0), Vector3.ONE, 0.0)
 	_panel = Paper.part(self, "WorkPanel", Paper.box(Vector3(2.4, 1.6, 0.18)), Color(0.72, 0.52, 0.3),
-			_at(Vector3(6.4, 1.2, -5.2)), Vector3.ZERO, Vector3.ONE, 0.02)
+			_at(Vector3(5.3, 1.8, -2.1)), Vector3.ZERO, Vector3.ONE, 0.02)
 	for i in 3:
 		Paper.part(_panel, "Socket%d" % i, Paper.cylinder(0.08, 0.08, 8), Color(0.35, 0.22, 0.12),
 				Vector3(-0.7 + i * 0.7, 0.15, 0.12), Vector3(PI / 2.0, 0.0, 0.0), Vector3.ONE, 0.0)
 	_rope = Paper.part(self, "PanelRope", Paper.cylinder(0.05, 2.2, 6), Color(0.55, 0.4, 0.22),
-			_at(Vector3(6.4, 1.85, -5.0)), Vector3(0.0, 0.0, PI / 2.0), Vector3.ONE, 0.0)
+			_at(Vector3(5.3, 2.45, -1.95)), Vector3(0.0, 0.0, PI / 2.0), Vector3.ONE, 0.0)
+
+
+func _ark_rib_mesh(depth: float) -> ArrayMesh:
+	var surface := SurfaceTool.new()
+	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var half_depth := depth * 0.5
+	var half_beam := 0.12
+	var steps := 10
+	var arch_width := 6.25
+	var spring_y := 2.72
+	var rise := 3.55
+	for step in steps:
+		var a0 := PI * float(step) / steps
+		var a1 := PI * float(step + 1) / steps
+		var p0 := Vector2(cos(a0) * arch_width, spring_y + sin(a0) * rise)
+		var p1 := Vector2(cos(a1) * arch_width, spring_y + sin(a1) * rise)
+		var direction := (p1 - p0).normalized()
+		var normal := Vector2(-direction.y, direction.x) * half_beam
+		var front := [
+			Vector3(p0.x + normal.x, p0.y + normal.y, -half_depth),
+			Vector3(p0.x - normal.x, p0.y - normal.y, -half_depth),
+			Vector3(p1.x - normal.x, p1.y - normal.y, -half_depth),
+			Vector3(p1.x + normal.x, p1.y + normal.y, -half_depth),
+		]
+		var back := PackedVector3Array()
+		for point in front:
+			back.append(Vector3(point.x, point.y, half_depth))
+		_add_rib_quad(surface, front[0], front[1], front[2], front[3])
+		_add_rib_quad(surface, back[3], back[2], back[1], back[0])
+		for edge in 4:
+			var next := (edge + 1) % 4
+			_add_rib_quad(surface, front[edge], back[edge], back[next], front[next])
+	surface.generate_normals()
+	return surface.commit()
+
+
+func _add_rib_quad(surface: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, d: Vector3) -> void:
+	surface.add_vertex(a)
+	surface.add_vertex(b)
+	surface.add_vertex(c)
+	surface.add_vertex(a)
+	surface.add_vertex(c)
+	surface.add_vertex(d)
 
 
 func _items() -> void:
-	_tool("Mallet", _at(Vector3(1.2, 0.35, 8.0)), Color(0.55, 0.34, 0.16))
-	_tool("RopeCoil", _at(Vector3(-5.0, 0.3, 9.0)), Color(0.62, 0.46, 0.24))
-	_tool("Pitch", _at(Vector3(7.5, 0.35, 7.0)), Color(0.25, 0.2, 0.16))
+	_tool("Mallet", _at(Vector3(-4.0, 0.35, 6.0)), Color(0.55, 0.34, 0.16))
+	_tool("RopeCoil", _at(Vector3(4.2, 0.3, 5.4)), Color(0.62, 0.46, 0.24))
+	_tool("Pitch", _at(Vector3(0.0, 0.35, 3.2)), Color(0.25, 0.2, 0.16))
 
 
 func _tool(tool_name: String, at: Vector3, color: Color) -> void:
@@ -141,18 +263,18 @@ func _tool(tool_name: String, at: Vector3, color: Color) -> void:
 
 
 func _animals() -> void:
-	_critter("SheepA", "sheep", Vector3(-6.0, 0.0, 5.0))
-	_critter("SheepB", "sheep", Vector3(2.2, 0.0, -1.2))
-	_critter("DoveA", "dove", Vector3(-3.0, 0.0, 6.5))
-	_critter("DoveB", "dove", Vector3(3.4, 0.0, -0.6))
-	_critter("ElephantA", "elephant", Vector3(5.5, 0.0, 6.0))
-	_critter("ElephantB", "elephant", Vector3(1.0, 0.0, -1.6))
+	_critter("SheepA", "sheep", Vector3(-5.5, 0.0, 5.0))
+	_critter("SheepB", "sheep", Vector3(4.6, 0.0, 2.0))
+	_critter("DoveA", "dove", Vector3(-2.3, 0.0, 5.4))
+	_critter("DoveB", "dove", Vector3(3.0, 0.0, 3.1))
+	_critter("ElephantA", "elephant", Vector3(6.0, 0.0, 4.0))
+	_critter("ElephantB", "elephant", Vector3(5.3, 0.0, 1.6))
 	_critter("GoatA", "goat", Vector3(-8.0, 0.0, 3.0))
-	_critter("GoatB", "goat", Vector3(-1.5, 0.0, -1.0))
-	_critter("RabbitA", "rabbit", Vector3(8.0, 0.0, 4.0))
-	_critter("RabbitB", "rabbit", Vector3(4.6, 0.0, -1.4))
+	_critter("GoatB", "goat", Vector3(-5.5, 0.0, 1.0))
+	_critter("RabbitA", "rabbit", Vector3(8.0, 0.0, 5.0))
+	_critter("RabbitB", "rabbit", Vector3(6.0, 0.0, 2.8))
 	_critter("GiraffeA", "giraffe", Vector3(-4.0, 0.0, 2.0))
-	_critter("GiraffeB", "giraffe", Vector3(0.2, 0.0, -0.4))
+	_critter("GiraffeB", "giraffe", Vector3(-2.2, 0.0, 0.2))
 
 
 func _critter(critter_name: String, kind: String, at: Vector3) -> void:
@@ -185,8 +307,8 @@ func _critter(critter_name: String, kind: String, at: Vector3) -> void:
 
 
 func _people() -> void:
-	_noah = _person("Noah", _at(Vector3(2.4, 0.0, -2.4)), Color(0.62, 0.32, 0.16), Color(0.35, 0.28, 0.22), true)
-	_wife = _person("NoahsWife", _at(Vector3(3.6, 0.0, -1.6)), Color(0.28, 0.55, 0.52), Color(0.25, 0.16, 0.1), false)
+	_noah = _person("Noah", _at(Vector3(2.4, 0.0, -0.4)), Color(0.62, 0.32, 0.16), Color(0.35, 0.28, 0.22), true)
+	_wife = _person("NoahsWife", _at(Vector3(3.6, 0.0, 0.2)), Color(0.28, 0.55, 0.52), Color(0.25, 0.16, 0.1), false)
 	_hand = _noah.get_node("Hand") as Node3D
 
 
@@ -212,14 +334,14 @@ func _person(person_name: String, at: Vector3, cloth: Color, hair: Color, beard:
 func _family() -> void:
 	var colours := [Color(0.55, 0.4, 0.28), Color(0.4, 0.5, 0.45), Color(0.7, 0.55, 0.4), Color(0.45, 0.38, 0.5), Color(0.6, 0.48, 0.32), Color(0.36, 0.48, 0.55)]
 	for i in colours.size():
-		var person := _person("Family%d" % i, _at(Vector3(-2.5 + (i % 3) * 1.3, 0.0, 1.2 + int(i / 3) * 1.1)), colours[i], Color(0.3, 0.2, 0.12), false)
+		var person := _person("Family%d" % i, _at(Vector3(-2.5 + (i % 3) * 1.3, 0.0, 2.4 + int(i / 3) * 1.1)), colours[i], Color(0.3, 0.2, 0.12), false)
 		person.set_meta("home", person.position)
 
 
 func _dove() -> void:
 	var dove := Node3D.new()
 	dove.name = "WindowDove"
-	dove.position = _at(Vector3(6.6, 2.3, -6.4))
+	dove.position = _at(Vector3(6.6, 3.0, -5.4))
 	add_child(dove)
 	Paper.part(dove, "Body", Paper.sphere(0.14, 8), Color(0.97, 0.97, 0.94), Vector3.ZERO, Vector3.ZERO, Vector3(1.4, 0.8, 1.0), 0.01)
 	var leaf := Paper.part(dove, "Leaf", Paper.box(Vector3(0.16, 0.05, 0.08)), Color(0.4, 0.62, 0.32), Vector3(0.16, -0.02, 0.08), Vector3.ZERO, Vector3.ONE, 0.0)
@@ -354,18 +476,18 @@ func _board_one(critter_name: String, side: float) -> void:
 	if animal == null or bool(animal.get_meta("aboard")):
 		return
 	animal.set_meta("aboard", true)
-	animal.position = _at(Vector3(-2.0 + side, 1.3, -7.0))
+	animal.position = _at(Vector3(-2.0 + side, 1.3, -4.0))
 
 
 func family_inside() -> void:
 	if _noah:
-		_noah.position = _at(Vector3(-1.0, 0.0, -6.6))
+		_noah.position = _at(Vector3(-1.0, 0.0, -4.8))
 	if _wife:
-		_wife.position = _at(Vector3(0.4, 0.0, -6.4))
+		_wife.position = _at(Vector3(0.4, 0.0, -4.6))
 	for i in 6:
 		var person := get_node_or_null("Family%d" % i) as Node3D
 		if person:
-			person.position = _at(Vector3(-2.2 + (i % 3) * 0.8, 0.0, -6.2 - int(i / 3) * 0.5))
+			person.position = _at(Vector3(-2.2 + (i % 3) * 0.8, 0.0, -4.3 - int(i / 3) * 0.5))
 
 
 func keep_guest_outside(player: Node3D) -> void:
@@ -373,7 +495,7 @@ func keep_guest_outside(player: Node3D) -> void:
 		return
 	var local := player.global_position - ORIGIN
 	if local.z < -3.0:
-		player.global_position = _at(Vector3(0.0, 0.2, 12.0))
+		player.global_position = _at(START_LOCAL)
 		if "velocity" in player:
 			player.velocity = Vector3.ZERO
 

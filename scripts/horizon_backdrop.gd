@@ -39,6 +39,14 @@ func set_blue_hour() -> void:
 		_cloud_mat.albedo_color = Color(0.72, 0.76, 0.94, 0.85)
 
 
+func set_daylight() -> void:
+	# Restore the shared backdrop when leaving the King's Camp for another story.
+	if _hill_mat:
+		_hill_mat.albedo_color = Color.WHITE
+	if _cloud_mat:
+		_cloud_mat.albedo_color = Color.WHITE
+
+
 ## -- Hills -------------------------------------------------------------------
 
 func _build_hills() -> void:

@@ -59,6 +59,8 @@ Run the examples from the repository root. The current character/props generator
 | `scripts/characters/generate_wonder_walker_v5.py` | `wonder_walker_v13.glb` |
 | `scripts/characters/generate_wonder_walker_v4.py` | `wonder_walker_v12.glb` |
 | `scripts/characters/generate_david_mentor_v4.py` | `david_mentor_v13.glb` |
+| `scripts/characters/generate_noah_v1.py` | `noah_v1.glb` (design stills in `output/previews/`) |
+| `scripts/characters/generate_noahs_wife_v1.py` | `noahs_wife_v1.glb` |
 | `scripts/props/generate_david_and_items_v3.py` | `david_mentor_v9.glb`, `wonder_items_v7.glb` |
 
 `wonder_walker_v12.glb`, `david_mentor_v9.glb` and `david_mentor_v12.glb` are no longer in
