@@ -57,6 +57,17 @@ Godot's `.gitignore` template excludes it. Recreate it in *Project > Export > Ad
 Gradle build off, package `com.oneleo.littlelight`, name it "Android tablet (debug)"), or copy it from
 another computer.
 
+Set the launcher icon fields (*Options > Launcher Icons*) to the generated PNGs under `assets/icons/`
+(regenerate them with `godot --path . --script tools/render_app_icon.gd` if they are missing or the
+design changes):
+
+- **Main 192x192:** `res://assets/icons/legacy_192.png`
+- **Adaptive Foreground 432x432:** `res://assets/icons/adaptive_foreground_432.png`
+- **Adaptive Background 432x432:** `res://assets/icons/adaptive_background_432.png`
+- **Adaptive Monochrome 432x432:** `res://assets/icons/adaptive_monochrome_432.png`
+
+Without these, an exported APK falls back to Godot's own default robot icon.
+
 ### Step 1: install the export templates (once per computer)
 
 1. Open the project in the Godot editor.
