@@ -28,6 +28,8 @@ const WELCOME_THINGS := ["Cushion", "Cup", "Lamp"]
 const FIND_LINES := {"Harp": &"harp", "WaterBowl": &"bowl", "Cloak": &"cloak"}
 const WORD_LABELS: PackedStringArray = ["God", "Sees", "Heart"]
 const WELCOME_PROMPT := "Carry the cushion, the cup and the lamp to the table"
+## The major beats the chapter can carry on from after the game was closed (Profiles places).
+const RESUME_BEATS: PackedStringArray = ["welcome", "meet", "not_these", "call", "david", "reflect"]
 ## Seconds with no progress before the golden arrow points the way.
 const HINT_DELAY := 12.0
 
@@ -71,8 +73,58 @@ func begin() -> void:
 	_busy = false
 	_ceremony = false
 	_word_said = [false, false, false] as Array[bool]
+	if _resume(Profiles.place_in(Profiles.active_id, Profiles.CHAPTER_BEGINNING)):
+		return
 	phase = Phase.ARRIVE
 	_say([&"turn_back"], "Press Space to continue")
+
+
+## Carries on from the last major beat this child reached (Profiles.mark_place), with the
+## courtyard set as it stood then and that beat's line read again. False to start afresh.
+func _resume(place: Dictionary) -> bool:
+	var beat := str(place.get("beat", ""))
+	var placed: Array = (place.get("placed", []) as Array).filter(func(t: Variant) -> bool: return t in WELCOME_THINGS) \
+			if place.get("placed", []) is Array else []
+	if not beat in RESUME_BEATS:
+		return false
+	var house := _house()
+	house.set_scene_for(beat, placed)
+	match beat:
+		"welcome":
+			phase = Phase.WELCOME
+			house.open_welcome()
+			_say([&"samuel_coming"], WELCOME_PROMPT)
+			if _checklist:
+				_checklist.set_found(house.placed())
+			_watch()
+		"meet":
+			phase = Phase.MEET
+			_say([&"jesse_welcome"], "Press Space to continue")
+			house.meet_shot()
+		"not_these":
+			phase = Phase.NOT_THESE
+			if _camera and _camera.has_method("cut_to_closeup"):
+				_camera.cut_to_closeup(house.samuel())
+			_say([&"not_these", &"waits"], "Press Space to continue")
+		"call":
+			phase = Phase.CALL
+			_say([&"call_david"], "Press E to call David home")
+		"david":
+			phase = Phase.DAVID
+			if _camera and _camera.has_method("cut_to_two_shot"):
+				_camera.cut_to_two_shot(house.david(), house.samuel())
+			_say([&"david_called"], "Press Space to continue")
+		"reflect":
+			phase = Phase.REFLECT
+			if _player:
+				house.watch_child(_player)
+			_say([&"reflect"], "Press Space to continue")
+	return true
+
+
+## Remembers this beat for the child playing, so the chapter can carry on from it.
+func _mark(beat: String, extra: Dictionary = {}) -> void:
+	Profiles.mark_place(Profiles.CHAPTER_BEGINNING, beat, extra)
 
 
 ## Another story is starting: this one stops listening.
@@ -116,6 +168,7 @@ func _advance() -> void:
 			phase = Phase.WELCOME
 			_house().set_child_watch(null)
 			_house().open_welcome()
+			_mark("welcome", {"placed": []})
 			_say([&"look_around", &"samuel_coming"], WELCOME_PROMPT)
 			_watch()
 		Phase.MEET:
@@ -126,6 +179,7 @@ func _advance() -> void:
 			_say([&"ask", &"youngest"], "Press Space to continue")
 		Phase.ASK:
 			phase = Phase.CALL
+			_mark("call")
 			_say([&"call_david"], "Press E to call David home")
 		Phase.DAVID:
 			phase = Phase.VERSE
@@ -138,6 +192,7 @@ func _advance() -> void:
 			_show_words(true)
 		Phase.ANOINT:
 			phase = Phase.REFLECT
+			_mark("reflect")
 			if _player:
 				_house().watch_child(_player)
 			_say([&"reflect"], "Press Space to continue")
@@ -188,10 +243,12 @@ func _on_placed(thing: String) -> void:
 	if _checklist:
 		_checklist.set_found(done)
 	if done.size() < WELCOME_THINGS.size():
+		_mark("welcome", {"placed": done})
 		_set_prompt(WELCOME_PROMPT)
 		_watch()
 		return
 	phase = Phase.MEET
+	_mark("meet")
 	_busy = true
 	if _hints:
 		_hints.stop()
@@ -218,6 +275,7 @@ func _procession() -> void:
 		return
 	_busy = false
 	phase = Phase.NOT_THESE
+	_mark("not_these")
 	if _camera and _camera.has_method("cut_to_closeup"):
 		_camera.cut_to_closeup(_house().samuel())
 	_say([&"not_these", &"waits"], "Press Space to continue")
@@ -237,6 +295,7 @@ func _call_david() -> void:
 		return
 	_busy = false
 	phase = Phase.DAVID
+	_mark("david")
 	if _camera and _camera.has_method("cut_to_two_shot"):
 		_camera.cut_to_two_shot(_house().david(), _house().samuel())
 	_say([&"david_called"], "Press Space to continue")

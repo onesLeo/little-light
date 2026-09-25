@@ -1,7 +1,19 @@
-[gd_resource type="Resource" load_steps=44 format=3]
+[gd_resource type="Resource" load_steps=56 format=3]
 
 [ext_resource type="Script" path="res://scripts/dialogue_lines.gd" id="1_lines"]
 [ext_resource type="Script" path="res://scripts/dialogue_line.gd" id="2_line"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ez_bg_turn_back.wav" id="ez_bg_turn_back"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ez_bg_look_around.wav" id="ez_bg_look_around"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ez_bg_samuel_coming.wav" id="ez_bg_samuel_coming"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ez_bg_brothers.wav" id="ez_bg_brothers"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ez_bg_waits.wav" id="ez_bg_waits"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ez_bg_heart.wav" id="ez_bg_heart"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ez_bg_anoint.wav" id="ez_bg_anoint"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ez_bg_reflect.wav" id="ez_bg_reflect"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ez_bg_charm.wav" id="ez_bg_charm"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ez_bg_keep_close.wav" id="ez_bg_keep_close"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ez_bg_not_these.wav" id="ez_bg_not_these"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ez_bg_youngest.wav" id="ez_bg_youngest"]
 [ext_resource type="AudioStream" path="res://assets/audio/vo/bg_turn_back.wav" id="bg_turn_back"]
 [ext_resource type="AudioStream" path="res://assets/audio/vo/bg_look_around.wav" id="bg_look_around"]
 [ext_resource type="AudioStream" path="res://assets/audio/vo/bg_samuel_coming.wav" id="bg_samuel_coming"]
@@ -29,6 +41,8 @@ id = &"turn_back"
 speaker = "Wonder Light"
 text = "We are turning back the page. This is Bethlehem, before the valley. David's family is getting ready for a guest."
 clip = ExtResource("bg_turn_back")
+easy_text = "This is Bethlehem, long ago. David's family is waiting for a guest."
+easy_clip = ExtResource("ez_bg_turn_back")
 
 [sub_resource type="Resource" id="Line_look_around"]
 script = ExtResource("2_line")
@@ -36,6 +50,8 @@ id = &"look_around"
 speaker = "Wonder Light"
 text = "David is out with the sheep. You may notice the things he uses to care for them."
 clip = ExtResource("bg_look_around")
+easy_text = "David is with the sheep. Look for his things."
+easy_clip = ExtResource("ez_bg_look_around")
 
 [sub_resource type="Resource" id="Line_samuel_coming"]
 script = ExtResource("2_line")
@@ -43,6 +59,8 @@ id = &"samuel_coming"
 speaker = "Wonder Light"
 text = "Samuel is coming. Let's get the cushion, the cup and the lamp ready for him."
 clip = ExtResource("bg_samuel_coming")
+easy_text = "Samuel is coming. Let's bring the cushion, the cup and the lamp."
+easy_clip = ExtResource("ez_bg_samuel_coming")
 
 [sub_resource type="Resource" id="Line_harp"]
 script = ExtResource("2_line")
@@ -85,6 +103,8 @@ id = &"brothers"
 speaker = "Wonder Light"
 text = "Jesse's seven older sons come forward, one by one."
 clip = ExtResource("bg_brothers")
+easy_text = "Here come David's seven big brothers, one by one."
+easy_clip = ExtResource("ez_bg_brothers")
 
 [sub_resource type="Resource" id="Line_not_these"]
 script = ExtResource("2_line")
@@ -92,6 +112,8 @@ id = &"not_these"
 speaker = "Samuel"
 text = "Yahweh has not chosen these."
 clip = ExtResource("bg_not_these")
+easy_text = "God has not chosen these."
+easy_clip = ExtResource("ez_bg_not_these")
 
 [sub_resource type="Resource" id="Line_waits"]
 script = ExtResource("2_line")
@@ -99,6 +121,8 @@ id = &"waits"
 speaker = "Wonder Light"
 text = "Samuel waits. The one God has chosen is not here yet."
 clip = ExtResource("bg_waits")
+easy_text = "Samuel waits. God's choice is not here yet."
+easy_clip = ExtResource("ez_bg_waits")
 
 [sub_resource type="Resource" id="Line_ask"]
 script = ExtResource("2_line")
@@ -113,6 +137,8 @@ id = &"youngest"
 speaker = "Jesse"
 text = "The youngest is still caring for the sheep."
 clip = ExtResource("bg_youngest")
+easy_text = "My youngest son is out with the sheep."
+easy_clip = ExtResource("ez_bg_youngest")
 
 [sub_resource type="Resource" id="Line_call_david"]
 script = ExtResource("2_line")
@@ -134,6 +160,8 @@ id = &"heart"
 speaker = "Wonder Light"
 text = "People notice the outside first. God sees who you are inside."
 clip = ExtResource("bg_heart")
+easy_text = "People look at the outside. God looks at your heart."
+easy_clip = ExtResource("ez_bg_heart")
 
 [sub_resource type="Resource" id="Line_anoint"]
 script = ExtResource("2_line")
@@ -141,6 +169,8 @@ id = &"anoint"
 speaker = "Wonder Light"
 text = "Samuel pours the oil. God has chosen David, the youngest shepherd."
 clip = ExtResource("bg_anoint")
+easy_text = "Samuel pours oil on David's head. God chose David."
+easy_clip = ExtResource("ez_bg_anoint")
 
 [sub_resource type="Resource" id="Line_reflect"]
 script = ExtResource("2_line")
@@ -148,6 +178,8 @@ id = &"reflect"
 speaker = "Wonder Light"
 text = "David was caring for the sheep when nobody expected him to be called. God saw his heart. God sees you too."
 clip = ExtResource("bg_reflect")
+easy_text = "Nobody thought of David. But God saw his heart. God sees you too."
+easy_clip = ExtResource("ez_bg_reflect")
 
 [sub_resource type="Resource" id="Line_charm"]
 script = ExtResource("2_line")
@@ -155,6 +187,8 @@ id = &"charm"
 speaker = "Wonder Light"
 text = "A Faithful Heart charm, for caring well in quiet places."
 clip = ExtResource("bg_charm")
+easy_text = "A Faithful Heart charm, for caring for little things."
+easy_clip = ExtResource("ez_bg_charm")
 
 [sub_resource type="Resource" id="Line_charm_arrives"]
 script = ExtResource("2_line")
@@ -167,6 +201,8 @@ id = &"keep_close"
 speaker = "Wonder Light"
 text = "Keep it close. Be faithful with the small things in front of you."
 clip = ExtResource("bg_keep_close")
+easy_text = "Keep it close. Care well for little things."
+easy_clip = ExtResource("ez_bg_keep_close")
 
 [resource]
 script = ExtResource("1_lines")

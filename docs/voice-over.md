@@ -56,7 +56,8 @@ A child who says they are 8 or younger when they are made ("How old are you?" on
 screen) plays with **Easy words** on: lines swap for a simpler version, each with its own recorded clip
 (`ez_*`), kept with the line itself (`easy_text`, `easy_clip` in `assets/dialogue/`): twelve in the
 valley, nine in the camp. Every other line, and the verses, are never changed. The
-choice is kept with the child like read-aloud, and can be switched in the pause menu at any time; the
+choice is kept with the child like read-aloud, and can be switched in the pause menu at any time (twelve lines in The
+Beginning too); the
 line on screen when it is switched stays as it is until the next line.
 
 ## Adding or changing a line
@@ -159,6 +160,11 @@ That take is MP3; without `miniaudio` it was decoded with Blender's bundled audi
 (`aud.Sound(...).write(...)`), then trimmed with `fetch_vo.trim` and set to Juno's level.
 The ark's old locked card ("Finish Chapter 2 ... Then Noah's Ark will open") is no longer spoken, now
 that The Beginning comes first, so `ark_locked.wav` was removed and `bg_locked_ark` reads the new one.
+
+Easy words (`ez_bg_*`, 2026-09-26): twelve lines, ten in Juno, Samuel's "God has not chosen these."
+in Gideon and Jesse's "My youngest son is out with the sheep." in Desmond (both set to -19 dB). The
+first Gideon take had extra speech after the line (two runs of sound for five words), so it was made
+again; compare a take's length with its full line before keeping it.
 
 To fetch them again: `python tools/fetch_vo.py --only bg_ --force` (the verse needs
 `pip install miniaudio`), then turn Samuel's and Jesse's four clips down to about -19 dB again (the

@@ -161,6 +161,12 @@ func set_paused(paused: bool) -> void:
 		get_viewport().gui_release_focus()
 
 
+## "Start this chapter again": forgets where the child got to in it, then starts it over.
+func start_chapter_again() -> void:
+	Profiles.forget_place(Profiles.current_chapter)
+	_restart()
+
+
 ## Loads the scene again. With a child still playing, the chapter they were on starts over
 ## (Profiles.current_chapter); with nobody, "Who is playing?" and then the map come first.
 func _restart() -> void:
@@ -343,7 +349,7 @@ func _build_pause_panel() -> void:
 	_voice_slider = _add_slider_row(vbox, "Voices", _on_voice_changed)
 
 	var restart := _make_button("Start this chapter again")
-	restart.pressed.connect(_restart)
+	restart.pressed.connect(start_chapter_again)
 	vbox.add_child(restart)
 
 	var change_player := _make_button("Change player")

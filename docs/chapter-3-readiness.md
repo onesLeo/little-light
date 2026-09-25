@@ -145,8 +145,13 @@ with flagstones in front of the house and a trodden footpath to the table (2026-
 People turn to whoever is speaking, and all look at the child for the reflection and the charm;
 Samuel steps back from David after the anointing. Carrying a welcome thing, walking up to any side
 of the table sets it on its place (the exact ring was too fiddly).
-Not yet: resume after a reload mid-chapter (Play again restarts it), per-object placement sounds
-beyond the three existing effects, and the family/tablet tests of Milestone C.
+The chapter carries on after the game is closed: the child's profile keeps the last major beat
+(the welcome with what is already on the table, Jesse's welcome, after the brothers, calling David,
+David home, after the anointing), and opening The Beginning again sets the courtyard as it stood
+and reads that beat's line again. Finishing the chapter, or "Start this chapter again", forgets it.
+Twelve lines have easy words for children of 8 or younger (the verse never changes).
+Not yet: per-object placement sounds beyond the three existing effects, and the family/tablet tests
+of Milestone C.
 
 - Greybox the courtyard, house edge, table, fold and sheep path.
 - Implement Prepare the Welcome with three placeholder objects.

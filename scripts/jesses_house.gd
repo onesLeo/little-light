@@ -194,6 +194,35 @@ func welcome_spots() -> Array:
 	return out
 
 
+## Sets the courtyard as it stands at a story beat the child is carrying on from
+## (chapter_three.gd _resume): the welcome things already on the table (all of them after
+## "welcome"), Samuel at the table from "meet" on, and David home from "david" on.
+func set_scene_for(beat: String, placed: Array) -> void:
+	for thing in WELCOME:
+		if beat != "welcome" or placed.has(thing):
+			_set_on_table(thing)
+	if beat in ["meet", "not_these", "call", "david", "reflect"]:
+		_samuel.global_position = SAMUEL_PLACE
+		face(_samuel, JESSE_PLACE)
+		face(_jesse, SAMUEL_PLACE)
+	if beat in ["david", "reflect"]:
+		_david.visible = true
+		_david.global_position = DAVID_PLACE
+		face(_david, SAMUEL_PLACE)
+		face(_samuel, DAVID_PLACE)
+
+
+## A welcome thing already on the table, at once (no tween, no sound).
+func _set_on_table(thing: String) -> void:
+	if not _placed.has(thing):
+		_placed.append(thing)
+	var node := _welcome[thing] as Node3D
+	node.visible = true
+	node.global_position = WELCOME[thing]["on"]
+	node.rotation = Vector3.ZERO
+	(_rings[thing] as Node3D).visible = false
+
+
 ## Shows the welcome things and their rings, so the child can start carrying.
 func open_welcome() -> void:
 	for thing in WELCOME:

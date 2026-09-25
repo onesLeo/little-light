@@ -189,6 +189,8 @@ func _run() -> void:
 			"Samuel asks, and Jesse says the youngest is with the sheep")
 	story._advance()
 	check(story.phase == story.Phase.CALL and story.get_action_hint() == "CALL", "the child calls David home: the button says CALL")
+	check(str(Profiles.place_in(Profiles.active_id, Profiles.CHAPTER_BEGINNING).get("beat", "")) == "call",
+			"the child's place is kept at each major beat (here: calling David)")
 	var call := InputEventAction.new()
 	call.action = "interact"
 	call.pressed = true
@@ -250,7 +252,48 @@ func _run() -> void:
 	check(story.phase == story.Phase.DONE and Profiles.has_finished(Profiles.active_id, Profiles.CHAPTER_BEGINNING)
 			and Profiles.is_unlocked(Profiles.active_id, Profiles.CHAPTER_ARK), "the chapter is finished, and Noah's Ark opens")
 	check(menu._end_charm == JournalContent.CHARM_FAITHFUL_HEART and "Faithful Heart" in menu._end_title.text, "the end card names the Faithful Heart charm")
+	check(Profiles.place_in(Profiles.active_id, Profiles.CHAPTER_BEGINNING).is_empty(), "finishing the chapter forgets the place, so Play again starts at the beginning")
 	await shot("08_end")
+
+	print("-- easy words --")
+	var easy: Dictionary = story.LINES.block([&"heart", &"not_these"], true)
+	var full: Dictionary = story.LINES.block([&"heart", &"not_these"], false)
+	check("God looks at your heart" in easy["text"] and "God has not chosen these" in easy["text"]
+			and easy["spoken"][0]["clip"] != null and easy["spoken"][0]["clip"] != full["spoken"][0]["clip"]
+			and easy["spoken"][1]["clip"] != full["spoken"][1]["clip"],
+			"a child of 8 or younger hears simpler lines, each in its own recording (Samuel's too)")
+
+	print("-- carrying on after the game was closed --")
+	var child := Profiles.active_id
+	Profiles.mark_place(Profiles.CHAPTER_BEGINNING, "welcome", {"placed": ["Cup"]})
+	# Read the save again, as the game does when the tablet opens it.
+	Profiles.use_file(PROFILE_FILE)
+	Profiles.set_active(child)
+	check(str(Profiles.place_in(child, Profiles.CHAPTER_BEGINNING).get("beat", "")) == "welcome", "the place is saved on the tablet, so it outlasts closing the game")
+	main.switch_to(Profiles.CHAPTER_BEGINNING)
+	await settle(8)
+	house = main.get_node("JessesHouse")
+	story = house.get_node("ChapterThree")
+	check(story.phase == story.Phase.WELCOME and house.placed() == ["Cup"] and "1 / 3" in story._checklist._title.text
+			and (house.get_node("Cup") as Node3D).global_position.distance_to(house.WELCOME["Cup"]["on"]) < 0.05 and "Samuel is coming" in line_text(),
+			"opening The Beginning again carries on with the welcome: the cup already on the table, two to go")
+	Profiles.mark_place(Profiles.CHAPTER_BEGINNING, "david")
+	# As if the game had been closed mid-welcome: the courtyard is put away, then opened afresh.
+	house.stand_down()
+	main.switch_to(Profiles.CHAPTER_BEGINNING)
+	await settle(8)
+	house = main.get_node("JessesHouse")
+	story = house.get_node("ChapterThree")
+	check(story.phase == story.Phase.DAVID and house.david().visible and house.david().global_position.distance_to(house.DAVID_PLACE) < 0.05
+			and house.placed().size() == 3 and "You called for me" in line_text(),
+			"or with David home: the table set, Samuel there, David before him")
+	var again: Button = null
+	for button in menu.find_children("*", "Button", true, false):
+		if (button as Button).text == "Start this chapter again":
+			again = button
+	check(again != null and again.pressed.is_connected(menu.start_chapter_again), "\"Start this chapter again\" forgets the place first")
+	Profiles.forget_place(Profiles.CHAPTER_BEGINNING)
+	check(Profiles.place_in(child, Profiles.CHAPTER_BEGINNING).is_empty(), "and then it starts from the beginning")
 
 	await create_timer(0.3).timeout
 	DirAccess.remove_absolute(PROFILE_FILE)

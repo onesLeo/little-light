@@ -109,6 +109,19 @@ CLIPS = {
     "bg_jesse_welcome": ("hf_20260925_160602_08799f53-e487-43bd-84a1-b179564773bf.wav", "Desmond", "Samuel! Welcome to our home."),
     "bg_youngest": ("hf_20260925_155739_b1282b21-ab0c-446c-a22c-55b7e6804f9d.wav", "Desmond", "The youngest is still caring for the sheep."),
     "bg_david_called": ("hf_20260925_155739_882a0418-10f8-43ef-bf8a-9d66e3671a6a.wav", "Bram", "You called for me?"),
+    # Chapter 3 in easy words (ez_bg_*): Wonder Light in Juno, Samuel in Gideon, Jesse in Desmond.
+    "ez_bg_turn_back": ("hf_20260925_172605_ed3fed3a-7e34-434b-b271-4e80eca311c7.wav", "Juno", "This is Bethlehem, long ago. David's family is waiting for a guest."),
+    "ez_bg_look_around": ("hf_20260925_172121_774a73bb-ad77-4741-b3c4-09e955ec07a2.wav", "Juno", "David is with the sheep. Look for his things."),
+    "ez_bg_samuel_coming": ("hf_20260925_172121_1f68d988-8a9d-4db9-82cc-260ceac4f6ac.wav", "Juno", "Samuel is coming. Let's bring the cushion, the cup and the lamp."),
+    "ez_bg_brothers": ("hf_20260925_172807_2bae845f-ee94-4e9a-a155-5a2d5ebf9bf8.wav", "Juno", "Here come David's seven big brothers, one by one."),
+    "ez_bg_waits": ("hf_20260925_172122_ecce89cf-e310-4241-a1dd-2902dc4a91e4.wav", "Juno", "Samuel waits. God's choice is not here yet."),
+    "ez_bg_heart": ("hf_20260925_172121_8ee7710b-03f6-41f7-a412-a1ea19ea9507.wav", "Juno", "People look at the outside. God looks at your heart."),
+    "ez_bg_anoint": ("hf_20260925_172605_75879663-6928-439e-9462-7d0ab5562cba.wav", "Juno", "Samuel pours oil on David's head. God chose David."),
+    "ez_bg_reflect": ("hf_20260925_172605_6faeac6b-423b-4730-bbfb-2771b7168cbf.wav", "Juno", "Nobody thought of David. But God saw his heart. God sees you too."),
+    "ez_bg_charm": ("hf_20260925_172605_fb24afed-d906-452f-b918-4de6e779cacd.wav", "Juno", "A Faithful Heart charm, for caring for little things."),
+    "ez_bg_keep_close": ("hf_20260925_172807_18ef844c-d004-4f9e-b1ed-81ac032c2119.wav", "Juno", "Keep it close. Care well for little things."),
+    "ez_bg_not_these": ("hf_20260925_172956_c3d98125-bf4a-44cb-92f2-bde409ff7bb2.wav", "Gideon", "God has not chosen these."),
+    "ez_bg_youngest": ("hf_20260925_172605_84263fa2-84bc-46f4-9c61-4c9373fe42fc.wav", "Desmond", "My youngest son is out with the sheep."),
 }
 
 LEAD_SECONDS = 0.06
