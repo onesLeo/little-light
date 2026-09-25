@@ -54,6 +54,16 @@ func _run() -> void:
 	var player: Node3D = main.get_node("Player")
 	check(ark.get_node("Noah").find_child("NoahBody", true, false) != null, "Noah in the scene is the designed model")
 	check(ark.get_node("NoahsWife").find_child("NoahsWifeBody", true, false) != null, "his wife in the scene is her own model")
+	var elephant: Node3D = ark.get_node("ElephantA")
+	var elephant_top := 0.0
+	for mesh in elephant.find_children("*", "MeshInstance3D", true, false):
+		if elephant.get_node("Beacon").is_ancestor_of(mesh) or mesh.name == "Ring":
+			continue  # the gold marker floats over the head on purpose
+		var box: AABB = (mesh as MeshInstance3D).global_transform * (mesh as MeshInstance3D).get_aabb()
+		elephant_top = maxf(elephant_top, box.end.y - elephant.global_position.y)
+	var headroom: float = ark.DOOR_TOP - (ark._doorstep(0.0).y - ark.ORIGIN.y)
+	check(elephant_top > 2.0 and headroom >= elephant_top,
+			"the doorway (%.2f m) is tall enough for an elephant (%.2f m)" % [headroom, elephant_top])
 	check(ark.get_node("Noah")._bones["Thigh_L"] >= 0 and ark.get_node("NoahsWife")._bones["Shin_R"] >= 0, "both parents have the leg bones used for boarding")
 	check("Long before David" in story._line.text, "arrival names the long work")
 	check(not player.can_move, "arrival holds still")

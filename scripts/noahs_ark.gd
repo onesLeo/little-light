@@ -35,6 +35,11 @@ const BASKET_WALK_FROM := Vector3(-8.8, 0.0, 2.1)
 const BASKET_WALK_TO := Vector3(-6.0, 0.0, 2.6)
 ## Where the ramp meets the plain.
 const RAMP_FOOT_Z := 4.6
+## The doorway in the hull side: low on the curve and up to just under the deck, and
+## wide enough for the elephants to walk in two by two.
+const DOOR_BOTTOM := 0.4
+const DOOR_TOP := 2.95
+const DOOR_HALF_WIDTH := 1.5
 ## Flood heights (local): just under the rim while it rains, and halfway down as it recedes.
 const FLOOD_HIGH := -1.1
 const FLOOD_MID := -5.0
@@ -375,25 +380,36 @@ func _hull() -> void:
 	# Rub-rails: two dark strakes that give the hull its long line.
 	for y in [1.6, 2.6]:
 		for x in range(-6, 7):
+			if absi(x) <= 1:
+				continue  # the doorway
 			var z := Shapes.side_z(float(x), y)
 			Paper.part(self, "Strake", Paper.box(Vector3(1.02, 0.12, 0.08)), PLANK_DARK.darkened(0.25),
 					_at(Vector3(float(x), y, HULL_Z + z + 0.02)), Vector3.ZERO, Vector3.ONE, 0.0)
-	# The door, low in the side, and a wide shallow ramp up to it.
-	var door_y := 1.95
-	var door_z := HULL_Z + Shapes.side_z(0.0, door_y)
-	Paper.part(self, "Entrance", Paper.box(Vector3(2.0, 1.6, 0.14)), Color(0.26, 0.2, 0.16),
-			_at(Vector3(0.0, door_y, door_z + 0.05)), Vector3.ZERO, Vector3.ONE, 0.03)
-	# The door itself, folded up out of sight until God closes it (close_door).
+	# The doorway, tall enough for an elephant, and a long shallow ramp up to its sill.
+	# The hull curves in towards the keel, so the opening, its frame and the door are
+	# boards laid along that curve rather than flat cards.
+	var entrance := Node3D.new()
+	entrance.name = "Entrance"
+	add_child(entrance)
+	_along_side(entrance, "Dark", 0.0, DOOR_BOTTOM, DOOR_TOP, DOOR_HALF_WIDTH * 2.0, Color(0.26, 0.2, 0.16), 0.03)
+	for side in [-1.0, 1.0]:
+		_along_side(entrance, "Jamb", side * (DOOR_HALF_WIDTH + 0.11), DOOR_BOTTOM - 0.05, DOOR_TOP + 0.02, 0.22, PLANK_DARK, 0.07)
+	Paper.part(entrance, "Lintel", Paper.box(Vector3(DOOR_HALF_WIDTH * 2.0 + 0.5, 0.2, 0.16)), PLANK_DARK,
+			_at(Vector3(0.0, DOOR_TOP + 0.02, HULL_Z + Shapes.side_z(0.0, DOOR_TOP) + 0.07)), Vector3.ZERO, Vector3.ONE, 0.015)
+	# The door itself, folded up under the lintel until God closes it (close_door): its
+	# boards hang from the top, so growing it downwards unrolls it over the curve.
 	_door = Node3D.new()
 	_door.name = "Door"
-	_door.position = _at(Vector3(0.0, door_y + 0.82, door_z + 0.16))
+	_door.position = _at(Vector3(0.0, DOOR_TOP, HULL_Z + Shapes.side_z(0.0, DOOR_TOP)))
 	_door.scale = Vector3(1.0, 0.01, 1.0)
 	_door.visible = false
 	add_child(_door)
-	var leaf := Paper.part(_door, "Leaf", Paper.box(Vector3(2.2, 1.7, 0.14)), PLANK_B, Vector3(0.0, -0.85, 0.0), Vector3.ZERO, Vector3.ONE, 0.03)
-	for i in 3:
-		Paper.part(leaf, "Batten%d" % i, Paper.box(Vector3(2.1, 0.1, 0.05)), PLANK_DARK, Vector3(0.0, -0.55 + i * 0.55, 0.09), Vector3.ZERO, Vector3.ONE, 0.0)
-	var ramp_top := Vector3(0.0, 1.15, door_z + 0.2)
+	_along_side(_door, "Leaf", 0.0, DOOR_BOTTOM, DOOR_TOP, DOOR_HALF_WIDTH * 2.0 + 0.1, PLANK_B, 0.11)
+	for i in 4:
+		var y := lerpf(DOOR_BOTTOM + 0.3, DOOR_TOP - 0.3, i / 3.0)
+		Paper.part(_door, "Batten%d" % i, Paper.box(Vector3(DOOR_HALF_WIDTH * 2.0 - 0.1, 0.12, 0.05)), PLANK_DARK,
+				_at(Vector3(0.0, y, HULL_Z + Shapes.side_z(0.0, y) + 0.17)) - _door.position, Vector3.ZERO, Vector3.ONE, 0.0)
+	var ramp_top := Vector3(0.0, DOOR_BOTTOM - 0.05, HULL_Z + Shapes.side_z(0.0, DOOR_BOTTOM) + 0.2)
 	var ramp_foot := Vector3(0.0, 0.05, RAMP_FOOT_Z)
 	var run := ramp_foot - ramp_top
 	var tilt := atan2(run.y, run.z)
@@ -412,6 +428,28 @@ func _hull() -> void:
 	ramp_body.position = _at((ramp_top + ramp_foot) * 0.5)
 	ramp_body.rotation = Vector3(-tilt, 0.0, 0.0)
 	add_child(ramp_body)
+
+
+## Boards laid up the hull side at `x`, from `y0` to `y1`, following its curve and
+## standing `out` proud of the planking, under `parent` (the ark or a node in it).
+func _along_side(parent: Node3D, part_name: String, x: float, y0: float, y1: float, width: float, color: Color, out: float) -> void:
+	var offset := Vector3.ZERO if parent == self else parent.position
+	var steps := 10
+	for k in steps:
+		var ya := lerpf(y0, y1, float(k) / steps)
+		var yb := lerpf(y0, y1, float(k + 1) / steps)
+		# (z, y) points on the side, a little out from it.
+		var a := Vector2(Shapes.side_z(x, ya) + out, ya)
+		var b := Vector2(Shapes.side_z(x, yb) + out, yb)
+		var mid := (a + b) * 0.5
+		var seg := b - a
+		Paper.part(parent, "%s%d" % [part_name, k], Paper.box(Vector3(width, seg.length() + 0.02, 0.06)), color,
+				_at(Vector3(x, mid.y, HULL_Z + mid.x)) - offset, Vector3(atan2(seg.x, seg.y), 0.0, 0.0), Vector3.ONE, 0.0)
+
+
+## Where a walker steps into (or out of) the doorway, `lane` metres along from its middle.
+func _doorstep(lane: float) -> Vector3:
+	return _at(Vector3(lane, DOOR_BOTTOM + 0.07, HULL_Z + Shapes.side_z(0.0, DOOR_BOTTOM) + 0.25))
 
 
 ## On the deck: the finished house with its roof and window at the bow end, and the bare
@@ -586,15 +624,27 @@ func _critter(critter_name: String, kind: String, at: Vector3) -> void:
 			var wool := Color(0.96, 0.94, 0.88)
 			var face := Color(0.25, 0.2, 0.18)
 			_legs(root, 0.16, 0.14, 0.34, face, 0.045, Color(0.14, 0.11, 0.1))
-			Paper.part(root, "Body", Paper.sphere(0.36, 9), wool, Vector3(0.0, 0.46, 0.0), Vector3.ZERO, Vector3(1.0, 0.85, 1.25), 0.025)
-			# Woolly lumps on the back break the ball into a fleece.
-			for k in 3:
-				Paper.part(root, "Fleece", Paper.sphere(0.17, 7), wool.darkened(0.03), Vector3((k - 1) * 0.14, 0.72, -0.1 + (k % 2) * 0.16), Vector3.ZERO, Vector3.ONE, 0.012)
-			Paper.part(root, "Tail", Paper.sphere(0.08, 6), wool, Vector3(0.0, 0.5, -0.46), Vector3.ZERO, Vector3(0.8, 1.0, 0.8), 0.01)
-			Paper.part(root, "Head", Paper.sphere(0.15, 8), face, Vector3(0.0, 0.58, 0.44), Vector3.ZERO, Vector3(1.0, 1.1, 1.2), 0.015)
-			Paper.part(root, "Topknot", Paper.sphere(0.09, 7), wool, Vector3(0.0, 0.72, 0.4), Vector3.ZERO, Vector3.ONE, 0.0)
+			# A smooth, slightly long fleece, like a toy: only a soft wavy line of wool along the
+			# spine, so it reads as woolly without bumps that look like growths.
+			var body_at := Vector3(0.0, 0.47, 0.0)
+			var radii := Vector3(0.3, 0.27, 0.4)
+			Paper.part(root, "Body", Paper.sphere(1.0, 16), wool, body_at, Vector3.ZERO, radii, 0.022)
+			for k in 4:
+				var along := lerpf(-0.7, 0.55, k / 3.0)
+				Paper.part(root, "Fleece", Paper.sphere(0.16, 14), wool, body_at + Vector3(0.0, cos(along) * radii.y * 0.86, sin(along) * radii.z * 0.86),
+						Vector3.ZERO, Vector3(1.1, 0.42, 1.0), 0.0)
+			Paper.part(root, "Tail", Paper.sphere(0.06, 10), wool, body_at + Vector3(0.0, 0.05, -radii.z * 0.97), Vector3.ZERO, Vector3(1.0, 1.2, 0.7), 0.0)
+			# The dark face stands clear of the fleece at the front, a little bowed, with a wool tuft.
+			var head_at := Vector3(0.0, 0.56, 0.47)
+			var head := Paper.part(root, "Head", Paper.sphere(0.13, 14), face, head_at, Vector3(0.35, 0.0, 0.0), Vector3(0.85, 1.0, 1.3), 0.015)
+			Paper.part(root, "WoolCap", Paper.sphere(0.1, 12), wool, head_at + Vector3(0.0, 0.1, -0.06), Vector3.ZERO, Vector3(1.2, 0.6, 1.1), 0.0)
 			for side in [-1.0, 1.0]:
-				Paper.part(root, "Ear", Paper.box(Vector3(0.14, 0.05, 0.07)), face, Vector3(side * 0.17, 0.64, 0.4), Vector3(0.0, 0.0, side * (0.5 if b and side > 0.0 else 0.2)), Vector3.ONE, 0.0)
+				# On the head itself, so the eyes bow with it.
+				Paper.part(head, "Eye", Paper.sphere(0.018, 6), Color(0.95, 0.93, 0.88), Vector3(side * 0.065, 0.045, 0.09), Vector3.ZERO, Vector3.ONE, 0.0)
+			for side in [-1.0, 1.0]:
+				# Out from the sides of the head and drooping; one of the pair's second droops lower.
+				var droop := 0.75 if b and side > 0.0 else 0.35
+				Paper.part(root, "Ear", Paper.sphere(0.075, 8), face, head_at + Vector3(side * 0.14, 0.02, -0.03), Vector3(0.0, 0.0, -side * droop), Vector3(1.0, 0.35, 0.6), 0.008)
 		"goat":
 			var coat := Color(0.64, 0.55, 0.43)
 			_legs(root, 0.13, 0.14, 0.4, Color(0.4, 0.3, 0.2), 0.04, Color(0.16, 0.12, 0.1))
@@ -1169,8 +1219,7 @@ func _queue_boarding(actor: Node3D, lane: float) -> void:
 	var start := actor.position
 	var front := Vector3(start.x, ORIGIN.y + 0.12, ORIGIN.z + RAMP_FOOT_Z + 1.1)
 	var foot := _at(Vector3(lane, 0.12, RAMP_FOOT_Z + 0.2))
-	var door_z := HULL_Z + Shapes.side_z(0.0, 1.95)
-	var entrance := _at(Vector3(lane, 1.27, door_z + 0.25))
+	var entrance := _doorstep(lane)
 	var approach := maxf(start.distance_to(front) / 3.0, 0.05) + maxf(front.distance_to(foot) / 3.0, 0.05)
 	var ramp_start := maxf(_time + approach, _ramp_available)
 	_ramp_available = ramp_start + 0.8
@@ -1340,11 +1389,10 @@ func leave_ark() -> void:
 	for pair in MATE_OF:
 		actors.append(get_node(pair))
 		actors.append(get_node(MATE_OF[pair]))
-	var door_z := HULL_Z + Shapes.side_z(0.0, 1.95)
 	for i in actors.size():
 		var actor := actors[i]
 		var lane := -0.45 if i % 2 == 0 else 0.45
-		var start := _at(Vector3(lane, 1.27, door_z + 0.25))
+		var start := _doorstep(lane)
 		var foot := _at(Vector3(lane, 0.12, RAMP_FOOT_Z + 0.4))
 		var target := _at(Vector3((-1.0 if i % 2 == 0 else 1.0) * (2.8 + (i % 5) * 1.15), 0.12, 5.8 + (i / 5) * 1.1))
 		var tw := create_tween()
