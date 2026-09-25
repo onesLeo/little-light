@@ -37,7 +37,7 @@ func _run() -> void:
 	Settings.read_aloud = false
 	main.get_node("AudioDirector").stop_speech()
 	var camp: Node = main.get_node("KingsCamp")
-	camp.visit()
+	main.switch_to(Profiles.CHAPTER_CAMP)
 	await settle()
 	var story: Node = camp.get_node("ChapterTwo")
 	var player: Node3D = main.get_node("Player")

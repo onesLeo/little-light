@@ -459,22 +459,15 @@ func _on_stop(id: String) -> void:
 	if is_locked(id):
 		_show_locked(id)
 		return
-	if id == "valley":
-		_play_valley()
-	elif id == "camp":
-		var camp := get_parent().get_node_or_null("KingsCamp")
-		if camp and camp.has_method("visit"):
-			close()
-			camp.visit()
-		else:
-			_say("The King's Camp is still being prepared.")
-	elif id == "ark":
-		var ark := get_parent().get_node_or_null("NoahsArk")
-		if ark and ark.has_method("visit"):
-			close()
-			ark.visit()
-		else:
-			_say("Noah's Ark is still being prepared.")
+	var data := _stop_data(id)
+	var shell := get_parent()
+	var chapter: String = data["chapter"]
+	if not shell.has_method("has_story") or not shell.has_story(chapter):
+		_say("%s is still being prepared." % data["title"])
+		return
+	# The shell starts it: in place, or by loading the scene again for the valley mid-story.
+	close()
+	shell.switch_to(chapter)
 
 
 ## The story is closed: the button gives a little shake, and a card says which story
@@ -545,24 +538,6 @@ static func _wonder_light(text: String) -> String:
 	for line in text.split("\n", false):
 		lines.append("Wonder Light: \"%s\"" % line)
 	return "\n".join(lines)
-
-
-## Chapter 1. When the map is the first stop the valley is already waiting behind it, so it
-## simply begins; otherwise the scene is loaded fresh so the valley starts from its first line.
-func _play_valley() -> void:
-	var director := get_parent().get_node_or_null("ChapterDirector")
-	if _choosing and director and director.has_method("begin_valley"):
-		close()
-		director.begin_valley()
-		return
-	Profiles.current_chapter = Profiles.CHAPTER_VALLEY
-	get_tree().paused = false
-	_paused_by_me = false
-	if _audio and _audio.has_method("stop_speech"):
-		_audio.stop_speech()
-	for action in ["move_left", "move_right", "move_forward", "move_back"]:
-		Input.action_release(action)
-	get_tree().reload_current_scene()
 
 
 func _on_change_player() -> void:

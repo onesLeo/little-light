@@ -361,9 +361,8 @@ func _finish() -> void:
 	if player and "can_move" in player:
 		player.can_move = true
 	_say("Wonder Light: \"Friends stay tied together.\"", "Well done, Wonder-Walker!")
-	var director := main.get_node_or_null("ChapterDirector")
-	if director and director.has_method("play_finale"):
-		director.play_finale("Chapter 2 Complete!")
+	if main.has_method("play_finale"):
+		main.play_finale("Chapter 2 Complete!")
 	var menu := main.get_node_or_null("GameMenu")
 	if menu and menu.has_method("show_end_panel"):
 		menu.show_end_panel(JournalContent.CHARM_FRIENDSHIP)
@@ -558,14 +557,14 @@ func _say(text: String, prompt: String) -> void:
 	var jon := get_parent().get_node_or_null("Jonathan")
 	if jon:
 		jon.speaking = text.begins_with("Jonathan:")
-	var director := get_parent().get_parent().get_node_or_null("ChapterDirector")
+	var shell := get_parent().get_parent()
 	if _line:
 		_line.text = text
 	if _prompt:
 		_prompt.text = _device_prompt(prompt)
 	# The bar fits this line (not the last one of chapter 1), then the cards sit above it.
-	if director and director.has_method("_fit_dialogue_panel"):
-		director._fit_dialogue_panel()
+	if shell.has_method("fit_dialogue"):
+		shell.fit_dialogue()
 	if is_instance_valid(_cord):
 		_place_above_dialogue(_cord, Cord.PANEL.y)
 	if _words and _words.visible:

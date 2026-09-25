@@ -112,20 +112,11 @@ func tent_count() -> int:
 	return n
 
 
+## Starts the camp, or carries on with it. Only the shell calls this (game_shell.gd
+## switch_to), after every other story has stood down.
 func visit() -> void:
-	# "Play again" from here comes back to the camp, not to the valley.
-	Profiles.current_chapter = Profiles.CHAPTER_CAMP
 	_build()
 	var main := get_parent()
-	var ark := main.get_node_or_null("NoahsArk")
-	if ark and ark.has_method("stand_down"):
-		ark.stand_down()
-	var director := main.get_node_or_null("ChapterDirector")
-	if director and director.has_method("stand_down"):
-		director.stand_down()
-	var menu := main.get_node_or_null("GameMenu")
-	if menu and menu.has_method("hide_end_panel"):
-		menu.hide_end_panel()
 	var bounds := main.get_node_or_null("PlayBounds")
 	if bounds and bounds.has_method("open_camp"):
 		bounds.open_camp()

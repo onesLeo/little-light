@@ -49,7 +49,7 @@ func _run() -> void:
 	var journey: Node = main.get_node("FaithJourney")
 	if journey.is_open():
 		journey.close()
-	ark.visit()
+	main.switch_to(Profiles.CHAPTER_ARK)
 	await settle()
 	var story: Node = ark.get_node("ChapterFour")
 	var player: Node3D = main.get_node("Player")

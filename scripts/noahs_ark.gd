@@ -110,6 +110,8 @@ func _unavailable(animal: Node3D) -> bool:
 	return bool(animal.get_meta("aboard", false)) or bool(animal.get_meta("boarding", false))
 
 
+## Starts the ark, or carries on with it. Only the shell calls this (game_shell.gd
+## switch_to), after every other story has stood down.
 func visit() -> void:
 	# A finished run leaves the tools taken, the pegs in, the animals and family moved and
 	# the door used. A fresh ark puts every piece back, including ones added later.
@@ -120,18 +122,8 @@ func visit() -> void:
 	# Tapping the ark on the map mid-story only closes the map; the story carries on.
 	if last_run and last_run.phase != ChapterFour.Phase.IDLE:
 		return
-	Profiles.current_chapter = Profiles.CHAPTER_ARK
 	_build()
 	var main := get_parent()
-	var camp := main.get_node_or_null("KingsCamp")
-	if camp and camp.has_method("stand_down"):
-		camp.stand_down()
-	var director := main.get_node_or_null("ChapterDirector")
-	if director and director.has_method("stand_down"):
-		director.stand_down()
-	var menu := main.get_node_or_null("GameMenu")
-	if menu and menu.has_method("hide_end_panel"):
-		menu.hide_end_panel()
 	var bounds := main.get_node_or_null("PlayBounds")
 	if bounds and bounds.has_method("open_ark"):
 		bounds.open_ark()
