@@ -78,6 +78,18 @@ func ark_story() -> Node:
 	return main.get_node_or_null("NoahsArk/ChapterFour")
 
 
+## True when the shared world is dressed exactly as `look` says (chapter_look.gd): sky,
+## air, lights, the backdrop of hills, night sounds and the tabletop camera's framing.
+func looks_like(look: Resource) -> bool:
+	var env: Environment = (main.get_node("WorldEnvironment") as WorldEnvironment).environment
+	var sky := env.sky.sky_material as ProceduralSkyMaterial
+	var sun := main.get_node("Sun") as DirectionalLight3D
+	var fill := main.get_node("FillLight") as DirectionalLight3D
+	var cam := main.get_node("TabletopCamera") as Camera3D
+	var backdrop := main.get_node("HorizonBackdrop") as Node3D
+	return sky.sky_top_color.is_equal_approx(look.sky_top) and sky.ground_bottom_color.is_equal_approx(look.ground_bottom) 			and env.ambient_light_color.is_equal_approx(look.ambient_color) and is_equal_approx(env.fog_density, look.fog_density) 			and sun.light_color.is_equal_approx(look.sun_color) and is_equal_approx(sun.light_energy, look.sun_energy) 			and fill.light_color.is_equal_approx(look.fill_color) and is_equal_approx(fill.light_energy, look.fill_energy) 			and backdrop.visible == (look.backdrop != "hidden") and main.get_node("Soundscape")._night == look.night 			and cam.offset.is_equal_approx(look.camera_offset) and is_equal_approx(cam.fov, look.camera_fov)
+
+
 ## How many of the UI's own children are named like `pattern` and showing.
 func showing(pattern: String) -> int:
 	var n := 0
@@ -108,6 +120,7 @@ func _run() -> void:
 	check(camp_story() != null and camp_story().phase == camp_story().Phase.ARRIVE and Profiles.current_chapter == Profiles.CHAPTER_CAMP,
 			"the camp starts from its first line")
 	check(director.beat == director.Beat.CAMP, "the valley's story stands down for the camp")
+	check(looks_like(main.get_node("KingsCamp").look), "the world takes the camp's look: blue hour, night sounds")
 
 	print("-- the ark from the map, mid-camp --")
 	await map_stop("ark")
@@ -115,6 +128,9 @@ func _run() -> void:
 			"the ark starts from its first line")
 	check(camp_story().phase == camp_story().Phase.IDLE and showing("Camp*") == 0,
 			"the camp's story stops, and none of its cards stay on screen")
+	check(looks_like(main.get_node("NoahsArk").look), "the world takes the ark's look: daylight, no hills, its own framing")
+	# Leave the ark mid-rain: its crossfade must not keep painting over the next story.
+	main.get_node("NoahsArk").set_weather("rain")
 
 	print("-- Play again in the ark --")
 	main.get_node("GameMenu")._restart()
@@ -122,11 +138,15 @@ func _run() -> void:
 	check(ark_story() != null and ark_story().phase == ark_story().Phase.ARRIVE and Profiles.current_chapter == Profiles.CHAPTER_ARK,
 			"Play again reloads straight back into the ark's first line")
 	check(main.get_node("UI").find_children("ArkWords*", "", false, false).size() == 1, "with one set of the ark's word chips")
+	check(looks_like(main.get_node("NoahsArk").look), "and in the ark's look")
+	main.get_node("NoahsArk").set_weather("rain")
 
 	print("-- the camp from the map, mid-ark, then Play again --")
 	await map_stop("camp")
 	check(camp_story().phase == camp_story().Phase.ARRIVE and not main.get_node("NoahsArk")._built and showing("Ark*") == 0,
 			"the camp starts, the ark is put away, and none of its cards stay on screen")
+	await create_timer(0.6).timeout
+	check(looks_like(main.get_node("KingsCamp").look), "left mid-rain, the ark's weather gives way to the camp's whole look")
 	main.get_node("GameMenu")._restart()
 	await reloaded()
 	check(camp_story().phase == camp_story().Phase.ARRIVE and Profiles.current_chapter == Profiles.CHAPTER_CAMP,
@@ -138,6 +158,7 @@ func _run() -> void:
 	director = main.get_node("ChapterDirector")
 	check(director.beat == director.Beat.ARRIVE and Profiles.current_chapter == Profiles.CHAPTER_VALLEY,
 			"the valley reloads the scene and starts chapter 1 from its first line")
+	check(looks_like(director.look), "in the valley's daylight")
 	check(camp_story() == null or camp_story().phase == camp_story().Phase.IDLE, "and the camp is not running behind it")
 	check(not main.get_node("NoahsArk")._built, "and the ark is not built")
 

@@ -145,7 +145,7 @@ repository.
 | Folder | What is in it |
 |--------|---------------|
 | `scenes/`, `scripts/` | the game |
-| `assets/` | only the models and sounds the game loads (five models, `audio/`, `shaders/`) |
+| `assets/` | only what the game loads: the models, `audio/`, `shaders/`, and `looks/` (each story's lighting, see below) |
 | `art/blender/` | generators for the models and the environment |
 | `art/archive/models/` | 34 earlier model versions, ignored by Godot (see its README) |
 | `art/previews/` | saved renders |
@@ -163,12 +163,19 @@ for "Play again" (`reload()`). Stories never call one another.
 - The **valley** is the scene itself (`chapter_director.gd`). Choosing it once another story has
   started reloads the scene.
 - The **camp** and the **ark** are nodes in the scene, listed in the shell's `STORIES`. Each offers
-  `visit()` (start, or carry on) and `stand_down()` (stop listening, put its cards and sounds away),
-  and its story node offers `get_action_hint()`. Only the shell calls `visit()`, after standing every
-  other story down.
+  `visit()` (start, or carry on), `stand_down()` (stop listening, put its cards and sounds away),
+  `in_progress()`, and a `look`; its story node offers `get_action_hint()`. Only the shell calls
+  `visit()`, after standing every other story down.
+- Each story's **look** is a `chapter_look.gd` resource in `assets/looks/` (`valley_day`,
+  `camp_blue_hour`, `ark_mountain_day`): the sky, ambient light and haze, sun and fill lights, the
+  valley's ring of hills (as painted, blue hour or hidden), night or day sounds, and how the tabletop
+  camera frames the Wonder-Walker. The shell applies it when the story starts, so no story undoes
+  another by hand; tune it in the inspector. Weather inside a story (the ark's flood) starts from
+  the look (`apply_lighting()`) and tweens on. Tapping a story that is under way carries on without
+  applying its look again, so the ark's rain stays.
 
-A new story in this scene is a node with those three methods and one line in `STORIES`, plus its
-entries in the shared data (voice lines, journal verses and charms, the map's stops).
+A new story in this scene is a node with those methods and a look, and one line in `STORIES`, plus
+its entries in the shared data (voice lines, journal verses and charms, the map's stops).
 `tests/journey_review.gd` checks moving between the stories.
 
 ## Making a change
