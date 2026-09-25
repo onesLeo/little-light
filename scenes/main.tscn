@@ -1,4 +1,4 @@
-[gd_scene load_steps=61 format=3]
+[gd_scene load_steps=62 format=3]
 
 [ext_resource type="PackedScene" path="res://assets/wonder_walker_v13.glb" id="1_ww"]
 [ext_resource type="PackedScene" path="res://assets/bethlehem_valley_v7.glb" id="2_valley"]
@@ -37,6 +37,7 @@
 [ext_resource type="Script" path="res://scripts/faith_journey_screen.gd" id="39_journey"]
 [ext_resource type="Script" path="res://scripts/kings_camp.gd" id="40_camp"]
 [ext_resource type="Script" path="res://scripts/noahs_ark.gd" id="41_ark"]
+[ext_resource type="Script" path="res://scripts/game_shell.gd" id="42_shell"]
 [ext_resource type="Script" path="res://scripts/stream_water_fx.gd" id="26_water"]
 [ext_resource type="Script" path="res://scripts/horizon_backdrop.gd" id="27_horizon"]
 [ext_resource type="Script" path="res://scripts/meadow_dressing.gd" id="28_meadow"]
@@ -148,6 +149,7 @@ glow_blend_mode = 2
 glow_hdr_threshold = 0.9
 
 [node name="Main" type="Node3D"]
+script = ExtResource("42_shell")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_main")

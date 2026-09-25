@@ -107,39 +107,12 @@ func _ready() -> void:
 	_start_story()
 
 
-## Starts the story. Nobody playing yet: the "Who is playing?" screen comes first, then the Faith
-## Journey map, where the child picks a chapter. A reload for "Play again" goes straight back into
-## the chapter they were on (Profiles.current_chapter).
+## Starts the story: the shell (game_shell.gd, on the Main root) decides which one.
+## Kept here because the valley's _ready() is what calls it, once everything is set up.
 func _start_story() -> void:
-	var picker := get_node_or_null("../ProfileScreen")
-	if Profiles.active_id.is_empty() and picker != null:
-		picker.profile_chosen.connect(func(_id: String) -> void: _open_journey_first(), CONNECT_ONE_SHOT)
-		return
-	match Profiles.current_chapter:
-		Profiles.CHAPTER_VALLEY:
-			_enter_beat(Beat.ARRIVE)
-		Profiles.CHAPTER_CAMP:
-			var camp := get_node_or_null("../KingsCamp")
-			if camp and camp.has_method("visit"):
-				camp.visit.call_deferred()
-			else:
-				_enter_beat(Beat.ARRIVE)
-		Profiles.CHAPTER_ARK:
-			var ark := get_node_or_null("../NoahsArk")
-			if ark and ark.has_method("visit"):
-				ark.visit.call_deferred()
-			else:
-				_open_journey_first.call_deferred()
-		_:
-			_open_journey_first.call_deferred()
-
-
-## The Faith Journey map as the first stop, before any chapter. Without it (a trimmed scene), the
-## valley starts as before.
-func _open_journey_first() -> void:
-	var journey := get_node_or_null("../FaithJourney")
-	if journey and journey.has_method("open_to_choose"):
-		journey.open_to_choose()
+	var shell := get_parent()
+	if shell and shell.has_method("start_story"):
+		shell.start_story()
 	else:
 		begin_valley()
 
@@ -444,16 +417,14 @@ func _show(dialogue: String, prompt: String) -> void:
 
 ## Short lines no longer sit at the top of a mostly empty 200 px panel. Long
 ## story beats (especially Joshua 1:9) still grow enough to wrap comfortably.
+## The bar itself is sized by the shell (fit_dialogue); the valley's word row sits above it.
 func _fit_dialogue_panel() -> void:
 	if dialogue_panel == null:
 		return
-	var dialogue_height := dialogue_label.get_combined_minimum_size().y
-	var prompt_height := prompt_label.get_combined_minimum_size().y
-	var wanted := dialogue_height + prompt_height + 44.0
-	var viewport_height := get_viewport().get_visible_rect().size.y
-	var max_height := maxf(116.0, minf(240.0, viewport_height * 0.38))
-	var height := clampf(wanted, 116.0, max_height)
-	dialogue_panel.offset_top = dialogue_panel.offset_bottom - height
+	var shell := get_parent()
+	if shell and shell.has_method("fit_dialogue"):
+		shell.fit_dialogue()
+	var height := dialogue_panel.offset_bottom - dialogue_panel.offset_top
 	if _word_row:
 		# A very long line (Joshua 1:9) makes the bar taller than `height`: go by what it needs.
 		var bar_top := dialogue_panel.offset_bottom - maxf(height, dialogue_panel.get_combined_minimum_size().y)
@@ -612,23 +583,11 @@ func _face_david(target: Node3D) -> void:
 
 ## The chapter-complete moment: applause, a big confetti pop over the
 ## Wonder-Walker, the light celebrating, and a banner that pops in.
-## The end-of-chapter celebration: a cheer, confetti, Wonder Light's burst and the
-## "Chapter Complete!" banner. The King's Camp uses it too, so both chapters end alike.
+## The end-of-chapter celebration, shared by every story: the shell plays it (game_shell.gd).
 func play_finale(title: String = "Chapter Complete!") -> void:
-	if audio_director and audio_director.has_method("play_cheer"):
-		audio_director.play_cheer()
-	if confetti and confetti.has_method("burst") and player:
-		confetti.burst(player.global_position + Vector3(0.0, 2.8, 0.0), 220, 1.4, 6.5, 0.95)
-	_celebrate_light()
-	if complete_banner:
-		complete_banner.text = title
-		complete_banner.visible = true
-		complete_banner.modulate.a = 0.0
-		complete_banner.pivot_offset = complete_banner.size * 0.5
-		complete_banner.scale = Vector2(0.4, 0.4)
-		var tw := create_tween().set_parallel(true)
-		tw.tween_property(complete_banner, "modulate:a", 1.0, 0.25)
-		tw.tween_property(complete_banner, "scale", Vector2.ONE, 0.55).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	var shell := get_parent()
+	if shell and shell.has_method("play_finale"):
+		shell.play_finale(title)
 
 
 func _celebrate_light() -> void:

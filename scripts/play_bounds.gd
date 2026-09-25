@@ -32,14 +32,14 @@ func open_ark() -> void:
 	half_extents = Vector2(18.0, 16.0)
 
 var _player: CharacterBody3D
-var _director: Node
+var _shell: Node
 var _nudge_index: int = 0
 
 
 func _ready() -> void:
 	var main := get_parent()
 	_player = main.get_node_or_null("Player") as CharacterBody3D
-	_director = main.get_node_or_null("ChapterDirector")
+	_shell = main
 
 
 func _physics_process(delta: float) -> void:
@@ -59,8 +59,8 @@ func _physics_process(delta: float) -> void:
 	if sd - push > 0.0:
 		moved = inward * sd
 	_player.global_position += Vector3(moved.x, 0.0, moved.y)
-	if depth > 0.35 and _director and _director.has_method("show_nudge"):
-		_director.show_nudge(NUDGE_LINES[_nudge_index % NUDGE_LINES.size()])
+	if depth > 0.35 and _shell and _shell.has_method("nudge"):
+		_shell.nudge(NUDGE_LINES[_nudge_index % NUDGE_LINES.size()])
 		_nudge_index += 1
 
 

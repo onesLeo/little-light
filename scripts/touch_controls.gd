@@ -153,14 +153,11 @@ func _set_button(down: bool) -> void:
 		Input.parse_input_event(ev)
 
 
+## The story being played now says what the button does (game_shell.gd action_hint).
 func _hint() -> String:
-	# The story being played now answers first; a finished one further back stays quiet.
-	var ark_story := get_parent().get_node_or_null("NoahsArk/ChapterFour")
-	if ark_story and ark_story.phase != ark_story.Phase.IDLE and ark_story.phase != ark_story.Phase.DONE:
-		return ark_story.get_action_hint()
-	var camp_story := get_parent().get_node_or_null("KingsCamp/ChapterTwo")
-	if camp_story and camp_story.phase != camp_story.Phase.IDLE:
-		return camp_story.get_action_hint()
+	var shell := get_parent()
+	if shell and shell.has_method("action_hint"):
+		return shell.action_hint()
 	if _director and _director.has_method("get_action_hint"):
 		return _director.get_action_hint()
 	return ""

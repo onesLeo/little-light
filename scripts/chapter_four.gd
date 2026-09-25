@@ -460,9 +460,8 @@ func _finish() -> void:
 	if _player and "can_move" in _player:
 		_player.can_move = true
 	_say("Wonder Light: \"Keep it close. Trust God, even before you see the way through.\"", "Well done, Wonder-Walker!")
-	var director := main.get_node_or_null("ChapterDirector")
-	if director and director.has_method("play_finale"):
-		director.play_finale("Chapter 4 Complete!")
+	if main.has_method("play_finale"):
+		main.play_finale("Chapter 4 Complete!")
 	var menu := main.get_node_or_null("GameMenu")
 	if menu and menu.has_method("show_end_panel"):
 		menu.show_end_panel(JournalContent.CHARM_TRUST)
@@ -505,9 +504,9 @@ func _say(text: String, prompt: String) -> void:
 	if _line:
 		_line.text = text
 	_set_prompt(prompt)
-	var director := get_parent().get_parent().get_node_or_null("ChapterDirector")
-	if director and director.has_method("_fit_dialogue_panel"):
-		director._fit_dialogue_panel()
+	var shell := get_parent().get_parent()
+	if shell.has_method("fit_dialogue"):
+		shell.fit_dialogue()
 	if _audio and _audio.has_method("speak_dialogue"):
 		_audio.speak_dialogue(text)
 

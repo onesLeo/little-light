@@ -168,13 +168,13 @@ func set_paused(paused: bool) -> void:
 ## Loads the scene again. With a child still playing, the chapter they were on starts over
 ## (Profiles.current_chapter); with nobody, "Who is playing?" and then the map come first.
 func _restart() -> void:
+	var shell := get_parent()
+	if shell and shell.has_method("reload"):
+		shell.reload(Profiles.current_chapter)
+		return
 	if Profiles.active_id.is_empty():
 		Profiles.current_chapter = ""
 	get_tree().paused = false
-	if _audio and _audio.has_method("stop_speech"):
-		_audio.stop_speech()
-	for action in ["move_left", "move_right", "move_forward", "move_back"]:
-		Input.action_release(action)
 	get_tree().reload_current_scene()
 
 
