@@ -7,6 +7,7 @@ extends Node
 ## off its spot.
 ## Sits as a child of DavidMentor; finds the sheep meshes by name once ready.
 
+const GameShell := preload("res://scripts/game_shell.gd")
 const SHEEP := "David_CompanionLamb"
 
 @export var notice_radius: float = 5.0
@@ -29,7 +30,7 @@ func _capture() -> void:
 	var david := get_parent() as Node3D
 	if david == null:
 		return
-	_player = david.get_parent().get_node_or_null("Player") as Node3D
+	_player = GameShell.of(self).get_node_or_null("Player") as Node3D
 	_meshes.clear()
 	for n in [SHEEP, SHEEP + "_Outline"]:
 		var mesh := david.find_child(n, false, false) as Node3D

@@ -2,59 +2,93 @@ extends Node3D
 ## The game shell, on the Main root. It is the one place a story is started, stopped or
 ## switched, and it holds the services every story shares: the end-of-chapter finale,
 ## fitting the dialogue bar to its line, the gentle nudges at the edge of the play area,
-## and what the touch button says. Stories reach it as their scene root and never call
-## one another, so adding a story means adding it here, not to every other story.
+## and what the touch button says. Stories never call one another, so adding a story means
+## adding it here, not to every other story. main.tscn itself holds only what every story
+## shares: the Wonder-Walker, the cameras and lights, the UI, the menus and the sound.
 ##
-## The camp and the ark are scenes of their own (see STORIES). The shell loads one when it
-## starts and frees it when another story starts, so only the running story is in the tree
-## and every start is a fresh one. Its root node offers:
+## Every story is a scene of its own (see STORIES). The shell loads one when it starts and
+## frees it when another story starts, so only what is being played is in the tree and every
+## start is a fresh one. The King's Camp stands on the valley's ridge, so the valley stays
+## loaded under it ("over"), with its story stood down. A story's root node sits under Main
+## and offers:
 ##   visit()             start it, or carry on if it is already under way
-##   stand_down()        stop it: its story stops listening, its cards and sounds go away
+##   stand_down()        stop it: its story stops listening, its sounds stop
 ##   in_progress()       true while its story is under way (then switching to it carries on)
 ##   look                its chapter_look.gd resource: sky, lights, backdrop, night, camera
 ##   play_area           its play_area.gd resource: where the walker can go
 ##   get_action_hint()   on its story node, for the touch button
-## The valley is the scene itself (chapter_director.gd): choosing it once another story
-## has started loads the scene again, which also starts every other story clean.
+## A story's pieces reach the shared nodes through GameShell.of(self).
 ##
 ## Which story is running is Profiles.current_chapter; it survives a reload, which is how
-## "Play again" works.
+## "Play again" works. Going back to the valley once another story has started also reloads,
+## so nothing another story changed on the shared nodes (the camp's paper look) stays.
 
 const Profiles := preload("res://scripts/profiles.gd")
+const DialogueView := preload("res://scripts/dialogue_view.gd")
 
-## The stories loaded on demand: their scene, the name of its root node under Main, and the
-## child holding its story script. The root stays a child of Main, which the stories reach
-## as their parent.
+## The stories: their scene, the name of its root node under Main, the child holding its
+## story script, and the story it stands on ("over"), which stays loaded under it.
 const STORIES := {
-	Profiles.CHAPTER_CAMP: {"scene": "res://scenes/chapters/kings_camp.tscn", "node": "KingsCamp", "story": "ChapterTwo"},
+	Profiles.CHAPTER_VALLEY: {"scene": "res://scenes/chapters/bethlehem_valley.tscn", "node": "Valley", "story": "ChapterDirector"},
+	Profiles.CHAPTER_CAMP: {"scene": "res://scenes/chapters/kings_camp.tscn", "node": "KingsCamp", "story": "ChapterTwo",
+			"over": Profiles.CHAPTER_VALLEY},
 	Profiles.CHAPTER_ARK: {"scene": "res://scenes/chapters/noahs_ark.tscn", "node": "NoahsArk", "story": "ChapterFour"},
 }
 
 ## True while the map is the first stop and no story has started behind it: the valley
-## is then already waiting in the scene, so it starts in place instead of reloading.
+## is then already waiting, so it starts in place instead of reloading.
 var _first_map: bool = false
 
 
-## Starts what this scene was loaded for; the valley's director calls it once it is ready.
-## Nobody playing yet: "Who is playing?" comes first, then the Faith Journey map. After a
-## reload for "Play again", straight back into the story the child was on.
+## The shell `node` belongs to: its nearest ancestor that is one (Main). A story's pieces use
+## it to reach the shared player, cameras, UI and sound, whatever scene they are in.
+static func of(node: Node) -> Node:
+	var at := node.get_parent()
+	while at != null and not at.has_method("start_story"):
+		at = at.get_parent()
+	return at
+
+
+func _ready() -> void:
+	_build_dialogue_view()
+	start_story()
+
+
+## The speaker's name tag and face over the dialogue bar, for every story (dialogue_view.gd).
+func _build_dialogue_view() -> void:
+	var ui := get_node_or_null("UI")
+	var panel := get_node_or_null("UI/Panel") as Control
+	var line := get_node_or_null("%DialogueLabel") as Label
+	if ui == null or panel == null or line == null:
+		return
+	var view := DialogueView.new()
+	view.name = "DialogueView"
+	view.setup(panel, line, get_node_or_null("AudioDirector"))
+	ui.add_child(view)
+
+
+## Starts what this scene was loaded for. Nobody playing yet: "Who is playing?" comes first,
+## then the Faith Journey map, with the valley waiting behind them. After a reload for
+## "Play again", straight back into the story the child was on.
 func start_story() -> void:
 	var picker := get_node_or_null("ProfileScreen")
-	if Profiles.active_id.is_empty() and picker != null:
-		picker.profile_chosen.connect(func(_id: String) -> void: _open_map_first(), CONNECT_ONE_SHOT)
-		return
 	var id := Profiles.current_chapter
-	if id == Profiles.CHAPTER_VALLEY:
+	if Profiles.active_id.is_empty() and picker != null:
+		_ensure_loaded(Profiles.CHAPTER_VALLEY)
+		picker.profile_chosen.connect(func(_id: String) -> void: _open_map_first(), CONNECT_ONE_SHOT)
+	elif id == Profiles.CHAPTER_VALLEY:
 		_begin_valley()
 	elif STORIES.has(id):
-		switch_to.call_deferred(id)
+		switch_to(id)
 	else:
+		_ensure_loaded(Profiles.CHAPTER_VALLEY)
 		_open_map_first.call_deferred()
 
 
 ## Moves to story `id`. Every other story stands down first, so only one ever listens.
 func switch_to(id: String) -> void:
 	if id == Profiles.CHAPTER_VALLEY:
+		# On the first map the valley is already waiting, with the Wonder-Walker at its start.
 		if _first_map:
 			_begin_valley()
 		else:
@@ -67,12 +101,17 @@ func switch_to(id: String) -> void:
 	# Tapping the story already under way only closes the map: its look (the ark's rain) stays.
 	var story := _story_node(id)
 	var carry_on: bool = Profiles.current_chapter == id and story != null and story.has_method("in_progress") and story.in_progress()
-	var director := get_node_or_null("ChapterDirector")
-	if director and director.has_method("stand_down"):
-		director.stand_down()
+	var under: String = STORIES[id].get("over", "")
 	for other in STORIES:
-		if other != id or not carry_on:
+		if other == id and carry_on:
+			continue
+		if other == under:
+			_stand_down(other)
+		else:
 			_put_away(other)
+	if not under.is_empty() and _story_node(under) == null:
+		_load_story(under)
+		_stand_down(under)
 	Profiles.current_chapter = id
 	var menu := get_node_or_null("GameMenu")
 	if menu and menu.has_method("hide_end_panel"):
@@ -99,14 +138,17 @@ func reload(id: String) -> void:
 	get_tree().reload_current_scene()
 
 
+## Chapter 1 in the valley as it is: loaded now if it is not waiting already.
 func _begin_valley() -> void:
 	_first_map = false
-	var director := get_node_or_null("ChapterDirector")
-	if director:
-		apply_look(director.get("look"))
-		_use_play_area(director.get("play_area"))
-	if director and director.has_method("begin_valley"):
-		director.begin_valley()
+	for other in STORIES:
+		if other != Profiles.CHAPTER_VALLEY:
+			_put_away(other)
+	var valley := _ensure_loaded(Profiles.CHAPTER_VALLEY)
+	Profiles.current_chapter = Profiles.CHAPTER_VALLEY
+	apply_look(valley.get("look"))
+	_use_play_area(valley.get("play_area"))
+	valley.visit()
 
 
 ## The Faith Journey map as the first stop, before any story. Without it (a trimmed scene),
@@ -126,9 +168,9 @@ func _use_play_area(area: Resource) -> void:
 		bounds.use_area(area)
 
 
-## True when story `id` can be played (the valley always can).
+## True when story `id` can be played.
 func has_story(id: String) -> bool:
-	return id == Profiles.CHAPTER_VALLEY or (STORIES.has(id) and ResourceLoader.exists(STORIES[id]["scene"]))
+	return STORIES.has(id) and ResourceLoader.exists(STORIES[id]["scene"])
 
 
 ## The story's root node while it is loaded, otherwise null.
@@ -138,7 +180,20 @@ func _story_node(id: String) -> Node:
 	return get_node_or_null(STORIES[id]["node"])
 
 
-## Loads story `id` fresh from its scene, under Main where the stories used to sit.
+## The node running story `id` (the director, ChapterTwo, ChapterFour) while it is loaded.
+func _story_script(id: String) -> Node:
+	if not STORIES.has(id):
+		return null
+	return get_node_or_null("%s/%s" % [STORIES[id]["node"], STORIES[id]["story"]])
+
+
+func _ensure_loaded(id: String) -> Node:
+	var story := _story_node(id)
+	return story if story != null else _load_story(id)
+
+
+## Loads story `id` fresh from its scene, under Main, before the lights (where the stories
+## always sat, so they process in the same order).
 func _load_story(id: String) -> Node:
 	var packed := load(STORIES[id]["scene"]) as PackedScene
 	if packed == null:
@@ -150,7 +205,17 @@ func _load_story(id: String) -> Node:
 	var before := get_node_or_null("Sun")
 	if before:
 		move_child(story, before.get_index())
+	# Outline hulls drawn into the shadow map twice cost a tablet a lot (performance_tuning.gd).
+	var tuning := get_node_or_null("PerformanceTuning")
+	if tuning and tuning.has_method("stop_outline_shadows"):
+		tuning.stop_outline_shadows.call_deferred(story)
 	return story
+
+
+func _stand_down(id: String) -> void:
+	var story := _story_node(id)
+	if story and story.has_method("stand_down"):
+		story.stand_down()
 
 
 ## Stops story `id` if it is loaded and frees it: it leaves the tree at once, so its name is
@@ -159,8 +224,7 @@ func _put_away(id: String) -> void:
 	var story := _story_node(id)
 	if story == null:
 		return
-	if story.has_method("stand_down"):
-		story.stand_down()
+	_stand_down(id)
 	remove_child(story)
 	story.queue_free()
 
@@ -174,7 +238,8 @@ func apply_look(look: Resource) -> void:
 	if look == null:
 		return
 	apply_lighting(look)
-	var backdrop := get_node_or_null("HorizonBackdrop") as Node3D
+	# The valley's ring of hills; a story far from the valley has none.
+	var backdrop := get_node_or_null("Valley/HorizonBackdrop") as Node3D
 	if backdrop:
 		if look.backdrop == "blue_hour" and backdrop.has_method("set_blue_hour"):
 			backdrop.set_blue_hour()
@@ -220,12 +285,8 @@ func apply_lighting(look: Resource) -> void:
 
 ## What the touch button says now ("" = nothing to do): the running story answers.
 func action_hint() -> String:
-	var id := Profiles.current_chapter
-	if STORIES.has(id):
-		var story := get_node_or_null("%s/%s" % [STORIES[id]["node"], STORIES[id]["story"]])
-		return story.get_action_hint() if story and story.has_method("get_action_hint") else ""
-	var director := get_node_or_null("ChapterDirector")
-	return director.get_action_hint() if director and director.has_method("get_action_hint") else ""
+	var story := _story_script(Profiles.current_chapter)
+	return story.get_action_hint() if story and story.has_method("get_action_hint") else ""
 
 
 ## The end-of-chapter celebration every story ends with: a cheer, confetti over the
@@ -269,6 +330,6 @@ func fit_dialogue() -> void:
 ## A short friendly line when the child wanders to the edge of the play area (play_bounds.gd).
 ## Only the valley has nudges so far; its director decides when one may show.
 func nudge(text: String) -> void:
-	var director := get_node_or_null("ChapterDirector")
+	var director := _story_script(Profiles.CHAPTER_VALLEY)
 	if director and director.has_method("show_nudge"):
 		director.show_nudge(text)

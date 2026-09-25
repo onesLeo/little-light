@@ -1,4 +1,5 @@
 extends Node3D
+const GameShell := preload("res://scripts/game_shell.gd")
 ## Smooth, slow-swimming fish for the alive brook.
 ## The pack's baked fish are faceted and shoot along the stream at ~5 m/s, so
 ## they are hidden and replaced by these: soft ellipsoid bodies with a wagging
@@ -15,7 +16,8 @@ const OUTLINE := Color(0.08, 0.06, 0.05)
 @export var water_name: String = "Stream_Water"
 @export var river_z_min: float = -4.2
 @export var lift: float = 0.09
-@export var player_path: NodePath = ^"../Player"
+## Who the fish shy away from; empty means the shell's Wonder-Walker.
+@export var player_path: NodePath = ^""
 ## A fish this close to the Wonder-Walker gets shy: it turns away and darts off.
 @export var scare_radius: float = 2.3
 @export var scare_speed_mul: float = 4.5
@@ -38,7 +40,8 @@ func _setup() -> void:
 	var art := get_node_or_null(art_path) as Node3D
 	if art == null:
 		return
-	_player = get_node_or_null(player_path) as Node3D
+	var from_shell := player_path.is_empty()
+	_player = (GameShell.of(self).get_node_or_null("Player") if from_shell else get_node_or_null(player_path)) as Node3D
 	for n in art.find_children("Fish_*", "Node3D", true, false):
 		(n as Node3D).visible = false
 	var water := art.find_child(water_name, true, false) as MeshInstance3D

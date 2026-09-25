@@ -24,6 +24,7 @@ signal minigame_completed
 signal breath_completed(count: int)
 
 const SoundBus := preload("res://scripts/sound_bus.gd")
+const GameShell := preload("res://scripts/game_shell.gd")
 const SoundLibrary := preload("res://scripts/sound_library.gd")
 
 @export var breaths_required: int = 3
@@ -57,8 +58,8 @@ var _full_time: float = 0.0
 var _idle_time: float = 0.0
 var _label_text: String = ""
 
-@onready var _breath: Control = get_node_or_null("%BreathIndicator") as Control
-@onready var _audio: Node = get_node_or_null("%AudioDirector")
+@onready var _breath: Control = GameShell.of(self).get_node_or_null("%BreathIndicator") as Control
+@onready var _audio: Node = GameShell.of(self).get_node_or_null("%AudioDirector")
 var _breath_label: Label
 var _dots: BreathDots
 var _air: AudioStreamPlayer
@@ -90,7 +91,7 @@ class BreathDots extends Control:
 func _ready() -> void:
 	active = false
 	set_process(false)
-	_wonder_light = get_node_or_null("../WonderLight")
+	_wonder_light = GameShell.of(self).get_node_or_null("WonderLight")
 	_david = get_node_or_null("../DavidMentor") as Node3D
 	if _david:
 		_david_base_scale = _david.scale
@@ -133,6 +134,16 @@ func _ready() -> void:
 		_dots.offset_bottom = 142.0
 		_dots.visible = false
 		_breath.get_parent().add_child(_dots)
+
+
+## The breath label and dots live in the shared UI, outside the valley, so they go with the
+## valley when the shell frees it (another story is starting); a valley loaded again builds its own.
+func _exit_tree() -> void:
+	for node in [_breath_label, _dots]:
+		if is_instance_valid(node):
+			if node.get_parent():
+				node.get_parent().remove_child(node)
+			node.queue_free()
 
 
 func start_minigame() -> void:

@@ -43,7 +43,7 @@ func _run() -> void:
 	var story: Node = camp.get_node("ChapterTwo")
 	var player: Node3D = main.get_node("Player")
 	var jon: Node3D = camp.get_node("Jonathan")
-	var david: Node3D = main.get_node("DavidMentor")
+	var david: Node3D = main.get_node("Valley/DavidMentor")
 	check("turning into night" in story._line.text, "arrival says night")
 	check(not player.can_move, "arrival holds still so she sees the camp")
 	check((-david.basis.z).dot((jon.position - camp.to_local(david.global_position)).normalized()) > 0.9, "David faces Jonathan")

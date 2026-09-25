@@ -71,13 +71,13 @@ func _initialize() -> void:
 	root.add_child(main)
 	await process_frame  # let _ready() propagate through the tree first
 
-	var director: Node = main.get_node("ChapterDirector")
+	var director: Node = main.get_node("Valley/ChapterDirector")
 	var wonder_light: Node = main.get_node("WonderLight")
-	var steady_hands: Node = main.get_node("SteadyHands")
+	var steady_hands: Node = main.get_node("Valley/SteadyHands")
 	var breath: Control = main.get_node("UI/BreathIndicator")
 	var closeup_cam: Camera3D = main.get_node("CloseUpCamera")
 	var tabletop_cam: Camera3D = main.get_node("TabletopCamera")
-	var david: Node3D = main.get_node("DavidMentor")
+	var david: Node3D = main.get_node("Valley/DavidMentor")
 	var input_setup: Node = main.get_node("InputSetup")
 	var touch_controls: CanvasLayer = main.get_node("TouchControls")
 	var game_menu: CanvasLayer = main.get_node("GameMenu")
@@ -123,12 +123,12 @@ func _initialize() -> void:
 	var after: Dictionary = bounds._edge_info(Vector2(player.global_position.x, player.global_position.z) - bounds.center)
 	_check(float(after["sd"]) <= 0.01, "a player far outside is brought back to the edge")
 	_check(director.dialogue_label.text.contains("valley"), "Wonder Light gives a friendly nudge at the edge")
-	var lamb_life: Node = main.get_node("WonderItems/LambLife")
+	var lamb_life: Node = main.get_node("Valley/WonderItems/LambLife")
 	_check(lamb_life._ready_to_animate, "the lamb is set up after the items are scattered")
-	_check(main.get_node("StreamFish")._fish.size() == 3, "three shy fish are swimming")
-	_check(main.get_node("Butterflies")._flies.size() == 8, "eight butterflies are fluttering")
+	_check(main.get_node("Valley/StreamFish")._fish.size() == 3, "three shy fish are swimming")
+	_check(main.get_node("Valley/Butterflies")._flies.size() == 8, "eight butterflies are fluttering")
 	var walls := 0
-	for bank in main.get_node("StreamFishAlive/Art").find_children("Bank_*", "MeshInstance3D", true, false):
+	for bank in main.get_node("Valley/StreamFishAlive/Art").find_children("Bank_*", "MeshInstance3D", true, false):
 		if bank.get_node_or_null("BakedCollision") != null:
 			walls += 1
 	_check(walls == 0, "hidden stream banks have no collision (no invisible walls)")
@@ -141,7 +141,7 @@ func _initialize() -> void:
 	var steepest: float = 0.0
 	var worst_gap: float = 0.0
 	var lost: Array = []
-	for tree in main.get_node("BethlehemValley").find_children("*", "MeshInstance3D", true, false):
+	for tree in main.get_node("Valley/BethlehemValley").find_children("*", "MeshInstance3D", true, false):
 		var tree_name: String = String(tree.name)
 		if tree_name.ends_with("_Outline") or not (tree_name.begins_with("Cypress_") or tree_name.begins_with("Olive_")):
 			continue
@@ -158,7 +158,7 @@ func _initialize() -> void:
 	_check(worst_gap <= 0.35, "no tree floats or is buried, even after the stream nudges it (worst %.2f m)" % worst_gap)
 	var plants: int = 0
 	var white_or_split: Array = []
-	for plant in main.get_node("BethlehemValley").find_children("*", "MeshInstance3D", true, false):
+	for plant in main.get_node("Valley/BethlehemValley").find_children("*", "MeshInstance3D", true, false):
 		var plant_name: String = String(plant.name)
 		if plant_name.ends_with("_Outline") or not (plant_name.begins_with("Cypress_") or plant_name.begins_with("Olive_") or plant_name.begins_with("Shrub_")):
 			continue
@@ -170,7 +170,7 @@ func _initialize() -> void:
 	_check(plants == 32 and white_or_split.is_empty(), "all %d trees and bushes are one painted surface (two draws with the outline) %s" % [plants, white_or_split])
 	var ledge_rocks: int = 0
 	var ledge_problems: Array = []
-	for outcrop in main.get_node("BethlehemValley").find_children("LedgeRock_*", "MeshInstance3D", true, false):
+	for outcrop in main.get_node("Valley/BethlehemValley").find_children("LedgeRock_*", "MeshInstance3D", true, false):
 		var outcrop_name: String = String(outcrop.name)
 		if outcrop_name.ends_with("_Outline"):
 			continue
@@ -182,7 +182,7 @@ func _initialize() -> void:
 	var brook_rocks: int = 0
 	var not_stone: Array = []
 	var no_outline: Array = []
-	var brook_art: Node = main.get_node("StreamFishAlive/Art")
+	var brook_art: Node = main.get_node("Valley/StreamFishAlive/Art")
 	for rock in brook_art.find_children("Rock_*", "MeshInstance3D", true, false):
 		var rock_name: String = String(rock.name)
 		if rock_name.ends_with("_Outline"):
@@ -392,13 +392,13 @@ func _initialize() -> void:
 	await process_frame
 	var panel_height: float = director.dialogue_panel.offset_bottom - director.dialogue_panel.offset_top
 	_check(panel_height <= 150.0, "a short line uses a compact dialogue panel instead of hiding the valley (%.0f px)" % panel_height)
-	var stone: Area3D = main.get_node("WonderItems/WonderItem_Stone")
+	var stone: Area3D = main.get_node("Valley/WonderItems/WonderItem_Stone")
 	director._near_item = stone
 	director._try_collect_near_item()
 	_check(director.wonder_items_found == 1, "collecting an item increments the counter")
 	_check("Stone ✓" in director.prompt_label.text, "the hunt checks off the thing that was found")
 	var foreground_fade: Node = main.get_node("ForegroundFade")
-	var olive: GeometryInstance3D = main.get_node("BethlehemValley").find_children("Olive*", "MeshInstance3D", true, false)[0]
+	var olive: GeometryInstance3D = main.get_node("Valley/BethlehemValley").find_children("Olive*", "MeshInstance3D", true, false)[0]
 	_check(foreground_fade._is_foreground_foliage(olive), "foreground foliage can soften instead of hiding the player")
 
 	print("-- reflect beat returns to the wide tabletop shot --")
@@ -537,7 +537,7 @@ func _initialize() -> void:
 		p.stop()
 	audio.play_step("water")
 	_check(audio._step_players.any(func(p): return p.playing and p.stream.resource_path.contains("step_water_")), "a step in the stream makes the splashy sound")
-	var lamb_node: Node = main.get_node("WonderItems/LambLife")
+	var lamb_node: Node = main.get_node("Valley/WonderItems/LambLife")
 	_check(lamb_node._bleat != null, "the lamb has a voice")
 	lamb_node._excite = 0.0
 	lamb_node._bleat_wait = 0.0
@@ -554,7 +554,7 @@ func _initialize() -> void:
 	audio.stop_speech()
 	lamb_node._update_bleat(0.1, 1.0)
 	_check(lamb_node._bleat.playing, "and bleats as soon as the voice has finished")
-	var flies: Node = main.get_node("Butterflies")
+	var flies: Node = main.get_node("Valley/Butterflies")
 	flies._flutter_cool = 0.0
 	walker.global_position = (flies._flies[0]["root"] as Node3D).global_position
 	await process_frame

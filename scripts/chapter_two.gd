@@ -380,7 +380,7 @@ func _finish() -> void:
 
 ## The found gift leaves the meadow and sits in a row beside David, so the giving is visible.
 func _place_beside_david(gift_name: String) -> void:
-	var david := get_parent().get_parent().get_node_or_null("DavidMentor") as Node3D
+	var david := get_parent().get_parent().get_node_or_null("Valley/DavidMentor") as Node3D
 	if david == null:
 		return
 	var holder := get_parent().get_node_or_null("GivenGifts") as Node3D

@@ -15,7 +15,7 @@ const GameSettings := preload("res://scripts/game_settings.gd")
 const EasyWords := preload("res://scripts/easy_words.gd")
 const PaperUI := preload("res://scripts/paper_ui.gd")
 const WordChip := preload("res://scripts/word_chip.gd")
-const DialogueView := preload("res://scripts/dialogue_view.gd")
+const GameShell := preload("res://scripts/game_shell.gd")
 
 enum Beat {
 	ARRIVE,
@@ -33,22 +33,20 @@ enum Beat {
 	CAMP,           # on hold: The King's Camp (chapter_two.gd) has the screen
 }
 
-## The valley's daylight (chapter_look.gd); the shell applies it when the valley starts.
-@export var look: Resource = preload("res://assets/looks/valley_day.tres")
-## Where the walker can go in the valley (play_area.gd); the shell hands it to PlayBounds.
-@export var play_area: Resource = preload("res://scripts/play_area.gd").new(Vector2(0.0, 2.4), Vector2(10.4, 8.2))
-@onready var dialogue_label: Label = %DialogueLabel
-@onready var prompt_label: Label = %PromptLabel
-@onready var dialogue_panel: PanelContainer = get_node_or_null("../UI/Panel") as PanelContainer
-@onready var player: CharacterBody3D = %Player
+## The shell (game_shell.gd): the shared player, cameras, UI and sound are reached through it.
+@onready var shell: Node = GameShell.of(self)
+@onready var dialogue_label: Label = shell.get_node("%DialogueLabel")
+@onready var prompt_label: Label = shell.get_node("%PromptLabel")
+@onready var dialogue_panel: PanelContainer = shell.get_node_or_null("UI/Panel") as PanelContainer
+@onready var player: CharacterBody3D = shell.get_node("%Player")
 @onready var steady_hands: Node = %SteadyHands
-@onready var camera_director: Node = %CameraDirector
-@onready var wonder_light: Node3D = %WonderLight
-@onready var audio_director: Node = get_node_or_null("%AudioDirector")
-@onready var confetti: Node = get_node_or_null("%ConfettiBurst")
-@onready var complete_banner: Label = get_node_or_null("%CompleteBanner") as Label
+@onready var camera_director: Node = shell.get_node("%CameraDirector")
+@onready var wonder_light: Node3D = shell.get_node("%WonderLight")
+@onready var audio_director: Node = shell.get_node_or_null("%AudioDirector")
+@onready var confetti: Node = shell.get_node_or_null("%ConfettiBurst")
+@onready var complete_banner: Label = shell.get_node_or_null("%CompleteBanner") as Label
 @onready var david_mentor: Node3D = get_node_or_null("../DavidMentor") as Node3D
-@onready var charm_award: Node3D = get_node_or_null("%CharmAward") as Node3D
+@onready var charm_award: Node3D = shell.get_node_or_null("%CharmAward") as Node3D
 
 signal explore_started
 signal wonder_item_collected(item_name: String)
@@ -93,7 +91,7 @@ var _word_buttons: Array[Button] = []
 func _ready() -> void:
 	dialogue_label.text = ""
 	_set_prompt("")
-	var input_setup := get_node_or_null("../InputSetup")
+	var input_setup := shell.get_node_or_null("InputSetup")
 	if input_setup and input_setup.has_signal("device_changed"):
 		input_setup.device_changed.connect(_on_device_changed)
 	if steady_hands and steady_hands.has_signal("minigame_completed"):
@@ -107,18 +105,21 @@ func _ready() -> void:
 	if audio_director and audio_director.has_signal("speech_finished"):
 		audio_director.speech_finished.connect(_on_speech_finished)
 	_build_word_buttons()
-	_build_dialogue_view()
-	_start_story()
 
 
-## Starts the story: the shell (game_shell.gd, on the Main root) decides which one.
-## Kept here because the valley's _ready() is what calls it, once everything is set up.
+## The word row lives in the shared UI, outside the valley, so it goes with the valley when the
+## shell frees it (another story is starting); a valley loaded again builds its own.
+func _exit_tree() -> void:
+	for node in [_word_row]:
+		if is_instance_valid(node):
+			if node.get_parent():
+				node.get_parent().remove_child(node)
+			node.queue_free()
+
+
+## Starts what the game was loaded for, as after "Play again": the shell decides which story.
 func _start_story() -> void:
-	var shell := get_parent()
-	if shell and shell.has_method("start_story"):
-		shell.start_story()
-	else:
-		begin_valley()
+	shell.start_story()
 
 
 ## Chapter 1 from its first line, in the scene as it is (the map uses it when nothing has started yet).
@@ -311,6 +312,9 @@ func _enter_beat(next: Beat) -> void:
 			_advance_ready = false
 			play_finale("Chapter 1 Complete!")
 			chapter_finished.emit()
+			var menu := shell.get_node_or_null("GameMenu")
+			if menu and menu.has_method("show_end_panel"):
+				menu.show_end_panel(JournalContent.CHARM_COURAGE)
 
 func _on_advance() -> void:
 	match beat:
@@ -425,8 +429,7 @@ func _show(dialogue: String, prompt: String) -> void:
 func _fit_dialogue_panel() -> void:
 	if dialogue_panel == null:
 		return
-	var shell := get_parent()
-	if shell and shell.has_method("fit_dialogue"):
+	if shell.has_method("fit_dialogue"):
 		shell.fit_dialogue()
 	var height := dialogue_panel.offset_bottom - dialogue_panel.offset_top
 	if _word_row:
@@ -478,7 +481,7 @@ func _on_device_changed(_mode: String) -> void:
 	call_deferred("_fit_dialogue_panel")
 
 func _localize_prompt(raw: String) -> String:
-	var input_setup := get_node_or_null("../InputSetup")
+	var input_setup := shell.get_node_or_null("InputSetup")
 	var mode: String = input_setup.mode if input_setup else "keyboard"
 	match mode:
 		"touch":
@@ -589,8 +592,7 @@ func _face_david(target: Node3D) -> void:
 ## Wonder-Walker, the light celebrating, and a banner that pops in.
 ## The end-of-chapter celebration, shared by every story: the shell plays it (game_shell.gd).
 func play_finale(title: String = "Chapter Complete!") -> void:
-	var shell := get_parent()
-	if shell and shell.has_method("play_finale"):
+	if shell.has_method("play_finale"):
 		shell.play_finale(title)
 
 
@@ -607,19 +609,8 @@ func _on_charm_ceremony_finished() -> void:
 	_advance_ready = true
 
 
-## The speaker's name tag and face over the dialogue bar, shared by both chapters (dialogue_view.gd).
-func _build_dialogue_view() -> void:
-	var ui := get_node_or_null("../UI")
-	if ui == null or dialogue_panel == null:
-		return
-	var view := DialogueView.new()
-	view.name = "DialogueView"
-	view.setup(dialogue_panel, dialogue_label, audio_director)
-	ui.add_child(view)
-
-
 func _build_word_buttons() -> void:
-	var ui := get_node_or_null("../UI")
+	var ui := shell.get_node_or_null("UI")
 	if ui == null:
 		return
 	_word_row = HBoxContainer.new()

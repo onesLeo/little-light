@@ -157,23 +157,34 @@ repository.
 
 `scripts/game_shell.gd`, on the `Main` root, is the one place a story is started, stopped or
 switched (`switch_to()`), and it holds what every story shares: the end-of-chapter finale, fitting
-the dialogue bar, the nudges at the edge of the play area, the touch button's label, and reloading
-for "Play again" (`reload()`). Stories never call one another.
+the dialogue bar, the speaker's name tag over it (`dialogue_view.gd`), the nudges at the edge of the
+play area, the touch button's label, and reloading for "Play again" (`reload()`). Stories never call
+one another. `scenes/main.tscn` holds only what every story shares: the Wonder-Walker, the cameras
+and lights, the UI and menus, and the sound. The shell starts the game from its own `_ready()`.
 
-- The **valley** is the scene itself (`chapter_director.gd`). Choosing it once another story has
-  started reloads the scene.
-- The **camp** and the **ark** are scenes of their own (`scenes/chapters/kings_camp.tscn`,
-  `noahs_ark.tscn`), listed in the shell's `STORIES`. The shell loads one when its story starts and
-  frees it when another starts, so only the running story is in the tree and every start is fresh
-  (the ark's tools, animals and door are all back). The loaded root sits under `Main`, which the
-  story reaches as its parent. Each offers `visit()` (build it and start, or carry on),
-  `stand_down()` (stop listening and sounds; the shell frees it next), `in_progress()`, a `look`
-  and a `play_area`; its story node offers `get_action_hint()`. Anything a story adds outside
-  itself, such as its cards in the shared `UI`, it takes away in `_exit_tree()`. Only the shell
-  calls `visit()`, after standing every other story down.
-- Both are still placed in the valley's world: the camp stands on the ridge behind the waterfall
-  and samples the valley's ground at its edge, and the ark sits far off at x = 96, 40 m up, above a
-  sea of clouds. Moving the valley into its own scene is the next step.
+- Every story is a scene of its own in `scenes/chapters/`: the **valley**
+  (`bethlehem_valley.tscn`: the terrain, brook, meadow, ring of hills, David, the Wonder Items,
+  Steady Hands and `chapter_director.gd`), the **camp** (`kings_camp.tscn`) and the **ark**
+  (`noahs_ark.tscn`), listed in the shell's `STORIES`. The shell loads one when its story starts and
+  frees it when another starts, so only what is being played is in the tree and every start is
+  fresh (the ark's tools, animals and door are all back). While the ark plays, the valley is not
+  loaded at all, which saves about 45 MB, and the ark stands at the world's origin.
+- The camp stands on the valley's ridge and looks down on it, so it is loaded **over** the valley
+  (`"over"` in `STORIES`): the valley stays loaded under it, its story stood down. The camp reaches
+  the valley's ground and David as `Valley/BethlehemValley` and `Valley/DavidMentor`.
+- Choosing the valley once another story has started reloads the whole scene, so nothing another
+  story changed on the shared nodes (the camp's paper look on the Wonder-Walker) stays. On the
+  first map it starts in place.
+- A loaded story's root sits under `Main`, and offers `visit()` (build it and start, or carry on),
+  `stand_down()` (stop listening and sounds; the shell frees it next, unless it is under another
+  story), `in_progress()`, a `look` and a `play_area`; its story node offers `get_action_hint()`.
+  Only the shell calls `visit()`, after standing every other story down.
+- A story's pieces reach the shared player, cameras, UI and sound through the shell:
+  `GameShell.of(self)` finds it from anywhere inside a story's scene. A `%Name` or a `../` path only
+  works inside the story's own scene.
+- Anything a story adds outside itself, such as its cards or the valley's word row in the shared
+  `UI`, it takes away in `_exit_tree()`, or it would pile up each time the story is loaded again.
+  `tests/journey_review.gd` checks this.
 - Each story's **look** is a `chapter_look.gd` resource in `assets/looks/` (`valley_day`,
   `camp_blue_hour`, `ark_mountain_day`): the sky, ambient light and haze, sun and fill lights, the
   valley's ring of hills (as painted, blue hour or hidden), night or day sounds, and how the tabletop
@@ -182,8 +193,7 @@ for "Play again" (`reload()`). Stories never call one another.
   the look (`apply_lighting()`) and tweens on. Tapping a story that is under way carries on without
   applying its look again, so the ark's rain stays.
 
-- Each story's **play area** is a `play_area.gd` resource on its node (the valley's is on the
-  director): the rounded rectangle the Wonder-Walker can walk in, with its soft edge. The shell
+- Each story's **play area** is a `play_area.gd` resource on its root node: the rounded rectangle the Wonder-Walker can walk in, with its soft edge. The shell
   hands it to `PlayBounds` when the story starts; tune it in the inspector.
 
 A new story is a scene whose root has those methods, a look and a play area, and one line in `STORIES`, plus
