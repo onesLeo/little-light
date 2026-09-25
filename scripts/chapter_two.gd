@@ -97,6 +97,16 @@ func stand_down() -> void:
 			card.visible = false
 
 
+## The checklist, the word chips and the cord card live in the shared UI, outside the camp,
+## so they go with it. They leave the UI at once, so a replay's new ones keep their names.
+func _exit_tree() -> void:
+	for node in [_checklist, _words, _cord]:
+		if is_instance_valid(node):
+			if node.get_parent():
+				node.get_parent().remove_child(node)
+			node.queue_free()
+
+
 func _input(event: InputEvent) -> void:
 	if phase == Phase.IDLE or phase == Phase.FIND or phase == Phase.CORD or phase == Phase.DONE:
 		return
@@ -616,6 +626,7 @@ func _build_ui() -> void:
 	if is_instance_valid(_checklist):
 		_checklist.queue_free()
 	_checklist = GiftChecklist.new()
+	_checklist.name = "CampGiftChecklist"
 	_checklist.position = Vector2(24, 90)
 	var ui := get_parent().get_parent().get_node("UI")
 	ui.add_child(_checklist)

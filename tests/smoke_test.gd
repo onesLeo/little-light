@@ -733,7 +733,7 @@ func _initialize() -> void:
 			and journey._ring.visible, "a bouncing Start here tag and rings mark the valley")
 	journey._on_stop("camp")
 	_check(journey._notice.visible and "Chapter 1" in journey._notice_body.text and journey._notice_go.visible
-			and journey._notice_go.text == "Play Chapter 1" and main.get_node("KingsCamp").tent_count() == 0,
+			and journey._notice_go.text == "Play Chapter 1" and main.get_node_or_null("KingsCamp") == null,
 			"tapping the King's Camp first says to finish Chapter 1, and offers to play it")
 	var pause_key := InputEventAction.new()
 	pause_key.action = "pause"
@@ -757,11 +757,11 @@ func _initialize() -> void:
 	Profiles.use_file(TEST_PROFILES)
 	Profiles.set_active(finished_kid)
 	journey.open()
-	var camp: Node = main.get_node("KingsCamp")
-	_check(camp.tent_count() == 0, "the camp is not built while the child is still in the valley")
+	_check(main.get_node_or_null("KingsCamp") == null, "the camp is not loaded while the child is still in the valley")
 	# As after Play again: chapter 1 is waiting for Space when the child jumps to the camp.
 	director._advance_ready = true
 	journey._on_stop("camp")
+	var camp: Node = main.get_node("KingsCamp")
 	var camp_walker: Node3D = main.get_node("Player")
 	_check(camp.tent_count() >= 4, "the king's camp has its tents on the ridge")
 	_check(camp_walker.global_position.z > 20.0, "the journey can walk up to the camp")
