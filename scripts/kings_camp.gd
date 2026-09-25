@@ -85,6 +85,8 @@ void fragment() {
 """
 
 var _clearing := Vector3.ZERO
+## The blue hour the camp starts in (chapter_look.gd); the shell applies it.
+@export var look: Resource = preload("res://assets/looks/camp_blue_hour.tres")
 var _built: bool = false
 var _grid_x: PackedFloat32Array = PackedFloat32Array()
 var _grid_z: PackedFloat32Array = PackedFloat32Array()
@@ -120,10 +122,7 @@ func visit() -> void:
 	var bounds := main.get_node_or_null("PlayBounds")
 	if bounds and bounds.has_method("open_camp"):
 		bounds.open_camp()
-	_blue_hour()
-	var soundscape := main.get_node_or_null("Soundscape")
-	if soundscape and soundscape.has_method("set_night"):
-		soundscape.set_night(true)
+	_night_sky()
 	_sounds.start(_at(FIRE))
 	var player := main.get_node_or_null("Player") as CharacterBody3D
 	if player:
@@ -154,6 +153,12 @@ func visit() -> void:
 	if _fireflies:
 		_fireflies.light_up()
 	_keep_people_paper()
+
+
+## True while the camp's story is under way; the shell then carries on instead of starting it.
+func in_progress() -> bool:
+	var story := get_node_or_null("ChapterTwo")
+	return story != null and story.phase != ChapterTwo.Phase.IDLE and story.phase != ChapterTwo.Phase.DONE
 
 
 ## Another story is starting: the camp goes quiet and its story puts its cards away.
@@ -855,35 +860,9 @@ func _build_grass() -> void:
 
 ## -- The blue hour ------------------------------------------------------------------
 
-## A calm blue hour, bright enough to play in: a clear mid-blue sky, blue light
-## on the ground, the far hills a step toward violet, and a soft moon. The fire
-## and the lantern stay the only warm lights.
-func _blue_hour() -> void:
-	var world := get_parent().get_node_or_null("WorldEnvironment") as WorldEnvironment
-	if world and world.environment:
-		var env := world.environment
-		if env.sky:
-			var sky := env.sky.sky_material as ProceduralSkyMaterial
-			if sky:
-				sky.sky_top_color = Color(0.24, 0.38, 0.7)
-				sky.sky_horizon_color = Color(0.6, 0.66, 0.88)
-				sky.ground_horizon_color = Color(0.52, 0.58, 0.8)
-				sky.ground_bottom_color = Color(0.3, 0.36, 0.56)
-		env.ambient_light_color = Color(0.6, 0.68, 0.96)
-		env.ambient_light_energy = 0.95
-		env.fog_light_color = Color(0.46, 0.54, 0.8)
-		env.fog_density = 0.0045
-	var sun := get_parent().get_node_or_null("Sun") as DirectionalLight3D
-	if sun:
-		sun.light_color = Color(0.66, 0.74, 1.0)
-		sun.light_energy = 0.5
-	var fill := get_parent().get_node_or_null("FillLight") as DirectionalLight3D
-	if fill:
-		fill.light_color = Color(0.5, 0.56, 0.9)
-		fill.light_energy = 0.25
-	var backdrop := get_parent().get_node_or_null("HorizonBackdrop")
-	if backdrop and backdrop.has_method("set_blue_hour"):
-		backdrop.set_blue_hour()
+## The camp's own night sky: a paper crescent moon and a few stars. The blue-hour light
+## itself is the camp's look (assets/looks/camp_blue_hour.tres).
+func _night_sky() -> void:
 	if _moon == null:
 		_moon = MeshInstance3D.new()
 		_moon.name = "Moon"

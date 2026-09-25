@@ -213,6 +213,16 @@ func _run() -> void:
 	check(ark.get_node("Shelter").visible and ark.get_node("Shelter/ShelterCamera").current, "rain uses the sheltered interior camera")
 	check(ark.get_node("Shelter/WindowRain").visible and ark.get_node("Shelter/ShelterNoah").visible, "rain is outside the window while Noah is safe inside")
 	check(not player.can_move, "the child cannot wander off during the shelter scene")
+	# The map mid-rain, then the ark again: the story and its weather carry on. Wait for the
+	# rain's crossfade to finish first, so the light is settled when it is compared.
+	await create_timer(2.8).timeout
+	var rain_sun: float = (main.get_node("Sun") as DirectionalLight3D).light_energy
+	journey.open()
+	journey._on_stop("ark")
+	await settle(2)
+	check(story.phase == story.Phase.RAIN and ark.weather_state == "rain" and ark.get_node("Rain").visible
+			and is_equal_approx((main.get_node("Sun") as DirectionalLight3D).light_energy, rain_sun),
+			"tapping the ark on the map mid-rain keeps the rain and its light")
 	await capture("rain-shelter")
 	await create_timer(0.3).timeout
 	check(ark.get_node("Mountain/Flood").visible and not ark.get_node("Mountain/CloudSea").visible, "the water rises over the cloud sea while it rains")

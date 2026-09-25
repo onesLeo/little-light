@@ -33,6 +33,8 @@ enum Beat {
 	CAMP,           # on hold: The King's Camp (chapter_two.gd) has the screen
 }
 
+## The valley's daylight (chapter_look.gd); the shell applies it when the valley starts.
+@export var look: Resource = preload("res://assets/looks/valley_day.tres")
 @onready var dialogue_label: Label = %DialogueLabel
 @onready var prompt_label: Label = %PromptLabel
 @onready var dialogue_panel: PanelContainer = get_node_or_null("../UI/Panel") as PanelContainer
