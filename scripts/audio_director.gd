@@ -194,15 +194,23 @@ func play_line(text: String) -> void:
 ## directions and stay silent). Interrupts whatever was being spoken, so pressing
 ## Space quickly cuts the old line and starts the new one.
 func speak_dialogue(text: String) -> void:
+	speak_lines(_spoken_lines(text))
+
+
+## Speaks lines given as {"speaker", "text", "clip"} (dialogue_line.gd spoken()), each with its
+## own clip. A line without one is looked up by its words (vo_library.gd); if any line has no
+## clip at all, the whole block goes to the system voice instead.
+func speak_lines(lines: Array[Dictionary]) -> void:
 	if not is_read_aloud_enabled():
 		return
 	if _vo_active and _vo_player.playing and not _speaking_clips:
 		return
 	stop_speech()
-	var lines := _spoken_lines(text)
 	var clips: Array[AudioStream] = []
 	for line in lines:
-		var clip := VoLibrary.clip_for(line["text"])
+		var clip: AudioStream = line.get("clip")
+		if clip == null:
+			clip = VoLibrary.clip_for(line["text"])
 		if clip == null:
 			clips.clear()
 			break

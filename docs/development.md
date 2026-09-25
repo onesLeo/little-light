@@ -145,7 +145,7 @@ repository.
 | Folder | What is in it |
 |--------|---------------|
 | `scenes/`, `scripts/` | the game |
-| `assets/` | only what the game loads: the models, `audio/`, `shaders/`, and `looks/` (each story's lighting, see below) |
+| `assets/` | only what the game loads: the models, `audio/`, `shaders/`, `looks/` (each story's lighting) and `dialogue/` (its lines), see below |
 | `art/blender/` | generators for the models and the environment |
 | `art/archive/models/` | 34 earlier model versions, ignored by Godot (see its README) |
 | `art/previews/` | saved renders |
@@ -193,6 +193,10 @@ and lights, the UI and menus, and the sound. The shell starts the game from its 
   the look (`apply_lighting()`) and tweens on. Tapping a story that is under way carries on without
   applying its look again, so the ark's rain stays.
 
+- A story's **lines** are data too, as far as it has moved (The King's Camp so far): a
+  `dialogue_lines.gd` resource in `assets/dialogue/`, one `dialogue_line.gd` per line with its speaker,
+  words, clip and easier version. The story shows lines by id; see `docs/voice-over.md`. Prompts
+  are written for the keyboard and worded for the device used last by `device_prompts.gd`.
 - Each story's **play area** is a `play_area.gd` resource on its root node: the rounded rectangle the Wonder-Walker can walk in, with its soft edge. The shell
   hands it to `PlayBounds` when the story starts; tune it in the inspector.
 
@@ -210,6 +214,7 @@ its entries in the shared data (voice lines, journal verses and charms, the map'
 ## Adding sound
 
 Synthesized sounds are rendered by `tools/make_sounds.py`; recorded voice clips live in
-`assets/audio/vo` and are listed in `scripts/vo_library.gd`. See `docs/sound-design.md`,
+`assets/audio/vo` and are linked from a story's lines (`assets/dialogue/`) or listed in
+`scripts/vo_library.gd`. See `docs/sound-design.md`,
 `docs/voice-over.md` and `assets/audio/CREDITS.md` (which also records where the CC0 recordings
 came from).
