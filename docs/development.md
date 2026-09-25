@@ -193,7 +193,7 @@ and lights, the UI and menus, and the sound. The shell starts the game from its 
   the look (`apply_lighting()`) and tweens on. Tapping a story that is under way carries on without
   applying its look again, so the ark's rain stays.
 
-- A story's **lines** are data too, as far as it has moved (The King's Camp so far): a
+- A story's **lines** are data too, as far as it has moved (the valley and The King's Camp): a
   `dialogue_lines.gd` resource in `assets/dialogue/`, one `dialogue_line.gd` per line with its speaker,
   words, clip and easier version. The story shows lines by id; see `docs/voice-over.md`. Prompts
   are written for the keyboard and worded for the device used last by `device_prompts.gd`.

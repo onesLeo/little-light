@@ -31,14 +31,16 @@ sentence will sit next to the old one and sound like a different recording.
 
 ## How it plays
 
-- A story's own lines are data: The King's Camp's are in `assets/dialogue/kings_camp.tres`, one
-  `dialogue_line.gd` per line with its speaker, words, clip, and easier words and clip. The story asks
-  for lines by id, and each plays its own clip (`AudioDirector.speak_lines()`), so rewording a line
-  cannot cut it off from its clip or its easier version. Chapters 1 and 4 move to the same form next.
+- A story's own lines are data: the valley's are in `assets/dialogue/bethlehem_valley.tres` and The
+  King's Camp's in `assets/dialogue/kings_camp.tres`, one `dialogue_line.gd` per line with its speaker,
+  words, clip, and easier words and clip. The story asks for lines by id, and each plays its own clip
+  (`AudioDirector.speak_lines()`), so rewording a line cannot cut it off from its clip or its easier
+  version. Noah's Ark moves to the same form next.
 - Everything else is still found by its words: `scripts/vo_library.gd` maps the exact spoken text
   (speaker name and quote marks removed) to a clip id; the file is `assets/audio/vo/<id>.wav`. That is
-  chapters 1 and 4 for now, and what several screens share: the verses and charms the journal reads,
-  the Faith Journey map, the word chips.
+  Noah's Ark for now, and what several screens share: the verses and charms the journal reads (a story
+  shows its verse with `JournalContent.verse_card()`), the Faith Journey map, "Who is playing?", the
+  word chips and the nudges at the edge of the play area.
 - `AudioDirector.speak_dialogue()` splits a dialogue block into lines. If every line has a clip they
   play in order with a 0.3 s gap; otherwise the whole block is spoken by the system voice.
 - Pressing Space quickly cuts the current line and starts the next one. A line still waiting in the
@@ -52,16 +54,18 @@ sentence will sit next to the old one and sound like a different recording.
 
 A child who says they are 8 or younger when they are made ("How old are you?" on the "Who is playing?"
 screen) plays with **Easy words** on: lines swap for a simpler version, each with its own recorded clip
-(`ez_*`). The camp keeps its easier lines with the lines themselves (`easy_text`, `easy_clip` in
-`assets/dialogue/kings_camp.tres`); chapter 1's twelve are in `scripts/easy_words.gd`. Every other line, and the Joshua 1:9 verse, is never changed. The
+(`ez_*`), kept with the line itself (`easy_text`, `easy_clip` in `assets/dialogue/`): twelve in the
+valley, nine in the camp. Every other line, and the verses, are never changed. The
 choice is kept with the child like read-aloud, and can be switched in the pause menu at any time; the
 line on screen when it is switched stays as it is until the next line.
 
 ## Adding or changing a line
 
-**In The King's Camp:** open `assets/dialogue/kings_camp.tres` in the inspector and change the line's
-text, or add a line with a new id and its clip (and easier version and clip, if it has one); the story
-asks for it by id (`_say([&"id"], prompt)` in `chapter_two.gd`). Rewording a line keeps its clip, so
+**In the valley or The King's Camp:** open its file in `assets/dialogue/` in the inspector and change
+the line's text, or add a line with a new id and its clip (and easier version and clip, if it has one);
+the story asks for it by id (`_show([&"id"], prompt)` in `chapter_director.gd`, `_say([&"id"], prompt)`
+in `chapter_two.gd`). A line with `same_quote` carries on the one before it inside the same quote marks,
+on a row of its own (the three words after Joshua 1:9). Rewording a line keeps its clip, so
 record a new take only when the words spoken change. The smoke test fails if a spoken line has no clip,
 an easier line has no clip of its own, or the story asks for an id that is not there.
 

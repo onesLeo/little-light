@@ -12,7 +12,6 @@ const Profiles := preload("res://scripts/profiles.gd")
 const JournalContent := preload("res://scripts/journal_content.gd")
 const GameSettings := preload("res://scripts/game_settings.gd")
 const CharmArt := preload("res://scripts/charm_art.gd")
-const EasyWords := preload("res://scripts/easy_words.gd")
 const GroundSurface := preload("res://scripts/ground_surface.gd")
 const SoundLibraryFile := preload("res://scripts/sound_library.gd")
 const TEST_PROFILES := "user://smoke_test_profiles.cfg"
@@ -438,20 +437,25 @@ func _initialize() -> void:
 			director.Beat.STEADY_DONE, director.Beat.RESOLUTION, director.Beat.REFLECT, director.Beat.VERSE_REWARD]:
 		director._enter_beat(b)
 		spoken_texts.append(director.dialogue_label.text)
-	spoken_texts.append(director.VERSE_PAGE_TWO)
+	spoken_texts.append(director.LINES.block(director.VERSE_PAGE_TWO, false)["text"])
 	spoken_texts.append("Wonder Light: \"Breathe with David...\"")
 	spoken_texts.append("Wonder Light: \"Keep this close. Courage is yours to carry.\"")
 	spoken_texts.append("Wonder Light: \"A Courage charm — for staying with David, and breathing God's promise with him.\"")
 	spoken_texts.append("Wonder Light: \"God was with David. God is with you.\"")
-	for flavor in director.ITEM_FLAVOR.values():
-		spoken_texts.append(flavor)
+	spoken_texts.append(director.LINES.block(director.ITEM_FLAVOR.values(), false)["text"])
 	for nudge in main.get_node("PlayBounds").NUDGE_LINES:
 		spoken_texts.append(nudge)
+	# The valley's own lines carry their clips (checked with the lines below); anything else on the
+	# bar is read by its words, so it needs an entry in the library.
+	var valley_words: Dictionary = {}
+	for l in director.LINES.lines:
+		valley_words[l.text] = true
+		valley_words[l.easy_text] = true
 	for block in spoken_texts:
 		for line in audio._spoken_lines(block):
-			if vo_lib.clip_for(line["text"]) == null:
+			if vo_lib.clip_for(line["text"]) == null and not valley_words.has(line["text"]):
 				unrecorded.append(line["text"])
-	_check(unrecorded.is_empty(), "no spoken line in the game is missing from the library %s" % [unrecorded])
+	_check(unrecorded.is_empty(), "no spoken line in the game is missing its recording %s" % [unrecorded])
 	var map_script := load("res://scripts/faith_journey_screen.gd")
 	var map_unrecorded: Array = []
 	for block in ["Hello!\nYour journey starts in the valley.", "Hello!\nThe King's Camp is next.", "Hello!\nNoah's Ark is next.", "Hello!\nTap a story to begin.",
@@ -463,7 +467,8 @@ func _initialize() -> void:
 				map_unrecorded.append(line["text"])
 	_check(map_unrecorded.is_empty(), "the Faith Journey map speaks in the recorded voice too %s" % [map_unrecorded])
 	# A story's own lines are data (assets/dialogue/*.tres, dialogue_line.gd), each with its clips.
-	for story in [["res://assets/dialogue/kings_camp.tres", "res://scripts/chapter_two.gd"]]:
+	for story in [["res://assets/dialogue/bethlehem_valley.tres", "res://scripts/chapter_director.gd"],
+			["res://assets/dialogue/kings_camp.tres", "res://scripts/chapter_two.gd"]]:
 		var book: Resource = load(story[0])
 		var seen: Dictionary = {}
 		var faults: Array = []
@@ -486,18 +491,19 @@ func _initialize() -> void:
 	settings.read_aloud = true
 	var vo_player: AudioStreamPlayer = audio.get_node("Vo")
 	audio.stop_speech()
-	audio.speak_dialogue("David: \"Oh! Hello there. Are you lost too?\"\nDavid: \"Everyone's scared of the big giant. But God gave me these sheep to keep safe.\"")
-	_check(vo_player.playing and vo_player.stream == vo_lib.clip_for("Oh! Hello there. Are you lost too?"), "the first line of a block plays its recorded clip")
+	var valley_lines: Resource = director.LINES
+	audio.speak_lines(valley_lines.block([&"david_hello", &"david_giant"], false)["spoken"])
+	_check(vo_player.playing and vo_player.stream == valley_lines.line(&"david_hello").clip, "the first line of a block plays its recorded clip")
 	_check(audio._clip_queue.size() == 1, "the second line waits in the queue")
 	vo_player.finished.emit()
-	audio.speak_dialogue("Wonder Light: \"Breathe with David...\"")
+	audio.speak_lines(director.LINES.block([&"breathe"], false)["spoken"])
 	await create_timer(0.5).timeout
-	_check(vo_player.stream == vo_lib.clip_for("Breathe with David...") and audio._clip_queue.is_empty(),
+	_check(vo_player.stream == valley_lines.line(&"breathe").clip and audio._clip_queue.is_empty(),
 			"skipping ahead cuts the old line and a stale queued line never plays")
-	audio.speak_dialogue("Wonder Light: \"David needs his stone, his staff, and his little lamb. Find them for him!\"\nDavid: \"Thanks. Will you stay close while I get ready?\"")
+	audio.speak_lines(valley_lines.block([&"explore", &"david_stay_close"], false)["spoken"])
 	vo_player.finished.emit()
 	await create_timer(0.5).timeout
-	_check(vo_player.stream == vo_lib.clip_for("Thanks. Will you stay close while I get ready?"), "clips of one block play one after another")
+	_check(vo_player.stream == valley_lines.line(&"david_stay_close").clip, "clips of one block play one after another")
 	audio.stop_speech()
 	_check(not vo_player.playing and not audio._speaking_clips, "stop_speech silences the clip")
 	audio.speak_dialogue("Wonder Light: \"A line nobody has recorded yet.\"")
@@ -536,7 +542,7 @@ func _initialize() -> void:
 	_check(soundscape._birds.any(func(b): return b.playing), "a bird calls")
 	for b in soundscape._birds:
 		b.stop()
-	audio.speak_dialogue("Wonder Light: \"Breathe with David...\"")
+	audio.speak_lines(director.LINES.block([&"breathe"], false)["spoken"])
 	soundscape._call_bird(0.0)
 	_check(not soundscape._birds.any(func(b): return b.playing), "birds stay quiet while somebody is speaking")
 	audio.stop_speech()
@@ -580,7 +586,7 @@ func _initialize() -> void:
 	_check(lamb_node._bleat.playing and lamb_node._bleat_wait > 5.0, "the lamb says baa when it notices the Wonder-Walker, then waits")
 	lamb_node._bleat.stop()
 	lamb_node._bleat_wait = 0.0
-	audio.speak_dialogue("Wonder Light: \"Breathe with David...\"")
+	audio.speak_lines(director.LINES.block([&"breathe"], false)["spoken"])
 	lamb_node._update_bleat(0.1, 1.0)
 	_check(not lamb_node._bleat.playing, "the lamb does not bleat over a voice")
 	audio.stop_speech()
@@ -622,7 +628,7 @@ func _initialize() -> void:
 	print("-- sound: the music ducks under speech and while paused --")
 	walker.global_position = Vector3(0.0, 1.0, 4.0)
 	settings.read_aloud = true
-	audio.speak_dialogue("Wonder Light: \"Being brave doesn't mean you're not scared. It means you go with God anyway.\"")
+	audio.speak_lines(director.LINES.block([&"reflect"], false)["spoken"])
 	await create_timer(0.8).timeout
 	var music_idx := AudioServer.get_bus_index("Music")
 	_check(audio.is_speaking() and sound_bus.duck > 0.5, "the music ducks while somebody is speaking")
@@ -640,7 +646,7 @@ func _initialize() -> void:
 	print("-- who is talking: the name tag over the dialogue bar --")
 	var talk_view: Control = main.get_node("UI/DialogueView")
 	audio.stop_speech()
-	director._say("Wonder Light: \"God gave David a job: keep the sheep safe. That's why he will go.\"\nDavid: \"Thanks. Will you stay close while I get ready?\"")
+	director._say([&"david_job", &"david_stay_close"])
 	await process_frame
 	await process_frame
 	_check(talk_view.speaker == "Wonder Light" and talk_view._current == 0 and talk_view._tag.visible
@@ -650,13 +656,13 @@ func _initialize() -> void:
 	await create_timer(audio.CLIP_GAP + 0.2).timeout
 	_check(talk_view.speaker == "David" and talk_view._current == 1, "when David's line starts, the tag turns to David")
 	audio.stop_speech()
-	director._say("Jonathan: \"I am Jonathan. David was brave today, because God was with him.\"")
+	director._say(["Jonathan: \"I am Jonathan. David was brave today, because God was with him.\""])
 	await process_frame
 	_check(talk_view.speaker == "Jonathan", "Jonathan has his own tag")
-	director._say(director.VERSE_PAGE_ONE)
+	director._say(director.verse_page_one())
 	await process_frame
 	_check(talk_view.speaker == "Bible", "a verse shows the Bible tag")
-	director._say("(Virtue Bracelet receives the charm.)")
+	director._say([&"charm_arrives"])
 	await process_frame
 	_check(not talk_view._tag.visible, "a line with nobody speaking has no tag")
 	audio.stop_speech()
@@ -703,16 +709,16 @@ func _initialize() -> void:
 	director._enter_beat(director.Beat.REFLECT)
 	_check("for you too" in director.dialogue_label.text and "Stay close" in director.dialogue_label.text and "remember the words" in director.dialogue_label.text,
 			"the child is given a purpose: stay close and remember the words")
-	_check("sheep to keep safe" in FileAccess.get_file_as_string("res://scripts/chapter_director.gd"), "David names his job: keep the sheep safe")
-	_check("small thing" in director.ITEM_FLAVOR["WonderItem_Stone"], "the stone flavour names God, not just a sling")
+	_check("sheep to keep safe" in director.LINES.line(&"david_giant").text, "David names his job: keep the sheep safe")
+	_check("small thing" in director.LINES.line(director.ITEM_FLAVOR["WonderItem_Stone"]).text, "the stone flavour names God, not just a sling")
 	director._enter_beat(director.Beat.ARRIVE)
 	_check("David's valley" in director.dialogue_label.text and "God looks after him" in director.dialogue_label.text,
 			"God is named through David from the first beat")
 	director._enter_beat(director.Beat.VERSE_REWARD)
 	_check("Yahweh is God's name" in director.dialogue_label.text, "Yahweh is explained so a child (and a parent) can hear it")
-	_check("lion and the bear" in FileAccess.get_file_as_string("res://scripts/chapter_director.gd"),
+	_check("lion and the bear" in director.LINES.line(&"david_lion_bear").text,
 			"David speaks 1 Samuel 17:37 in his own words")
-	_check("God was with David" in FileAccess.get_file_as_string("res://scripts/chapter_director.gd"),
+	_check("God was with David" in director.LINES.line(&"complete").text,
 			"the ending names God, not a secular slogan")
 	director.beat = director.Beat.STEADY_DONE
 	director._advance_ready = true
@@ -970,32 +976,35 @@ func _initialize() -> void:
 	Profiles.set_active(kid_id)
 
 	print("-- easy words: the story for younger readers --")
-	var director_source: String = FileAccess.get_file_as_string("res://scripts/chapter_director.gd")
-	var missing_original: Array = []
-	var no_clip: Array = []
-	for original in EasyWords.LINES:
-		if not director_source.contains(original):
-			missing_original.append(original)
-		if vo_lib.clip_for(EasyWords.LINES[original]) == null:
-			no_clip.append(EasyWords.LINES[original])
-	_check(missing_original.is_empty(), "every line that has an easier version is still in the story as written %s" % [missing_original])
-	_check(no_clip.is_empty(), "and every easier line has a recorded clip %s" % [no_clip])
-	var verse_block: String = JournalContent.verse_dialogue(JournalContent.VERSE_JOSHUA_1_9)
-	_check(EasyWords.apply(verse_block) == verse_block, "the Joshua 1:9 verse is never changed")
-	var arrive_line: String = "Wonder Light: \"This is David's valley. He looks after sheep. God looks after him.\""
-	GameSettings.easy_words = false
-	director._say(arrive_line)
-	_check(director.dialogue_label.text == arrive_line and vo_player.stream == vo_lib.clip_for("This is David's valley. He looks after sheep. God looks after him."), "a child who is 9 or older gets the story as written, in the original voice clip")
+	var easy_count := 0
+	for l in director.LINES.lines:
+		easy_count += 1 if l.has_easy() else 0
+	_check(easy_count == 12, "twelve of the valley's lines have an easier version (%d)" % easy_count)
 	GameSettings.easy_words = true
-	director._say(arrive_line)
-	_check(director.dialogue_label.text == "Wonder Light: \"This is David's valley. God looks after him.\"" and vo_player.stream == vo_lib.clip_for("This is David's valley. God looks after him."), "with Easy words on, the easier line is shown and read aloud")
+	director._say(director.verse_page_one())
+	_check(director.dialogue_label.text.begins_with(JournalContent.verse_card(JournalContent.VERSE_JOSHUA_1_9)),
+			"the Joshua 1:9 verse is never changed")
+	director._say(director.VERSE_PAGE_TWO)
+	_check(director.dialogue_label.text == "Wonder Light: \"This verse has three special words. Can you say them with me?\nDon't. Be. Afraid.\"",
+			"the three words carry on Wonder Light's line, in the same quote marks, on a row of their own")
+	var arrive: Resource = director.LINES.line(&"arrive")
+	GameSettings.easy_words = false
+	director._say([&"arrive"])
+	_check(director.dialogue_label.text == "Wonder Light: \"This is David's valley. He looks after sheep. God looks after him.\""
+			and vo_player.stream == arrive.clip and vo_player.stream.resource_path.ends_with("wl_arrive.wav"),
+			"a child who is 9 or older gets the story as written, in the original voice clip")
+	GameSettings.easy_words = true
+	director._say([&"arrive"])
+	_check(director.dialogue_label.text == "Wonder Light: \"This is David's valley. God looks after him.\""
+			and vo_player.stream == arrive.easy_clip and vo_player.stream.resource_path.ends_with("ez_arrive.wav"),
+			"with Easy words on, the easier line is shown and read aloud")
 	var camp_story: Node = main.get_node("KingsCamp/ChapterTwo")
 	camp_story._say([&"jonathan_hello"], "")
 	_check(director.dialogue_label.text == "Jonathan: \"I am Jonathan. God was with David today.\"", "the King's Camp has easier words too")
 	_check(vo_player.stream != null and vo_player.stream == camp_story.LINES.line(&"jonathan_hello").easy_clip
 			and vo_player.stream.resource_path.ends_with("ez_jn_hello.wav"),
 			"and Jonathan reads his easier line in his own recorded voice")
-	var mixed: String = director._say("David: \"Thanks. Will you stay close while I get ready?\"")
+	var mixed: String = director._say([&"david_stay_close"])
 	_check(mixed == "David: \"Thanks. Will you stay close while I get ready?\"", "a line with no easier version stays as it is")
 	GameSettings.easy_words = false
 

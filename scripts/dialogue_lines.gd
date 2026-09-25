@@ -6,6 +6,8 @@ extends Resource
 ##   const CampLines := preload("res://assets/dialogue/kings_camp.tres")
 ##   var said: Dictionary = CampLines.block([&"arrive"], GameSettings.easy_words)
 
+const DialogueLine := preload("res://scripts/dialogue_line.gd")
+
 ## DialogueLine resources (dialogue_line.gd).
 @export var lines: Array[Resource] = []
 
@@ -24,18 +26,32 @@ func line(id: StringName) -> Resource:
 	return _by_id[id]
 
 
-## The lines `ids`, one to a row, as the dialogue bar shows them ("text"), and the ones read
-## aloud with their clips ("spoken", for audio_director.gd speak_lines). A missing id shows as
-## [missing line: id], so a test that reads the bar notices it.
-func block(ids: Array, easy: bool) -> Dictionary:
+## `parts`, one to a row, as the dialogue bar shows them ("text"), and the lines read aloud
+## ("spoken", for audio_director.gd speak_lines). A part is a line's id (a StringName, with
+## its own clips), or text that is not the story's own, such as a verse from the journal
+## (a String, shown as it is and read by its words). A missing id shows as [missing line: id],
+## so a test that reads the bar notices it.
+func block(parts: Array, easy: bool) -> Dictionary:
 	var shown := PackedStringArray()
 	var spoken: Array[Dictionary] = []
-	for id in ids:
-		var l := line(id)
-		if l == null:
-			shown.append("[missing line: %s]" % id)
+	var last: Resource = null
+	for part in parts:
+		if not part is StringName:
+			shown.append(String(part))
+			spoken.append_array(DialogueLine.spoken_in(String(part)))
+			last = null
 			continue
-		shown.append(l.shown(easy))
+		var l := line(part)
+		if l == null:
+			shown.append("[missing line: %s]" % part)
+			last = null
+			continue
+		if l.same_quote and last != null and last.speaker == l.speaker and not shown.is_empty():
+			# Inside the quote marks of the line before, on a row of its own.
+			shown[shown.size() - 1] = shown[shown.size() - 1].trim_suffix("\"") + "\n" + l.words(easy) + "\""
+		else:
+			shown.append(l.shown(easy))
 		if l.is_spoken():
 			spoken.append(l.spoken(easy))
+		last = l
 	return {"text": "\n".join(shown), "spoken": spoken}

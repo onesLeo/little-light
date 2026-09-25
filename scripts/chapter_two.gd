@@ -141,10 +141,7 @@ func _on_cord_completed() -> void:
 	Profiles.unlock_verse(JournalContent.VERSE_SAMUEL_18_1)
 	if _audio:
 		_audio.play_success()
-	_say_text(
-		"1 Samuel 18:1 (WEB):\n\"The soul of Jonathan was knit with the soul of David, and Jonathan loved him as his own soul.\"",
-		"Press Space to continue"
-	)
+	_say_text(JournalContent.verse_card(JournalContent.VERSE_SAMUEL_18_1), "Press Space to continue")
 
 
 func _advance() -> void:

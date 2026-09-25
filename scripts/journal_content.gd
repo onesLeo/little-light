@@ -83,6 +83,13 @@ static func charm(id: String) -> Dictionary:
 
 
 ## The text handed to AudioDirector.speak_dialogue for a verse: its reference, then the verse.
+## The verse as a story shows it on the dialogue bar: `Joshua 1:9 (WEB):` over the words in
+## quote marks. The voice reads the reference the way the journal does (dialogue_line.gd).
+static func verse_card(id: String) -> String:
+	var v := verse(id)
+	return "" if v.is_empty() else "%s (WEB):\n\"%s\"" % [v["ref"], v["text"]]
+
+
 static func verse_dialogue(id: String) -> String:
 	var v := verse(id)
 	return "" if v.is_empty() else "%s\n%s" % [v["spoken_ref"], v["text"]]
