@@ -27,11 +27,10 @@ const HINT_CHOOSE := 10.0
 const HINT_MATE := 4.0
 ## How long Noah and the child take to turn to each other when the last tool is found.
 const TURN_SECONDS := 0.5
-const ITEMS := {
-	"Mallet": "A wooden mallet. Noah builds with it.",
-	"RopeCoil": "A coil of rope. It holds the ark together.",
-	"Pitch": "A jar of sticky pitch. It keeps water out.",
-}
+## What Wonder Light says about each tool when it is picked up (a line's id).
+const ITEMS := {"Mallet": &"mallet", "RopeCoil": &"rope", "Pitch": &"pitch"}
+## The ark's lines and their clips (dialogue_lines.gd).
+const LINES := preload("res://assets/dialogue/noahs_ark.tres")
 
 var phase: Phase = Phase.IDLE
 var _found: Array[String] = []
@@ -94,7 +93,7 @@ func begin() -> void:
 	_build_words(main.get_node("UI"))
 	_build_checklist(main.get_node("UI"))
 	_watch(Phase.IDLE)
-	_say("Wonder Light: \"Long before David, God asked Noah to trust him and build something no one had seen before.\"", "Press Space to continue")
+	_say([&"arrive"], "Press Space to continue")
 
 
 ## The word chips and the tool list live in the shared UI, outside the ark, so they go with it.
@@ -154,43 +153,43 @@ func _follow(delta: float) -> void:
 		_finish_guide()
 	elif ark.wrong_mate_near(_guide, 1.7) and not _mismatch_said:
 		_mismatch_said = true
-		_say("Wonder Light: \"This friend is looking for its match.\"", "Walk to the animal that looks the same")
+		_say([&"match"], "Walk to the animal that looks the same")
 
 
 func _advance() -> void:
 	match phase:
 		Phase.ARRIVE:
 			phase = Phase.HURT
-			_say("Wonder Light: \"People were hurting one another, and the world was full of violence.\"", "Press Space to continue")
+			_say([&"hurt"], "Press Space to continue")
 		Phase.HURT:
 			phase = Phase.FIND
 			_watch(phase)
-			_say("Wonder Light: \"Find the mallet, the rope, and the jar of pitch. Bring them to Noah.\"", "Walk to a glowing tool")
+			_say([&"find"], "Walk to a glowing tool")
 		Phase.MEET:
 			phase = Phase.PANEL
 			get_parent().highlight_socket(0)
 			_watch(phase)
-			_say("Wonder Light: \"Let's finish this panel. Three pegs, then draw the rope tight.\"", "Press E at the panel")
+			_say([&"panel"], "Press E at the panel")
 		Phase.DOOR:
 			phase = Phase.RAIN
 			_watch(phase)
 			get_parent().set_weather("rain")
-			_say("Wonder Light: \"The water covered the land. God kept Noah's family, and the animals with them, safe inside.\"", "Press Space to continue")
+			_say([&"rain"], "Press Space to continue")
 		Phase.RAIN:
 			phase = Phase.DOVE
 			get_parent().set_weather("waiting")
-			_say("Wonder Light: \"Let's open the window and send the dove.\"", "Press E to send the dove")
+			_say([&"send_dove"], "Press E to send the dove")
 		Phase.OLIVE:
 			phase = Phase.DRY
 			get_parent().set_weather("morning")
 			get_parent().close_door(false)
 			get_parent().leave_ark()
-			_say("Noah: \"Dry ground. Thank you for keeping us safe.\"", "Press Space to continue")
+			_say([&"dry"], "Press Space to continue")
 		Phase.DRY:
 			get_parent().reveal_rainbow()
 			phase = Phase.VERSE
 			Profiles.unlock_verse(JournalContent.VERSE_GENESIS_9_13)
-			_say("Genesis 9:13 (WEB):\n\"I set my rainbow in the cloud, and it will be a sign of a covenant between me and the earth.\"", "Press Space to continue")
+			_say([JournalContent.verse_card(JournalContent.VERSE_GENESIS_9_13)], "Press Space to continue")
 		Phase.VERSE:
 			phase = Phase.WORDS
 			_words_done = false
@@ -231,9 +230,9 @@ func _try_collect() -> void:
 		await _face_each_other()
 		if phase != Phase.MEET:
 			return
-		_say("Noah: \"God told me to build this ark. I cannot see the rain yet, but I trust him.\"", "Press Space to continue")
+		_say([&"noah_trust"], "Press Space to continue")
 	else:
-		_say("Wonder Light: \"%s\"" % ITEMS[tool_name], "Find the other glowing tools")
+		_say([ITEMS[tool_name]], "Find the other glowing tools")
 
 
 ## Noah and the child turn on the spot to face each other. Both models look down their
@@ -299,7 +298,7 @@ func _begin_pairs() -> void:
 	phase = Phase.PAIRS
 	get_parent().show_beacons(true)
 	_watch(phase)
-	_say("Wonder Light: \"Two by two, they're coming. Help these animals find their partners.\"\nNoah's wife: \"This way. Walk together up the wide ramp.\"", "Press E beside an animal")
+	_say([&"pairs", &"wife_ramp"], "Press E beside an animal")
 
 
 func _try_guide() -> void:
@@ -325,7 +324,7 @@ func _finish_guide() -> void:
 	if _audio and _audio.has_method("play_success"):
 		_audio.play_success()
 	if _matched < 3:
-		_say("Wonder Light: \"Two by two, they're coming. Help these animals find their partners.\"", "Guide the next pair  •  %d / 3" % _matched)
+		_say([&"pairs"], "Guide the next pair  •  %d / 3" % _matched)
 		return
 	ark.board_remaining()
 	phase = Phase.BOARDING
@@ -333,14 +332,14 @@ func _finish_guide() -> void:
 	_watch(phase)
 	ark.family_inside()
 	ark.keep_guest_outside(_player)
-	_say("", "Watch the animals and Noah's family walk aboard")
+	_say([], "Watch the animals and Noah's family walk aboard")
 	if ark.is_boarding():
 		await ark.boarding_finished
 	if phase != Phase.BOARDING:
 		return
 	phase = Phase.DOOR
 	ark.close_door(true)
-	_say("Wonder Light: \"Noah's family and the animals are safely inside. God closes the door and keeps them safe.\"", "Press Space to continue")
+	_say([&"door"], "Press Space to continue")
 
 
 func _send_dove() -> void:
@@ -361,11 +360,11 @@ func _on_dove_back() -> void:
 	var ark := get_parent()
 	if _dove_flights == 1:
 		phase = Phase.SKY
-		_say("Wonder Light: \"The dove came back safe. The water is still too high.\"", "Press E to turn the sky")
+		_say([&"dove_back"], "Press E to turn the sky")
 	else:
 		ark.show_leaf(true)
 		phase = Phase.OLIVE
-		_say("Wonder Light: \"Look, an olive leaf. The water is going down.\"", "Press Space to continue")
+		_say([&"olive_leaf"], "Press Space to continue")
 
 
 func _turn_sky() -> void:
@@ -377,7 +376,7 @@ func _turn_sky() -> void:
 		_set_prompt("The water is going down. Press E to turn the sky again")
 		return
 	phase = Phase.LEAF
-	_say("Wonder Light: \"Let's open the window and send the dove.\"", "Press E to send the dove")
+	_say([&"send_dove"], "Press E to send the dove")
 
 
 func _build_words(ui: Node) -> void:
@@ -423,14 +422,14 @@ func press_word(index: int) -> void:
 		_words_done = true
 		_show_words(false)
 		phase = Phase.REFLECT
-		_say("Wonder Light: \"God's covenant is a promise God chooses to keep.\"", "Press Space to continue")
+		_say([&"covenant"], "Press Space to continue")
 
 
 func _award_charm() -> void:
 	phase = Phase.CHARM
 	_show_words(false)
 	Profiles.unlock_charm(JournalContent.CHARM_TRUST)
-	_say("Wonder Light: \"A Trust charm. Noah kept building before he could see the rain.\"\n(Virtue Bracelet receives the charm.)", "…")
+	_say([&"charm", &"charm_arrives"], "…")
 	var main := get_parent().get_parent()
 	var award := main.get_node_or_null("CharmAward") as Node3D
 	if award == null or _player == null or not award.has_method("play_ceremony"):
@@ -461,7 +460,7 @@ func _finish() -> void:
 		_camera.cut_to_tabletop()
 	if _player and "can_move" in _player:
 		_player.can_move = true
-	_say("Wonder Light: \"Keep it close. Trust God, even before you see the way through.\"", "Well done, Wonder-Walker!")
+	_say([&"keep_close"], "Well done, Wonder-Walker!")
 	if main.has_method("play_finale"):
 		main.play_finale("Chapter 4 Complete!")
 	var menu := main.get_node_or_null("GameMenu")
@@ -469,7 +468,12 @@ func _finish() -> void:
 		menu.show_end_panel(JournalContent.CHARM_TRUST)
 
 
-func _say(text: String, prompt: String) -> void:
+## Shows `parts` on the dialogue bar and reads them aloud: the ark's lines by id
+## (assets/dialogue/noahs_ark.tres), each in its own clip, or shared text such as the verse,
+## read by its words (dialogue_lines.gd block).
+func _say(parts: Array, prompt: String) -> void:
+	var said: Dictionary = LINES.block(parts, GameSettings.easy_words)
+	var text: String = said["text"]
 	if _checklist:
 		_checklist.visible = phase in [Phase.FIND, Phase.MEET]
 	var ark := get_parent()
@@ -507,8 +511,8 @@ func _say(text: String, prompt: String) -> void:
 	var shell := get_parent().get_parent()
 	if shell.has_method("fit_dialogue"):
 		shell.fit_dialogue()
-	if _audio and _audio.has_method("speak_dialogue"):
-		_audio.speak_dialogue(text)
+	if _audio and _audio.has_method("speak_lines"):
+		_audio.speak_lines(said["spoken"])
 
 
 func _pressed(event: InputEvent) -> bool:

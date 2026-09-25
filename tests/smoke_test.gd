@@ -468,7 +468,8 @@ func _initialize() -> void:
 	_check(map_unrecorded.is_empty(), "the Faith Journey map speaks in the recorded voice too %s" % [map_unrecorded])
 	# A story's own lines are data (assets/dialogue/*.tres, dialogue_line.gd), each with its clips.
 	for story in [["res://assets/dialogue/bethlehem_valley.tres", "res://scripts/chapter_director.gd"],
-			["res://assets/dialogue/kings_camp.tres", "res://scripts/chapter_two.gd"]]:
+			["res://assets/dialogue/kings_camp.tres", "res://scripts/chapter_two.gd"],
+			["res://assets/dialogue/noahs_ark.tres", "res://scripts/chapter_four.gd"]]:
 		var book: Resource = load(story[0])
 		var seen: Dictionary = {}
 		var faults: Array = []
