@@ -457,11 +457,29 @@ func _initialize() -> void:
 	for block in ["Hello!\nYour journey starts in the valley.", "Hello!\nThe King's Camp is next.", "Hello!\nNoah's Ark is next.", "Hello!\nTap a story to begin.",
 			"One story at a time.", "Finish Chapter 1, The valley, first. Then The King's Camp will open for you.",
 			"Finish Chapter 2, The King's Camp, first. Then Noah's Ark will open for you.",
-			"This part of the path is still ahead. New stories will be waiting here.", "Look. David's valley is still down there."]:
+			"This part of the path is still ahead. New stories will be waiting here."]:
 		for line in audio._spoken_lines(map_script._wonder_light(block)):
 			if vo_lib.clip_for(line["text"]) == null:
 				map_unrecorded.append(line["text"])
-	_check(map_unrecorded.is_empty(), "the Faith Journey map and the camp lookout speak in the recorded voice too %s" % [map_unrecorded])
+	_check(map_unrecorded.is_empty(), "the Faith Journey map speaks in the recorded voice too %s" % [map_unrecorded])
+	# A story's own lines are data (assets/dialogue/*.tres, dialogue_line.gd), each with its clips.
+	for story in [["res://assets/dialogue/kings_camp.tres", "res://scripts/chapter_two.gd"]]:
+		var book: Resource = load(story[0])
+		var seen: Dictionary = {}
+		var faults: Array = []
+		for l in book.lines:
+			if String(l.id).is_empty() or seen.has(l.id):
+				faults.append("id '%s' empty or used twice" % l.id)
+			seen[l.id] = true
+			if l.is_spoken() and l.clip == null:
+				faults.append("%s has no clip" % l.id)
+			if l.has_easy() and (l.easy_clip == null or not l.is_spoken()):
+				faults.append("%s has an easier version with no clip" % l.id)
+		var asked := RegEx.create_from_string("&\"(\\w+)\"")
+		for m in asked.search_all(FileAccess.get_file_as_string(story[1])):
+			if not seen.has(StringName(m.get_string(1))):
+				faults.append("%s asks for '%s', which is not in its lines" % [story[1].get_file(), m.get_string(1)])
+		_check(faults.is_empty(), "%s: every line has its clip, and every line the story asks for is there %s" % [story[0].get_file(), faults])
 
 	print("-- voice-over: playback, chaining and fast skipping --")
 	var settings := load("res://scripts/game_settings.gd")
@@ -952,8 +970,7 @@ func _initialize() -> void:
 	Profiles.set_active(kid_id)
 
 	print("-- easy words: the story for younger readers --")
-	var director_source: String = FileAccess.get_file_as_string("res://scripts/chapter_director.gd") \
-			+ FileAccess.get_file_as_string("res://scripts/chapter_two.gd")
+	var director_source: String = FileAccess.get_file_as_string("res://scripts/chapter_director.gd")
 	var missing_original: Array = []
 	var no_clip: Array = []
 	for original in EasyWords.LINES:
@@ -973,9 +990,10 @@ func _initialize() -> void:
 	director._say(arrive_line)
 	_check(director.dialogue_label.text == "Wonder Light: \"This is David's valley. God looks after him.\"" and vo_player.stream == vo_lib.clip_for("This is David's valley. God looks after him."), "with Easy words on, the easier line is shown and read aloud")
 	var camp_story: Node = main.get_node("KingsCamp/ChapterTwo")
-	camp_story._say("Jonathan: \"I am Jonathan. David was brave today, because God was with him.\"", "")
+	camp_story._say([&"jonathan_hello"], "")
 	_check(director.dialogue_label.text == "Jonathan: \"I am Jonathan. God was with David today.\"", "the King's Camp has easier words too")
-	_check(vo_player.stream != null and vo_player.stream == vo_lib.clip_for("I am Jonathan. God was with David today."),
+	_check(vo_player.stream != null and vo_player.stream == camp_story.LINES.line(&"jonathan_hello").easy_clip
+			and vo_player.stream.resource_path.ends_with("ez_jn_hello.wav"),
 			"and Jonathan reads his easier line in his own recorded voice")
 	var mixed: String = director._say("David: \"Thanks. Will you stay close while I get ready?\"")
 	_check(mixed == "David: \"Thanks. Will you stay close while I get ready?\"", "a line with no easier version stays as it is")

@@ -1,0 +1,133 @@
+[gd_resource type="Resource" load_steps=36 format=3]
+
+[ext_resource type="Script" path="res://scripts/dialogue_lines.gd" id="1_lines"]
+[ext_resource type="Script" path="res://scripts/dialogue_line.gd" id="2_line"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/jn_arrive.wav" id="jn_arrive"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ez_jn_arrive.wav" id="ez_jn_arrive"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/jn_hello.wav" id="jn_hello"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ez_jn_hello.wav" id="ez_jn_hello"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/jn_find.wav" id="jn_find"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ez_jn_find.wav" id="ez_jn_find"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/jn_robe.wav" id="jn_robe"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ez_jn_robe.wav" id="ez_jn_robe"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/jn_bow.wav" id="jn_bow"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ez_jn_bow.wav" id="ez_jn_bow"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/jn_belt.wav" id="jn_belt"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ez_jn_belt.wav" id="ez_jn_belt"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/jn_give.wav" id="jn_give"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ez_jn_give.wav" id="ez_jn_give"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/jn_tied.wav" id="jn_tied"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/jn_cord.wav" id="jn_cord"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ez_jn_cord.wav" id="ez_jn_cord"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/jn_charm.wav" id="jn_charm"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ez_jn_charm.wav" id="ez_jn_charm"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/jn_lookout.wav" id="jn_lookout"]
+
+[sub_resource type="Resource" id="Line_arrive"]
+script = ExtResource("2_line")
+id = &"arrive"
+speaker = "Wonder Light"
+text = "This is the king's camp. The day is turning into night."
+clip = ExtResource("jn_arrive")
+easy_text = "This is the king's camp. It is almost night."
+easy_clip = ExtResource("ez_jn_arrive")
+
+[sub_resource type="Resource" id="Line_jonathan_hello"]
+script = ExtResource("2_line")
+id = &"jonathan_hello"
+speaker = "Jonathan"
+text = "I am Jonathan. David was brave today, because God was with him."
+clip = ExtResource("jn_hello")
+easy_text = "I am Jonathan. God was with David today."
+easy_clip = ExtResource("ez_jn_hello")
+
+[sub_resource type="Resource" id="Line_find"]
+script = ExtResource("2_line")
+id = &"find"
+speaker = "Wonder Light"
+text = "Find Jonathan's robe, his bow, and his belt. They are gifts for David."
+clip = ExtResource("jn_find")
+easy_text = "Find the robe, the bow, and the belt. They are gifts for David."
+easy_clip = ExtResource("ez_jn_find")
+
+[sub_resource type="Resource" id="Line_robe"]
+script = ExtResource("2_line")
+id = &"robe"
+speaker = "Wonder Light"
+text = "A folded robe. Jonathan is giving it to David."
+clip = ExtResource("jn_robe")
+easy_text = "A robe. It is a gift for David."
+easy_clip = ExtResource("ez_jn_robe")
+
+[sub_resource type="Resource" id="Line_bow"]
+script = ExtResource("2_line")
+id = &"bow"
+speaker = "Wonder Light"
+text = "A bow with no arrow. It is a gift, not a fight."
+clip = ExtResource("jn_bow")
+easy_text = "A bow. It is a gift, not for fighting."
+easy_clip = ExtResource("ez_jn_bow")
+
+[sub_resource type="Resource" id="Line_belt"]
+script = ExtResource("2_line")
+id = &"belt"
+speaker = "Wonder Light"
+text = "A belt with one gold square. A friend shares what he has."
+clip = ExtResource("jn_belt")
+easy_text = "A belt. Friends share what they have."
+easy_clip = ExtResource("ez_jn_belt")
+
+[sub_resource type="Resource" id="Line_jonathan_give"]
+script = ExtResource("2_line")
+id = &"jonathan_give"
+speaker = "Jonathan"
+text = "These were mine. I give them to David, because he is my friend."
+clip = ExtResource("jn_give")
+easy_text = "These were mine. Now they are David's. He is my friend."
+easy_clip = ExtResource("ez_jn_give")
+
+[sub_resource type="Resource" id="Line_tied"]
+script = ExtResource("2_line")
+id = &"tied"
+speaker = "Wonder Light"
+text = "Friends stay tied together."
+clip = ExtResource("jn_tied")
+
+[sub_resource type="Resource" id="Line_cord"]
+script = ExtResource("2_line")
+id = &"cord"
+speaker = "Wonder Light"
+text = "Hold still, and loop the cord. Three slow loops."
+clip = ExtResource("jn_cord")
+easy_text = "Loop the cord. Three slow loops."
+easy_clip = ExtResource("ez_jn_cord")
+
+[sub_resource type="Resource" id="Line_charm"]
+script = ExtResource("2_line")
+id = &"charm"
+speaker = "Wonder Light"
+text = "A Friendship charm, for Jonathan giving David what was his."
+clip = ExtResource("jn_charm")
+easy_text = "A Friendship charm, because Jonathan gave to his friend."
+easy_clip = ExtResource("ez_jn_charm")
+
+[sub_resource type="Resource" id="Line_charm_arrives"]
+script = ExtResource("2_line")
+id = &"charm_arrives"
+text = "Virtue Bracelet receives the charm."
+
+[sub_resource type="Resource" id="Line_charm_sealed"]
+script = ExtResource("2_line")
+id = &"charm_sealed"
+text = "Friendship charm sealed on the Virtue Bracelet."
+
+[sub_resource type="Resource" id="Line_lookout"]
+script = ExtResource("2_line")
+id = &"lookout"
+speaker = "Wonder Light"
+text = "Look. David's valley is still down there."
+clip = ExtResource("jn_lookout")
+
+[resource]
+script = ExtResource("1_lines")
+lines = Array[Resource]([SubResource("Line_arrive"), SubResource("Line_jonathan_hello"), SubResource("Line_find"), SubResource("Line_robe"), SubResource("Line_bow"), SubResource("Line_belt"), SubResource("Line_jonathan_give"), SubResource("Line_tied"), SubResource("Line_cord"), SubResource("Line_charm"), SubResource("Line_charm_arrives"), SubResource("Line_charm_sealed"), SubResource("Line_lookout")])
