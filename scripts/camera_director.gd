@@ -61,6 +61,25 @@ func cut_to_closeup(look_target: Node3D = null) -> void:
 		_place_closeup()
 	_closeup.current = true
 
+## Two people facing each other, both in one frame: the close-up camera stands to the
+## side of the line between them, so neither hides the other. It takes the side nearer
+## the tabletop camera, so the cut does not flip the scene round.
+func cut_to_two_shot(a: Node3D, b: Node3D) -> void:
+	if _closeup == null or a == null or b == null:
+		cut_to_tabletop()
+		return
+	_orbit_target = null
+	var mid := (a.global_position + b.global_position) * 0.5
+	var across := b.global_position - a.global_position
+	across.y = 0.0
+	var side := across.normalized().cross(Vector3.UP) if across.length() > 0.01 else Vector3.RIGHT
+	if _tabletop and side.dot(_tabletop.global_position - mid) < 0.0:
+		side = -side
+	var distance := clampf(across.length() * 1.3 + 1.8, 2.8, 6.5)
+	_closeup.global_position = mid + side * distance + Vector3(0.0, 1.35, 0.0)
+	_closeup.look_at(mid + Vector3(0.0, 0.95, 0.0), Vector3.UP)
+	_closeup.current = true
+
 ## True while the close-up is on a target the player can orbit around.
 func move_to_closeup(target: Node3D) -> void:
 	cut_to_closeup(target)

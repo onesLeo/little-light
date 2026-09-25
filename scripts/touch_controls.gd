@@ -154,6 +154,10 @@ func _set_button(down: bool) -> void:
 
 
 func _hint() -> String:
+	# The story being played now answers first; a finished one further back stays quiet.
+	var ark_story := get_parent().get_node_or_null("NoahsArk/ChapterFour")
+	if ark_story and ark_story.phase != ark_story.Phase.IDLE and ark_story.phase != ark_story.Phase.DONE:
+		return ark_story.get_action_hint()
 	var camp_story := get_parent().get_node_or_null("KingsCamp/ChapterTwo")
 	if camp_story and camp_story.phase != camp_story.Phase.IDLE:
 		return camp_story.get_action_hint()

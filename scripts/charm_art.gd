@@ -35,6 +35,17 @@ static func _circle(center: Vector2, radius: float, sides: int = 48) -> PackedVe
 	return pts
 
 
+static func _band(center: Vector2, inner: float, outer: float, a0: float, a1: float) -> PackedVector2Array:
+	var pts := PackedVector2Array()
+	for i in 9:
+		var a := lerpf(a0, a1, i / 8.0)
+		pts.append(center + Vector2(cos(a), sin(a)) * outer)
+	for i in 9:
+		var a := lerpf(a1, a0, i / 8.0)
+		pts.append(center + Vector2(cos(a), sin(a)) * inner)
+	return pts
+
+
 static func _star(center: Vector2, outer: float, inner: float) -> PackedVector2Array:
 	var pts := PackedVector2Array()
 	for i in 10:
@@ -46,6 +57,13 @@ static func _star(center: Vector2, outer: float, inner: float) -> PackedVector2A
 ## The regions of a charm's picture, back to front, in unit coordinates.
 static func regions(charm_id: String) -> Array:
 	var c := MEDAL_CENTER
+	if charm_id == "trust":
+		return [
+			PackedVector2Array([Vector2(0.16, 0.78), Vector2(0.84, 0.78), Vector2(0.76, 0.9), Vector2(0.24, 0.9)]),
+			_band(Vector2(0.5, 0.86), 0.34, 0.42, 3.55, 5.87),
+			_band(Vector2(0.5, 0.86), 0.26, 0.33, 3.55, 5.87),
+			_band(Vector2(0.5, 0.86), 0.18, 0.25, 3.55, 5.87),
+		]
 	if charm_id == "friendship":
 		return [
 			PackedVector2Array([Vector2(0.27, 0.62), Vector2(0.15, 0.97), Vector2(0.31, 0.89), Vector2(0.41, 0.99), Vector2(0.5, 0.66)]),

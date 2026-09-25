@@ -13,6 +13,7 @@ signal closed
 
 const Profiles := preload("res://scripts/profiles.gd")
 const PaperUI := preload("res://scripts/paper_ui.gd")
+const MapArkSketch := preload("res://scripts/map_ark_sketch.gd")
 
 const MAP_PATH := "res://assets/ui/faith_journey_map.jpg"
 const MAP_ASPECT := 16.0 / 9.0
@@ -23,9 +24,10 @@ const DONE_FILL := Color(0.99, 0.95, 0.82)
 ## Where each story sits on the map, as a fraction of the picture. `chapter` is the
 ## Profiles chapter id; the last stop is the path still ahead.
 const STOPS := [
-	{"id": "valley", "chapter": Profiles.CHAPTER_VALLEY, "number": 1, "title": "The valley", "at": Vector2(0.30, 0.76)},
-	{"id": "camp", "chapter": Profiles.CHAPTER_CAMP, "number": 2, "title": "The King's Camp", "at": Vector2(0.545, 0.48)},
-	{"id": "ahead", "chapter": "", "number": 3, "title": "Coming soon", "at": Vector2(0.80, 0.30)},
+	{"id": "valley", "chapter": Profiles.CHAPTER_VALLEY, "number": 1, "title": "The valley", "at": Vector2(0.22, 0.76)},
+	{"id": "camp", "chapter": Profiles.CHAPTER_CAMP, "number": 2, "title": "The King's Camp", "at": Vector2(0.545, 0.50)},
+	{"id": "ark", "chapter": Profiles.CHAPTER_ARK, "number": 3, "title": "Noah's Ark", "at": MapArkSketch.ANCHOR},
+	{"id": "ahead", "chapter": "", "number": 4, "title": "Coming soon", "at": Vector2(0.84, 0.22)},
 ]
 
 var _audio: Node
@@ -33,6 +35,7 @@ var _paused_by_me: bool = false
 ## True when the map is the first stop and no story has started behind it yet.
 var _choosing: bool = false
 var _map: TextureRect
+var _ark_sketch: Control
 var _line: Label
 var _back: Button
 var _change_player: Button
@@ -180,6 +183,8 @@ func open_to_choose() -> void:
 		line = "Your journey starts in the valley."
 	elif next == Profiles.CHAPTER_CAMP:
 		line = "The King's Camp is next."
+	elif next == Profiles.CHAPTER_ARK:
+		line = "Noah's Ark is next."
 	# The name is on the screen only: the recorded "Hello!" cannot say every child's name.
 	var hello := "Hello, %s! " % p["name"] if not p.is_empty() else "Hello! "
 	_show_map(hello + line, "Hello!\n" + line)
@@ -260,6 +265,11 @@ func _build() -> void:
 	if ResourceLoader.exists(MAP_PATH):
 		_map.texture = load(MAP_PATH)
 	add_child(_map)
+
+	# The valley and the camp are painted into the map; the ark is inked on top in the same hand.
+	_ark_sketch = MapArkSketch.new()
+	_ark_sketch.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(_ark_sketch)
 
 	var title := PaperUI.label("Faith Journey", 40)
 	title.set_anchors_preset(Control.PRESET_CENTER_TOP)
@@ -419,6 +429,7 @@ func _layout() -> void:
 	if view.x < 1.0 or view.y < 1.0:
 		return
 	var fitted := _fitted_map(view)
+	_ark_sketch.fit(fitted)
 	for stop in _stops:
 		var at: Vector2 = stop["at"]
 		var button: Button = stop["button"]
@@ -457,6 +468,13 @@ func _on_stop(id: String) -> void:
 			camp.visit()
 		else:
 			_say("The King's Camp is still being prepared.")
+	elif id == "ark":
+		var ark := get_parent().get_node_or_null("NoahsArk")
+		if ark and ark.has_method("visit"):
+			close()
+			ark.visit()
+		else:
+			_say("Noah's Ark is still being prepared.")
 
 
 ## The story is closed: the button gives a little shake, and a card says which story

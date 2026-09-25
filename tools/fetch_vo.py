@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
-"""Download the Seed Audio takes for the lines added with the Faith Journey map and chapter 2's
-easy words, trim them, and save them as the game's voice clips (assets/audio/vo/<id>.wav).
+"""Download the Seed Audio takes for the lines added with the Faith Journey map, chapter 2's
+easy words and chapter 4, trim them, and save them as the game's voice clips
+(assets/audio/vo/<id>.wav).
 
 Standard library only, so it runs the same on Windows, macOS and Linux:
 
     python tools/fetch_vo.py            # every clip not in assets/audio/vo yet
     python tools/fetch_vo.py --force    # download again and overwrite
+    python tools/fetch_vo.py --only ark_ --force   # only chapter 4's clips, replacing the stand-ins
+
+A take saved as MP3 (the Seed Speech engine only writes MP3) needs `pip install miniaudio` to decode.
 
 Then open the project in Godot once (or run `godot --headless --import .`) so the new clips are
 imported, and run the smoke test. See docs/voice-over.md.
@@ -46,11 +50,53 @@ CLIPS = {
     "ez_jn_charm": ("hf_20260923_220903_ec140e67-b97a-46e8-a55a-aa72121b2d62.wav", "Juno", "A Friendship charm, because Jonathan gave to his friend."),
     "ez_jn_hello": ("hf_20260923_220910_9b139b4b-8dce-4478-ac8e-fb8ffead0d55.wav", "Dylan", "I am Jonathan. God was with David today."),
     "ez_jn_give": ("hf_20260923_221334_78d0e038-3dad-4b0d-944a-3df9bf995fd3.wav", "Dylan", "These were mine. Now they are David's. He is my friend."),
+    # Chapter 4 (Noah's Ark), Wonder Light in Juno. Seed Audio 1.0 failed the olive leaf and
+    # Genesis 9:13 again and again, so those two are Juno through Seed Speech (MP3; see read_audio).
+    # Noah in Arthur (the one preset marked "old"), his wife in Helena.
+    "ark_map": ("hf_20260924_233009_a809ac8f-7526-4631-a6da-733af7d87ecc.wav", "Juno", "Noah's Ark is next."),
+    "ark_locked": ("hf_20260924_233009_364b578e-e227-44eb-9690-1490a362a0b1.wav", "Juno", "Finish Chapter 2, The King's Camp, first. Then Noah's Ark will open for you."),
+    "ark_arrive": ("hf_20260924_233009_2223c5cb-7fbc-4fb3-881f-6c8198545d69.wav", "Juno", "Long before David, God asked Noah to trust him and build something no one had seen before."),
+    "ark_hurt": ("hf_20260924_233039_dfeaee00-1544-45ac-b463-6f407ec391f4.wav", "Juno", "People were hurting one another, and the world was full of violence."),
+    "ark_find": ("hf_20260924_233038_88b0a606-77b9-4629-9b3d-315a8e67bf75.wav", "Juno", "Find the mallet, the rope, and the jar of pitch. Bring them to Noah."),
+    "ark_mallet": ("hf_20260924_233038_a0a92b34-ca90-4912-8b1a-e712135fd83f.wav", "Juno", "A wooden mallet. Noah builds with it."),
+    "ark_rope": ("hf_20260924_233127_28102037-3449-438c-8af6-6421a3960632.wav", "Juno", "A coil of rope. It holds the ark together."),
+    "ark_pitch": ("hf_20260924_233127_35c58ce2-6fa6-4666-b58b-8c1ad6bf06a5.wav", "Juno", "A jar of sticky pitch. It keeps water out."),
+    "ark_panel": ("hf_20260924_233127_7bb8128e-327a-4d2c-898d-91687702bdf4.wav", "Juno", "Let's finish this panel. Three pegs, then draw the rope tight."),
+    "ark_pairs": ("hf_20260924_233243_406e327c-6644-4f5b-bf75-95b691096465.wav", "Juno", "Two by two, they're coming. Help these animals find their partners."),
+    "ark_match": ("hf_20260924_233159_b1a43d20-b626-4ed7-9d4e-d98470fd8c74.wav", "Juno", "This friend is looking for its match."),
+    "ark_door": ("hf_20260924_233158_261f4bf1-36ab-4ed1-95e9-4cf5f275b124.wav", "Juno", "Noah's family and the animals are safely inside. God closes the door and keeps them safe."),
+    "ark_rain": ("hf_20260924_233243_32dd4199-89d0-410b-b088-f4c1b32e8f11.wav", "Juno", "The water covered the land. God kept Noah's family, and the animals with them, safe inside."),
+    "ark_send": ("hf_20260924_233243_1fef697f-c99f-438a-a16f-ad4d1f66def8.wav", "Juno", "Let's open the window and send the dove."),
+    "ark_dove_back": ("hf_20260924_233410_371ae1ce-ed81-4aaa-b4b0-f89f51d1120c.wav", "Juno", "The dove came back safe. The water is still too high."),
+    "ark_leaf": ("hf_20260924_233934_d01eed8d-df2a-4796-b26a-661d84624838.mp3", "Juno (Seed Speech)", "Look, an olive leaf. The water is going down."),
+    "ark_verse_ref": ("hf_20260924_233410_42d6e91a-e4d3-4459-8053-175a5f9d14ef.wav", "Juno", "Genesis, chapter nine, verse thirteen."),
+    "ark_verse": ("hf_20260924_233934_fbfaa8dd-a91a-4d7a-8754-4947e5d47b70.mp3", "Juno (Seed Speech)", "I set my rainbow in the cloud, and it will be a sign of a covenant between me and the earth."),
+    "ark_covenant": ("hf_20260924_233444_fe8a604d-2e0d-410a-a0d9-96374b59705e.wav", "Juno", "God's covenant is a promise God chooses to keep."),
+    "ark_word_rainbow": ("hf_20260924_233628_191cf45f-d2b4-4aea-a44a-60e184f356d0.wav", "Juno", "Rainbow."),
+    "ark_word_sign": ("hf_20260924_233654_ffb2db77-ba87-488b-b740-fba4be511522.wav", "Juno", "Sign."),
+    "ark_word_promise": ("hf_20260924_233725_e842db2b-e007-4187-8aa8-73cd8158cfd4.wav", "Juno", "Promise."),
+    "ark_charm": ("hf_20260924_233443_7d53496e-3a56-4430-89b8-92a575a49934.wav", "Juno", "A Trust charm. Noah kept building before he could see the rain."),
+    "ark_keep": ("hf_20260924_233529_e663cc86-90d6-4906-8769-524b2043456b.wav", "Juno", "Keep it close. Trust God, even before you see the way through."),
+    "ark_noah": ("hf_20260924_232807_00432a3e-7f80-46fc-89ff-c6c9a948b15b.wav", "Arthur", "God told me to build this ark. I cannot see the rain yet, but I trust him."),
+    "ark_dry": ("hf_20260924_234814_07e9880a-2156-420b-86c8-0de7ac1ef2fb.wav", "Arthur", "Dry ground. Thank you for keeping us safe."),
+    "ark_wife": ("hf_20260924_232847_f900dcfa-849c-40ed-87f6-e2e80dddfed2.wav", "Helena", "This way. Walk together up the wide ramp."),
 }
 
 LEAD_SECONDS = 0.06
 TAIL_SECONDS = 0.35
 THRESHOLD = 0.02  # of full scale
+
+
+def read_audio(data: bytes, name: str) -> tuple[list[float], int]:
+    """Mono samples and the sample rate from a WAV take, or an MP3 one through miniaudio."""
+    if not name.endswith(".mp3"):
+        return read_wav(data)
+    try:
+        import miniaudio  # noqa: PLC0415 - only needed for the few MP3 takes
+    except ImportError as error:
+        raise RuntimeError("this take is MP3; run `pip install miniaudio` and try again") from error
+    decoded = miniaudio.decode(data, output_format=miniaudio.SampleFormat.FLOAT32, nchannels=1)
+    return list(decoded.samples), decoded.sample_rate
 
 
 def read_wav(data: bytes) -> tuple[list[float], int]:
@@ -189,6 +235,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--force", action="store_true", help="download and overwrite clips that exist")
     parser.add_argument("--retrim", action="store_true", help="trim the clips already saved again, without downloading")
+    parser.add_argument("--only", default="", help="only the clips whose id starts with this, e.g. ark_")
     args = parser.parse_args()
     out_dir = Path(__file__).resolve().parent.parent / "assets" / "audio" / "vo"
     if args.retrim:
@@ -202,6 +249,8 @@ def main() -> int:
         return 0
     failed = 0
     for clip_id, (result, voice, line) in CLIPS.items():
+        if not clip_id.startswith(args.only):
+            continue
         target = out_dir / f"{clip_id}.wav"
         if target.exists() and not args.force:
             print(f"  have  {clip_id}")
@@ -212,7 +261,7 @@ def main() -> int:
             continue
         try:
             with urllib.request.urlopen(BASE + result, timeout=60) as response:
-                samples, rate = read_wav(response.read())
+                samples, rate = read_audio(response.read(), result)
             write_wav(target, trim(samples, rate), rate)
             settings = target.with_name(target.name + ".import")
             if not settings.exists():

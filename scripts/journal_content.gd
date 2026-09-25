@@ -10,10 +10,13 @@ extends RefCounted
 
 const VERSE_JOSHUA_1_9 := "joshua_1_9"
 const VERSE_SAMUEL_18_1 := "samuel_18_1"
+const VERSE_GENESIS_9_13 := "genesis_9_13"
 const CHARM_COURAGE := "courage"
 const CHARM_FRIENDSHIP := "friendship"
+const CHARM_TRUST := "trust"
 
 ## Charm slots shown as a dashed "?" after the earned charms, for adventures still to come.
+## Chapter 3's charm is not on this branch, so two slots stay open for The Beginning and Jonah.
 const MYSTERY_SLOTS := 2
 
 const VERSES := [
@@ -31,6 +34,13 @@ const VERSES := [
 		"text": "The soul of Jonathan was knit with the soul of David, and Jonathan loved him as his own soul.",
 		"why": "After the valley, Jonathan gave David what was his. A friend can do that.",
 	},
+	{
+		"id": VERSE_GENESIS_9_13,
+		"ref": "Genesis 9:13",
+		"spoken_ref": "Genesis, chapter nine, verse thirteen.",
+		"text": "I set my rainbow in the cloud, and it will be a sign of a covenant between me and the earth.",
+		"why": "The rainbow is the sign of God's covenant, a promise God chooses to keep. It is not a prize Noah earned.",
+	},
 ]
 
 const CHARMS := [
@@ -47,6 +57,13 @@ const CHARMS := [
 		"reason": "For Jonathan giving David what was his.",
 		"spoken": "A Friendship charm, for Jonathan giving David what was his.",
 		"color": Color(0.55, 0.22, 0.28),
+	},
+	{
+		"id": CHARM_TRUST,
+		"name": "Trust",
+		"reason": "Noah kept building before he could see the rain.",
+		"spoken": "A Trust charm. Noah kept building before he could see the rain.",
+		"color": Color(0.4, 0.66, 0.92),
 	},
 ]
 

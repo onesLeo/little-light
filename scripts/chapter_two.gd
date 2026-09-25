@@ -85,6 +85,18 @@ func begin() -> void:
 	)
 
 
+## Another story is starting: this one stops listening and puts its cards away. The next
+## visit begins it again from the first line, as begin() does from IDLE.
+func stand_down() -> void:
+	phase = Phase.IDLE
+	_ceremony = false
+	if _hints:
+		_hints.stop()
+	for card in [_checklist, _words, _cord]:
+		if is_instance_valid(card):
+			card.visible = false
+
+
 func _input(event: InputEvent) -> void:
 	if phase == Phase.IDLE or phase == Phase.FIND or phase == Phase.CORD or phase == Phase.DONE:
 		return

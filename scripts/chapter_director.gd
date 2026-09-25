@@ -124,6 +124,12 @@ func _start_story() -> void:
 				camp.visit.call_deferred()
 			else:
 				_enter_beat(Beat.ARRIVE)
+		Profiles.CHAPTER_ARK:
+			var ark := get_node_or_null("../NoahsArk")
+			if ark and ark.has_method("visit"):
+				ark.visit.call_deferred()
+			else:
+				_open_journey_first.call_deferred()
 		_:
 			_open_journey_first.call_deferred()
 

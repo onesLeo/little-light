@@ -22,9 +22,11 @@ const SPEAKERS := {
 	"Wonder Light": {"fill": Color(0.98, 0.78, 0.25), "ink": Color(0.35, 0.2, 0.08), "text": Color(0.66, 0.4, 0.02)},
 	"David": {"fill": Color(0.36, 0.55, 0.82), "ink": Color(1.0, 0.98, 0.92), "text": Color(0.18, 0.36, 0.66)},
 	"Jonathan": {"fill": Color(0.62, 0.2, 0.28), "ink": Color(1.0, 0.95, 0.88), "text": Color(0.58, 0.14, 0.24)},
+	"Noah": {"fill": Color(0.62, 0.32, 0.16), "ink": Color(1.0, 0.95, 0.86), "text": Color(0.45, 0.22, 0.08)},
+	"Noah's wife": {"fill": Color(0.28, 0.55, 0.52), "ink": Color(1.0, 0.96, 0.9), "text": Color(0.12, 0.36, 0.34)},
 	"Bible": {"fill": Color(0.52, 0.36, 0.2), "ink": Color(1.0, 0.95, 0.85), "text": Color(0.45, 0.28, 0.1)},
 }
-const VERSE_REFS := ["Joshua 1:9", "1 Samuel 18:1"]
+const VERSE_REFS := ["Joshua 1:9", "1 Samuel 18:1", "Genesis 9:13"]
 const INK := Color(0.3, 0.17, 0.06)
 const SOFT := Color(0.55, 0.42, 0.3)
 ## How far the lines not being read step back while one is read.
@@ -117,7 +119,7 @@ func _parse(text: String) -> void:
 			entry["kind"] = "direction"
 		else:
 			var named := false
-			for who_name in ["Wonder Light", "David", "Jonathan"]:
+			for who_name in ["Wonder Light", "David", "Jonathan", "Noah's wife", "Noah"]:
 				if line.begins_with(who_name + ":"):
 					who = who_name
 					named = true
@@ -249,6 +251,12 @@ func _draw_face(c: Vector2, r: float) -> void:
 			_person(c, r, Color(0.36, 0.55, 0.82), Color(0.42, 0.26, 0.12), false)
 		"Jonathan":
 			_person(c, r, Color(0.62, 0.2, 0.28), Color(0.22, 0.13, 0.08), true)
+		"Noah":
+			_person(c, r, Color(0.62, 0.32, 0.16), Color(0.35, 0.28, 0.22), false)
+			_tag.draw_circle(c + Vector2(0.0, r * 0.18), r * 0.26, Color(0.35, 0.28, 0.22))
+		"Noah's wife":
+			_person(c, r, Color(0.28, 0.55, 0.52), Color(0.25, 0.16, 0.1), false)
+			_tag.draw_circle(c + Vector2(0.0, -r * 0.62), r * 0.16, Color(0.25, 0.16, 0.1))
 		"Bible":
 			for side in [-1.0, 1.0]:
 				var page := PackedVector2Array([c + Vector2(side * 2.0, -r * 0.42), c + Vector2(side * r * 0.72, -r * 0.34),

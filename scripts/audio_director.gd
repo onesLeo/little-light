@@ -262,11 +262,20 @@ func _spoken_lines(text: String) -> Array[Dictionary]:
 		elif line.begins_with("Jonathan:"):
 			line = line.substr(10)
 			speaker = "Jonathan"
+		elif line.begins_with("Noah's wife:"):
+			line = line.substr("Noah's wife:".length())
+			speaker = "Noah's wife"
+		elif line.begins_with("Noah:"):
+			line = line.substr("Noah:".length())
+			speaker = "Noah"
 		elif line.begins_with("Joshua 1:9"):
 			line = "Joshua, chapter one, verse nine."
 			speaker = "Reader"
 		elif line.begins_with("1 Samuel 18:1"):
 			line = "First Samuel, chapter eighteen, verse one."
+			speaker = "Reader"
+		elif line.begins_with("Genesis 9:13"):
+			line = "Genesis, chapter nine, verse thirteen."
 			speaker = "Reader"
 		line = line.replace("\"", "").strip_edges()
 		if not line.is_empty():

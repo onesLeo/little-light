@@ -2,6 +2,23 @@
 
 Companion to [chapter-4-concept.md](chapter-4-concept.md). How each thing should move and sound so nothing reads as a statue, a conveyor belt or a weather slideshow. Reuse `chapter_two_character_motion.gd`, `lamb_life.gd`, `camp_owl.gd`, `camp_guard.gd` turn-and-walk, the valley-to-camp lighting crossfade, and the stream water shader.
 
+## Implemented story polish (September 2026)
+
+- Boarding follows the ramp and waits for the last family member before closing the door.
+- Rain cuts to an open-front timber shelter with the family, resting animals, a warm lamp
+  and rain outside the window. A separate render layer isolates the cutaway.
+- Building, storm, waiting and new morning use distinct lighting. Crossfades replace unfinished
+  transitions; turning the sky also lowers the water outside the shelter window.
+- The dove follows a curved flight with wingbeats and a landing settle. Repeated SEND presses
+  cannot overlap flights, and pausing freezes the flight and camera motion.
+- The olive sprig gets a close view and its own recorded line. NEXT reveals morning and the
+  family emerging; the next NEXT reveals the rainbow in a wide shot with Genesis 9:13.
+- Existing recorded lines are retained. Movement is locked during the shelter/window scenes.
+
+Run `tests/ark_review.gd` headlessly for progression checks. For rendered captures, run it without
+`--headless` and append `-- --capture-ark`; images go to `.godot/ark-visual-review/`.
+The broader art ambitions below remain a checklist, not a claim that every detail is finished.
+
 ## Models — humans
 
 - **Noah** is a workman, not a prophet on a stick: rust over cream, dark belt, full grey-brown beard thicker than Samuel's. Hands stay connected to the arms (Wonder-Walker v13). One shape key for measuring / resting a palm on wood. Closed default smile, tired and steady, never smug. Thin outline hull.

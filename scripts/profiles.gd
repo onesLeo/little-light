@@ -30,9 +30,13 @@ static var picker_open: bool = false
 static var current_chapter: String = ""
 
 ## The chapters in the order they are played. Each one opens once the one before it is finished.
+## The Beginning is being built on feature/chapter-3. This branch plays Noah's Ark after the camp
+## so the chapter can be reached. Merging the two branches should produce
+## valley, camp, beginning, ark.
 const CHAPTER_VALLEY := "valley"
 const CHAPTER_CAMP := "camp"
-const CHAPTERS := [CHAPTER_VALLEY, CHAPTER_CAMP]
+const CHAPTER_ARK := "ark"
+const CHAPTERS := [CHAPTER_VALLEY, CHAPTER_CAMP, CHAPTER_ARK]
 
 static var _profiles: Dictionary = {}
 static var _order: Array = []
