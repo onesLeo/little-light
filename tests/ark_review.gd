@@ -44,13 +44,14 @@ func _run() -> void:
 	Profiles.finish_chapter(Profiles.CHAPTER_CAMP)
 	check(Profiles.is_unlocked(kid, Profiles.CHAPTER_ARK), "finishing the camp opens Noah's Ark")
 
-	var ark: Node = main.get_node("NoahsArk")
+	check(main.get_node_or_null("NoahsArk") == null, "the ark is not in the scene until its story starts")
 	# The game opens the ark from the Faith Journey map, which closes first and unpauses.
 	var journey: Node = main.get_node("FaithJourney")
 	if journey.is_open():
 		journey.close()
 	main.switch_to(Profiles.CHAPTER_ARK)
 	await settle()
+	var ark: Node = main.get_node("NoahsArk")
 	var story: Node = ark.get_node("ChapterFour")
 	var player: Node3D = main.get_node("Player")
 	check(ark.get_node("Noah").find_child("NoahBody", true, false) != null, "Noah in the scene is the designed model")
@@ -325,8 +326,7 @@ func _run() -> void:
 	await settle()
 	var camp: Node = main.get_node("KingsCamp")
 	var camp_story: Node = camp.get_node("ChapterTwo")
-	var ark_now: Node = main.get_node("NoahsArk")
-	check(not is_instance_valid(story_again) and not ark_now._built, "leaving the ark for the camp puts the ark's story away")
+	check(not is_instance_valid(story_again) and main.get_node_or_null("NoahsArk") == null, "leaving the ark for the camp frees the ark and its story")
 	check(main.get_node("UI").find_children("Ark*", "", false, false).is_empty() and not is_instance_valid(ark_arrow),
 			"the ark's words, tool list and arrow leave the screen")
 	check(cam.offset == framing[0] and cam.look_height == framing[1] and is_equal_approx(cam.fov, framing[2]) and cam.current,
@@ -336,10 +336,11 @@ func _run() -> void:
 	journey.open()
 	journey._on_stop("ark")
 	await settle()
-	ark_now = main.get_node("NoahsArk")
-	check(camp_story.phase == camp_story.Phase.IDLE and not camp_story._checklist.visible and not camp_story._words.visible,
-			"going back to the ark puts the camp's story away")
-	check(not camp.get_node("CampSounds").is_playing(), "the camp's crickets and fire stop on the mountaintop")
+	var ark_now: Node = main.get_node("NoahsArk")
+	check(not is_instance_valid(camp) and not is_instance_valid(camp_story) and main.get_node_or_null("KingsCamp") == null,
+			"going back to the ark frees the camp, its story, and its crickets and fire")
+	check(main.get_node("UI").find_children("Camp*", "", false, false).is_empty() and main.get_node("UI").find_children("*Checklist", "", false, false).size() == 1,
+			"and the camp's word chips and gift list leave the screen")
 	var ark_story_now: Node = ark_now.get_node("ChapterFour")
 	check(ark_story_now.phase == ark_story_now.Phase.ARRIVE and "Long before David" in ark_story_now._line.text,
 			"the ark starts again from its first line")

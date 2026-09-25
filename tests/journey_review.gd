@@ -114,6 +114,8 @@ func _run() -> void:
 	var director: Node = main.get_node("ChapterDirector")
 	var journey: Node = main.get_node("FaithJourney")
 	check(journey.is_open() and journey._choosing, "with a child chosen, the game opens on the Faith Journey map")
+	check(main.get_node_or_null("KingsCamp") == null and main.get_node_or_null("NoahsArk") == null,
+			"the camp and the ark are not loaded until their story starts")
 
 	print("-- the valley from the map, at the start --")
 	await map_stop("valley")
@@ -137,8 +139,8 @@ func _run() -> void:
 	await map_stop("ark")
 	check(ark_story() != null and ark_story().phase == ark_story().Phase.ARRIVE and Profiles.current_chapter == Profiles.CHAPTER_ARK,
 			"the ark starts from its first line")
-	check(camp_story().phase == camp_story().Phase.IDLE and showing("Camp*") == 0,
-			"the camp's story stops, and none of its cards stay on screen")
+	check(camp_story() == null and main.get_node_or_null("KingsCamp") == null and showing("Camp*") == 0,
+			"the camp is freed, and none of its cards stay on screen")
 	check(looks_like(main.get_node("NoahsArk").look), "the world takes the ark's look: daylight, no hills, its own framing")
 	await settle(10)
 	check(kept_in(main.get_node("NoahsArk").play_area), "the walker is kept to the ark's play area, far from the valley")
@@ -156,8 +158,8 @@ func _run() -> void:
 
 	print("-- the camp from the map, mid-ark, then Play again --")
 	await map_stop("camp")
-	check(camp_story().phase == camp_story().Phase.ARRIVE and not main.get_node("NoahsArk")._built and showing("Ark*") == 0,
-			"the camp starts, the ark is put away, and none of its cards stay on screen")
+	check(camp_story().phase == camp_story().Phase.ARRIVE and main.get_node_or_null("NoahsArk") == null and showing("Ark*") == 0,
+			"the camp starts, the ark is freed, and none of its cards stay on screen")
 	await create_timer(0.6).timeout
 	check(looks_like(main.get_node("KingsCamp").look), "left mid-rain, the ark's weather gives way to the camp's whole look")
 	main.get_node("GameMenu")._restart()
@@ -173,8 +175,8 @@ func _run() -> void:
 			"the valley reloads the scene and starts chapter 1 from its first line")
 	check(looks_like(director.look), "in the valley's daylight")
 	check(kept_in(director.play_area), "and kept to the valley's play area")
-	check(camp_story() == null or camp_story().phase == camp_story().Phase.IDLE, "and the camp is not running behind it")
-	check(not main.get_node("NoahsArk")._built, "and the ark is not built")
+	check(main.get_node_or_null("KingsCamp") == null and main.get_node_or_null("NoahsArk") == null,
+			"and neither the camp nor the ark is loaded behind it")
 
 	print("-- Play again in the valley --")
 	main.get_node("GameMenu")._restart()

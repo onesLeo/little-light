@@ -5,7 +5,9 @@ extends Node3D
 ## and what the touch button says. Stories reach it as their scene root and never call
 ## one another, so adding a story means adding it here, not to every other story.
 ##
-## A story that lives in this scene as a node (see STORIES) offers:
+## The camp and the ark are scenes of their own (see STORIES). The shell loads one when it
+## starts and frees it when another story starts, so only the running story is in the tree
+## and every start is a fresh one. Its root node offers:
 ##   visit()             start it, or carry on if it is already under way
 ##   stand_down()        stop it: its story stops listening, its cards and sounds go away
 ##   in_progress()       true while its story is under way (then switching to it carries on)
@@ -20,10 +22,12 @@ extends Node3D
 
 const Profiles := preload("res://scripts/profiles.gd")
 
-## The stories that live in this scene as nodes: the node, and the node holding its story script.
+## The stories loaded on demand: their scene, the name of its root node under Main, and the
+## child holding its story script. The root stays a child of Main, which the stories reach
+## as their parent.
 const STORIES := {
-	Profiles.CHAPTER_CAMP: {"node": "KingsCamp", "story": "KingsCamp/ChapterTwo"},
-	Profiles.CHAPTER_ARK: {"node": "NoahsArk", "story": "NoahsArk/ChapterFour"},
+	Profiles.CHAPTER_CAMP: {"scene": "res://scenes/chapters/kings_camp.tscn", "node": "KingsCamp", "story": "ChapterTwo"},
+	Profiles.CHAPTER_ARK: {"scene": "res://scenes/chapters/noahs_ark.tscn", "node": "NoahsArk", "story": "ChapterFour"},
 }
 
 ## True while the map is the first stop and no story has started behind it: the valley
@@ -42,7 +46,7 @@ func start_story() -> void:
 	var id := Profiles.current_chapter
 	if id == Profiles.CHAPTER_VALLEY:
 		_begin_valley()
-	elif STORIES.has(id) and _story_node(id) != null:
+	elif STORIES.has(id):
 		switch_to.call_deferred(id)
 	else:
 		_open_map_first.call_deferred()
@@ -56,25 +60,27 @@ func switch_to(id: String) -> void:
 		else:
 			reload(Profiles.CHAPTER_VALLEY)
 		return
-	_first_map = false
-	var story := _story_node(id)
-	if story == null or not story.has_method("visit"):
-		push_warning("GameShell: no story called %s in this scene" % id)
+	if not STORIES.has(id):
+		push_warning("GameShell: no story called %s" % id)
 		return
+	_first_map = false
 	# Tapping the story already under way only closes the map: its look (the ark's rain) stays.
-	var carry_on: bool = Profiles.current_chapter == id and story.has_method("in_progress") and story.in_progress()
+	var story := _story_node(id)
+	var carry_on: bool = Profiles.current_chapter == id and story != null and story.has_method("in_progress") and story.in_progress()
 	var director := get_node_or_null("ChapterDirector")
 	if director and director.has_method("stand_down"):
 		director.stand_down()
 	for other in STORIES:
-		var node := _story_node(other)
-		if other != id and node and node.has_method("stand_down"):
-			node.stand_down()
+		if other != id or not carry_on:
+			_put_away(other)
 	Profiles.current_chapter = id
 	var menu := get_node_or_null("GameMenu")
 	if menu and menu.has_method("hide_end_panel"):
 		menu.hide_end_panel()
 	if not carry_on:
+		story = _load_story(id)
+		if story == null:
+			return
 		apply_look(story.get("look"))
 	_use_play_area(story.get("play_area"))
 	story.visit()
@@ -120,15 +126,43 @@ func _use_play_area(area: Resource) -> void:
 		bounds.use_area(area)
 
 
-## True when story `id` can be played in this scene (the valley always can).
+## True when story `id` can be played (the valley always can).
 func has_story(id: String) -> bool:
-	return id == Profiles.CHAPTER_VALLEY or _story_node(id) != null
+	return id == Profiles.CHAPTER_VALLEY or (STORIES.has(id) and ResourceLoader.exists(STORIES[id]["scene"]))
 
 
+## The story's root node while it is loaded, otherwise null.
 func _story_node(id: String) -> Node:
 	if not STORIES.has(id):
 		return null
 	return get_node_or_null(STORIES[id]["node"])
+
+
+## Loads story `id` fresh from its scene, under Main where the stories used to sit.
+func _load_story(id: String) -> Node:
+	var packed := load(STORIES[id]["scene"]) as PackedScene
+	if packed == null:
+		push_warning("GameShell: could not load %s" % STORIES[id]["scene"])
+		return null
+	var story := packed.instantiate()
+	story.name = STORIES[id]["node"]
+	add_child(story)
+	var before := get_node_or_null("Sun")
+	if before:
+		move_child(story, before.get_index())
+	return story
+
+
+## Stops story `id` if it is loaded and frees it: it leaves the tree at once, so its name is
+## free for the next one, and its tweens, sounds and cards go with it.
+func _put_away(id: String) -> void:
+	var story := _story_node(id)
+	if story == null:
+		return
+	if story.has_method("stand_down"):
+		story.stand_down()
+	remove_child(story)
+	story.queue_free()
 
 
 ## -- Shared by every story ------------------------------------------------------
@@ -188,7 +222,7 @@ func apply_lighting(look: Resource) -> void:
 func action_hint() -> String:
 	var id := Profiles.current_chapter
 	if STORIES.has(id):
-		var story := get_node_or_null(STORIES[id]["story"])
+		var story := get_node_or_null("%s/%s" % [STORIES[id]["node"], STORIES[id]["story"]])
 		return story.get_action_hint() if story and story.has_method("get_action_hint") else ""
 	var director := get_node_or_null("ChapterDirector")
 	return director.get_action_hint() if director and director.has_method("get_action_hint") else ""

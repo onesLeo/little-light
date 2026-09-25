@@ -36,9 +36,10 @@ func _run() -> void:
 	check(not paused, "scratch profile opens the game without the picker")
 	Settings.read_aloud = false
 	main.get_node("AudioDirector").stop_speech()
-	var camp: Node = main.get_node("KingsCamp")
+	check(main.get_node_or_null("KingsCamp") == null, "the camp is not in the scene until its story starts")
 	main.switch_to(Profiles.CHAPTER_CAMP)
 	await settle()
+	var camp: Node = main.get_node("KingsCamp")
 	var story: Node = camp.get_node("ChapterTwo")
 	var player: Node3D = main.get_node("Player")
 	var jon: Node3D = camp.get_node("Jonathan")

@@ -3,10 +3,10 @@ extends Node3D
 ## The valley's ridge top is only a few steps deep, so the camp stands on its
 ## own stretch of ground that carries on from it: a wide, gently rolling
 ## clearing with trees at its edges, and the whole of chapter 1 below the
-## lookout. It is built the first time the child visits, so chapter 1 never pays
-## for it. visit() is what lets the child walk up there: the soft edge of the
-## valley opens, the light becomes the blue hour, and she arrives at the back of
-## the camp with the fire in front of her.
+## lookout. It is its own scene (scenes/chapters/kings_camp.tscn), loaded by the
+## shell when the story starts and freed when another one does, so chapter 1 never
+## pays for it. visit() builds it and brings the child up there: she arrives at the
+## back of the camp with the fire in front of her.
 ##
 ## Layout, looking the way the tabletop camera looks (toward the valley):
 ## the lookout stone at the far edge, the fire in the middle, the king's round

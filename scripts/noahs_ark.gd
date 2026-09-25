@@ -1,6 +1,6 @@
 extends Node3D
-## Noah's Ark, built the first time it is visited so the valley and the camp
-## do not pay for it. The ark stands on a mountaintop above a sea of clouds
+## Noah's Ark, in its own scene (scenes/chapters/noahs_ark.tscn): the shell loads it
+## when the story starts and frees it when another one does, so every start is fresh. The ark stands on a mountaintop above a sea of clouds
 ## (ark_mountain.gd): a curved plank hull with its house finished at one end and bare
 ## ribs still going up at the other, a work bench, six animal pairs that wander and
 ## graze, a family at work, and three weather states, all in the camp's paper style.
@@ -116,14 +116,8 @@ func _unavailable(animal: Node3D) -> bool:
 ## Starts the ark, or carries on with it. Only the shell calls this (game_shell.gd
 ## switch_to), after every other story has stood down.
 func visit() -> void:
-	# A finished run leaves the tools taken, the pegs in, the animals and family moved and
-	# the door used. A fresh ark puts every piece back, including ones added later.
-	var last_run := get_node_or_null("ChapterFour")
-	if last_run and last_run.phase == ChapterFour.Phase.DONE:
-		_fresh_ark().visit()
-		return
 	# Tapping the ark on the map mid-story only closes the map; the story carries on.
-	if last_run and last_run.phase != ChapterFour.Phase.IDLE:
+	if in_progress():
 		return
 	_build()
 	var main := get_parent()
@@ -151,32 +145,13 @@ func in_progress() -> bool:
 	return story != null and story.phase != ChapterFour.Phase.IDLE and story.phase != ChapterFour.Phase.DONE
 
 
-## Another story is starting: the ark makes way for an unbuilt ark, so nothing of this run
-## keeps playing and the next visit starts whole. The next story's look resets the world.
+## Another story is starting, and the shell frees the ark after this, with its tweens and
+## cards. The next story's look resets the world.
 func stand_down() -> void:
-	if not _built:
-		return
-	var main := get_parent()
 	# The shelter or rainbow shot may be the live camera, and it goes with this ark.
-	var shots := main.get_node_or_null("CameraDirector")
+	var shots := get_parent().get_node_or_null("CameraDirector")
 	if shots and shots.has_method("cut_to_tabletop"):
 		shots.cut_to_tabletop()
-	_fresh_ark()
-
-
-## Swaps this ark for an unbuilt one with the same name and place in the scene, so the
-## map, the director and the touch button still find it. Its tweens go with it.
-func _fresh_ark() -> Node3D:
-	var main := get_parent()
-	var index := get_index()
-	var fresh := Node3D.new()
-	fresh.set_script(get_script())
-	main.remove_child(self)
-	fresh.name = name
-	main.add_child(fresh)
-	main.move_child(fresh, index)
-	queue_free()
-	return fresh
 
 
 func _build() -> void:

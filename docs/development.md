@@ -162,10 +162,18 @@ for "Play again" (`reload()`). Stories never call one another.
 
 - The **valley** is the scene itself (`chapter_director.gd`). Choosing it once another story has
   started reloads the scene.
-- The **camp** and the **ark** are nodes in the scene, listed in the shell's `STORIES`. Each offers
-  `visit()` (start, or carry on), `stand_down()` (stop listening, put its cards and sounds away),
-  `in_progress()`, a `look` and a `play_area`; its story node offers `get_action_hint()`. Only the shell calls
-  `visit()`, after standing every other story down.
+- The **camp** and the **ark** are scenes of their own (`scenes/chapters/kings_camp.tscn`,
+  `noahs_ark.tscn`), listed in the shell's `STORIES`. The shell loads one when its story starts and
+  frees it when another starts, so only the running story is in the tree and every start is fresh
+  (the ark's tools, animals and door are all back). The loaded root sits under `Main`, which the
+  story reaches as its parent. Each offers `visit()` (build it and start, or carry on),
+  `stand_down()` (stop listening and sounds; the shell frees it next), `in_progress()`, a `look`
+  and a `play_area`; its story node offers `get_action_hint()`. Anything a story adds outside
+  itself, such as its cards in the shared `UI`, it takes away in `_exit_tree()`. Only the shell
+  calls `visit()`, after standing every other story down.
+- Both are still placed in the valley's world: the camp stands on the ridge behind the waterfall
+  and samples the valley's ground at its edge, and the ark sits far off at x = 96, 40 m up, above a
+  sea of clouds. Moving the valley into its own scene is the next step.
 - Each story's **look** is a `chapter_look.gd` resource in `assets/looks/` (`valley_day`,
   `camp_blue_hour`, `ark_mountain_day`): the sky, ambient light and haze, sun and fill lights, the
   valley's ring of hills (as painted, blue hour or hidden), night or day sounds, and how the tabletop
@@ -178,7 +186,7 @@ for "Play again" (`reload()`). Stories never call one another.
   director): the rounded rectangle the Wonder-Walker can walk in, with its soft edge. The shell
   hands it to `PlayBounds` when the story starts; tune it in the inspector.
 
-A new story in this scene is a node with those methods, a look and a play area, and one line in `STORIES`, plus
+A new story is a scene whose root has those methods, a look and a play area, and one line in `STORIES`, plus
 its entries in the shared data (voice lines, journal verses and charms, the map's stops).
 `tests/journey_review.gd` checks moving between the stories.
 
