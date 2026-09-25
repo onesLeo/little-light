@@ -460,7 +460,6 @@ func _initialize() -> void:
 	var map_unrecorded: Array = []
 	for block in ["Hello!\nYour journey starts in the valley.", "Hello!\nThe King's Camp is next.", "Hello!\nNoah's Ark is next.", "Hello!\nTap a story to begin.",
 			"One story at a time.", "Finish Chapter 1, The valley, first. Then The King's Camp will open for you.",
-			"Finish Chapter 2, The King's Camp, first. Then Noah's Ark will open for you.",
 			"This part of the path is still ahead. New stories will be waiting here."]:
 		for line in audio._spoken_lines(map_script._wonder_light(block)):
 			if vo_lib.clip_for(line["text"]) == null:
@@ -469,7 +468,8 @@ func _initialize() -> void:
 	# A story's own lines are data (assets/dialogue/*.tres, dialogue_line.gd), each with its clips.
 	for story in [["res://assets/dialogue/bethlehem_valley.tres", "res://scripts/chapter_director.gd"],
 			["res://assets/dialogue/kings_camp.tres", "res://scripts/chapter_two.gd"],
-			["res://assets/dialogue/noahs_ark.tres", "res://scripts/chapter_four.gd"]]:
+			["res://assets/dialogue/noahs_ark.tres", "res://scripts/chapter_four.gd"],
+			["res://assets/dialogue/jesses_house.tres", "res://scripts/chapter_three.gd"]]:
 		var book: Resource = load(story[0])
 		var seen: Dictionary = {}
 		var faults: Array = []
@@ -477,9 +477,9 @@ func _initialize() -> void:
 			if String(l.id).is_empty() or seen.has(l.id):
 				faults.append("id '%s' empty or used twice" % l.id)
 			seen[l.id] = true
-			if l.is_spoken() and l.clip == null:
+			if book.recorded and l.is_spoken() and l.clip == null:
 				faults.append("%s has no clip" % l.id)
-			if l.has_easy() and (l.easy_clip == null or not l.is_spoken()):
+			if book.recorded and l.has_easy() and (l.easy_clip == null or not l.is_spoken()):
 				faults.append("%s has an easier version with no clip" % l.id)
 		var asked := RegEx.create_from_string("&\"(\\w+)\"")
 		for m in asked.search_all(FileAccess.get_file_as_string(story[1])):
@@ -793,6 +793,29 @@ func _initialize() -> void:
 	_check(Profiles.has_finished("p1", Profiles.CHAPTER_VALLEY) and Profiles.is_unlocked("p1", Profiles.CHAPTER_CAMP),
 			"a save from before chapters were told apart still has the valley finished")
 	DirAccess.remove_absolute("user://smoke-legacy-profiles.cfg")
+	# Saves from before The Beginning was put ahead of the ark: nobody loses a chapter they had open.
+	var pre_beginning := ConfigFile.new()
+	pre_beginning.set_value("app", "order", ["p1", "p2"])
+	pre_beginning.set_value("profile_p1", "name", "Ahead")
+	pre_beginning.set_value("profile_p1", "finished", [Profiles.CHAPTER_VALLEY, Profiles.CHAPTER_CAMP])
+	pre_beginning.set_value("profile_p2", "name", "Behind")
+	pre_beginning.set_value("profile_p2", "finished", [Profiles.CHAPTER_VALLEY])
+	pre_beginning.save("user://smoke-pre-beginning.cfg")
+	Profiles.use_file("user://smoke-pre-beginning.cfg")
+	_check(Profiles.is_unlocked("p1", Profiles.CHAPTER_ARK) and Profiles.is_unlocked("p1", Profiles.CHAPTER_BEGINNING)
+			and Profiles.next_chapter("p1") == Profiles.CHAPTER_BEGINNING,
+			"a child who had finished the camp keeps Noah's Ark open, and The Beginning opens for them too")
+	Profiles.set_active("p2")
+	Profiles.finish_chapter(Profiles.CHAPTER_CAMP)
+	_check(Profiles.is_unlocked("p2", Profiles.CHAPTER_BEGINNING) and not Profiles.is_unlocked("p2", Profiles.CHAPTER_ARK),
+			"a child who finishes the camp now goes on to The Beginning before the ark")
+	Profiles.use_file("user://smoke-pre-beginning.cfg")
+	_check(Profiles.is_unlocked("p1", Profiles.CHAPTER_ARK) and not Profiles.is_unlocked("p2", Profiles.CHAPTER_ARK),
+			"saved again and read back, that stays the same")
+	Profiles.set_active("p2")
+	Profiles.finish_chapter(Profiles.CHAPTER_ARK)
+	_check(Profiles.is_unlocked("p2", Profiles.CHAPTER_ARK), "a chapter a child has finished always stays open to replay")
+	DirAccess.remove_absolute("user://smoke-pre-beginning.cfg")
 	Profiles.use_file(TEST_PROFILES)
 	Profiles.set_active(finished_kid)
 	journey.open()
@@ -1015,12 +1038,13 @@ func _initialize() -> void:
 	_check(Profiles.has_charm(kid_id, JournalContent.CHARM_COURAGE), "the Courage charm is in it too")
 	_check(int(kid["chapters"]) == 1, "and the finished chapter is counted")
 	var unrecorded_journal: Array = []
+	# A chapter not cast yet marks its entries "recorded": false; the system voice reads those.
 	for v in JournalContent.VERSES:
 		for line in [v["spoken_ref"], v["text"]]:
-			if not vo_lib.LINES.has(line):
+			if v.get("recorded", true) and not vo_lib.LINES.has(line):
 				unrecorded_journal.append(line)
 	for c in JournalContent.CHARMS:
-		if not vo_lib.LINES.has(c["spoken"]):
+		if c.get("recorded", true) and not vo_lib.LINES.has(c["spoken"]):
 			unrecorded_journal.append(c["spoken"])
 	_check(unrecorded_journal.is_empty(), "every verse and charm in the journal has a recorded clip %s" % [unrecorded_journal])
 	var journal: CanvasLayer = main.get_node("JournalScreen")

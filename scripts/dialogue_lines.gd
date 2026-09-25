@@ -10,6 +10,9 @@ const DialogueLine := preload("res://scripts/dialogue_line.gd")
 
 ## DialogueLine resources (dialogue_line.gd).
 @export var lines: Array[Resource] = []
+## False while the story is not cast yet: its lines have no clips and the system voice reads
+## them (docs/chapter-3-readiness.md). The smoke test then does not ask for clips.
+@export var recorded: bool = true
 
 var _by_id: Dictionary = {}
 

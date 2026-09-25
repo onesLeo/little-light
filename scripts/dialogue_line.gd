@@ -7,10 +7,10 @@ extends Resource
 
 const JournalContent := preload("res://scripts/journal_content.gd")
 ## Who can speak, as the dialogue bar writes them ("Noah's wife" before "Noah").
-const SPEAKERS := ["Wonder Light", "David", "Jonathan", "Noah's wife", "Noah"]
+const SPEAKERS := ["Wonder Light", "David", "Jonathan", "Samuel", "Jesse", "Noah's wife", "Noah"]
 
 @export var id: StringName = &""
-## "Wonder Light", "David", "Jonathan", "Noah" or "Noah's wife". Empty for a stage direction,
+## One of SPEAKERS ("Wonder Light", "David", "Samuel", ...). Empty for a stage direction,
 ## which is shown in brackets and never read aloud.
 @export var speaker: String = ""
 ## The words alone, without the speaker's name or quote marks.

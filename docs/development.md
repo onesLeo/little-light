@@ -164,8 +164,9 @@ and lights, the UI and menus, and the sound. The shell starts the game from its 
 
 - Every story is a scene of its own in `scenes/chapters/`: the **valley**
   (`bethlehem_valley.tscn`: the terrain, brook, meadow, ring of hills, David, the Wonder Items,
-  Steady Hands and `chapter_director.gd`), the **camp** (`kings_camp.tscn`) and the **ark**
-  (`noahs_ark.tscn`), listed in the shell's `STORIES`. The shell loads one when its story starts and
+  Steady Hands and `chapter_director.gd`), the **camp** (`kings_camp.tscn`), **The Beginning**
+  (`jesses_house.tscn`, Jesse's courtyard, `chapter_three.gd`) and the **ark** (`noahs_ark.tscn`),
+  listed in the shell's `STORIES`. The shell loads one when its story starts and
   frees it when another starts, so only what is being played is in the tree and every start is
   fresh (the ark's tools, animals and door are all back). While the ark plays, the valley is not
   loaded at all, which saves about 45 MB, and the ark stands at the world's origin.

@@ -44,7 +44,6 @@ const LINES := {
 	"Finish Chapter 1, The valley, first. Then The King's Camp will open for you.": "wl_locked_camp",
 	"This part of the path is still ahead. New stories will be waiting here.": "wl_path_ahead",
 	"Noah's Ark is next.": "ark_map",
-	"Finish Chapter 2, The King's Camp, first. Then Noah's Ark will open for you.": "ark_locked",
 	# Chapter 4, Noah's Ark: its story lines are in assets/dialogue/noahs_ark.tres (Wonder Light in
 	# Juno, Noah in Arthur, his wife in Helena; docs/voice-over.md). These are spoken by their words:
 	# the word chips, and the verse and charm the journal reads too.

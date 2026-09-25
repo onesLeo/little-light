@@ -78,6 +78,10 @@ func ark_story() -> Node:
 	return main.get_node_or_null("NoahsArk/ChapterFour")
 
 
+func beginning_story() -> Node:
+	return main.get_node_or_null("JessesHouse/ChapterThree")
+
+
 ## True when the shared world is dressed exactly as `look` says (chapter_look.gd): sky,
 ## air, lights, the backdrop of hills, night sounds and the tabletop camera's framing.
 func looks_like(look: Resource) -> bool:
@@ -124,7 +128,8 @@ func _run() -> void:
 	var kid := Profiles.active_id
 	Profiles.finish_chapter(Profiles.CHAPTER_VALLEY)
 	Profiles.finish_chapter(Profiles.CHAPTER_CAMP)
-	check(Profiles.is_unlocked(kid, Profiles.CHAPTER_ARK), "finishing the valley and the camp opens every story")
+	Profiles.finish_chapter(Profiles.CHAPTER_BEGINNING)
+	check(Profiles.is_unlocked(kid, Profiles.CHAPTER_ARK), "finishing the valley, the camp and The Beginning opens every story")
 
 	print("-- the camp from the map, mid-valley --")
 	await map_stop("camp")
@@ -202,6 +207,24 @@ func _run() -> void:
 	director = main.get_node("Valley/ChapterDirector")
 	check(director.beat == director.Beat.ARRIVE and Profiles.current_chapter == Profiles.CHAPTER_VALLEY,
 			"Play again reloads straight back into the valley's first line")
+
+	print("-- The Beginning from the map, mid-valley --")
+	await map_stop("beginning")
+	check(beginning_story() != null and beginning_story().phase == beginning_story().Phase.ARRIVE
+			and Profiles.current_chapter == Profiles.CHAPTER_BEGINNING and "turning back the page" in main.get_node("UI").find_child("DialogueLabel", true, false).text,
+			"The Beginning starts from its first line")
+	check(main.get_node_or_null("Valley") == null and main.get_node_or_null("KingsCamp") == null and main.get_node_or_null("NoahsArk") == null,
+			"with no other story loaded behind it")
+	check(looks_like(main.get_node("JessesHouse").look), "the world takes Bethlehem's morning look")
+	await settle(10)
+	check(kept_in(main.get_node("JessesHouse").play_area), "the walker is kept to the courtyard")
+
+	print("-- Play again in The Beginning --")
+	main.get_node("GameMenu")._restart()
+	await reloaded()
+	check(beginning_story() != null and beginning_story().phase == beginning_story().Phase.ARRIVE
+			and Profiles.current_chapter == Profiles.CHAPTER_BEGINNING and main.get_node_or_null("Valley") == null,
+			"Play again reloads straight back into The Beginning's first line, with the valley not loaded")
 
 	print("-- the valley from the map, mid-ark --")
 	await map_stop("ark")

@@ -44,7 +44,12 @@ Each story is a numbered paper label under its place on the map, so the tents an
 
 - **1 The valley**, on the river and the sheep. Always open.
 - **2 The King's Camp**, on the tents and the fire. Opens once the valley is finished.
-- **3 Coming soon**, on the pale hill. A tap says "This part of the path is still ahead."
+- **3 The Beginning**, at Jesse's house in Bethlehem, inked onto the plain below the camp
+  (`map_house_sketch.gd`); its trail curls back like a turned page. Opens once the camp is finished.
+- **4 Noah's Ark**, on its hill left of the camp (`map_ark_sketch.gd`). Opens once The Beginning is
+  finished. A child whose save had the ark open before The Beginning was added (they had finished the
+  camp) keeps it open (`Profiles.is_unlocked`, `opened_early`), and a finished chapter always stays open.
+- **5 Coming soon**, on the pale hill. A tap says "This part of the path is still ahead."
 
 Markers, so she can see where she is and what comes after:
 

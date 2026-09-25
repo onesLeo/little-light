@@ -39,10 +39,12 @@ func _run() -> void:
 	# The scene's own framing, before the ark borrows the camera.
 	var framing: Array = [cam.offset, cam.look_height, cam.fov]
 	var kid := Profiles.active_id
-	check(not Profiles.is_unlocked(kid, Profiles.CHAPTER_ARK), "the ark stays closed until the camp is finished")
+	check(not Profiles.is_unlocked(kid, Profiles.CHAPTER_ARK), "the ark stays closed at the start")
 	Profiles.finish_chapter(Profiles.CHAPTER_VALLEY)
 	Profiles.finish_chapter(Profiles.CHAPTER_CAMP)
-	check(Profiles.is_unlocked(kid, Profiles.CHAPTER_ARK), "finishing the camp opens Noah's Ark")
+	check(not Profiles.is_unlocked(kid, Profiles.CHAPTER_ARK), "a new child's ark waits for The Beginning, after the camp")
+	Profiles.finish_chapter(Profiles.CHAPTER_BEGINNING)
+	check(Profiles.is_unlocked(kid, Profiles.CHAPTER_ARK), "finishing The Beginning opens Noah's Ark")
 
 	check(main.get_node_or_null("NoahsArk") == null, "the ark is not in the scene until its story starts")
 	# The game opens the ark from the Faith Journey map, which closes first and unpauses.

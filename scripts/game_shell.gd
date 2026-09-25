@@ -32,6 +32,7 @@ const STORIES := {
 	Profiles.CHAPTER_VALLEY: {"scene": "res://scenes/chapters/bethlehem_valley.tscn", "node": "Valley", "story": "ChapterDirector"},
 	Profiles.CHAPTER_CAMP: {"scene": "res://scenes/chapters/kings_camp.tscn", "node": "KingsCamp", "story": "ChapterTwo",
 			"over": Profiles.CHAPTER_VALLEY},
+	Profiles.CHAPTER_BEGINNING: {"scene": "res://scenes/chapters/jesses_house.tscn", "node": "JessesHouse", "story": "ChapterThree"},
 	Profiles.CHAPTER_ARK: {"scene": "res://scenes/chapters/noahs_ark.tscn", "node": "NoahsArk", "story": "ChapterFour"},
 }
 

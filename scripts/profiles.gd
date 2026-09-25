@@ -8,6 +8,7 @@ extends RefCounted
 ## A profile is a Dictionary:
 ##   id, name, avatar (one of AVATAR_KINDS), verses (ids), charms (ids), chapters (times finished),
 ##   finished (the chapter ids they have finished at least once, see CHAPTERS),
+##   opened_early (chapters their save had open before The Beginning came before them, see is_unlocked),
 ##   settings (that child's read-aloud and volume choices; empty means "as the tablet has them"),
 ##   colours (charm id -> the paints they chose for its regions, see charm_art.gd).
 
@@ -30,13 +31,15 @@ static var picker_open: bool = false
 static var current_chapter: String = ""
 
 ## The chapters in the order they are played. Each one opens once the one before it is finished.
-## The Beginning is being built on feature/chapter-3. This branch plays Noah's Ark after the camp
-## so the chapter can be reached. Merging the two branches should produce
-## valley, camp, beginning, ark.
+## The Beginning (Samuel anoints David) is a look back, played after the camp and before the ark.
 const CHAPTER_VALLEY := "valley"
 const CHAPTER_CAMP := "camp"
+const CHAPTER_BEGINNING := "beginning"
 const CHAPTER_ARK := "ark"
-const CHAPTERS := [CHAPTER_VALLEY, CHAPTER_CAMP, CHAPTER_ARK]
+const CHAPTERS := [CHAPTER_VALLEY, CHAPTER_CAMP, CHAPTER_BEGINNING, CHAPTER_ARK]
+## The order before The Beginning was added. A save written then has no "opened_early" entry; the
+## chapters it had open are worked out from this order when it is loaded, so none closes again.
+const CHAPTERS_BEFORE_BEGINNING := [CHAPTER_VALLEY, CHAPTER_CAMP, CHAPTER_ARK]
 
 static var _profiles: Dictionary = {}
 static var _order: Array = []
@@ -60,6 +63,9 @@ static func load_all() -> void:
 		if not cfg.has_section(section) or _profiles.has(str(id)):
 			continue
 		var avatar := str(cfg.get_value(section, "avatar", AVATAR_KINDS[0]))
+		var finished := _finished_list(cfg.get_value(section, "finished", null), int(cfg.get_value(section, "chapters", 0)))
+		var early: Array = _strings(cfg.get_value(section, "opened_early", [])).filter(func(c: String) -> bool: return c in CHAPTERS) \
+				if cfg.has_section_key(section, "opened_early") else _opened_before_beginning(finished)
 		_profiles[str(id)] = {
 			"id": str(id),
 			"name": clean_name(str(cfg.get_value(section, "name", ""))),
@@ -67,7 +73,8 @@ static func load_all() -> void:
 			"verses": _strings(cfg.get_value(section, "verses", [])),
 			"charms": _strings(cfg.get_value(section, "charms", [])),
 			"chapters": maxi(int(cfg.get_value(section, "chapters", 0)), 0),
-			"finished": _finished_list(cfg.get_value(section, "finished", null), int(cfg.get_value(section, "chapters", 0))),
+			"finished": finished,
+			"opened_early": early,
 			"settings": cfg.get_value(section, "settings", {}) if cfg.get_value(section, "settings", {}) is Dictionary else {},
 			"colours": _colour_lists(cfg.get_value(section, "colours", {})),
 		}
@@ -99,6 +106,7 @@ static func save() -> void:
 		cfg.set_value(section, "charms", p["charms"])
 		cfg.set_value(section, "chapters", p["chapters"])
 		cfg.set_value(section, "finished", p["finished"])
+		cfg.set_value(section, "opened_early", p["opened_early"])
 		cfg.set_value(section, "settings", p["settings"])
 		cfg.set_value(section, "colours", p["colours"])
 	cfg.save(path)
@@ -124,6 +132,18 @@ static func _finished_list(values: Variant, times: int) -> Array:
 	if values is Array:
 		return _strings(values).filter(func(id: String) -> bool: return id in CHAPTERS)
 	return [CHAPTER_VALLEY] if times > 0 else []
+
+
+## What a save from before The Beginning had open, in the order it had then, and has open no
+## longer by the new order: the ark, once the camp was finished.
+static func _opened_before_beginning(finished: Array) -> Array:
+	var early: Array = []
+	for i in range(1, CHAPTERS_BEFORE_BEGINNING.size()):
+		var chapter_id: String = CHAPTERS_BEFORE_BEGINNING[i]
+		var before: String = CHAPTERS[CHAPTERS.find(chapter_id) - 1]
+		if finished.has(CHAPTERS_BEFORE_BEGINNING[i - 1]) and not finished.has(before):
+			early.append(chapter_id)
+	return early
 
 
 static func _strings(values: Variant) -> Array:
@@ -219,6 +239,7 @@ static func create(display_name: String, avatar: String) -> String:
 		"charms": [],
 		"chapters": 0,
 		"finished": [],
+		"opened_early": [],
 		"settings": {},
 		"colours": {},
 	}
@@ -300,11 +321,14 @@ static func has_finished(id: String, chapter_id: String) -> bool:
 
 
 ## A chapter opens once the one before it is finished. The first is always open.
+## Open when the chapter before it is finished. A chapter the child has finished stays open, and so
+## does one their save had open before The Beginning was put ahead of it (the ark after the camp).
 static func is_unlocked(id: String, chapter_id: String) -> bool:
 	var at := CHAPTERS.find(chapter_id)
 	if at <= 0:
 		return at == 0
-	return has_finished(id, CHAPTERS[at - 1])
+	return has_finished(id, CHAPTERS[at - 1]) or has_finished(id, chapter_id) \
+			or (get_profile(id).get("opened_early", []) as Array).has(chapter_id)
 
 
 ## The first chapter this child has not finished yet, or "" when every chapter is done.

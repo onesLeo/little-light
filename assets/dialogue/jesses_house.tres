@@ -1,0 +1,21 @@
+[gd_resource type="Resource" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/dialogue_lines.gd" id="1_lines"]
+[ext_resource type="Script" path="res://scripts/dialogue_line.gd" id="2_line"]
+
+[sub_resource type="Resource" id="Line_turn_back"]
+script = ExtResource("2_line")
+id = &"turn_back"
+speaker = "Wonder Light"
+text = "We are turning back the page. This is Bethlehem, before the valley. David's family is getting ready for a guest."
+
+[sub_resource type="Resource" id="Line_look_around"]
+script = ExtResource("2_line")
+id = &"look_around"
+speaker = "Wonder Light"
+text = "David is out with the sheep. Look around his home while we get ready for Samuel."
+
+[resource]
+script = ExtResource("1_lines")
+recorded = false
+lines = Array[Resource]([SubResource("Line_turn_back"), SubResource("Line_look_around")])
