@@ -88,6 +88,16 @@ func begin() -> void:
 	_say("Wonder Light: \"Long before David, God asked Noah to trust him and build something no one had seen before.\"", "Press Space to continue")
 
 
+## The word chips and the tool list live in the shared UI, outside the ark, so they go with it.
+## They leave the UI at once, so a replay's new ones keep their names.
+func _exit_tree() -> void:
+	for node in [_words, _checklist]:
+		if is_instance_valid(node):
+			if node.get_parent():
+				node.get_parent().remove_child(node)
+			node.queue_free()
+
+
 func _input(event: InputEvent) -> void:
 	if phase == Phase.IDLE or phase == Phase.DONE or _ceremony or phase == Phase.BOARDING:
 		return

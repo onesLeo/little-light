@@ -73,6 +73,14 @@ func stop() -> void:
 	_active = false
 
 
+## The flat arrow may live in the UI rather than under this node; it goes when the hints do.
+func _exit_tree() -> void:
+	if is_instance_valid(_arrow2d) and _arrow2d.get_parent() != self:
+		if _arrow2d.get_parent():
+			_arrow2d.get_parent().remove_child(_arrow2d)
+		_arrow2d.queue_free()
+
+
 func is_pointing() -> bool:
 	return _arrow3d.visible or _arrow2d.visible
 

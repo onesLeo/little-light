@@ -193,6 +193,24 @@ func _run() -> void:
 	check(story.phase == story.Phase.DONE and Profiles.has_finished(kid, Profiles.CHAPTER_ARK), "the chapter finishes")
 	check(Profiles.has_charm(kid, JournalContent.CHARM_TRUST), "the Trust charm is earned")
 	check(menu._end_charm == JournalContent.CHARM_TRUST and "Trust" in menu._end_title.text, "the end card names the Trust charm")
+
+	# Playing it again from the map, without reloading the scene, starts from a whole ark.
+	journey.open()
+	journey._on_stop("ark")
+	await settle()
+	var again: Node = main.get_node("NoahsArk")
+	var story_again: Node = again.get_node("ChapterFour")
+	check(again != ark and not is_instance_valid(ark), "a replay builds a fresh ark and frees the old one")
+	check(story_again.phase == story_again.Phase.ARRIVE and "Long before David" in story_again._line.text, "a replay starts at the first line")
+	check(again.tool_spots().size() == 3, "all three tools are back on the ground")
+	check(again.get_node("Noah").visible and again.aboard_count() == 0 and not again.get_node("Door").visible, "the family and animals are outside and the door is open")
+	check(not again.get_node("WorkPanel").has_node("Peg0") and not again.get_node("Rainbow").visible, "the panel is unpegged and the rainbow is put away")
+	check(main.get_node("UI").find_children("ArkWords*", "", false, false).size() == 1
+			and main.get_node("UI").find_children("ArkToolChecklist*", "", false, false).size() == 1,
+			"the old word chips and tool list are gone")
+	story_again._advance()
+	story_again._advance()
+	check(story_again.phase == story_again.Phase.FIND and story_again._checklist.visible and "0 / 3" in story_again._checklist._title.text, "the hunt can start again")
 	print("ARK REVIEW %s" % ("PASSED" if failures == 0 else "FAILED"))
 	quit(0 if failures == 0 else 1)
 

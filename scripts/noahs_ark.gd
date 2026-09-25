@@ -90,6 +90,12 @@ func _unavailable(animal: Node3D) -> bool:
 
 
 func visit() -> void:
+	# A finished run leaves the tools taken, the pegs in, the animals and family moved and
+	# the door used. A fresh ark puts every piece back, including ones added later.
+	var last_run := get_node_or_null("ChapterFour")
+	if last_run and last_run.phase == ChapterFour.Phase.DONE:
+		_fresh_ark().visit()
+		return
 	Profiles.current_chapter = Profiles.CHAPTER_ARK
 	_build()
 	var main := get_parent()
@@ -126,6 +132,21 @@ func visit() -> void:
 	var story := get_node_or_null("ChapterFour")
 	if story and story.has_method("begin"):
 		story.begin()
+
+
+## Swaps this ark for an unbuilt one with the same name and place in the scene, so the
+## map, the director and the touch button still find it. Its tweens go with it.
+func _fresh_ark() -> Node3D:
+	var main := get_parent()
+	var index := get_index()
+	var fresh := Node3D.new()
+	fresh.set_script(get_script())
+	main.remove_child(self)
+	fresh.name = name
+	main.add_child(fresh)
+	main.move_child(fresh, index)
+	queue_free()
+	return fresh
 
 
 func _build() -> void:
