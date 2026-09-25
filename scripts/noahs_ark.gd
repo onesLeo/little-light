@@ -69,6 +69,17 @@ var _noah: Node3D
 var _wife: Node3D
 ## True once the family has gone into the ark and stops working outside.
 var _family_in: bool = false
+signal boarding_finished
+var _boarding_pending: int = 0
+var _ramp_available: float = 0.0
+
+
+func is_boarding() -> bool:
+	return _boarding_pending > 0
+
+
+func _unavailable(animal: Node3D) -> bool:
+	return bool(animal.get_meta("aboard", false)) or bool(animal.get_meta("boarding", false))
 
 
 func visit() -> void:
@@ -566,7 +577,8 @@ func _critter(critter_name: String, kind: String, at: Vector3) -> void:
 func _legs(root: Node3D, half_x: float, half_z: float, height: float, color: Color, radius: float = 0.045) -> void:
 	for sx in [-1.0, 1.0]:
 		for sz in [-1.0, 1.0]:
-			Paper.part(root, "Leg", Paper.cylinder(radius, height, 6), color, Vector3(sx * half_x, height * 0.5, sz * half_z), Vector3.ZERO, Vector3.ONE, 0.01)
+			var leg := Paper.part(root, "Leg", Paper.cylinder(radius, height, 6), color, Vector3(sx * half_x, height * 0.5, sz * half_z), Vector3.ZERO, Vector3.ONE, 0.01)
+			leg.set_meta("stride_side", sx * sz)
 
 
 func _people() -> void:
@@ -592,6 +604,9 @@ func _person(person_name: String, at: Vector3, cloth: Color, hair: Color, beard:
 	root.name = person_name
 	root.position = at
 	add_child(root)
+	for side in [-1.0, 1.0]:
+		var foot := Paper.part(root, "Foot", Paper.box(Vector3(0.16, 0.12, 0.28)), PLANK_DARK, Vector3(side * 0.17, 0.06, 0.08), Vector3.ZERO, Vector3.ONE, 0.01)
+		foot.set_meta("step_side", side)
 	Paper.part(root, "Hem", Paper.cylinder(0.36, 0.16, 9, 0.34), under, Vector3(0.0, 0.08, 0.0), Vector3.ZERO, Vector3.ONE, 0.02)
 	Paper.part(root, "Body", Paper.cylinder(0.33, 1.15, 9, 0.2), cloth, Vector3(0.0, 0.7, 0.0), Vector3.ZERO, Vector3.ONE, 0.025)
 	Paper.part(root, "Belt", Paper.cylinder(0.265, 0.09, 9), Color(0.22, 0.14, 0.09), Vector3(0.0, 0.84, 0.0), Vector3.ZERO, Vector3.ONE, 0.0)
@@ -730,7 +745,7 @@ func highlight_socket(index: int) -> void:
 func show_beacons(on: bool) -> void:
 	_beacons_on = on
 	for beacon in _beacons:
-		beacon.visible = on and not bool((beacon.get_parent() as Node3D).get_meta("aboard"))
+		beacon.visible = on and not _unavailable(beacon.get_parent() as Node3D)
 
 
 ## The spot under an animal, for the hint arrow: the guided ones before one is chosen,
@@ -739,7 +754,7 @@ func guide_spots() -> Array:
 	var out: Array = []
 	for critter_name in GUIDED:
 		var animal := get_node_or_null(critter_name) as Node3D
-		if animal and not bool(animal.get_meta("aboard")):
+		if animal and not _unavailable(animal):
 			out.append(animal.get_node("%sSpot" % critter_name))
 	return out
 
@@ -828,7 +843,7 @@ func nearest_guide(from: Vector3, reach: float) -> String:
 	var best_d := reach
 	for critter_name in GUIDED:
 		var animal := get_node_or_null(critter_name) as Node3D
-		if animal == null or bool(animal.get_meta("aboard")):
+		if animal == null or _unavailable(animal):
 			continue
 		var d := animal.global_position.distance_to(from)
 		if d < best_d:
@@ -879,49 +894,105 @@ func board_pair(critter_name: String) -> void:
 
 
 func board_remaining() -> void:
-	var slot := 0.0
 	for critter_name in MATE_OF.keys():
 		var animal := get_node_or_null(critter_name) as Node3D
-		if animal and not bool(animal.get_meta("aboard")):
+		if animal and not _unavailable(animal):
 			board_pair(critter_name)
-			slot += 1.0
 
 
 func aboard_count() -> int:
 	var n := 0
 	for child in get_children():
-		if child is Node3D and child.has_meta("aboard") and bool(child.get_meta("aboard")):
+		if child is Node3D and child.has_meta("kind") and bool(child.get_meta("aboard", false)):
 			n += 1
 	return n
 
 
 func _board_one(critter_name: String, side: float) -> void:
 	var animal := get_node_or_null(critter_name) as Node3D
-	if animal == null or bool(animal.get_meta("aboard")):
+	if animal == null or _unavailable(animal):
 		return
-	animal.set_meta("aboard", true)
-	animal.position = _at(Vector3(-2.0 + side, 1.3, -4.0))
+	_queue_boarding(animal, -0.45 if side == 0.0 else 0.45)
 
 
 func family_inside() -> void:
+	if _family_in:
+		return
 	_family_in = true
-	if _noah:
-		_noah.position = _at(Vector3(-1.0, 0.0, -4.8))
-	if _wife:
-		_wife.position = _at(Vector3(0.4, 0.0, -4.6))
+	set_speaking("")
+	# Leave the shared timber at the work site before its carriers separate.
+	var plank := get_node_or_null("Family0/CarriedPlank") as Node3D
+	if plank:
+		plank.reparent(self, true)
+		create_tween().tween_property(plank, "position:y", ORIGIN.y + 0.15, 0.4).set_trans(Tween.TRANS_SINE)
 	for i in 6:
 		var person := get_node_or_null("Family%d" % i) as Node3D
 		if person:
-			person.position = _at(Vector3(-2.2 + (i % 3) * 0.8, 0.0, -4.3 - int(i / 3) * 0.5))
+			_queue_boarding(person, -0.4 if i % 2 == 0 else 0.4)
+	if _wife:
+		_queue_boarding(_wife, -0.4)
+	if _noah:
+		_queue_boarding(_noah, 0.4)
 
 
-## When the door closes the child watches from the plain: anyone on the ramp, at the
-## bench or against the hull steps back to where they arrived, with the whole ark in view.
+## Approach in front of the work area, then take a timed slot on the ramp.
+## Node-bound tweens pause with the story and are cancelled when it is freed.
+func _queue_boarding(actor: Node3D, lane: float) -> void:
+	actor.set_meta("boarding", true)
+	actor.rotation.x = 0.0
+	_boarding_pending += 1
+	var start := actor.position
+	var front := Vector3(start.x, ORIGIN.y + 0.12, ORIGIN.z + RAMP_FOOT_Z + 1.1)
+	var foot := _at(Vector3(lane, 0.12, RAMP_FOOT_Z + 0.2))
+	var door_z := HULL_Z + Shapes.side_z(0.0, 1.95)
+	var entrance := _at(Vector3(lane, 1.27, door_z + 0.25))
+	var approach := maxf(start.distance_to(front) / 3.0, 0.05) + maxf(front.distance_to(foot) / 3.0, 0.05)
+	var ramp_start := maxf(_time + approach, _ramp_available)
+	_ramp_available = ramp_start + 0.8
+	var tw := create_tween()
+	if ramp_start > _time + approach:
+		tw.tween_interval(ramp_start - _time - approach)
+	_walk_segment(tw, actor, start, front)
+	_walk_segment(tw, actor, front, foot)
+	_walk_segment(tw, actor, foot, entrance)
+	tw.tween_callback(func() -> void:
+		actor.set_meta("boarding", false)
+		actor.set_meta("aboard", true)
+		actor.visible = false
+		actor.position.z -= 1.5
+		_boarding_pending -= 1
+		if _boarding_pending == 0:
+			boarding_finished.emit()
+	)
+
+
+func _walk_segment(tw: Tween, actor: Node3D, start: Vector3, finish: Vector3) -> void:
+	var duration := maxf(start.distance_to(finish) / 3.0, 0.05)
+	tw.tween_callback(func() -> void: actor.set_meta("walk_yaw", actor.rotation.y))
+	tw.tween_method(func(t: float) -> void:
+		var direction := finish - start
+		var yaw := atan2(direction.x, direction.z)
+		actor.rotation.y = lerp_angle(float(actor.get_meta("walk_yaw")), yaw, smoothstep(0.0, 0.25, t))
+		var stride := sin(t * duration * 9.0)
+		var settle := sin(PI * t)
+		actor.position = start.lerp(finish, t) + Vector3.UP * absf(stride) * 0.035 * settle
+		for part in actor.get_children():
+			if part is Node3D and part.has_meta("stride_side"):
+				part.rotation.x = stride * float(part.get_meta("stride_side")) * 0.28 * settle
+			if part is Node3D and part.has_meta("step_side"):
+				var step := stride * float(part.get_meta("step_side")) * settle
+				part.position.z = 0.08 + step * 0.13
+				part.position.y = 0.06 + maxf(step, 0.0) * 0.06
+		if "walk_amount" in actor:
+			actor.walk_amount = settle
+	, 0.0, 1.0, duration)
+
+
+## Frame the procession from the arrival spot, clear of the ramp and work bench.
 func keep_guest_outside(player: Node3D) -> void:
 	if player == null:
 		return
-	var local := player.global_position - ORIGIN
-	if local.z < RAMP_FOOT_Z:
+	if player.global_position != _at(START_LOCAL):
 		player.global_position = _at(START_LOCAL)
 		if "velocity" in player:
 			player.velocity = Vector3.ZERO
@@ -950,7 +1021,7 @@ func _process(delta: float) -> void:
 			if d.position.y < ORIGIN.y:
 				d.position.y += RAIN_HEIGHT
 	for child in get_children():
-		if child is Node3D and child.has_meta("kind") and not bool(child.get_meta("aboard")):
+		if child is Node3D and child.has_meta("kind") and not _unavailable(child):
 			_graze(child, delta)
 	var breathe := 1.0 + sin(_time * 3.0) * 0.12
 	for glow in _glows:
@@ -958,7 +1029,7 @@ func _process(delta: float) -> void:
 	for beacon in _beacons:
 		var animal := beacon.get_parent() as Node3D
 		var led := _time - float(animal.get_meta("led_at", -10.0)) < 0.6
-		beacon.visible = _beacons_on and not led and not bool(animal.get_meta("aboard"))
+		beacon.visible = _beacons_on and not led and not _unavailable(animal)
 		beacon.rotation.y = _time * 1.6
 		beacon.position.y = float(beacon.get_meta("y")) + sin(_time * 3.0) * 0.08
 	for socket in _sockets:

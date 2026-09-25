@@ -8,6 +8,7 @@ const WIFE := preload("res://assets/noahs_wife_v1.glb")
 ## "noah" or "wife". Set this before the node enters the tree.
 var who: String = "noah"
 var speaking: bool = false
+var walk_amount: float = 0.0
 var _time: float = 0.0
 var _blink: float = 2.4
 var _talk: float = 0.0
@@ -31,9 +32,11 @@ func _ready() -> void:
 	var outline_name := "NoahOutline" if who == "noah" else "NoahsWifeOutline"
 	_body = model.find_child(body_name, true, false) as MeshInstance3D
 	var outline := model.find_child(outline_name, true, false) as MeshInstance3D
-	for bone_name in ["Hips", "Spine", "Chest", "Head", "UpperArm_L", "LowerArm_L", "UpperArm_R", "LowerArm_R"]:
+	for bone_name in ["Hips", "Spine", "Chest", "Head", "UpperArm_L", "LowerArm_L", "UpperArm_R", "LowerArm_R", "Thigh_L", "Shin_L", "Thigh_R", "Shin_R"]:
 		var index := _skeleton.find_bone(bone_name)
 		_bones[bone_name] = index
+		if index < 0:
+			continue
 		_axes[bone_name] = _skeleton.get_bone_global_rest(index).basis.inverse()
 		_rest_rotations[bone_name] = _skeleton.get_bone_rest(index).basis.get_rotation_quaternion()
 	_blink_shape = _body.find_blend_shape_by_name("Blink")
@@ -77,11 +80,16 @@ func _process(delta: float) -> void:
 	for side in ["L", "R"]:
 		var sign_side := -1.0 if side == "L" else 1.0
 		var lead := 1.0 if side == "R" else 0.25
-		_pose("UpperArm_" + side, Vector3(0.02 + gesture * 0.03 * lead, 0, sign_side * 0.02))
+		var stride := sin(_time * 9.0) * sign_side * walk_amount
+		_pose("Thigh_" + side, Vector3(stride * 0.28, 0, 0))
+		_pose("Shin_" + side, Vector3(maxf(-stride, 0.0) * 0.3, 0, 0))
+		_pose("UpperArm_" + side, Vector3(0.02 + gesture * 0.03 * lead - stride * 0.18, 0, sign_side * 0.02))
 		_pose("LowerArm_" + side, Vector3(0.03 + gesture * 0.05 * lead, 0, 0))
 
 
 func _pose(bone_name: String, angles: Vector3) -> void:
+	if int(_bones.get(bone_name, -1)) < 0:
+		return
 	var axes: Basis = _axes[bone_name]
 	var pose := Quaternion((axes * Vector3.RIGHT).normalized(), angles.x) * Quaternion((axes * Vector3.UP).normalized(), angles.y) * Quaternion((axes * Vector3.BACK).normalized(), angles.z)
 	_skeleton.set_bone_pose_rotation(_bones[bone_name], _rest_rotations[bone_name] * pose)

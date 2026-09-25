@@ -11,7 +11,7 @@ const Hints := preload("res://scripts/wonder_item_hints.gd")
 const GameSettings := preload("res://scripts/game_settings.gd")
 const EasyWords := preload("res://scripts/easy_words.gd")
 
-enum Phase { IDLE, ARRIVE, HURT, FIND, MEET, PANEL, PAIRS, DOOR, RAIN, DOVE, SKY, LEAF, DRY, VERSE, WORDS, REFLECT, CHARM, DONE }
+enum Phase { IDLE, ARRIVE, HURT, FIND, MEET, PANEL, PAIRS, BOARDING, DOOR, RAIN, DOVE, SKY, LEAF, DRY, VERSE, WORDS, REFLECT, CHARM, DONE }
 
 const WORD_LABELS: PackedStringArray = ["Rainbow", "Sign", "Promise"]
 const WORD_LINES: PackedStringArray = ["Rainbow.", "Sign.", "Promise."]
@@ -89,7 +89,7 @@ func begin() -> void:
 
 
 func _input(event: InputEvent) -> void:
-	if phase == Phase.IDLE or phase == Phase.DONE or _ceremony:
+	if phase == Phase.IDLE or phase == Phase.DONE or _ceremony or phase == Phase.BOARDING:
 		return
 	if phase == Phase.WORDS and not _words_done:
 		return
@@ -272,12 +272,18 @@ func _finish_guide() -> void:
 		_say("Wonder Light: \"Two by two, they're coming. Help these animals find their partners.\"", "Guide the next pair  •  %d / 3" % _matched)
 		return
 	ark.board_remaining()
-	phase = Phase.DOOR
+	phase = Phase.BOARDING
 	ark.show_beacons(false)
 	_watch(phase)
 	ark.family_inside()
-	ark.close_door(true)
 	ark.keep_guest_outside(_player)
+	_say("", "Watch the animals and Noah's family walk aboard")
+	if ark.is_boarding():
+		await ark.boarding_finished
+	if phase != Phase.BOARDING:
+		return
+	phase = Phase.DOOR
+	ark.close_door(true)
 	_say("Wonder Light: \"Noah's family and the animals are safely inside. God closes the door and keeps them safe.\"", "Press Space to continue")
 
 
@@ -435,7 +441,7 @@ func _say(text: String, prompt: String) -> void:
 	if _player and "can_move" in _player:
 		_player.can_move = moving
 	if _camera:
-		if phase in [Phase.MEET, Phase.REFLECT, Phase.CHARM] and ark.get_node_or_null("Noah"):
+		if phase == Phase.MEET and ark.get_node_or_null("Noah"):
 			_camera.cut_to_closeup(ark.get_node("Noah"))
 		elif phase != Phase.CHARM:
 			_camera.cut_to_tabletop()
@@ -480,7 +486,7 @@ func _device_prompt(raw: String) -> String:
 func get_action_hint() -> String:
 	var ark := get_parent()
 	match phase:
-		Phase.IDLE, Phase.DONE:
+		Phase.IDLE, Phase.DONE, Phase.BOARDING:
 			return ""
 		Phase.FIND:
 			return "GRAB" if _player and not ark.nearest_item(_player.global_position, 2.4).is_empty() else ""

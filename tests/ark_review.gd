@@ -51,6 +51,7 @@ func _run() -> void:
 	var player: Node3D = main.get_node("Player")
 	check(ark.get_node("Noah").find_child("NoahBody", true, false) != null, "Noah in the scene is the designed model")
 	check(ark.get_node("NoahsWife").find_child("NoahsWifeBody", true, false) != null, "his wife in the scene is her own model")
+	check(ark.get_node("Noah")._bones["Thigh_L"] >= 0 and ark.get_node("NoahsWife")._bones["Shin_R"] >= 0, "both parents have the leg bones used for boarding")
 	check("Long before David" in story._line.text, "arrival names the long work")
 	check(not player.can_move, "arrival holds still")
 	check(not ark.get_node("Rain").visible, "the plain starts dry")
@@ -93,7 +94,12 @@ func _run() -> void:
 	player.global_position = ark.get_node("DoveA").global_position
 	story._try_guide()
 	check(story._guide == "DoveA" and ark.get_node("DoveB/Ring").visible, "leading a dove lights a ring under its partner")
+	var dove_start: Vector3 = ark.get_node("DoveA").position
 	story._finish_guide()
+	check(ark.get_node("DoveA").position == dove_start and ark.aboard_count() == 0, "matching starts a walk instead of teleporting aboard")
+	check(ark.nearest_guide(ark.get_node("DoveA").global_position, 0.1).is_empty(), "a boarding animal cannot be selected again")
+	await create_timer(0.3).timeout
+	check(ark.get_node("DoveA").position.distance_to(dove_start) > 0.05, "the boarding animal moves along its approach")
 	check(not ark.get_node("DoveB/Ring").visible, "the ring goes when the pair boards")
 
 	var sheep: Node3D = ark.get_node("SheepA")
@@ -103,10 +109,24 @@ func _run() -> void:
 	check(story._mismatch_said and not bool(sheep.get_meta("aboard")), "a mismatch points to the real mate and boards nobody")
 	sheep.global_position = ark.get_node("SheepB").global_position
 	story._follow(0.05)
-	check(story._matched == 2 and bool(sheep.get_meta("aboard")), "standing with the matching sheep boards the pair")
+	check(story._matched == 2 and bool(sheep.get_meta("boarding", false)), "standing with the matching sheep starts boarding the pair")
 	story._guide = "ElephantA"
 	story._finish_guide()
-	check(story._matched == 3 and ark.aboard_count() == 12, "three guided pairs and three montage pairs are aboard")
+	check(story.phase == story.Phase.BOARDING and ark.is_boarding(), "the final match starts the boarding story phase")
+	check(not ark.get_node("Door").visible and story.get_action_hint().is_empty(), "the door stays open and NEXT is hidden during boarding")
+	story._advance()
+	check(story.phase == story.Phase.BOARDING and not ark.get_node("Rain").visible, "continue cannot skip boarding into rain")
+	var paused_at: Vector3 = ark.get_node("DoveA").position
+	paused = true
+	await create_timer(0.2, true).timeout
+	check(ark.get_node("DoveA").position == paused_at, "pausing also pauses boarding")
+	paused = false
+	var deadline := Time.get_ticks_msec() + 35000
+	while ark.is_boarding() and Time.get_ticks_msec() < deadline:
+		await process_frame
+	check(not ark.is_boarding() and story.phase == story.Phase.DOOR, "door phase waits for the last family member")
+	check(story._matched == 3 and ark.aboard_count() == 12, "all twelve animals have actually reached the entrance")
+	check(not ark.get_node("Noah").visible and not ark.get_node("NoahsWife").visible, "both parents have entered before the door closes")
 	check(ark.get_node("Door").visible and not ark.get_node("SheepA/Beacon").visible, "God closes the door, and the markers are put away")
 	check(ark.get_node("Noah").global_position.z < 5.0
 			and player.global_position.distance_to(ark.get_node("Noah").global_position) > 3.0,
