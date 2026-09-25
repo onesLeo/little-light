@@ -117,6 +117,9 @@ func visit() -> void:
 	Profiles.current_chapter = Profiles.CHAPTER_CAMP
 	_build()
 	var main := get_parent()
+	var ark := main.get_node_or_null("NoahsArk")
+	if ark and ark.has_method("stand_down"):
+		ark.stand_down()
 	var director := main.get_node_or_null("ChapterDirector")
 	if director and director.has_method("stand_down"):
 		director.stand_down()
@@ -160,6 +163,15 @@ func visit() -> void:
 	if _fireflies:
 		_fireflies.light_up()
 	_keep_people_paper()
+
+
+## Another story is starting: the camp goes quiet and its story puts its cards away.
+func stand_down() -> void:
+	if _sounds:
+		_sounds.stop()
+	var story := get_node_or_null("ChapterTwo")
+	if story and story.has_method("stand_down"):
+		story.stand_down()
 
 
 func _snap_followers(player: Node3D) -> void:

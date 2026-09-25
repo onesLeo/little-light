@@ -96,9 +96,15 @@ func visit() -> void:
 	if last_run and last_run.phase == ChapterFour.Phase.DONE:
 		_fresh_ark().visit()
 		return
+	# Tapping the ark on the map mid-story only closes the map; the story carries on.
+	if last_run and last_run.phase != ChapterFour.Phase.IDLE:
+		return
 	Profiles.current_chapter = Profiles.CHAPTER_ARK
 	_build()
 	var main := get_parent()
+	var camp := main.get_node_or_null("KingsCamp")
+	if camp and camp.has_method("stand_down"):
+		camp.stand_down()
 	var director := main.get_node_or_null("ChapterDirector")
 	if director and director.has_method("stand_down"):
 		director.stand_down()
@@ -118,6 +124,9 @@ func visit() -> void:
 		player.global_position = _at(START_LOCAL)
 		var cam := main.get_node_or_null("TabletopCamera") as Camera3D
 		if cam and "offset" in cam:
+			# The other stories do not set the framing, so stand_down() gives it back.
+			if not cam.has_meta("before_ark"):
+				cam.set_meta("before_ark", [cam.offset, cam.get("look_height"), cam.fov])
 			# Low and pulled back, so the hull rises out of the plain behind the child.
 			cam.offset = CAMERA_OFFSET
 			if "look_height" in cam:
@@ -132,6 +141,26 @@ func visit() -> void:
 	var story := get_node_or_null("ChapterFour")
 	if story and story.has_method("begin"):
 		story.begin()
+
+
+## Another story is starting: the ark gives back the camera framing and makes way for an
+## unbuilt ark, so nothing of this run keeps playing and the next visit starts whole.
+func stand_down() -> void:
+	if not _built:
+		return
+	var main := get_parent()
+	var cam := main.get_node_or_null("TabletopCamera") as Camera3D
+	if cam and cam.has_meta("before_ark"):
+		var before: Array = cam.get_meta("before_ark")
+		cam.offset = before[0]
+		cam.set("look_height", before[1])
+		cam.fov = before[2]
+		cam.remove_meta("before_ark")
+	# The shelter or rainbow shot may be the live camera, and it goes with this ark.
+	var shots := main.get_node_or_null("CameraDirector")
+	if shots and shots.has_method("cut_to_tabletop"):
+		shots.cut_to_tabletop()
+	_fresh_ark()
 
 
 ## Swaps this ark for an unbuilt one with the same name and place in the scene, so the

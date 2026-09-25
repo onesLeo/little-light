@@ -34,6 +34,9 @@ func _run() -> void:
 	Settings.read_aloud = false
 	main.get_node("AudioDirector").stop_speech()
 	main.get_node("GameMenu").end_panel_delay = 0.05
+	var cam: Camera3D = main.get_node("TabletopCamera")
+	# The scene's own framing, before the ark borrows the camera.
+	var framing: Array = [cam.offset, cam.look_height, cam.fov]
 	var kid := Profiles.active_id
 	check(not Profiles.is_unlocked(kid, Profiles.CHAPTER_ARK), "the ark stays closed until the camp is finished")
 	Profiles.finish_chapter(Profiles.CHAPTER_VALLEY)
@@ -69,6 +72,15 @@ func _run() -> void:
 	player.global_position = ark.get_node("Mallet").global_position
 	await settle(2)
 	check("Mallet" in story._found and story._checklist.is_found("Mallet"), "walking onto a tool picks it up and ticks it")
+	# The map mid-story, then the ark again: the story carries on where it was.
+	var stood_at: Vector3 = player.global_position
+	journey.open()
+	journey._on_stop("ark")
+	await settle(2)
+	check(main.get_node("NoahsArk") == ark and story.phase == story.Phase.FIND and story._found == ["Mallet"],
+			"tapping the ark on the map mid-story keeps the story where it was")
+	check(player.global_position.distance_to(stood_at) < 0.5 and not ark.get_node("Mallet").visible,
+			"the child is not sent back to the start and the mallet stays picked up")
 	for tool_name in ["RopeCoil", "Pitch"]:
 		player.global_position = ark.get_node(tool_name).global_position
 		story._try_collect()
@@ -211,6 +223,34 @@ func _run() -> void:
 	story_again._advance()
 	story_again._advance()
 	check(story_again.phase == story_again.Phase.FIND and story_again._checklist.visible and "0 / 3" in story_again._checklist._title.text, "the hunt can start again")
+
+	# Mid-hunt, the child picks the camp on the map: only one story keeps running.
+	story_again._hints.hint_delay = 0.05
+	await settle(20)
+	var ark_arrow: Node = story_again._hints._arrow2d
+	journey.open()
+	journey._on_stop("camp")
+	await settle()
+	var camp: Node = main.get_node("KingsCamp")
+	var camp_story: Node = camp.get_node("ChapterTwo")
+	var ark_now: Node = main.get_node("NoahsArk")
+	check(not is_instance_valid(story_again) and not ark_now._built, "leaving the ark for the camp puts the ark's story away")
+	check(main.get_node("UI").find_children("Ark*", "", false, false).is_empty() and not is_instance_valid(ark_arrow),
+			"the ark's words, tool list and arrow leave the screen")
+	check(cam.offset == framing[0] and cam.look_height == framing[1] and is_equal_approx(cam.fov, framing[2]) and cam.current,
+			"the camp gets its own camera framing back")
+	check(camp_story.phase == camp_story.Phase.ARRIVE and main.get_node("TouchControls")._hint() == camp_story.get_action_hint(),
+			"the camp's story is the one the button follows")
+	journey.open()
+	journey._on_stop("ark")
+	await settle()
+	ark_now = main.get_node("NoahsArk")
+	check(camp_story.phase == camp_story.Phase.IDLE and not camp_story._checklist.visible and not camp_story._words.visible,
+			"going back to the ark puts the camp's story away")
+	check(not camp.get_node("CampSounds").is_playing(), "the camp's crickets and fire stop on the mountaintop")
+	var ark_story_now: Node = ark_now.get_node("ChapterFour")
+	check(ark_story_now.phase == ark_story_now.Phase.ARRIVE and "Long before David" in ark_story_now._line.text,
+			"the ark starts again from its first line")
 	print("ARK REVIEW %s" % ("PASSED" if failures == 0 else "FAILED"))
 	quit(0 if failures == 0 else 1)
 

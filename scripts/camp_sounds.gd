@@ -42,6 +42,16 @@ func start(fire_at: Vector3) -> void:
 		_fire.play()
 
 
+## Silent again, for when another story takes over; start() brings it back.
+func stop() -> void:
+	if not _on:
+		return
+	_on = false
+	_gain = 0.0
+	_crickets.queue_free()
+	_fire.queue_free()
+
+
 func is_playing() -> bool:
 	return _on
 
