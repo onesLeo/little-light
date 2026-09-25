@@ -31,16 +31,16 @@ sentence will sit next to the old one and sound like a different recording.
 
 ## How it plays
 
-- A story's own lines are data: the valley's are in `assets/dialogue/bethlehem_valley.tres` and The
-  King's Camp's in `assets/dialogue/kings_camp.tres`, one `dialogue_line.gd` per line with its speaker,
-  words, clip, and easier words and clip. The story asks for lines by id, and each plays its own clip
+- Every story's own lines are data, one file each in `assets/dialogue/` (`bethlehem_valley.tres`,
+  `kings_camp.tres`, `noahs_ark.tres`): one `dialogue_line.gd` per line with its speaker, words, clip,
+  and easier words and clip. The story asks for lines by id, and each plays its own clip
   (`AudioDirector.speak_lines()`), so rewording a line cannot cut it off from its clip or its easier
-  version. Noah's Ark moves to the same form next.
-- Everything else is still found by its words: `scripts/vo_library.gd` maps the exact spoken text
-  (speaker name and quote marks removed) to a clip id; the file is `assets/audio/vo/<id>.wav`. That is
-  Noah's Ark for now, and what several screens share: the verses and charms the journal reads (a story
-  shows its verse with `JournalContent.verse_card()`), the Faith Journey map, "Who is playing?", the
-  word chips and the nudges at the edge of the play area.
+  version.
+- What several screens share is found by its words: `scripts/vo_library.gd` maps the exact spoken
+  text (speaker name and quote marks removed) to a clip id; the file is `assets/audio/vo/<id>.wav`.
+  That is the verses and charms the journal reads (a story shows its verse with
+  `JournalContent.verse_card()`), the Faith Journey map, "Who is playing?", the word chips and the
+  nudges at the edge of the play area.
 - `AudioDirector.speak_dialogue()` splits a dialogue block into lines. If every line has a clip they
   play in order with a 0.3 s gap; otherwise the whole block is spoken by the system voice.
 - Pressing Space quickly cuts the current line and starts the next one. A line still waiting in the
@@ -61,17 +61,17 @@ line on screen when it is switched stays as it is until the next line.
 
 ## Adding or changing a line
 
-**In the valley or The King's Camp:** open its file in `assets/dialogue/` in the inspector and change
-the line's text, or add a line with a new id and its clip (and easier version and clip, if it has one);
-the story asks for it by id (`_show([&"id"], prompt)` in `chapter_director.gd`, `_say([&"id"], prompt)`
-in `chapter_two.gd`). A line with `same_quote` carries on the one before it inside the same quote marks,
+**In a story:** open its file in `assets/dialogue/` in the inspector and change the line's text, or
+add a line with a new id and its clip (and easier version and clip, if it has one); the story asks for
+it by id (`_show([&"id"], prompt)` in `chapter_director.gd`, `_say([&"id"], prompt)` in
+`chapter_two.gd` and `chapter_four.gd`). A line with `same_quote` carries on the one before it inside the same quote marks,
 on a row of its own (the three words after Joshua 1:9). Rewording a line keeps its clip, so
 record a new take only when the words spoken change. The smoke test fails if a spoken line has no clip,
 an easier line has no clip of its own, or the story asks for an id that is not there.
 
-**Everywhere else:**
+**Everywhere else** (the map, the journal, "Who is playing?", the word chips, the edge nudges):
 
-1. Change the text in the game (`chapter_director.gd`, `play_bounds.gd`, ...).
+1. Change the text in the game (`faith_journey_screen.gd`, `play_bounds.gd`, ...).
 2. Add or update the entry in `LINES` in `scripts/vo_library.gd`.
 3. Generate the clip in the matching voice, trim leading and trailing silence, and save it as mono
    `assets/audio/vo/<id>.wav`.

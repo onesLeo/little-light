@@ -1,8 +1,11 @@
 extends RefCounted
-## Recorded voice-over for every spoken line, keyed by the exact text that is
-## read aloud (speaker name and quotation marks removed). Each clip lives at
-## res://assets/audio/vo/<id>.wav. A line with no entry, or whose file is
-## missing, falls back to the system text-to-speech voice.
+## Recorded voice-over for what is spoken by its words, keyed by the exact text
+## that is read aloud (speaker name and quotation marks removed): the verses and
+## charms the journal reads, the Faith Journey map, "Who is playing?", the word
+## chips and the edge nudges. A story's own lines carry their clips with them
+## (assets/dialogue/, dialogue_line.gd). Each clip lives at
+## res://assets/audio/vo/<id>.wav. A line with no clip, or whose file is missing,
+## falls back to the system text-to-speech voice.
 ##
 ## Wonder Light is voiced by "Juno" and David by "Bram" (see docs/voice-over.md).
 
@@ -42,32 +45,15 @@ const LINES := {
 	"This part of the path is still ahead. New stories will be waiting here.": "wl_path_ahead",
 	"Noah's Ark is next.": "ark_map",
 	"Finish Chapter 2, The King's Camp, first. Then Noah's Ark will open for you.": "ark_locked",
-	# Chapter 4: Wonder Light in Juno, Noah in Arthur, his wife in Helena (docs/voice-over.md).
-	"Long before David, God asked Noah to trust him and build something no one had seen before.": "ark_arrive",
-	"People were hurting one another, and the world was full of violence.": "ark_hurt",
-	"Find the mallet, the rope, and the jar of pitch. Bring them to Noah.": "ark_find",
-	"A wooden mallet. Noah builds with it.": "ark_mallet",
-	"A coil of rope. It holds the ark together.": "ark_rope",
-	"A jar of sticky pitch. It keeps water out.": "ark_pitch",
-	"God told me to build this ark. I cannot see the rain yet, but I trust him.": "ark_noah",
-	"Let's finish this panel. Three pegs, then draw the rope tight.": "ark_panel",
-	"Two by two, they're coming. Help these animals find their partners.": "ark_pairs",
-	"This way. Walk together up the wide ramp.": "ark_wife",
-	"This friend is looking for its match.": "ark_match",
-	"Noah's family and the animals are safely inside. God closes the door and keeps them safe.": "ark_door",
-	"The water covered the land. God kept Noah's family, and the animals with them, safe inside.": "ark_rain",
-	"Let's open the window and send the dove.": "ark_send",
-	"The dove came back safe. The water is still too high.": "ark_dove_back",
-	"Look, an olive leaf. The water is going down.": "ark_leaf",
-	"Dry ground. Thank you for keeping us safe.": "ark_dry",
+	# Chapter 4, Noah's Ark: its story lines are in assets/dialogue/noahs_ark.tres (Wonder Light in
+	# Juno, Noah in Arthur, his wife in Helena; docs/voice-over.md). These are spoken by their words:
+	# the word chips, and the verse and charm the journal reads too.
 	"Genesis, chapter nine, verse thirteen.": "ark_verse_ref",
 	"I set my rainbow in the cloud, and it will be a sign of a covenant between me and the earth.": "ark_verse",
-	"God's covenant is a promise God chooses to keep.": "ark_covenant",
 	"Rainbow.": "ark_word_rainbow",
 	"Sign.": "ark_word_sign",
 	"Promise.": "ark_word_promise",
 	"A Trust charm. Noah kept building before he could see the rain.": "ark_charm",
-	"Keep it close. Trust God, even before you see the way through.": "ark_keep",
 }
 
 static var _cache: Dictionary = {}
