@@ -114,6 +114,7 @@ func _advance() -> void:
 	match phase:
 		Phase.ARRIVE:
 			phase = Phase.WELCOME
+			_house().set_child_watch(null)
 			_house().open_welcome()
 			_say([&"look_around", &"samuel_coming"], WELCOME_PROMPT)
 			_watch()
@@ -266,6 +267,7 @@ func _anoint() -> void:
 	if _camera and _camera.has_method("cut_to_two_shot"):
 		_camera.cut_to_two_shot(_house().samuel(), _house().david())
 	_say([&"anoint"], "…")
+	_house().set_child_watch(_house().david())
 	var pour: Tween = _house().anoint()
 	await pour.finished
 	if phase != Phase.ANOINT:
@@ -287,6 +289,8 @@ func _award_charm() -> void:
 	if "can_move" in _player:
 		_player.can_move = false
 	award.global_position = _player.global_position + Vector3(0.35, 1.15, 0.9)
+	# The child turns to the charm as it floats in, towards the camera.
+	_house().set_child_watch(award)
 	if _camera and _camera.has_method("cut_to_charm"):
 		_camera.cut_to_charm(award)
 	award.ceremony_finished.connect(_on_charm_sealed, CONNECT_ONE_SHOT)
@@ -300,6 +304,7 @@ func _on_charm_sealed() -> void:
 
 func _finish() -> void:
 	phase = Phase.DONE
+	_house().set_child_watch(null)
 	var main := get_parent().get_parent()
 	Profiles.finish_chapter(Profiles.CHAPTER_BEGINNING)
 	_say([&"keep_close"], "Well done, Wonder-Walker!")

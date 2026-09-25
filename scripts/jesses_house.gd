@@ -140,6 +140,7 @@ func in_progress() -> bool:
 
 ## Another story is starting: this one stops listening, and the shell frees the courtyard next.
 func stand_down() -> void:
+	set_child_watch(null)
 	var story := get_node_or_null("ChapterThree")
 	if story and story.has_method("stand_down"):
 		story.stand_down()
@@ -316,6 +317,10 @@ func set_speaking(speaker: String) -> void:
 	for pair in [[_samuel, "Samuel"], [_jesse, "Jesse"], [_david, "David"]]:
 		if pair[0]:
 			pair[0].speaking = speaker == pair[1]
+	var speaking: Node3D = {"Samuel": _samuel, "Jesse": _jesse, "David": _david}.get(speaker)
+	# The child looks at whoever is talking too, even during the pour.
+	if speaking:
+		set_child_watch(speaking)
 	if _anointing:
 		return
 	var david_here := _david.visible and _flat_distance(_david.global_position, _samuel.global_position) < 3.0
@@ -336,6 +341,13 @@ func set_speaking(speaker: String) -> void:
 			_jesse.watch = _david
 
 
+## Who the Wonder-Walker turns to look at while standing (null: the way it last walked).
+func set_child_watch(target: Node3D) -> void:
+	var player := get_parent().get_node_or_null("Player") if get_parent() else null
+	if player and "watch" in player:
+		player.watch = target
+
+
 ## Samuel, Jesse and David all turn to look at the child (for the reflection and the charm).
 func watch_child(child: Node3D) -> void:
 	if _anointing:
@@ -350,6 +362,7 @@ func watch_brothers() -> void:
 	var middle: Node3D = _sons.brothers()[3]
 	_samuel.watch = middle
 	_jesse.watch = middle
+	set_child_watch(middle)
 
 
 ## David kneels and Samuel steps up close to him; Samuel lifts the horn over David's head and a

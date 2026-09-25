@@ -154,6 +154,7 @@ func _run() -> void:
 	check(house.samuel().global_position.distance_to(house.SAMUEL_PLACE) < 0.1, "Samuel has walked to the table")
 	await create_timer(0.8).timeout
 	check(faces(house.jesse(), house.samuel()) and faces(house.samuel(), house.jesse()), "Jesse and Samuel turn to face each other as they talk")
+	check(faces(player.get_node("Model"), house.jesse()), "the Wonder-Walker turns to look at Jesse while he speaks, not at the table")
 	await shot("03_meet")
 	story._advance()
 	check(story.phase == story.Phase.PROCESSION and story.get_action_hint().is_empty() and not player.can_move,
@@ -175,6 +176,8 @@ func _run() -> void:
 		home_again = home_again and brother.global_position.distance_to(brother.home) < 0.05
 	check(home_again, "every brother is back in the line")
 	check(story.phase == story.Phase.NOT_THESE and "Yahweh has not chosen these" in line_text(), "Samuel says calmly that these are not the ones")
+	await create_timer(1.0).timeout
+	check(faces(player.get_node("Model"), house.samuel()), "the Wonder-Walker looks at Samuel as he speaks")
 
 	print("-- David comes home --")
 	story._advance()
@@ -193,6 +196,7 @@ func _run() -> void:
 	await create_timer(1.0).timeout
 	check(faces(house.samuel(), house.david()) and faces(house.david(), house.samuel()) and faces(house.jesse(), house.david()),
 			"when David speaks, Samuel and Jesse turn to him, and he faces Samuel")
+	check(faces(player.get_node("Model"), house.david()), "and the Wonder-Walker turns to David too")
 	await shot("05_david")
 
 	print("-- the verse and the anointing --")
