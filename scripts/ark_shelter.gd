@@ -5,6 +5,10 @@ const Paper := preload("res://scripts/camp_paper.gd")
 const Person := preload("res://scripts/ark_person.gd")
 const LAYER := 1 << 10
 const PERCH := Vector3(3.8, 2.9, -2.6)
+const Sea := preload("res://assets/shaders/flood_sea.gdshader")
+## The sea sits just under the deck floor and runs out to a far horizon behind the sky card.
+const SEA_Y := -0.6
+const SEA_Y_RECEDING := -1.0
 var camera: Camera3D
 var bird: Node3D
 var rain: Node3D
@@ -36,8 +40,8 @@ func build(ark: Node3D) -> void:
 		part("Rib", Vector3(0.22, 4.8, 0.32), cream.darkened(0.15), Vector3(x, 2.4, -3.25))
 	part("RoofBeam", Vector3(14.4, 0.3, 0.45), timber.darkened(0.18), Vector3(0, 4.9, -2.8))
 	part("Sill", Vector3(3.1, 0.16, 0.95), cream, Vector3(4.1, 2.55, -3.05))
-	part("OutsideSky", Vector3(200, 100, 0.1), Color(0.43, 0.54, 0.66), Vector3(0, 6, -7))
-	part("OutsideWater", Vector3(200, 100, 0.1), Color(0.32, 0.46, 0.57), Vector3(0, -47, -6.8))
+	part("OutsideSky", Vector3(1400, 700, 0.1), Color(0.43, 0.54, 0.66), Vector3(0, 330, -300))
+	_build_sea()
 	for i in 4:
 		part("StrawBed", Vector3(2.4, 0.08, 1.4), cream.darkened(0.05), Vector3(-5.0 + i * 3.3, 0.14, 1.3))
 	for i in 2:
@@ -94,7 +98,6 @@ func build(ark: Node3D) -> void:
 	Paper.part(self, "Lantern", Paper.sphere(0.16, 8), Color(1, 0.8, 0.45), lamp.position, Vector3.ZERO, Vector3.ONE, 0.015)
 	# Outdoor paper layers keep their cool colours under the warm interior light.
 	get_node("OutsideSky").material_override = Paper.glow_mat(Color(0.43, 0.54, 0.66))
-	get_node("OutsideWater").material_override = Paper.glow_mat(Color(0.32, 0.46, 0.57))
 	get_node("Lantern").material_override = Paper.glow_mat(Color(1, 0.8, 0.45))
 	for drop in rain.get_children():
 		drop.material_override = Paper.glow_mat(Color(0.74, 0.83, 0.9))
@@ -109,6 +112,29 @@ func build(ark: Node3D) -> void:
 	add_child(camera)
 	_set_layer(self)
 	visible = false
+
+
+## The open water outside: a wide subdivided plane under the flood shader, keeping its own
+## cool colours under the warm lamp.
+func _build_sea() -> void:
+	var plane := PlaneMesh.new()
+	plane.size = Vector2(600, 420)
+	plane.subdivide_width = 120
+	plane.subdivide_depth = 84
+	var mat := ShaderMaterial.new()
+	mat.shader = Sea
+	mat.set_shader_parameter("self_lit", 1.0)
+	mat.set_shader_parameter("swell_height", 0.16)
+	mat.set_shader_parameter("haze_start", 20.0)
+	mat.set_shader_parameter("haze_end", 200.0)
+	mat.set_shader_parameter("horizon_color", Color(0.47, 0.57, 0.68))
+	var sea := MeshInstance3D.new()
+	sea.name = "OutsideWater"
+	sea.mesh = plane
+	sea.material_override = mat
+	sea.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	sea.position = Vector3(0, SEA_Y, -90)
+	add_child(sea)
 
 
 func part(label: String, size: Vector3, color: Color, at: Vector3) -> void:
@@ -198,6 +224,12 @@ func set_sky(state: String) -> void:
 	var material := sky.material_override.duplicate() as StandardMaterial3D
 	sky.material_override = material
 	var color := Color(0.43, 0.54, 0.66) if state == "rain" else Color(0.66, 0.75, 0.8)
+	var sea := get_node("OutsideWater") as MeshInstance3D
+	var sea_mat := sea.material_override as ShaderMaterial
+	var horizon: Color = sea_mat.get_shader_parameter("horizon_color")
 	_sky_tween = create_tween().set_parallel(true).set_trans(Tween.TRANS_SINE)
 	_sky_tween.tween_property(material, "albedo_color", color, 2.0)
-	_sky_tween.tween_property(get_node("OutsideWater"), "position:y", -48.4 if state == "receding" else -47.0, 2.5)
+	# The far water takes the sky's colour, so the horizon stays one soft line.
+	_sky_tween.tween_method(func(c: Color) -> void: sea_mat.set_shader_parameter("horizon_color", c),
+			horizon, color.lerp(Color.WHITE, 0.08), 2.0)
+	_sky_tween.tween_property(sea, "position:y", SEA_Y_RECEDING if state == "receding" else SEA_Y, 2.5)

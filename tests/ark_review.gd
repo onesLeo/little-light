@@ -119,6 +119,11 @@ func _run() -> void:
 	sheep.global_position = ark.get_node("GoatB").global_position
 	story._follow(0.05)
 	check(story._mismatch_said and not bool(sheep.get_meta("aboard")), "a mismatch points to the real mate and boards nobody")
+	var hip := sheep.get_node("Hip") as Node3D
+	story._mismatch_said = false
+	for _i in 6:
+		story._follow(0.05)
+	check(absf(hip.rotation.x) > 0.02 and sheep.find_child("Hoof*", true, false) != null, "a led animal steps on hoofed legs as it walks")
 	sheep.global_position = ark.get_node("SheepB").global_position
 	story._follow(0.05)
 	check(story._matched == 2 and bool(sheep.get_meta("boarding", false)), "standing with the matching sheep starts boarding the pair")
@@ -134,8 +139,25 @@ func _run() -> void:
 	check(ark.get_node("DoveA").position == paused_at, "pausing also pauses boarding")
 	paused = false
 	var deadline := Time.get_ticks_msec() + 35000
+	# Noah and his wife are the Blender models, which face -z; while they walk, their faces lead.
+	var parents: Array[Node3D] = [ark.get_node("Noah"), ark.get_node("NoahsWife")]
+	var was: Array[Vector3] = [parents[0].global_position, parents[1].global_position]
+	var walking_frames := 0
+	var backwards_frames := 0
 	while ark.is_boarding() and Time.get_ticks_msec() < deadline:
 		await process_frame
+		for i in parents.size():
+			var step := parents[i].global_position - was[i]
+			was[i] = parents[i].global_position
+			step.y = 0.0
+			if step.length() < 0.01 or not parents[i].visible:
+				continue
+			walking_frames += 1
+			var face := -parents[i].global_transform.basis.z
+			face.y = 0.0
+			if face.normalized().dot(step.normalized()) < 0.0:
+				backwards_frames += 1
+	check(walking_frames > 20 and backwards_frames == 0, "Noah and his wife walk up the ramp face first (%d of %d frames backwards)" % [backwards_frames, walking_frames])
 	check(not ark.is_boarding() and story.phase == story.Phase.DOOR, "door phase waits for the last family member")
 	check(story._matched == 3 and ark.aboard_count() == 12, "all twelve animals have actually reached the entrance")
 	check(not ark.get_node("Noah").visible and not ark.get_node("NoahsWife").visible, "both parents have entered before the door closes")

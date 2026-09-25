@@ -438,21 +438,22 @@ func _build_birds() -> void:
 ## -- The flood ------------------------------------------------------------------------
 
 ## A calm grey-blue water that rises over the cloud sea while it rains and goes down
-## again after. Never rough: it only breathes up and down a little.
+## again after. Never rough: slow swells with thin crest strokes (flood_sea.gdshader),
+## and the whole sheet breathes up and down a little.
 func _build_water() -> void:
-	var disc := CylinderMesh.new()
-	disc.top_radius = 230.0
-	disc.bottom_radius = 230.0
-	disc.height = 0.2
-	disc.radial_segments = 48
-	disc.rings = 1
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.5, 0.6, 0.68)
-	mat.roughness = 0.55
-	mat.metallic_specular = 0.3
+	var sheet := PlaneMesh.new()
+	sheet.size = Vector2(460.0, 460.0)
+	sheet.subdivide_width = 110
+	sheet.subdivide_depth = 110
+	var mat := ShaderMaterial.new()
+	mat.shader = preload("res://assets/shaders/flood_sea.gdshader")
+	mat.set_shader_parameter("swell_height", 0.12)
+	mat.set_shader_parameter("haze_start", 45.0)
+	mat.set_shader_parameter("haze_end", 220.0)
+	mat.set_shader_parameter("horizon_color", Color(0.62, 0.66, 0.72))
 	_water = MeshInstance3D.new()
 	_water.name = "Flood"
-	_water.mesh = disc
+	_water.mesh = sheet
 	_water.material_override = mat
 	_water.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_water.visible = false

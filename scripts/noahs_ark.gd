@@ -47,6 +47,8 @@ const PLANK_DARK := Color(0.42, 0.31, 0.22)
 const PLANK_A := Color(0.66, 0.5, 0.35)
 const PLANK_B := Color(0.58, 0.43, 0.3)
 const SKIN := Color(0.86, 0.66, 0.5)
+## Drawn at about a grown-up's height, the elephants are scaled up to stand over them.
+const ELEPHANT_SCALE := 1.7
 const GUIDED := ["SheepA", "DoveA", "ElephantA"]
 const MATE_OF := {
 	"SheepA": "SheepB", "DoveA": "DoveB", "ElephantA": "ElephantB",
@@ -552,23 +554,26 @@ func _animals() -> void:
 	_critter("SheepB", "sheep", Vector3(2.6, 0.0, 6.4))
 	_critter("DoveA", "dove", Vector3(-2.3, 0.0, 5.4))
 	_critter("DoveB", "dove", Vector3(3.0, 0.0, 3.1))
-	_critter("ElephantA", "elephant", Vector3(6.0, 0.0, 4.0))
-	_critter("ElephantB", "elephant", Vector3(7.8, 0.0, 6.8))
+	_critter("ElephantA", "elephant", Vector3(6.4, 0.0, 4.4))
+	_critter("ElephantB", "elephant", Vector3(8.2, 0.0, 7.4))
 	_critter("GoatA", "goat", Vector3(-9.6, 0.0, 4.4))
 	_critter("GoatB", "goat", Vector3(-5.5, 0.0, 1.0))
-	_critter("RabbitA", "rabbit", Vector3(8.0, 0.0, 5.0))
-	_critter("RabbitB", "rabbit", Vector3(6.0, 0.0, 2.8))
+	_critter("RabbitA", "rabbit", Vector3(8.4, 0.0, 4.6))
+	_critter("RabbitB", "rabbit", Vector3(5.6, 0.0, 2.4))
 	_critter("GiraffeA", "giraffe", Vector3(-4.0, 0.0, 2.0))
 	_critter("GiraffeB", "giraffe", Vector3(-2.2, 0.0, 0.2))
 
 
 ## Paper-diorama animals: each pair shares a silhouette and colour, and the second of
-## the two has one small difference (an ear, a patch, a horn angle).
+## the two has one small difference (an ear, a patch, a horn angle). Legs hang from hip
+## pivots so they can swing (_stride), and end in a hoof, a pad or a foot.
 func _critter(critter_name: String, kind: String, at: Vector3) -> void:
 	var root := Node3D.new()
 	root.name = critter_name
 	root.position = _at(at)
 	root.rotation.y = 0.35 if critter_name.ends_with("A") else -0.35
+	# Elephants stand well above the grown-ups; everything else is at its drawn size.
+	root.scale = Vector3.ONE * (ELEPHANT_SCALE if kind == "elephant" else 1.0)
 	root.set_meta("kind", kind)
 	root.set_meta("home", root.position)
 	root.set_meta("aboard", false)
@@ -579,63 +584,129 @@ func _critter(critter_name: String, kind: String, at: Vector3) -> void:
 	match kind:
 		"sheep":
 			var wool := Color(0.96, 0.94, 0.88)
-			_legs(root, 0.16, 0.12, 0.34, Color(0.22, 0.18, 0.16))
+			var face := Color(0.25, 0.2, 0.18)
+			_legs(root, 0.16, 0.14, 0.34, face, 0.045, Color(0.14, 0.11, 0.1))
 			Paper.part(root, "Body", Paper.sphere(0.36, 9), wool, Vector3(0.0, 0.46, 0.0), Vector3.ZERO, Vector3(1.0, 0.85, 1.25), 0.025)
-			Paper.part(root, "Head", Paper.sphere(0.15, 8), Color(0.25, 0.2, 0.18), Vector3(0.0, 0.58, 0.44), Vector3.ZERO, Vector3(1.0, 1.1, 1.2), 0.015)
+			# Woolly lumps on the back break the ball into a fleece.
+			for k in 3:
+				Paper.part(root, "Fleece", Paper.sphere(0.17, 7), wool.darkened(0.03), Vector3((k - 1) * 0.14, 0.72, -0.1 + (k % 2) * 0.16), Vector3.ZERO, Vector3.ONE, 0.012)
+			Paper.part(root, "Tail", Paper.sphere(0.08, 6), wool, Vector3(0.0, 0.5, -0.46), Vector3.ZERO, Vector3(0.8, 1.0, 0.8), 0.01)
+			Paper.part(root, "Head", Paper.sphere(0.15, 8), face, Vector3(0.0, 0.58, 0.44), Vector3.ZERO, Vector3(1.0, 1.1, 1.2), 0.015)
+			Paper.part(root, "Topknot", Paper.sphere(0.09, 7), wool, Vector3(0.0, 0.72, 0.4), Vector3.ZERO, Vector3.ONE, 0.0)
 			for side in [-1.0, 1.0]:
-				Paper.part(root, "Ear", Paper.box(Vector3(0.14, 0.05, 0.07)), Color(0.25, 0.2, 0.18), Vector3(side * 0.17, 0.64, 0.4), Vector3(0.0, 0.0, side * (0.5 if b and side > 0.0 else 0.2)), Vector3.ONE, 0.0)
+				Paper.part(root, "Ear", Paper.box(Vector3(0.14, 0.05, 0.07)), face, Vector3(side * 0.17, 0.64, 0.4), Vector3(0.0, 0.0, side * (0.5 if b and side > 0.0 else 0.2)), Vector3.ONE, 0.0)
 		"goat":
 			var coat := Color(0.64, 0.55, 0.43)
-			_legs(root, 0.13, 0.12, 0.4, Color(0.4, 0.3, 0.2))
-			Paper.part(root, "Body", Paper.sphere(0.3, 8), coat, Vector3(0.0, 0.52, 0.0), Vector3.ZERO, Vector3(0.9, 0.8, 1.3), 0.02)
-			Paper.part(root, "Head", Paper.sphere(0.14, 8), coat.lightened(0.1), Vector3(0.0, 0.76, 0.38), Vector3.ZERO, Vector3(0.9, 1.0, 1.3), 0.015)
-			Paper.part(root, "Beard", Paper.cylinder(0.04, 0.12, 5, 0.01), Color(0.9, 0.86, 0.78), Vector3(0.0, 0.62, 0.5), Vector3.ZERO, Vector3.ONE, 0.0)
+			_legs(root, 0.13, 0.14, 0.4, Color(0.4, 0.3, 0.2), 0.04, Color(0.16, 0.12, 0.1))
+			Paper.part(root, "Body", Paper.sphere(0.3, 8), coat, Vector3(0.0, 0.54, 0.0), Vector3.ZERO, Vector3(0.9, 0.8, 1.3), 0.02)
+			Paper.part(root, "Neck", Paper.cylinder(0.09, 0.26, 6, 0.07), coat, Vector3(0.0, 0.7, 0.3), Vector3(0.6, 0.0, 0.0), Vector3.ONE, 0.012)
+			Paper.part(root, "Head", Paper.sphere(0.14, 8), coat.lightened(0.1), Vector3(0.0, 0.8, 0.42), Vector3.ZERO, Vector3(0.9, 1.0, 1.3), 0.015)
+			Paper.part(root, "Beard", Paper.cylinder(0.04, 0.12, 5, 0.01), Color(0.9, 0.86, 0.78), Vector3(0.0, 0.66, 0.54), Vector3.ZERO, Vector3.ONE, 0.0)
+			Paper.part(root, "Tail", Paper.box(Vector3(0.05, 0.14, 0.04)), coat.darkened(0.2), Vector3(0.0, 0.66, -0.4), Vector3(-0.6, 0.0, 0.0), Vector3.ONE, 0.0)
 			for side in [-1.0, 1.0]:
-				Paper.part(root, "Horn", Paper.cylinder(0.03, 0.26, 5, 0.01), Color(0.35, 0.27, 0.2), Vector3(side * 0.07, 0.95, 0.34), Vector3(-0.5 - tilt, 0.0, side * 0.2), Vector3.ONE, 0.0)
+				Paper.part(root, "Horn", Paper.cylinder(0.03, 0.26, 5, 0.01), Color(0.35, 0.27, 0.2), Vector3(side * 0.07, 0.99, 0.38), Vector3(-0.5 - tilt, 0.0, side * 0.2), Vector3.ONE, 0.0)
+				Paper.part(root, "Ear", Paper.box(Vector3(0.16, 0.04, 0.07)), coat, Vector3(side * 0.15, 0.84, 0.38), Vector3(0.0, 0.0, side * -0.3), Vector3.ONE, 0.0)
 			if b:
-				Paper.part(root, "Patch", Paper.sphere(0.14, 6), Color(0.94, 0.9, 0.82), Vector3(0.18, 0.58, -0.05), Vector3.ZERO, Vector3(0.6, 1.0, 1.2), 0.0)
+				Paper.part(root, "Patch", Paper.sphere(0.14, 6), Color(0.94, 0.9, 0.82), Vector3(0.18, 0.6, -0.05), Vector3.ZERO, Vector3(0.6, 1.0, 1.2), 0.0)
 		"rabbit":
 			var fur := Color(0.84, 0.78, 0.7)
-			Paper.part(root, "Body", Paper.sphere(0.2, 8), fur, Vector3(0.0, 0.2, 0.0), Vector3.ZERO, Vector3(1.0, 0.95, 1.2), 0.015)
-			Paper.part(root, "Head", Paper.sphere(0.13, 8), fur, Vector3(0.0, 0.36, 0.17), Vector3.ZERO, Vector3.ONE, 0.012)
-			Paper.part(root, "Tail", Paper.sphere(0.07, 6), Color(0.98, 0.96, 0.92), Vector3(0.0, 0.24, -0.24), Vector3.ZERO, Vector3.ONE, 0.0)
+			Paper.part(root, "Body", Paper.sphere(0.2, 8), fur, Vector3(0.0, 0.22, 0.0), Vector3.ZERO, Vector3(1.0, 0.95, 1.2), 0.015)
+			Paper.part(root, "Head", Paper.sphere(0.13, 8), fur, Vector3(0.0, 0.38, 0.17), Vector3.ZERO, Vector3.ONE, 0.012)
+			Paper.part(root, "Nose", Paper.sphere(0.025, 5), Color(0.86, 0.56, 0.56), Vector3(0.0, 0.38, 0.3), Vector3.ZERO, Vector3.ONE, 0.0)
+			Paper.part(root, "Tail", Paper.sphere(0.07, 6), Color(0.98, 0.96, 0.92), Vector3(0.0, 0.26, -0.24), Vector3.ZERO, Vector3.ONE, 0.0)
 			for side in [-1.0, 1.0]:
 				var droop := 0.9 if b and side > 0.0 else 0.1
-				Paper.part(root, "Ear", Paper.box(Vector3(0.07, 0.3, 0.035)), fur.darkened(0.08), Vector3(side * 0.06, 0.58, 0.14), Vector3(0.0, 0.0, side * droop), Vector3.ONE, 0.01)
+				Paper.part(root, "Ear", Paper.box(Vector3(0.07, 0.3, 0.035)), fur.darkened(0.08), Vector3(side * 0.06, 0.6, 0.14), Vector3(0.0, 0.0, side * droop), Vector3.ONE, 0.01)
+				# Folded haunches, long flat hind feet and two small front paws: it sits up on them.
+				Paper.part(root, "Haunch", Paper.sphere(0.11, 7), fur.darkened(0.04), Vector3(side * 0.12, 0.13, -0.08), Vector3.ZERO, Vector3(0.6, 0.9, 1.2), 0.01)
+				Paper.part(root, "HindFoot", Paper.box(Vector3(0.07, 0.04, 0.2)), fur.lightened(0.12), Vector3(side * 0.11, 0.02, -0.02), Vector3.ZERO, Vector3.ONE, 0.008)
+				Paper.part(root, "Paw", Paper.sphere(0.035, 6), fur.lightened(0.12), Vector3(side * 0.06, 0.03, 0.17), Vector3.ZERO, Vector3(1.0, 0.8, 1.3), 0.006)
 		"dove":
 			var feather := Color(0.97, 0.97, 0.94)
+			var shin := Color(0.86, 0.5, 0.44)
 			Paper.part(root, "Body", Paper.sphere(0.15, 8), feather, Vector3(0.0, 0.26, 0.0), Vector3.ZERO, Vector3(0.9, 0.85, 1.4), 0.012)
 			Paper.part(root, "Head", Paper.sphere(0.09, 8), feather, Vector3(0.0, 0.38, 0.16), Vector3.ZERO, Vector3.ONE, 0.01)
 			Paper.part(root, "Beak", Paper.cylinder(0.025, 0.08, 5, 0.0), Color(0.9, 0.6, 0.3), Vector3(0.0, 0.37, 0.27), Vector3(PI / 2.0, 0.0, 0.0), Vector3.ONE, 0.0)
 			Paper.part(root, "Tail", Paper.box(Vector3(0.14, 0.03, 0.16)), Color(0.82, 0.84, 0.86), Vector3(0.0, 0.27, -0.24), Vector3(0.2, 0.0, 0.0), Vector3.ONE, 0.0)
+			root.set_meta("gait_rate", 20.0)
 			for side in [-1.0, 1.0]:
 				Paper.part(root, "Wing", Paper.box(Vector3(0.05, 0.12, 0.26)), Color(0.8, 0.82, 0.86) if not b else Color(0.88, 0.88, 0.9), Vector3(side * 0.13, 0.28, -0.02), Vector3(0.0, 0.0, side * 0.3), Vector3.ONE, 0.0)
+				# Two thin pink legs with three-toed feet, so it stands rather than sits on the grass.
+				var hip := _hip(root, Vector3(side * 0.05, 0.15, 0.0), side)
+				Paper.part(hip, "Shin", Paper.cylinder(0.012, 0.14, 5), shin, Vector3(0.0, -0.07, 0.0), Vector3.ZERO, Vector3.ONE, 0.0)
+				for toe in [-0.5, 0.0, 0.5]:
+					Paper.part(hip, "Toe", Paper.box(Vector3(0.012, 0.012, 0.06)), shin, Vector3(0.0, -0.14, 0.025), Vector3(0.0, toe, 0.0), Vector3.ONE, 0.0)
 		"elephant":
 			var hide := Color(0.52, 0.54, 0.58)
-			_legs(root, 0.3, 0.3, 0.55, hide.darkened(0.1), 0.13)
+			_legs(root, 0.3, 0.3, 0.55, hide.darkened(0.1), 0.13, hide.darkened(0.2), true)
 			Paper.part(root, "Body", Paper.sphere(0.55, 9), hide, Vector3(0.0, 0.85, 0.0), Vector3.ZERO, Vector3(1.0, 0.85, 1.25), 0.03)
 			Paper.part(root, "Head", Paper.sphere(0.36, 8), hide, Vector3(0.0, 1.05, 0.62), Vector3.ZERO, Vector3.ONE, 0.025)
 			Paper.part(root, "Trunk", Paper.cylinder(0.1, 0.62, 7, 0.06), hide.darkened(0.04), Vector3(0.0, 0.72, 0.9), Vector3(0.35, 0.0, 0.0), Vector3.ONE, 0.018)
+			Paper.part(root, "Tail", Paper.cylinder(0.025, 0.36, 5, 0.015), hide.darkened(0.1), Vector3(0.0, 0.78, -0.7), Vector3(-0.3, 0.0, 0.0), Vector3.ONE, 0.0)
+			Paper.part(root, "TailTuft", Paper.sphere(0.05, 6), Color(0.25, 0.22, 0.2), Vector3(0.0, 0.6, -0.76), Vector3.ZERO, Vector3(0.8, 1.4, 0.8), 0.0)
 			for side in [-1.0, 1.0]:
 				Paper.part(root, "Ear", Paper.sphere(0.3, 7), Color(0.7, 0.62, 0.64), Vector3(side * 0.36, 1.1, 0.5), Vector3(0.0, side * (0.5 + tilt), 0.0), Vector3(0.25, 1.0, 0.9), 0.02)
+				# Short cream tusks either side of the trunk; the pair's second has shorter ones.
+				Paper.part(root, "Tusk", Paper.cylinder(0.04, 0.26 if not b else 0.18, 6, 0.012), Color(0.96, 0.92, 0.82), Vector3(side * 0.13, 0.84, 0.92), Vector3(1.2, 0.0, side * -0.2), Vector3.ONE, 0.008)
+				Paper.part(root, "Eye", Paper.sphere(0.035, 6), Color(0.1, 0.08, 0.07), Vector3(side * 0.24, 1.14, 0.86), Vector3.ZERO, Vector3.ONE, 0.0)
 		"giraffe":
 			var coat := Color(0.86, 0.75, 0.53)
-			_legs(root, 0.16, 0.18, 0.9, coat.darkened(0.08), 0.06)
+			var patch := Color(0.6, 0.47, 0.34)
+			_legs(root, 0.16, 0.2, 0.9, coat.darkened(0.08), 0.06, Color(0.22, 0.17, 0.13))
 			Paper.part(root, "Body", Paper.sphere(0.3, 8), coat, Vector3(0.0, 1.0, 0.0), Vector3.ZERO, Vector3(0.95, 0.8, 1.3), 0.02)
 			Paper.part(root, "Neck", Paper.cylinder(0.09, 1.1, 6, 0.07), coat, Vector3(0.0, 1.6, 0.3), Vector3(0.3, 0.0, 0.0), Vector3.ONE, 0.018)
+			# A short brown mane down the back of the neck.
+			Paper.part(root, "Mane", Paper.box(Vector3(0.035, 1.0, 0.07)), patch.darkened(0.15), Vector3(0.0, 1.62, 0.2), Vector3(0.3, 0.0, 0.0), Vector3.ONE, 0.0)
 			Paper.part(root, "Head", Paper.sphere(0.13, 7), coat, Vector3(0.0, 2.15, 0.52), Vector3.ZERO, Vector3(0.9, 0.9, 1.5), 0.015)
+			Paper.part(root, "Tail", Paper.cylinder(0.02, 0.4, 5, 0.012), coat.darkened(0.1), Vector3(0.0, 0.92, -0.42), Vector3(-0.25, 0.0, 0.0), Vector3.ONE, 0.0)
+			Paper.part(root, "TailTuft", Paper.sphere(0.05, 6), Color(0.25, 0.18, 0.12), Vector3(0.0, 0.72, -0.47), Vector3.ZERO, Vector3(0.8, 1.5, 0.8), 0.0)
 			for side in [-1.0, 1.0]:
 				Paper.part(root, "Ossicone", Paper.cylinder(0.025, 0.14, 5), Color(0.45, 0.3, 0.18), Vector3(side * 0.05, 2.28, 0.46), Vector3(0.0, 0.0, side * 0.15), Vector3.ONE, 0.0)
+				Paper.part(root, "Ear", Paper.box(Vector3(0.12, 0.035, 0.06)), coat, Vector3(side * 0.11, 2.22, 0.44), Vector3(0.0, 0.0, side * 0.35), Vector3.ONE, 0.0)
 			var spots := [Vector3(0.2, 1.05, 0.1), Vector3(-0.2, 1.0, -0.15), Vector3(0.15, 0.95, -0.25)] if not b else [Vector3(-0.2, 1.05, 0.12), Vector3(0.21, 0.98, -0.1), Vector3(-0.12, 1.12, -0.28)]
 			for k in spots.size():
-				Paper.part(root, "Spot%d" % k, Paper.sphere(0.09, 6), Color(0.6, 0.47, 0.34), spots[k], Vector3.ZERO, Vector3(0.6, 1.0, 1.0), 0.0)
+				Paper.part(root, "Spot%d" % k, Paper.sphere(0.09, 6), patch, spots[k], Vector3.ZERO, Vector3(0.6, 1.0, 1.0), 0.0)
 
 
-func _legs(root: Node3D, half_x: float, half_z: float, height: float, color: Color, radius: float = 0.045) -> void:
+## Four legs in diagonal pairs, each hung from its hip so a stride swings it from the
+## top, ending in a darker hoof or, for the elephant, a broad pad with cream toenails.
+func _legs(root: Node3D, half_x: float, half_z: float, height: float, color: Color, radius: float = 0.045,
+		hoof: Color = Color(0.18, 0.14, 0.12), pads: bool = false) -> void:
+	# Longer legs take longer steps: the gait turns this many radians per metre walked.
+	root.set_meta("gait_rate", 2.4 / (height * root.scale.y))
 	for sx in [-1.0, 1.0]:
 		for sz in [-1.0, 1.0]:
-			var leg := Paper.part(root, "Leg", Paper.cylinder(radius, height, 6), color, Vector3(sx * half_x, height * 0.5, sz * half_z), Vector3.ZERO, Vector3.ONE, 0.01)
-			leg.set_meta("stride_side", sx * sz)
+			var hip := _hip(root, Vector3(sx * half_x, height, sz * half_z), sx * sz)
+			Paper.part(hip, "Leg", Paper.cylinder(radius, height, 6), color, Vector3(0.0, -height * 0.5, 0.0), Vector3.ZERO, Vector3.ONE, 0.01)
+			if pads:
+				Paper.part(hip, "Pad", Paper.cylinder(radius * 1.2, 0.1, 8), color.darkened(0.06), Vector3(0.0, -height + 0.05, 0.0), Vector3.ZERO, Vector3.ONE, 0.012)
+				for toe in [-0.6, 0.0, 0.6]:
+					Paper.part(hip, "Toenail", Paper.sphere(0.035, 5), Color(0.9, 0.86, 0.76), Vector3(sin(toe) * radius * 1.05, -height + 0.05, cos(toe) * radius * 1.12), Vector3.ZERO, Vector3(1.0, 0.8, 0.6), 0.0)
+			else:
+				Paper.part(hip, "Hoof", Paper.cylinder(radius * 1.15, 0.07, 6, radius), hoof, Vector3(0.0, -height + 0.035, 0.0), Vector3.ZERO, Vector3.ONE, 0.008)
+
+
+## An empty joint the leg parts hang from; `stride_side` says which half of the gait it takes.
+func _hip(root: Node3D, at: Vector3, side: float) -> Node3D:
+	var hip := Node3D.new()
+	hip.name = "Hip"
+	hip.position = at
+	hip.set_meta("stride_side", side)
+	root.add_child(hip, true)
+	return hip
+
+
+## Swings the legs in diagonal pairs by how far the animal has just moved, so an amble
+## is a slow step and being led is a real walk; standing still lets them settle.
+func _stride(animal: Node3D, moved: float, delta: float) -> void:
+	var gait := float(animal.get_meta("gait", 0.0)) + moved * float(animal.get_meta("gait_rate", 7.0))
+	animal.set_meta("gait", gait)
+	var want := clampf(moved / maxf(delta, 0.0001) / 1.2, 0.0, 1.0)
+	var amount := move_toward(float(animal.get_meta("gait_amount", 0.0)), want, delta * 4.0)
+	animal.set_meta("gait_amount", amount)
+	for part in animal.get_children():
+		if part is Node3D and part.has_meta("stride_side"):
+			part.rotation.x = sin(gait) * float(part.get_meta("stride_side")) * 0.5 * amount
 
 
 func _people() -> void:
@@ -652,6 +723,8 @@ func _designed(person_name: String, who: String, at: Vector3) -> Node3D:
 	person.who = who
 	person.position = _at(at)
 	person.rotation.y = PI
+	# The Blender models face -z, where the block people and animals face +z; a walk turns them this much more.
+	person.set_meta("forward_yaw", PI)
 	add_child(person)
 	return person
 
@@ -960,7 +1033,8 @@ func _critter_marks(root: Node3D, critter_name: String, kind: String) -> void:
 	root.add_child(ring)
 	if critter_name not in GUIDED:
 		return
-	var heights := {"sheep": 1.2, "dove": 0.85, "elephant": 2.0, "giraffe": 2.8, "goat": 1.3, "rabbit": 1.0}
+	# Local heights: the elephant's is inside its scale, so it still floats just over its head.
+	var heights := {"sheep": 1.2, "dove": 0.85, "elephant": 1.7, "giraffe": 2.8, "goat": 1.3, "rabbit": 1.0}
 	var beacon := Node3D.new()
 	beacon.name = "Beacon"
 	beacon.position.y = heights.get(kind, 1.3)
@@ -1007,6 +1081,7 @@ func follow(critter_name: String, target: Vector3, delta: float) -> void:
 	if animal == null:
 		return
 	var next := animal.global_position.move_toward(target, 3.2 * delta)
+	_stride(animal, Vector2(next.x - animal.global_position.x, next.z - animal.global_position.z).length(), delta)
 	animal.global_position = next
 	# Wherever the child leaves it, that becomes its new spot to graze around.
 	animal.set_meta("led_at", _time)
@@ -1121,11 +1196,15 @@ func _walk_segment(tw: Tween, actor: Node3D, start: Vector3, finish: Vector3) ->
 	tw.tween_callback(func() -> void: actor.set_meta("walk_yaw", actor.rotation.y))
 	tw.tween_method(func(t: float) -> void:
 		var direction := finish - start
-		var yaw := atan2(direction.x, direction.z)
-		actor.rotation.y = lerp_angle(float(actor.get_meta("walk_yaw")), yaw, smoothstep(0.0, 0.25, t))
-		var stride := sin(t * duration * 9.0)
-		var settle := sin(PI * t)
-		actor.position = start.lerp(finish, t) + Vector3.UP * absf(stride) * 0.035 * settle
+		var yaw := atan2(direction.x, direction.z) + float(actor.get_meta("forward_yaw", 0.0))
+		var from_yaw := float(actor.get_meta("walk_yaw"))
+		# A sharp corner is turned on the spot first, so nobody slides backwards round it.
+		var turn_share := clampf(absf(angle_difference(from_yaw, yaw)) / PI, 0.0, 1.0) * 0.3
+		actor.rotation.y = lerp_angle(from_yaw, yaw, smoothstep(0.0, maxf(turn_share, 0.12), t))
+		var along := clampf((t - turn_share) / (1.0 - turn_share), 0.0, 1.0)
+		var stride := sin(along * duration * 9.0)
+		var settle := sin(PI * along)
+		actor.position = start.lerp(finish, along) + Vector3.UP * absf(stride) * 0.035 * settle
 		for part in actor.get_children():
 			if part is Node3D and part.has_meta("stride_side"):
 				part.rotation.x = stride * float(part.get_meta("stride_side")) * 0.28 * settle
@@ -1210,6 +1289,7 @@ func _graze(animal: Node3D, delta: float) -> void:
 	var hop := 0.0
 	if kind in ["rabbit", "dove"]:
 		hop = maxf(sin(_time * 5.0 + seed * 7.0), 0.0) * (0.07 if kind == "rabbit" else 0.04)
+	_stride(animal, Vector2(moved.x - animal.position.x, moved.z - animal.position.z).length(), delta)
 	animal.position = Vector3(moved.x, home.y + hop, moved.z)
 	if step.length() > 0.02:
 		animal.rotation.y = lerp_angle(animal.rotation.y, atan2(step.x, step.z), 1.5 * delta)
