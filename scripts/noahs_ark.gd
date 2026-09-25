@@ -55,12 +55,26 @@ const SKIN := Color(0.86, 0.66, 0.5)
 ## Drawn at about a grown-up's height, the elephants are scaled up to stand over them.
 const ELEPHANT_SCALE := 1.7
 const GUIDED := ["SheepA", "DoveA", "ElephantA"]
+## Places on the plain a tool can lie: clear of the ramp, the bench, the timber, the
+## baskets and the people, and in view from the arrival spot. Each visit takes three.
+const TOOL_SPOTS := [
+	Vector3(-4.0, 0.0, 6.0), Vector3(3.8, 0.0, 5.8), Vector3(-2.7, 0.0, 3.4), Vector3(-6.2, 0.0, 7.6),
+	Vector3(3.4, 0.0, 8.0), Vector3(-4.6, 0.0, -1.8), Vector3(-3.0, 0.0, 8.4), Vector3(5.6, 0.0, 9.0),
+]
+## The chosen spots stay at least this far apart, and each is nudged up to TOOL_JITTER.
+const TOOL_APART := 3.5
+const TOOL_JITTER := 0.35
+## How far an animal's spot and facing can wander from its drawn place, per visit.
+const ANIMAL_JITTER := 0.5
+const ANIMAL_TURN := 0.5
 const MATE_OF := {
 	"SheepA": "SheepB", "DoveA": "DoveB", "ElephantA": "ElephantB",
 	"GoatA": "GoatB", "RabbitA": "RabbitB", "GiraffeA": "GiraffeB",
 }
 
 var _built: bool = false
+## A new layout each visit: where the tools lie, and the animals' spots and facing.
+var _layout := RandomNumberGenerator.new()
 var _time: float = 0.0
 var _mountain: Node3D
 var _glows: Array[MeshInstance3D] = []
@@ -189,6 +203,7 @@ func _build() -> void:
 	if _built:
 		return
 	_built = true
+	_layout.randomize()
 	_ground()
 	_plain_dressing()
 	_hull()
@@ -544,9 +559,33 @@ func _work_station() -> void:
 
 
 func _items() -> void:
-	_tool("Mallet", _at(Vector3(-4.0, 0.0, 6.0)))
-	_tool("RopeCoil", _at(Vector3(4.2, 0.0, 5.4)))
-	_tool("Pitch", _at(Vector3(-2.7, 0.0, 3.4)))
+	var spots := tool_layout(_layout)
+	_tool("Mallet", _at(spots[0]))
+	_tool("RopeCoil", _at(spots[1]))
+	_tool("Pitch", _at(spots[2]))
+
+
+## Three of TOOL_SPOTS, in a shuffled order, kept TOOL_APART apart and each nudged a little.
+static func tool_layout(rng: RandomNumberGenerator) -> Array[Vector3]:
+	var order: Array = TOOL_SPOTS.duplicate()
+	for i in range(order.size() - 1, 0, -1):
+		var j := rng.randi_range(0, i)
+		var swap: Vector3 = order[i]
+		order[i] = order[j]
+		order[j] = swap
+	var picked: Array[Vector3] = []
+	for spot in order:
+		var far := true
+		for other in picked:
+			if (spot as Vector3).distance_to(other) < TOOL_APART:
+				far = false
+		if far:
+			picked.append(spot)
+		if picked.size() == 3:
+			break
+	for i in picked.size():
+		picked[i] += Vector3(rng.randf_range(-TOOL_JITTER, TOOL_JITTER), 0.0, rng.randf_range(-TOOL_JITTER, TOOL_JITTER))
+	return picked
 
 
 ## Wood, rope and sealed pitch, each with its own clear shape; nothing sharp.
@@ -608,8 +647,10 @@ func _animals() -> void:
 func _critter(critter_name: String, kind: String, at: Vector3) -> void:
 	var root := Node3D.new()
 	root.name = critter_name
-	root.position = _at(at)
-	root.rotation.y = 0.35 if critter_name.ends_with("A") else -0.35
+	# Each visit the herd stands a little differently; the big elephants move least.
+	var wander := ANIMAL_JITTER * (0.5 if kind == "elephant" else 1.0)
+	root.position = _at(at + Vector3(_layout.randf_range(-wander, wander), 0.0, _layout.randf_range(-wander, wander)))
+	root.rotation.y = (0.35 if critter_name.ends_with("A") else -0.35) + _layout.randf_range(-ANIMAL_TURN, ANIMAL_TURN)
 	# Elephants stand well above the grown-ups; everything else is at its drawn size.
 	root.scale = Vector3.ONE * (ELEPHANT_SCALE if kind == "elephant" else 1.0)
 	root.set_meta("kind", kind)

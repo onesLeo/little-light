@@ -25,6 +25,8 @@ const HINT_FIND := 14.0
 const HINT_PANEL := 8.0
 const HINT_CHOOSE := 10.0
 const HINT_MATE := 4.0
+## How long Noah and the child take to turn to each other when the last tool is found.
+const TURN_SECONDS := 0.5
 const ITEMS := {
 	"Mallet": "A wooden mallet. Noah builds with it.",
 	"RopeCoil": "A coil of rope. It holds the ark together.",
@@ -43,6 +45,8 @@ var _dove_flights: int = 0
 var _sky_turns: int = 0
 var _dove_busy: bool = false
 var _ceremony: bool = false
+## True while Noah and the child turn to face each other; Space waits for it.
+var _turning: bool = false
 var _words_done: bool = false
 var _word_said: Array[bool] = [false, false, false]
 var _words: HBoxContainer
@@ -71,6 +75,7 @@ func begin() -> void:
 	_sky_turns = 0
 	_dove_busy = false
 	_ceremony = false
+	_turning = false
 	_words_done = false
 	_word_said = [false, false, false]
 	var main := get_parent().get_parent()
@@ -99,7 +104,7 @@ func _exit_tree() -> void:
 
 
 func _input(event: InputEvent) -> void:
-	if phase == Phase.IDLE or phase == Phase.DONE or _ceremony or phase == Phase.BOARDING:
+	if phase == Phase.IDLE or phase == Phase.DONE or _ceremony or _turning or phase == Phase.BOARDING:
 		return
 	if phase == Phase.WORDS and not _words_done:
 		return
@@ -217,9 +222,40 @@ func _try_collect() -> void:
 	if _found.size() >= 3:
 		phase = Phase.MEET
 		_watch(phase)
+		if "can_move" in _player:
+			_player.can_move = false
+		# The last tool may lie behind Noah: they turn to each other before he speaks.
+		await _face_each_other()
+		if phase != Phase.MEET:
+			return
 		_say("Noah: \"God told me to build this ark. I cannot see the rain yet, but I trust him.\"", "Press Space to continue")
 	else:
 		_say("Wonder Light: \"%s\"" % ITEMS[tool_name], "Find the other glowing tools")
+
+
+## Noah and the child turn on the spot to face each other. Both models look down their
+## -z, so the yaw that points -z at the other is the one each turns to.
+func _face_each_other() -> void:
+	var noah := get_parent().get_node_or_null("Noah") as Node3D
+	var model := _player.get_node_or_null("Model") as Node3D
+	if noah == null or model == null:
+		return
+	_turning = true
+	var tw := create_tween().set_parallel(true).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tw.tween_interval(TURN_SECONDS)
+	_turn_toward(tw, noah, _player.global_position)
+	_turn_toward(tw, model, noah.global_position)
+	await tw.finished
+	_turning = false
+
+
+func _turn_toward(tw: Tween, mover: Node3D, target: Vector3) -> void:
+	var to := target - mover.global_position
+	to.y = 0.0
+	if to.length() < 0.01:
+		return
+	var turn := wrapf(atan2(-to.x, -to.z) - mover.global_rotation.y, -PI, PI)
+	tw.tween_property(mover, "rotation:y", mover.rotation.y + turn, TURN_SECONDS)
 
 
 func _place_peg() -> void:
@@ -449,7 +485,11 @@ func _say(text: String, prompt: String) -> void:
 		_player.can_move = moving
 	if _camera:
 		if phase == Phase.MEET and ark.get_node_or_null("Noah"):
-			_camera.cut_to_closeup(ark.get_node("Noah"))
+			# They face each other, so a close-up on Noah would look past the child's head.
+			if _camera.has_method("cut_to_two_shot") and _player:
+				_camera.cut_to_two_shot(ark.get_node("Noah"), _player)
+			else:
+				_camera.cut_to_closeup(ark.get_node("Noah"))
 		elif phase != Phase.CHARM:
 			_camera.cut_to_tabletop()
 	if phase == Phase.RAIN:
@@ -522,7 +562,7 @@ func get_action_hint() -> String:
 			return "TURN"
 		Phase.WORDS:
 			return "NEXT" if _words_done else ""
-	return "" if _ceremony else "NEXT"
+	return "" if _ceremony or _turning else "NEXT"
 
 
 func _build_checklist(ui: Node) -> void:

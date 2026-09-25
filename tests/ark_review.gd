@@ -66,6 +66,18 @@ func _run() -> void:
 			"the doorway (%.2f m) is tall enough for an elephant (%.2f m)" % [headroom, elephant_top])
 	check(ark.get_node("Noah")._bones["Thigh_L"] >= 0 and ark.get_node("NoahsWife")._bones["Shin_R"] >= 0, "both parents have the leg bones used for boarding")
 	check("Long before David" in story._line.text, "arrival names the long work")
+	# The tools lie on three of the allowed spots, well apart, wherever this visit put them.
+	var first_layout: Array[Vector3] = []
+	var on_spots := true
+	for tool_name in story.TOOLS:
+		var at: Vector3 = (ark.get_node(tool_name) as Node3D).global_position - ark.ORIGIN
+		first_layout.append(at)
+		var near_spot := false
+		for spot in ark.TOOL_SPOTS:
+			near_spot = near_spot or Vector2(at.x - spot.x, at.z - spot.z).length() <= ark.TOOL_JITTER * 1.5
+		on_spots = on_spots and near_spot
+	check(on_spots and first_layout[0].distance_to(first_layout[1]) > 2.5 and first_layout[1].distance_to(first_layout[2]) > 2.5
+			and first_layout[0].distance_to(first_layout[2]) > 2.5, "the tools lie on allowed spots, well apart")
 	check(not player.can_move, "arrival holds still")
 	check(not ark.get_node("Rain").visible, "the plain starts dry")
 	story._advance()
@@ -91,10 +103,30 @@ func _run() -> void:
 			"tapping the ark on the map mid-story keeps the story where it was")
 	check(player.global_position.distance_to(stood_at) < 0.5 and not ark.get_node("Mallet").visible,
 			"the child is not sent back to the start and the mallet stays picked up")
-	for tool_name in ["RopeCoil", "Pitch"]:
-		player.global_position = ark.get_node(tool_name).global_position
-		story._try_collect()
+	# The last tool lies behind Noah and the child picks it up facing away from him: back to back.
+	var noah: Node3D = ark.get_node("Noah")
+	var walker_model: Node3D = player.get_node("Model")
+	ark.get_node("Pitch").global_position = noah.global_position + Vector3(0.0, 0.0, -1.6)
+	player.global_position = ark.get_node("RopeCoil").global_position
+	story._try_collect()
+	player.global_position = ark.get_node("Pitch").global_position
+	walker_model.rotation.y = 0.0
+	story._try_collect()
 	check(story.phase == story.Phase.MEET and not ark.get_node("Pitch").visible, "three tools are brought to Noah")
+	check(story._turning and story.get_action_hint().is_empty(), "Noah and the child turn to each other before he speaks")
+	await create_timer(story.TURN_SECONDS + 0.2).timeout
+	var to_child := player.global_position - noah.global_position
+	to_child.y = 0.0
+	var noah_face := -noah.global_transform.basis.z
+	var child_face := -walker_model.global_transform.basis.z
+	noah_face.y = 0.0
+	child_face.y = 0.0
+	check(noah_face.normalized().dot(to_child.normalized()) > 0.95 and child_face.normalized().dot(-to_child.normalized()) > 0.95,
+			"Noah and the child face each other, even when the last tool was behind him")
+	var shot: Camera3D = main.get_node("CloseUpCamera")
+	check(shot.current and shot.is_position_in_frustum(noah.global_position + Vector3(0.0, 1.6, 0.0))
+			and shot.is_position_in_frustum(player.global_position + Vector3(0.0, 1.1, 0.0)),
+			"the meeting is framed with both of them in view")
 	check("I trust him" in story._line.text, "Noah says he trusts before he sees the rain")
 	story._advance()
 	check(story.phase == story.Phase.PANEL, "the panel activity starts")
@@ -247,6 +279,12 @@ func _run() -> void:
 	check(again != ark and not is_instance_valid(ark), "a replay builds a fresh ark and frees the old one")
 	check(story_again.phase == story_again.Phase.ARRIVE and "Long before David" in story_again._line.text, "a replay starts at the first line")
 	check(again.tool_spots().size() == 3, "all three tools are back on the ground")
+	var moved_tools := 0
+	for i in story_again.TOOLS.size():
+		var now_at: Vector3 = (again.get_node(story_again.TOOLS[i]) as Node3D).global_position - again.ORIGIN
+		if now_at.distance_to(first_layout[i]) > 0.01:
+			moved_tools += 1
+	check(moved_tools > 0, "a replay lays the tools out afresh")
 	check(again.get_node("Noah").visible and again.aboard_count() == 0 and not again.get_node("Door").visible, "the family and animals are outside and the door is open")
 	check(not again.get_node("WorkPanel").has_node("Peg0") and not again.get_node("Rainbow").visible, "the panel is unpegged and the rainbow is put away")
 	check(main.get_node("UI").find_children("ArkWords*", "", false, false).size() == 1
