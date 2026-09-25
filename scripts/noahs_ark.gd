@@ -12,7 +12,7 @@ const Profiles := preload("res://scripts/profiles.gd")
 const Mountain := preload("res://scripts/ark_mountain.gd")
 const Shapes := preload("res://scripts/ark_shapes.gd")
 const Shelter := preload("res://scripts/ark_shelter.gd")
-const ArkPerson := preload("res://scripts/ark_person.gd")
+const ArkPerson := preload("res://scripts/story_person.gd")
 
 ## The ark has the world to itself (the valley is not loaded under it), so the
 ## mountaintop stands at the origin. Everything is placed relative to it (_at).

@@ -26,10 +26,11 @@ It starts the real main scene without a window and checks the story beats, input
 area, the living world, where trees and rocks stand, a triangle budget, who is playing, the Faith Journal and colouring the charm, the voice-over, the soundscape and Steady Hands. It prints `SMOKE TEST PASSED`
 when every check is OK and exits with code 1 otherwise. It takes about a minute.
 
-Three review tests play the stories through, each printing `<NAME> REVIEW PASSED`:
+Four review tests play the stories through, each printing `<NAME> REVIEW PASSED`:
 
 ```bash
 godot --headless --path . --script tests/camp_review.gd      # chapter 2, The King's Camp
+godot --headless --path . --script tests/beginning_review.gd # chapter 3, The Beginning
 godot --headless --path . --script tests/ark_review.gd       # chapter 4, Noah's Ark
 godot --headless --path . --script tests/journey_review.gd   # moving between the stories
 ```

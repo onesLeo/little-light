@@ -1,4 +1,4 @@
-[gd_resource type="Resource" load_steps=5 format=3]
+[gd_resource type="Resource" load_steps=24 format=3]
 
 [ext_resource type="Script" path="res://scripts/dialogue_lines.gd" id="1_lines"]
 [ext_resource type="Script" path="res://scripts/dialogue_line.gd" id="2_line"]
@@ -13,9 +13,122 @@ text = "We are turning back the page. This is Bethlehem, before the valley. Davi
 script = ExtResource("2_line")
 id = &"look_around"
 speaker = "Wonder Light"
-text = "David is out with the sheep. Look around his home while we get ready for Samuel."
+text = "David is out with the sheep. You may notice the things he uses to care for them."
+
+[sub_resource type="Resource" id="Line_samuel_coming"]
+script = ExtResource("2_line")
+id = &"samuel_coming"
+speaker = "Wonder Light"
+text = "Samuel is coming. Let's get the cushion, the cup and the lamp ready for him."
+
+[sub_resource type="Resource" id="Line_harp"]
+script = ExtResource("2_line")
+id = &"harp"
+speaker = "Wonder Light"
+text = "A small harp. David plays it while he watches the sheep."
+
+[sub_resource type="Resource" id="Line_bowl"]
+script = ExtResource("2_line")
+id = &"bowl"
+speaker = "Wonder Light"
+text = "A bowl of water for the sheep. David cares for them every day."
+
+[sub_resource type="Resource" id="Line_cloak"]
+script = ExtResource("2_line")
+id = &"cloak"
+speaker = "Wonder Light"
+text = "A plain shepherd's cloak, made for work outside."
+
+[sub_resource type="Resource" id="Line_ready"]
+script = ExtResource("2_line")
+id = &"ready"
+speaker = "Wonder Light"
+text = "Everything is ready. Here comes Samuel."
+
+[sub_resource type="Resource" id="Line_jesse_welcome"]
+script = ExtResource("2_line")
+id = &"jesse_welcome"
+speaker = "Jesse"
+text = "Samuel! Welcome to our home."
+
+[sub_resource type="Resource" id="Line_brothers"]
+script = ExtResource("2_line")
+id = &"brothers"
+speaker = "Wonder Light"
+text = "Jesse's seven older sons come forward, one by one."
+
+[sub_resource type="Resource" id="Line_not_these"]
+script = ExtResource("2_line")
+id = &"not_these"
+speaker = "Samuel"
+text = "Yahweh has not chosen these."
+
+[sub_resource type="Resource" id="Line_waits"]
+script = ExtResource("2_line")
+id = &"waits"
+speaker = "Wonder Light"
+text = "Samuel waits. The one God has chosen is not here yet."
+
+[sub_resource type="Resource" id="Line_ask"]
+script = ExtResource("2_line")
+id = &"ask"
+speaker = "Samuel"
+text = "Are all your children here?"
+
+[sub_resource type="Resource" id="Line_youngest"]
+script = ExtResource("2_line")
+id = &"youngest"
+speaker = "Jesse"
+text = "The youngest is still caring for the sheep."
+
+[sub_resource type="Resource" id="Line_call_david"]
+script = ExtResource("2_line")
+id = &"call_david"
+speaker = "Wonder Light"
+text = "Let's call David home."
+
+[sub_resource type="Resource" id="Line_david_called"]
+script = ExtResource("2_line")
+id = &"david_called"
+speaker = "David"
+text = "You called for me?"
+
+[sub_resource type="Resource" id="Line_heart"]
+script = ExtResource("2_line")
+id = &"heart"
+speaker = "Wonder Light"
+text = "People notice the outside first. God sees who you are inside."
+
+[sub_resource type="Resource" id="Line_anoint"]
+script = ExtResource("2_line")
+id = &"anoint"
+speaker = "Wonder Light"
+text = "Samuel pours the oil. God has chosen David, the youngest shepherd."
+
+[sub_resource type="Resource" id="Line_reflect"]
+script = ExtResource("2_line")
+id = &"reflect"
+speaker = "Wonder Light"
+text = "David was caring for the sheep when nobody expected him to be called. God saw his heart. God sees you too."
+
+[sub_resource type="Resource" id="Line_charm"]
+script = ExtResource("2_line")
+id = &"charm"
+speaker = "Wonder Light"
+text = "A Faithful Heart charm, for caring well in quiet places."
+
+[sub_resource type="Resource" id="Line_charm_arrives"]
+script = ExtResource("2_line")
+id = &"charm_arrives"
+text = "Virtue Bracelet receives the charm."
+
+[sub_resource type="Resource" id="Line_keep_close"]
+script = ExtResource("2_line")
+id = &"keep_close"
+speaker = "Wonder Light"
+text = "Keep it close. Be faithful with the small things in front of you."
 
 [resource]
 script = ExtResource("1_lines")
 recorded = false
-lines = Array[Resource]([SubResource("Line_turn_back"), SubResource("Line_look_around")])
+lines = Array[Resource]([SubResource("Line_turn_back"), SubResource("Line_look_around"), SubResource("Line_samuel_coming"), SubResource("Line_harp"), SubResource("Line_bowl"), SubResource("Line_cloak"), SubResource("Line_ready"), SubResource("Line_jesse_welcome"), SubResource("Line_brothers"), SubResource("Line_not_these"), SubResource("Line_waits"), SubResource("Line_ask"), SubResource("Line_youngest"), SubResource("Line_call_david"), SubResource("Line_david_called"), SubResource("Line_heart"), SubResource("Line_anoint"), SubResource("Line_reflect"), SubResource("Line_charm"), SubResource("Line_charm_arrives"), SubResource("Line_keep_close")])

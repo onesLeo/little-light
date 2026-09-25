@@ -2,7 +2,7 @@ extends Node3D
 ## A small open-front paper stage for the protected family, rain window and dove.
 ## A dedicated render layer keeps the outdoor mountain out of these intimate shots.
 const Paper := preload("res://scripts/camp_paper.gd")
-const Person := preload("res://scripts/ark_person.gd")
+const Person := preload("res://scripts/story_person.gd")
 const LAYER := 1 << 10
 const PERCH := Vector3(3.8, 2.9, -2.6)
 const Sea := preload("res://assets/shaders/flood_sea.gdshader")

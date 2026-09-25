@@ -127,6 +127,17 @@ and a developer-only Chapter 3 stop can open and return safely.
 
 ### Milestone B — playable greybox
 
+**Done on `feat/chapter-3` (2026-09-25).** The whole chapter plays from the first line to the end
+card (`tests/beginning_review.gd`): the optional harp, bowl and cloak; Prepare the Welcome (carry the
+cushion, cup and lamp one at a time to breathing rings in front of the table, any order, a ring only
+takes its own thing, the golden arrow after 12 s); Samuel's arrival; the seven brothers
+(`jesse_sons.gd`: idle glances and weight shifts, then out-hold-back in about nine seconds, on a
+still camera); "Yahweh has not chosen these"; calling David home (CALL on a tablet); 1 Samuel 16:7
+with God, Sees and Heart to tap; the anointing (the horn lifted, a thin line of oil, a breeze, no
+glow); the reflection; the Faithful Heart ceremony. Read by the system voice (no recordings yet).
+Not yet: resume after a reload mid-chapter (Play again restarts it), doves, per-object placement
+sounds beyond the three existing effects, and the family/tablet tests of Milestone C.
+
 - Greybox the courtyard, house edge, table, fold and sheep path.
 - Implement Prepare the Welcome with three placeholder objects.
 - Implement seven brother placeholders, procession, idle life and skip-safe timing.
@@ -146,6 +157,12 @@ uses no final paid voice or art, and can resume after pause/reload at major beat
 describe the charm or David's ordinary work as the reason he earned selection.
 
 ### Milestone D — production assets
+
+**Characters done early, by the owner's decision (2026-09-25):** Samuel, Jesse and the younger
+David are rigged Blender models on the shared skeleton
+(`art/blender/scripts/characters/generate_bethlehem_people_v1.py`), with Blink and Talk, driven
+by `story_person.gd` (breath, blink, talk, gesture, walk; Samuel's arm lifts the horn). Voices,
+charm art polish, soundscape and foley are still to come.
 
 - Generate and review Samuel, Jesse and younger David models.
 - Add final courtyard props, charm art, motion, soundscape and licensed foley.

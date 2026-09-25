@@ -5,7 +5,7 @@ name: Smoke test
 # The test starts the real main scene without a window and checks the story, input
 # devices, the play area, the living world, the voice-over, the soundscape and
 # Steady Hands. It takes about a minute. The review tests follow: each chapter played
-# through (tests/camp_review.gd, tests/ark_review.gd), and moving between the stories
+# through (tests/camp_review.gd, tests/beginning_review.gd, tests/ark_review.gd), and moving between the stories
 # from the map, "Play again" and switching (tests/journey_review.gd).
 
 on:
@@ -62,7 +62,7 @@ jobs:
         # Each one prints "<NAME> REVIEW PASSED" at the end; all of them run even if one fails.
         run: |
           failed=0
-          for review in camp ark journey; do
+          for review in camp beginning ark journey; do
             echo "::group::${review} review"
             "$GODOT_BIN" --headless --path . --script "tests/${review}_review.gd" > "${review}_review.log" 2>&1 || true
             grep -E "^(OK|FAIL) |REVIEW" "${review}_review.log" || true

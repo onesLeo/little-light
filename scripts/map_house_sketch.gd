@@ -99,7 +99,9 @@ func _hill(rng: RandomNumberGenerator) -> void:
 		shades.append(HILL)
 	for i in 21:
 		var x := lerpf(170.0, -170.0, i / 20.0)
-		ground.append(Vector2(x, 70.0 + 12.0 * (1.0 - pow(x / 170.0, 2.0))))
+		# 2 px below the ridge's ends, so the outline never doubles back on itself there (a
+		# zero-width sliver, which cannot be triangulated).
+		ground.append(Vector2(x, 72.0 + 12.0 * (1.0 - pow(x / 170.0, 2.0))))
 		shades.append(Color(HILL, 0.0))
 	draw_polygon(ground, shades)
 	_wobbly(ridge, INK_SOFT, 2.0, rng)

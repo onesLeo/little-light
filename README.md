@@ -52,6 +52,7 @@ older versions were moved to `art/archive/models/` (see its README).
 | David mentor | `assets/david_mentor_v13.glb` |
 | Wonder Items | `assets/wonder_items_v7.glb` |
 | Animated stream | `assets/bethlehem_stream_fish_alive_v7.glb` |
+| Samuel, Jesse, younger David (Chapter 3) | `assets/samuel_v1.glb`, `assets/jesse_v1.glb`, `assets/young_david_v1.glb` |
 
 ## Project layout
 
