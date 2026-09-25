@@ -17,14 +17,17 @@ extends Node3D
 ## to their rings in front of the table. The story (chapter_three.gd) says when.
 ##
 ## Layout, looking the way the tabletop camera looks (towards -z): the house along the back,
-## the table and olive tree right of centre, the brothers along the left, the fold and the
-## sheep path at the front right, and the arrival spot at the front, in the open.
+## the table and olive tree right of centre, the brothers in a row in front of the house, the
+## fold and the sheep path at the front right, and the arrival spot at the front, in the open.
+## A low field-stone wall frames it; the small moving things (cloud shadows, breeze, doves) are
+## in courtyard_life.gd.
 
 const Paper := preload("res://scripts/camp_paper.gd")
 const PlayArea := preload("res://scripts/play_area.gd")
 const ChapterThree := preload("res://scripts/chapter_three.gd")
 const StoryPerson := preload("res://scripts/story_person.gd")
 const JesseSons := preload("res://scripts/jesse_sons.gd")
+const CourtyardLife := preload("res://scripts/courtyard_life.gd")
 
 ## The Wonder-Walker arrives here, at the open front edge.
 const ARRIVE := Vector3(0.0, 0.25, 7.0)
@@ -64,10 +67,14 @@ const JESSE_PLACE := Vector3(-1.5, 0.0, -1.9)
 ## David waits out on the sheep path, beyond the courtyard, and walks in when called.
 const DAVID_AWAY := Vector3(8.3, 0.0, 13.5)
 const DAVID_PLACE := Vector3(0.5, 0.0, 0.9)
-## The brothers stand in a row across the back, in front of the house wall, and step out
-## towards Samuel one by one.
-const BROTHERS_START := Vector3(-9.2, 0.0, -3.6)
-const BROTHERS_ALONG := Vector3(1.05, 0.0, 0.0)
+## The brothers stand in a row across the back, in front of the house wall and clear of its
+## side wall, and step out towards Samuel one by one.
+const BROTHERS_START := Vector3(-7.9, 0.0, -3.6)
+const BROTHERS_ALONG := Vector3(0.95, 0.0, 0.0)
+## At the anointing Samuel stands this close in front of the kneeling David, and this far to
+## the left, so the horn in his raised right hand is over David's head.
+const ANOINT_GAP := 0.34
+const ANOINT_SIDE := 0.27
 ## A still view of the whole row and Samuel for the procession: from the front, a little aside.
 const PROCESSION_EYE := Vector3(-2.6, 2.8, 6.0)
 const PROCESSION_LOOK := Vector3(-3.7, 0.9, -2.2)
@@ -95,6 +102,7 @@ var _placed: Array = []
 var _found: Array = []
 var _carrying: String = ""
 var _breeze: float = 0.0
+var _life: Node3D
 
 
 ## Builds the courtyard and starts the story, or carries on with it. Only the shell calls
@@ -283,13 +291,25 @@ func set_speaking(speaker: String) -> void:
 			pair[0].speaking = speaker == pair[1]
 
 
-## Samuel lifts the horn and a thin line of oil unfurls onto David's head, over about two
-## seconds, while a warm breeze lifts the awning and the olive leaves. No glow, no crown.
+## David kneels and Samuel steps up close to him; Samuel lifts the horn over David's head and a
+## thin line of oil runs down onto it, over about two seconds, while a warm breeze lifts the
+## awning and the olive leaves. Then Samuel lowers the horn and David stands. No glow, no crown.
 func anoint(seconds: float = 2.0) -> Tween:
-	face(_samuel, _david.global_position)
 	face(_david, _samuel.global_position)
-	_horn.visible = true
+	var to_samuel := _samuel.global_position - _david.global_position
+	to_samuel.y = 0.0
+	var ahead := -to_samuel.normalized()
+	var right := ahead.cross(Vector3.UP)
+	var close := _david.global_position - ahead * ANOINT_GAP - right * ANOINT_SIDE
+	face(_samuel, close)
+	_samuel.walk_amount = 1.0
 	var tw := create_tween()
+	tw.tween_property(_david, "kneel", 1.0, 1.1).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.parallel().tween_property(_samuel, "global_position", close, 1.1).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_callback(func() -> void:
+		_samuel.walk_amount = 0.0
+		face(_samuel, close + ahead)
+		_horn.visible = true)
 	tw.tween_property(_samuel, "reach", 1.0, 0.8).set_trans(Tween.TRANS_SINE)
 	tw.tween_callback(func() -> void: _oil.visible = true)
 	tw.tween_method(_pour, 0.0, 1.0, seconds).set_trans(Tween.TRANS_SINE)
@@ -298,7 +318,12 @@ func anoint(seconds: float = 2.0) -> Tween:
 	tw.tween_callback(func() -> void: _oil.visible = false)
 	tw.tween_property(_samuel, "reach", 0.0, 0.8).set_trans(Tween.TRANS_SINE)
 	tw.tween_callback(func() -> void: _horn.visible = false)
+	tw.tween_property(_david, "kneel", 0.0, 0.9).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	return tw
+
+
+func life() -> Node3D:
+	return _life
 
 
 func oil_shown() -> bool:
@@ -306,9 +331,9 @@ func oil_shown() -> bool:
 
 
 func _pour(amount: float) -> void:
-	# The line of oil runs from the horn's lip down to the top of David's head.
-	var from := _horn.global_position + Vector3(0.0, -0.04, 0.0)
-	var to := _david.global_position + Vector3(0.0, 1.2, 0.0)
+	# The line of oil runs from the horn's lip down onto the top of the kneeling David's head.
+	var from := (_horn.get_node("Horn") as Node3D).global_position + Vector3(0.0, -0.04, 0.0)
+	var to: Vector3 = _david.head_top()
 	var end := from.lerp(to, amount)
 	_oil.global_position = (from + end) * 0.5
 	_oil.scale = Vector3(1.0, maxf(from.distance_to(end), 0.001), 1.0)
@@ -350,6 +375,8 @@ func _process(delta: float) -> void:
 		sheep.get_child(0).position.y = 0.42 + sin(_time * 1.6 + i) * 0.01
 	# The breeze at the anointing, and a faint one always.
 	var sway := 0.02 + _breeze * 0.18
+	if _life:
+		_life.breeze = _breeze
 	if _awning:
 		_awning.rotation.x = 0.12 + sin(_time * 2.2) * sway * 0.6
 	for i in _leaves.size():
@@ -377,10 +404,14 @@ func _build() -> void:
 	_olive_tree()
 	_table()
 	_fold()
+	_yard()
 	_welcome_things()
 	_david_things()
 	_people()
 	_markers()
+	_life = CourtyardLife.new()
+	_life.name = "CourtyardLife"
+	add_child(_life)
 	var story := Node.new()
 	story.name = "ChapterThree"
 	story.set_script(ChapterThree)
@@ -450,15 +481,22 @@ func _house() -> void:
 	Paper.part(_awning, "Cloth", Paper.box(Vector3(5.4, 0.08, 2.2)), CLAY, Vector3(0.0, 0.0, 1.0))
 	for x in [-1.1, 3.9]:
 		Paper.part(house, "AwningPole", Paper.cylinder(0.06, 3.3, 6), WOOD, Vector3(x, 1.65, 2.2))
-	var wall := StaticBody3D.new()
-	wall.name = "WallBody"
+	_solid(house, "WallBody", Vector3(10.0, 4.2, 0.8), Vector3(0.0, 2.1, 0.0))
+	_solid(house, "SideWallBody", Vector3(0.8, 4.2, 5.2), Vector3(-4.8, 2.1, 2.2))
+
+
+## A still, invisible body the walker bumps into instead of walking through.
+func _solid(parent: Node3D, body_name: String, size: Vector3, at: Vector3) -> StaticBody3D:
+	var body := StaticBody3D.new()
+	body.name = body_name
 	var shape := CollisionShape3D.new()
 	var box := BoxShape3D.new()
-	box.size = Vector3(10.0, 4.2, 0.8)
+	box.size = size
 	shape.shape = box
-	shape.position = Vector3(0.0, 2.1, 0.0)
-	wall.add_child(shape)
-	house.add_child(wall)
+	shape.position = at
+	body.add_child(shape)
+	parent.add_child(body)
+	return body
 
 
 func _olive_tree() -> void:
@@ -467,6 +505,7 @@ func _olive_tree() -> void:
 	tree.position = Vector3(6.4, 0.0, -3.4)
 	add_child(tree)
 	Paper.part(tree, "Trunk", Paper.cylinder(0.35, 3.8, 7, 0.26), WOOD, Vector3(0.0, 1.9, 0.0))
+	_solid(tree, "TrunkBody", Vector3(0.6, 2.0, 0.6), Vector3(0.0, 1.0, 0.0))
 	for i in 7:
 		var angle := TAU * float(i) / 7.0
 		var holder := Node3D.new()
@@ -487,6 +526,7 @@ func _table() -> void:
 	for x in [-1.35, 1.35]:
 		for z in [-0.52, 0.52]:
 			Paper.part(table, "Leg", Paper.cylinder(0.08, 0.8, 6), WOOD, Vector3(x, 0.4, z))
+	_solid(table, "TableBody", Vector3(3.4, 0.9, 1.55), Vector3(0.0, 0.45, 0.0))
 
 
 func _fold() -> void:
@@ -498,6 +538,7 @@ func _fold() -> void:
 		Paper.part(fold, "FencePost", Paper.cylinder(0.09, 1.2, 6), WOOD, Vector3(x, 0.6, 0.0))
 	for y in [0.38, 0.84]:
 		Paper.part(fold, "FenceRail", Paper.cylinder(0.055, 4.9, 6), WOOD, Vector3(0.0, y, 0.0), Vector3(0.0, 0.0, PI * 0.5))
+	_solid(fold, "FenceBody", Vector3(4.9, 1.2, 0.3), Vector3(0.0, 0.6, 0.0))
 	# Two sheep behind the fence. They breathe and turn; nothing to collect.
 	for i in 2:
 		var sheep := Node3D.new()
@@ -511,6 +552,87 @@ func _fold() -> void:
 		for leg in [Vector3(-0.14, -0.3, -0.22), Vector3(0.14, -0.3, -0.22), Vector3(-0.14, -0.3, 0.22), Vector3(0.14, -0.3, 0.22)]:
 			Paper.part(body, "Leg", Paper.cylinder(0.035, 0.3, 5), Color(0.3, 0.22, 0.16), leg)
 		_sheep.append(sheep)
+
+
+## A lived-in yard: water jars by the door, a woven mat and a basket of bread under the awning,
+## firewood by the side wall, a low field-stone wall round the edge with bushes and a second
+## tree beyond it, and wildflowers in the corners. Kept clear of the welcome things, David's
+## things, the rings and the paths the people walk.
+func _yard() -> void:
+	var yard := Node3D.new()
+	yard.name = "Yard"
+	add_child(yard)
+	for jar in [[Vector3(-0.7, 0.0, -5.2), 1.0], [Vector3(-0.15, 0.0, -5.0), 0.8], [Vector3(-1.25, 0.0, -4.95), 0.7]]:
+		var s: float = jar[1]
+		Paper.part(yard, "Jar", Paper.cylinder(0.24 * s, 0.62 * s, 9, 0.16 * s), CLAY, jar[0] + Vector3(0.0, 0.31 * s, 0.0))
+		Paper.part(yard, "JarNeck", Paper.cylinder(0.1 * s, 0.14 * s, 8, 0.13 * s), CLAY.darkened(0.08), jar[0] + Vector3(0.0, 0.68 * s, 0.0))
+	_solid(yard, "JarsBody", Vector3(1.5, 0.8, 0.7), Vector3(-0.7, 0.4, -5.05))
+	Paper.part(yard, "Mat", Paper.box(Vector3(2.2, 0.02, 1.3)), Color(0.82, 0.62, 0.36), Vector3(-2.7, 0.012, -4.7), Vector3(0.0, 0.08, 0.0), Vector3.ONE, 0.0)
+	for i in 4:
+		Paper.part(yard, "MatStripe", Paper.box(Vector3(2.2, 0.022, 0.1)), Color(0.66, 0.34, 0.26),
+				Vector3(-2.7, 0.014, -5.15 + i * 0.3), Vector3(0.0, 0.08, 0.0), Vector3.ONE, 0.0)
+	Paper.part(yard, "Basket", Paper.cylinder(0.3, 0.2, 10, 0.34), Color(0.72, 0.56, 0.32), Vector3(-2.2, 0.1, -4.5))
+	for i in 3:
+		Paper.part(yard, "Bread", Paper.sphere(0.12, 7), Color(0.86, 0.66, 0.4), Vector3(-2.3 + i * 0.1, 0.22, -4.55 + (i % 2) * 0.1),
+				Vector3.ZERO, Vector3(1.0, 0.5, 1.0), 0.0)
+	for i in 5:
+		Paper.part(yard, "Log", Paper.cylinder(0.09, 1.0, 6), WOOD.lightened(0.05 * (i % 2)),
+				Vector3(-7.9 + (i % 3) * 0.2, 0.1 + (i / 3) * 0.17, -5.4 + (i % 3) * 0.19), Vector3(PI * 0.5, 0.0, 0.0), Vector3.ONE, 0.015)
+	# The low wall of field stones round the yard, open at the front; outside the walker's play
+	# area, so it only frames the courtyard.
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 1613
+	var runs := [[Vector3(-12.3, 0.0, 9.5), Vector3(-12.3, 0.0, -9.0)], [Vector3(-12.3, 0.0, -9.0), Vector3(12.3, 0.0, -9.0)],
+			[Vector3(12.3, 0.0, -9.0), Vector3(12.3, 0.0, 2.0)]]
+	for run in runs:
+		var a: Vector3 = run[0]
+		var b: Vector3 = run[1]
+		var count := int(a.distance_to(b) / 0.7)
+		for i in count:
+			var at := a.lerp(b, (float(i) + 0.5) / float(count))
+			Paper.part(yard, "WallStone", Paper.box(Vector3(0.72, 0.5, 0.55)), LIMESTONE.darkened(rng.randf_range(0.04, 0.16)),
+					at + Vector3(0.0, 0.22 + rng.randf_range(-0.04, 0.04), 0.0),
+					Vector3(0.0, atan2(b.x - a.x, b.z - a.z) + PI * 0.5 + rng.randf_range(-0.12, 0.12), rng.randf_range(-0.06, 0.06)),
+					Vector3.ONE, 0.015)
+	for bush in [Vector3(-11.2, 0.0, -7.8), Vector3(-11.4, 0.0, 6.6), Vector3(11.1, 0.0, -7.6), Vector3(10.9, 0.0, -4.9), Vector3(-10.6, 0.0, 1.0)]:
+		var s := rng.randf_range(0.8, 1.2)
+		Paper.part(yard, "Bush", Paper.sphere(0.7, 7), OLIVE.darkened(rng.randf_range(0.0, 0.12)), bush + Vector3(0.0, 0.45 * s, 0.0),
+				Vector3(0.0, rng.randf() * TAU, 0.0), Vector3(1.3, 0.85, 1.1) * s)
+	var fig := Node3D.new()
+	fig.name = "FigTree"
+	fig.position = Vector3(-10.4, 0.0, -6.6)
+	yard.add_child(fig)
+	Paper.part(fig, "Trunk", Paper.cylinder(0.24, 2.6, 7, 0.18), WOOD, Vector3(0.0, 1.3, 0.0))
+	for i in 5:
+		var angle := TAU * float(i) / 5.0
+		Paper.part(fig, "Leaves%d" % i, Paper.sphere(0.8, 7), OLIVE.darkened(0.05 + 0.05 * float(i % 2)),
+				Vector3(cos(angle) * 0.8, 2.7 + 0.2 * float(i % 2), sin(angle) * 0.7), Vector3.ZERO, Vector3(1.2, 0.75, 1.0))
+	# Wildflowers: little clusters of red anemones, yellow, white and purple, off the busy ground.
+	var colours := [Color(0.86, 0.3, 0.3), Color(0.96, 0.84, 0.36), Color(0.97, 0.95, 0.9), Color(0.72, 0.5, 0.82)]
+	var busy: Array[Vector3] = [ARRIVE, TABLE, SAMUEL_START, SAMUEL_PLACE, JESSE_PLACE, DAVID_PLACE]
+	for thing in WELCOME:
+		busy.append(WELCOME[thing]["at"])
+		busy.append(WELCOME[thing]["ring"])
+	for thing in FINDS:
+		busy.append(FINDS[thing])
+	for dove in CourtyardLife.DOVE_SPOTS:
+		busy.append(dove)
+	var placed := 0
+	while placed < 26:
+		var at := Vector3(rng.randf_range(-11.0, 11.5), 0.0, rng.randf_range(-8.2, 9.8))
+		# Not on the sheep path, nor where the brothers stand and walk.
+		var clear := absf(at.x - 5.5) > 1.9 or at.z < -1.6
+		clear = clear and not (at.z < -2.4 and at.x > -9.2 and at.x < 1.4)
+		for spot in busy:
+			clear = clear and Vector2(at.x - spot.x, at.z - spot.z).length() > 1.6
+		if not clear:
+			continue
+		var colour: Color = colours[placed % colours.size()]
+		for k in 4:
+			var petal := at + Vector3(rng.randf_range(-0.22, 0.22), 0.0, rng.randf_range(-0.22, 0.22))
+			Paper.part(yard, "Stem", Paper.cylinder(0.008, 0.16, 3), OLIVE, petal + Vector3(0.0, 0.08, 0.0), Vector3.ZERO, Vector3.ONE, 0.0)
+			Paper.part(yard, "Flower", Paper.sphere(0.045, 5), colour, petal + Vector3(0.0, 0.17, 0.0), Vector3.ZERO, Vector3(1.0, 0.6, 1.0), 0.0)
+		placed += 1
 
 
 ## The cushion, the cup of water and the oil lamp for Samuel, each waiting somewhere in the

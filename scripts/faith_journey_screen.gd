@@ -189,8 +189,6 @@ func open_to_choose() -> void:
 		line = "The King's Camp is next."
 	elif next == Profiles.CHAPTER_BEGINNING:
 		line = "The Beginning is next."
-		# Not recorded yet: Wonder Light says her recorded "Tap a story to begin." instead.
-		spoken = "Tap a story to begin."
 	elif next == Profiles.CHAPTER_ARK:
 		line = "Noah's Ark is next."
 	# The name is on the screen only: the recorded "Hello!" cannot say every child's name.

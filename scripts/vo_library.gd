@@ -53,6 +53,18 @@ const LINES := {
 	"Sign.": "ark_word_sign",
 	"Promise.": "ark_word_promise",
 	"A Trust charm. Noah kept building before he could see the rain.": "ark_charm",
+	# Chapter 3, The Beginning: its story lines are in assets/dialogue/jesses_house.tres (Wonder
+	# Light in Juno, Samuel in Gideon, Jesse in Desmond, David in Bram). These are spoken by their
+	# words: the map, the locked cards, the verse, the word chips and the charm the journal reads.
+	"A Faithful Heart charm, for caring well in quiet places.": "bg_charm",
+	"The Beginning is next.": "bg_map",
+	"Finish Chapter 2, The King's Camp, first. Then The Beginning will open for you.": "bg_locked",
+	"Finish Chapter 3, The Beginning, first. Then Noah's Ark will open for you.": "bg_locked_ark",
+	"First Samuel, chapter sixteen, verse seven.": "bg_verse_ref",
+	"But Yahweh said to Samuel, ‘Don't look on his face, or on the height of his stature, because I have rejected him; for I don't see as man sees. For man looks at the outward appearance, but Yahweh looks at the heart.’": "bg_verse",
+	"God.": "bg_word_god",
+	"Sees.": "bg_word_sees",
+	"Heart.": "bg_word_heart",
 }
 
 static var _cache: Dictionary = {}

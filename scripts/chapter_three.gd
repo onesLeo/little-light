@@ -2,9 +2,8 @@ extends Node
 ## Chapter 3, The Beginning: Samuel comes to Jesse's home in Bethlehem and anoints David,
 ## the youngest, who is out with the sheep (1 Samuel 16:1-13). It is a look back, played
 ## after The King's Camp: "God sees the heart", with the Faithful Heart charm.
-## Lives on the courtyard (jesses_house.gd), which stages the people and props; its lines are
-## in assets/dialogue/jesses_house.tres, read by the system voice until the chapter is cast
-## (docs/chapter-3-readiness.md).
+## Lives on the courtyard (jesses_house.gd), which stages the people and props; its lines, with
+## their recorded clips, are in assets/dialogue/jesses_house.tres (docs/voice-over.md).
 ##
 ## The beats: turn back the page; prepare the welcome (carry the cushion, the cup and the lamp
 ## to the table, in any order, while David's harp, bowl and cloak can be found on the way);

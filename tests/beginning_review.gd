@@ -63,6 +63,16 @@ func prompt_text() -> String:
 	return (main.find_child("PromptLabel", true, false) as Label).text
 
 
+## Whether a solid body (a wall the walker cannot pass) is at `point`.
+func solid_at(space: PhysicsDirectSpaceState3D, point: Vector3) -> bool:
+	var query := PhysicsPointQueryParameters3D.new()
+	query.position = point
+	for hit in space.intersect_point(query):
+		if hit["collider"] is StaticBody3D:
+			return true
+	return false
+
+
 ## Puts the walker at `at` and lets the story notice it.
 func walk_to(player: Node3D, at: Vector3) -> void:
 	player.global_position = Vector3(at.x, 0.3, at.z)
@@ -87,6 +97,16 @@ func _run() -> void:
 	check(house.sons().brothers().size() == 7, "all seven of Jesse's older sons stand in the courtyard")
 	check(not house.david().visible, "David is away with the sheep")
 	check(not player.can_move and story.get_action_hint() == "NEXT", "the first line holds the child still, and the button says NEXT")
+	var space := (house as Node3D).get_world_3d().direct_space_state
+	check(solid_at(space, Vector3(-8.8, 1.0, -3.8)), "the house's side wall is solid: the walker cannot pass through it")
+	var clear_of_walls := true
+	for brother in house.sons().brothers():
+		clear_of_walls = clear_of_walls and not solid_at(space, brother.global_position + Vector3(0.0, 1.0, 0.0))
+	check(clear_of_walls, "every brother stands clear of the walls")
+	var life: Node3D = house.life()
+	var cloud_x: float = life.cloud_shadows()[0].position.x
+	await create_timer(0.5).timeout
+	check(life.cloud_shadows().size() == 3 and life.cloud_shadows()[0].position.x > cloud_x, "cloud shadows drift across the courtyard")
 	await shot("01_arrive")
 
 	print("-- Prepare the Welcome --")
@@ -94,6 +114,12 @@ func _run() -> void:
 	await settle()
 	check(story.phase == story.Phase.WELCOME and player.can_move and story._checklist.visible
 			and "0 / 3" in story._checklist._title.text, "the welcome starts: the child can walk, and the list shows 0 / 3")
+	var dove: Node3D = life.ground_doves()[0]
+	var dove_home := dove.global_position
+	await walk_to(player, dove_home + Vector3(0.6, 0.0, 0.6))
+	await create_timer(1.8).timeout
+	check(dove.global_position.distance_to(dove_home) > 1.5 and dove.global_position.y < 0.05,
+			"a dove flutters off when the child walks up, and lands a little way away")
 	await walk_to(player, house.FINDS["Harp"])
 	check(house.found_things() == ["Harp"] and "small harp" in line_text(), "finding David's harp, Wonder Light says what it is for")
 	check(prompt_text().begins_with("Carry the cushion"), "and the welcome prompt stays")
@@ -168,11 +194,21 @@ func _run() -> void:
 	for i in [2, 0, 1]:
 		story.press_word(i)
 	check(story.phase == story.Phase.ANOINT and not story._words.visible, "tapping all three, in any order, moves on to the anointing")
-	await create_timer(1.6).timeout
+	await create_timer(1.2).timeout
+	check(house.david().kneel > 0.95 and house.samuel().global_position.distance_to(house.david().global_position) < house.ANOINT_GAP + house.ANOINT_SIDE,
+			"David kneels, and Samuel comes close to him")
+	await create_timer(1.4).timeout
 	check(house.oil_shown() and house.samuel().reach > 0.5, "Samuel lifts the horn and the oil runs down")
+	await create_timer(0.9).timeout
+	var horn: Node3D = house.samuel().find_child("OilHorn", true, false).get_node("Horn")
+	var head: Vector3 = house.david().head_top()
+	check(Vector2(horn.global_position.x - head.x, horn.global_position.z - head.z).length() < 0.12 and horn.global_position.y > head.y,
+			"the horn is held over David's head, so the oil runs down onto it, not across to him (%.2f m aside, %.2f m above)"
+			% [Vector2(horn.global_position.x - head.x, horn.global_position.z - head.z).length(), horn.global_position.y - head.y])
 	await shot("06_anoint")
-	await create_timer(4.0).timeout
-	check(not house.oil_shown() and story.get_action_hint() == "NEXT", "the oil is gone again, and the story waits for the child")
+	await create_timer(4.4).timeout
+	check(not house.oil_shown() and house.david().kneel < 0.01 and story.get_action_hint() == "NEXT",
+			"the oil is gone again, David stands, and the story waits for the child")
 	story._advance()
 	check(story.phase == story.Phase.REFLECT and "God sees you too" in line_text(), "the reflection: God saw his heart, and sees you too")
 

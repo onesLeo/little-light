@@ -459,6 +459,8 @@ func _initialize() -> void:
 	var map_script := load("res://scripts/faith_journey_screen.gd")
 	var map_unrecorded: Array = []
 	for block in ["Hello!\nYour journey starts in the valley.", "Hello!\nThe King's Camp is next.", "Hello!\nNoah's Ark is next.", "Hello!\nTap a story to begin.",
+			"Hello!\nThe Beginning is next.", "Finish Chapter 2, The King's Camp, first. Then The Beginning will open for you.",
+			"Finish Chapter 3, The Beginning, first. Then Noah's Ark will open for you.",
 			"One story at a time.", "Finish Chapter 1, The valley, first. Then The King's Camp will open for you.",
 			"This part of the path is still ahead. New stories will be waiting here."]:
 		for line in audio._spoken_lines(map_script._wonder_light(block)):

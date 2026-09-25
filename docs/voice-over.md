@@ -142,3 +142,24 @@ stand-ins had used compressed audio.
 
 To fetch them again: `python tools/fetch_vo.py --only ark_ --force`, then import in Godot and run the
 smoke test and `tests/ark_review.gd`.
+
+## Chapter 3, The Beginning (2026-09-26)
+
+Twenty-eight clips, mono 24 kHz PCM, Seed Audio 1.0 unless noted:
+
+| Character | Voice | Notes |
+|-----------|-------|-------|
+| Wonder Light, the verse, the three words, the map lines | Juno | 22 clips |
+| Samuel | Gideon | calm and slow, which suits the old prophet; set to about -19 dB speech RMS like Noah |
+| Jesse | Desmond | an older father's voice, apart from Gideon; also set to about -19 dB |
+| David (younger) | Bram | the same voice as David in the valley |
+
+Seed Audio 1.0 failed 1 Samuel 16:7 twice, so it is Juno through Seed Speech, like Genesis 9:13.
+That take is MP3; without `miniaudio` it was decoded with Blender's bundled audio library
+(`aud.Sound(...).write(...)`), then trimmed with `fetch_vo.trim` and set to Juno's level.
+The ark's old locked card ("Finish Chapter 2 ... Then Noah's Ark will open") is no longer spoken, now
+that The Beginning comes first, so `ark_locked.wav` was removed and `bg_locked_ark` reads the new one.
+
+To fetch them again: `python tools/fetch_vo.py --only bg_ --force` (the verse needs
+`pip install miniaudio`), then turn Samuel's and Jesse's four clips down to about -19 dB again (the
+takes come in 3 to 4 dB louder), import in Godot and run the smoke test and `tests/beginning_review.gd`.

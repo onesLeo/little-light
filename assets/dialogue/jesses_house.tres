@@ -1,121 +1,160 @@
-[gd_resource type="Resource" load_steps=24 format=3]
+[gd_resource type="Resource" load_steps=44 format=3]
 
 [ext_resource type="Script" path="res://scripts/dialogue_lines.gd" id="1_lines"]
 [ext_resource type="Script" path="res://scripts/dialogue_line.gd" id="2_line"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/bg_turn_back.wav" id="bg_turn_back"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/bg_look_around.wav" id="bg_look_around"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/bg_samuel_coming.wav" id="bg_samuel_coming"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/bg_harp.wav" id="bg_harp"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/bg_bowl.wav" id="bg_bowl"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/bg_cloak.wav" id="bg_cloak"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/bg_ready.wav" id="bg_ready"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/bg_brothers.wav" id="bg_brothers"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/bg_waits.wav" id="bg_waits"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/bg_call_david.wav" id="bg_call_david"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/bg_heart.wav" id="bg_heart"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/bg_anoint.wav" id="bg_anoint"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/bg_reflect.wav" id="bg_reflect"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/bg_charm.wav" id="bg_charm"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/bg_keep_close.wav" id="bg_keep_close"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/bg_not_these.wav" id="bg_not_these"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/bg_ask.wav" id="bg_ask"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/bg_jesse_welcome.wav" id="bg_jesse_welcome"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/bg_youngest.wav" id="bg_youngest"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/bg_david_called.wav" id="bg_david_called"]
 
 [sub_resource type="Resource" id="Line_turn_back"]
 script = ExtResource("2_line")
 id = &"turn_back"
 speaker = "Wonder Light"
 text = "We are turning back the page. This is Bethlehem, before the valley. David's family is getting ready for a guest."
+clip = ExtResource("bg_turn_back")
 
 [sub_resource type="Resource" id="Line_look_around"]
 script = ExtResource("2_line")
 id = &"look_around"
 speaker = "Wonder Light"
 text = "David is out with the sheep. You may notice the things he uses to care for them."
+clip = ExtResource("bg_look_around")
 
 [sub_resource type="Resource" id="Line_samuel_coming"]
 script = ExtResource("2_line")
 id = &"samuel_coming"
 speaker = "Wonder Light"
 text = "Samuel is coming. Let's get the cushion, the cup and the lamp ready for him."
+clip = ExtResource("bg_samuel_coming")
 
 [sub_resource type="Resource" id="Line_harp"]
 script = ExtResource("2_line")
 id = &"harp"
 speaker = "Wonder Light"
 text = "A small harp. David plays it while he watches the sheep."
+clip = ExtResource("bg_harp")
 
 [sub_resource type="Resource" id="Line_bowl"]
 script = ExtResource("2_line")
 id = &"bowl"
 speaker = "Wonder Light"
 text = "A bowl of water for the sheep. David cares for them every day."
+clip = ExtResource("bg_bowl")
 
 [sub_resource type="Resource" id="Line_cloak"]
 script = ExtResource("2_line")
 id = &"cloak"
 speaker = "Wonder Light"
 text = "A plain shepherd's cloak, made for work outside."
+clip = ExtResource("bg_cloak")
 
 [sub_resource type="Resource" id="Line_ready"]
 script = ExtResource("2_line")
 id = &"ready"
 speaker = "Wonder Light"
 text = "Everything is ready. Here comes Samuel."
+clip = ExtResource("bg_ready")
 
 [sub_resource type="Resource" id="Line_jesse_welcome"]
 script = ExtResource("2_line")
 id = &"jesse_welcome"
 speaker = "Jesse"
 text = "Samuel! Welcome to our home."
+clip = ExtResource("bg_jesse_welcome")
 
 [sub_resource type="Resource" id="Line_brothers"]
 script = ExtResource("2_line")
 id = &"brothers"
 speaker = "Wonder Light"
 text = "Jesse's seven older sons come forward, one by one."
+clip = ExtResource("bg_brothers")
 
 [sub_resource type="Resource" id="Line_not_these"]
 script = ExtResource("2_line")
 id = &"not_these"
 speaker = "Samuel"
 text = "Yahweh has not chosen these."
+clip = ExtResource("bg_not_these")
 
 [sub_resource type="Resource" id="Line_waits"]
 script = ExtResource("2_line")
 id = &"waits"
 speaker = "Wonder Light"
 text = "Samuel waits. The one God has chosen is not here yet."
+clip = ExtResource("bg_waits")
 
 [sub_resource type="Resource" id="Line_ask"]
 script = ExtResource("2_line")
 id = &"ask"
 speaker = "Samuel"
 text = "Are all your children here?"
+clip = ExtResource("bg_ask")
 
 [sub_resource type="Resource" id="Line_youngest"]
 script = ExtResource("2_line")
 id = &"youngest"
 speaker = "Jesse"
 text = "The youngest is still caring for the sheep."
+clip = ExtResource("bg_youngest")
 
 [sub_resource type="Resource" id="Line_call_david"]
 script = ExtResource("2_line")
 id = &"call_david"
 speaker = "Wonder Light"
 text = "Let's call David home."
+clip = ExtResource("bg_call_david")
 
 [sub_resource type="Resource" id="Line_david_called"]
 script = ExtResource("2_line")
 id = &"david_called"
 speaker = "David"
 text = "You called for me?"
+clip = ExtResource("bg_david_called")
 
 [sub_resource type="Resource" id="Line_heart"]
 script = ExtResource("2_line")
 id = &"heart"
 speaker = "Wonder Light"
 text = "People notice the outside first. God sees who you are inside."
+clip = ExtResource("bg_heart")
 
 [sub_resource type="Resource" id="Line_anoint"]
 script = ExtResource("2_line")
 id = &"anoint"
 speaker = "Wonder Light"
 text = "Samuel pours the oil. God has chosen David, the youngest shepherd."
+clip = ExtResource("bg_anoint")
 
 [sub_resource type="Resource" id="Line_reflect"]
 script = ExtResource("2_line")
 id = &"reflect"
 speaker = "Wonder Light"
 text = "David was caring for the sheep when nobody expected him to be called. God saw his heart. God sees you too."
+clip = ExtResource("bg_reflect")
 
 [sub_resource type="Resource" id="Line_charm"]
 script = ExtResource("2_line")
 id = &"charm"
 speaker = "Wonder Light"
 text = "A Faithful Heart charm, for caring well in quiet places."
+clip = ExtResource("bg_charm")
 
 [sub_resource type="Resource" id="Line_charm_arrives"]
 script = ExtResource("2_line")
@@ -127,8 +166,8 @@ script = ExtResource("2_line")
 id = &"keep_close"
 speaker = "Wonder Light"
 text = "Keep it close. Be faithful with the small things in front of you."
+clip = ExtResource("bg_keep_close")
 
 [resource]
 script = ExtResource("1_lines")
-recorded = false
 lines = Array[Resource]([SubResource("Line_turn_back"), SubResource("Line_look_around"), SubResource("Line_samuel_coming"), SubResource("Line_harp"), SubResource("Line_bowl"), SubResource("Line_cloak"), SubResource("Line_ready"), SubResource("Line_jesse_welcome"), SubResource("Line_brothers"), SubResource("Line_not_these"), SubResource("Line_waits"), SubResource("Line_ask"), SubResource("Line_youngest"), SubResource("Line_call_david"), SubResource("Line_david_called"), SubResource("Line_heart"), SubResource("Line_anoint"), SubResource("Line_reflect"), SubResource("Line_charm"), SubResource("Line_charm_arrives"), SubResource("Line_keep_close")])

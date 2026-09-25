@@ -133,10 +133,16 @@ cushion, cup and lamp one at a time to breathing rings in front of the table, an
 takes its own thing, the golden arrow after 12 s); Samuel's arrival; the seven brothers
 (`jesse_sons.gd`: idle glances and weight shifts, then out-hold-back in about nine seconds, on a
 still camera); "Yahweh has not chosen these"; calling David home (CALL on a tablet); 1 Samuel 16:7
-with God, Sees and Heart to tap; the anointing (the horn lifted, a thin line of oil, a breeze, no
-glow); the reflection; the Faithful Heart ceremony. Read by the system voice (no recordings yet).
-Not yet: resume after a reload mid-chapter (Play again restarts it), doves, per-object placement
-sounds beyond the three existing effects, and the family/tablet tests of Milestone C.
+with God, Sees and Heart to tap; the anointing (David kneels, Samuel steps up and holds the horn
+over his head, and a thin line of oil runs down onto it, a breeze, no glow); the reflection; the
+Faithful Heart ceremony. Recorded voices (2026-09-26, `docs/voice-over.md`). The house's side wall,
+the table, the olive trunk, the fence and the water jars are solid, and the brothers stand clear of
+the walls. The courtyard is dressed and alive (`courtyard_life.gd`): water jars, a mat and a bread
+basket under the awning, firewood, a low field-stone wall with bushes and a fig tree, wildflowers,
+cloud shadows drifting over the ground and the people, leaves on the breeze, two doves circling and
+two pecking, which flutter off when the child walks up.
+Not yet: resume after a reload mid-chapter (Play again restarts it), per-object placement sounds
+beyond the three existing effects, and the family/tablet tests of Milestone C.
 
 - Greybox the courtyard, house edge, table, fold and sheep path.
 - Implement Prepare the Welcome with three placeholder objects.
@@ -161,8 +167,9 @@ describe the charm or David's ordinary work as the reason he earned selection.
 **Characters done early, by the owner's decision (2026-09-25):** Samuel, Jesse and the younger
 David are rigged Blender models on the shared skeleton
 (`art/blender/scripts/characters/generate_bethlehem_people_v1.py`), with Blink and Talk, driven
-by `story_person.gd` (breath, blink, talk, gesture, walk; Samuel's arm lifts the horn). Voices,
-charm art polish, soundscape and foley are still to come.
+by `story_person.gd` (breath, blink, talk, gesture, walk, kneel; Samuel's arm lifts the horn).
+Voices are recorded (Juno, Gideon, Desmond, Bram). Charm art polish, soundscape and foley are still
+to come.
 
 - Generate and review Samuel, Jesse and younger David models.
 - Add final courtyard props, charm art, motion, soundscape and licensed foley.

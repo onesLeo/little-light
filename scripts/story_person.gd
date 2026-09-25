@@ -15,12 +15,25 @@ const PEOPLE := {
 	"young_david": {"scene": "res://assets/young_david_v1.glb", "body": "YoungDavidBody", "outline": "YoungDavidOutline", "scale": 1.06},
 }
 
+## The kneeling pose, in radians at kneel = 1: the knees bend right back under the body, the
+## back leans a little forward and the head bows.
+const KNEEL_THIGH := -0.12
+const KNEEL_SHIN := 1.5
+const KNEEL_LEAN := -0.12
+const KNEEL_BOW := -0.4
+
 ## One of PEOPLE. Set this before the node enters the tree.
 var who: String = "noah"
 var speaking: bool = false
 var walk_amount: float = 0.0
 ## 0 to 1: the right arm lifts forward and a little up (Samuel raising the oil horn).
 var reach: float = 0.0
+## 0 to 1: down on both knees, head bowed (David, to be anointed). The model sinks by the
+## height of its knees, so the knees rest on the ground.
+var kneel: float = 0.0
+var _model: Node3D
+var _knee_height: float = 0.0
+var _height: float = 0.0
 var _time: float = 0.0
 var _blink: float = 2.4
 var _talk: float = 0.0
@@ -40,6 +53,7 @@ func _ready() -> void:
 	model.name = "Model"
 	model.scale = Vector3.ONE * float(person["scale"])
 	add_child(model)
+	_model = model
 	_skeleton = model.find_children("*", "Skeleton3D", true, false)[0] as Skeleton3D
 	_body = model.find_child(person["body"], true, false) as MeshInstance3D
 	var outline := model.find_child(person["outline"], true, false) as MeshInstance3D
@@ -50,6 +64,11 @@ func _ready() -> void:
 			continue
 		_axes[bone_name] = _skeleton.get_bone_global_rest(index).basis.inverse()
 		_rest_rotations[bone_name] = _skeleton.get_bone_rest(index).basis.get_rotation_quaternion()
+	_height = _body.get_aabb().end.y * float(person["scale"])
+	var shin := _skeleton.find_bone("Shin_L")
+	if shin >= 0:
+		var knee := _skeleton.global_transform * _skeleton.get_bone_global_rest(shin).origin
+		_knee_height = (knee - model.global_transform.origin).y if model.is_inside_tree() else 0.0
 	_blink_shape = _body.find_blend_shape_by_name("Blink")
 	_talk_shape = _body.find_blend_shape_by_name("Talk")
 	_measure_shape = _body.find_blend_shape_by_name("Measure")
@@ -63,6 +82,11 @@ func _ready() -> void:
 			mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 			mat.cull_mode = BaseMaterial3D.CULL_BACK
 			outline.set_surface_override_material(i, mat)
+
+
+## The top of the head in the world, standing or kneeling (where the oil runs to).
+func head_top() -> Vector3:
+	return global_position + Vector3(0.0, _height - _knee_height * kneel, 0.0)
 
 
 ## Hangs `prop` on one of the skeleton's bones (a staff in a hand), so it moves with it.
@@ -96,19 +120,20 @@ func _process(delta: float) -> void:
 		_body.set_blend_shape_value(_measure_shape, _talk * 0.35)
 	var breath := CharacterMotion.breath(_time)
 	var gesture := CharacterMotion.speaking_pulse(_time) * _talk
+	_model.position.y = -_knee_height * kneel
 	_pose("Hips", Vector3(0, 0, sin(_time * 0.9) * 0.008))
-	_pose("Spine", Vector3(breath * 0.006, 0, 0))
+	_pose("Spine", Vector3(breath * 0.006 + kneel * KNEEL_LEAN, 0, 0))
 	_pose("Chest", Vector3(0, sin(_time * 1.1) * 0.012, 0))
-	_pose("Head", Vector3(sin(_time * 2.4) * (0.012 + _talk * 0.025), sin(_time * 0.7) * 0.035, 0))
+	_pose("Head", Vector3(sin(_time * 2.4) * (0.012 + _talk * 0.025) + kneel * KNEEL_BOW, sin(_time * 0.7) * 0.035, 0))
 	for side in ["L", "R"]:
 		var sign_side := -1.0 if side == "L" else 1.0
 		var lead := 1.0 if side == "R" else 0.25
 		var stride := sin(_time * 9.0) * sign_side * walk_amount
-		_pose("Thigh_" + side, Vector3(stride * 0.28, 0, 0))
-		_pose("Shin_" + side, Vector3(maxf(-stride, 0.0) * 0.3, 0, 0))
+		_pose("Thigh_" + side, Vector3(stride * 0.28 + kneel * KNEEL_THIGH, 0, 0))
+		_pose("Shin_" + side, Vector3(maxf(-stride, 0.0) * 0.3 + kneel * KNEEL_SHIN, 0, 0))
 		var lift := reach if side == "R" else 0.0
-		_pose("UpperArm_" + side, Vector3(0.02 + gesture * 0.03 * lead - stride * 0.18 + lift * 1.15, 0, sign_side * 0.02))
-		_pose("LowerArm_" + side, Vector3(0.03 + gesture * 0.05 * lead + lift * 0.35, 0, 0))
+		_pose("UpperArm_" + side, Vector3(0.02 + gesture * 0.03 * lead - stride * 0.18 + lift * 1.9 + kneel * 0.25, 0, sign_side * 0.02))
+		_pose("LowerArm_" + side, Vector3(0.03 + gesture * 0.05 * lead + lift * 0.2, 0, 0))
 
 
 func _pose(bone_name: String, angles: Vector3) -> void:

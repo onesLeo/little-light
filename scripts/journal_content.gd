@@ -51,7 +51,6 @@ const VERSES := [
 		# World English Bible Classic, verified in docs/chapter-3-concept.md.
 		"text": "But Yahweh said to Samuel, ‘Don't look on his face, or on the height of his stature, because I have rejected him; for I don't see as man sees. For man looks at the outward appearance, but Yahweh looks at the heart.’",
 		"why": "David was out caring for the sheep when Samuel came. People look at the outside first. God sees the heart.",
-		"recorded": false,
 	},
 ]
 
@@ -83,7 +82,6 @@ const CHARMS := [
 		"reason": "For caring well in quiet places.",
 		"spoken": "A Faithful Heart charm, for caring well in quiet places.",
 		"color": Color(0.9, 0.52, 0.42),
-		"recorded": false,
 	},
 ]
 
