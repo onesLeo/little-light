@@ -269,6 +269,12 @@ func _run() -> void:
 	check(story.phase == story.Phase.DONE and Profiles.has_finished(kid, Profiles.CHAPTER_ARK), "the chapter finishes")
 	check(Profiles.has_charm(kid, JournalContent.CHARM_TRUST), "the Trust charm is earned")
 	check(menu._end_charm == JournalContent.CHARM_TRUST and "Trust" in menu._end_title.text, "the end card names the Trust charm")
+	# Pausing over the end card: the pause menu is on top, and the card waits behind it.
+	menu.set_paused(true)
+	check(menu._pause_layer.visible and not menu._end_panel.visible
+			and menu._pause_layer.get_index() > menu._end_panel.get_index(), "pausing puts the end card aside under the pause menu")
+	menu.set_paused(false)
+	check(menu._end_panel.visible and not menu._pause_layer.visible, "resuming brings the end card back")
 
 	# Playing it again from the map, without reloading the scene, starts from a whole ark.
 	journey.open()

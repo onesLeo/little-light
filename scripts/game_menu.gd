@@ -36,6 +36,8 @@ var _pause_button: IconButton
 var _speaker_button: IconButton
 var _book_button: IconButton
 var _end_panel: PanelContainer
+## True while the pause menu has put the end card aside; Resume brings it back.
+var _end_paused_away: bool = false
 var _end_title: Label
 var _end_token: int = 0
 var _play_again_button: Button
@@ -116,8 +118,9 @@ func _ready() -> void:
 	add_child(_root)
 
 	_build_corner_buttons()
-	_build_pause_panel()
+	# The end card first, so the pause menu is drawn over it.
 	_build_end_panel()
+	_build_pause_panel()
 
 	if _director and _director.has_signal("chapter_finished"):
 		_director.chapter_finished.connect(_on_chapter_finished)
@@ -144,6 +147,13 @@ func _input(event: InputEvent) -> void:
 func set_paused(paused: bool) -> void:
 	get_tree().paused = paused
 	_pause_layer.visible = paused
+	# The end card steps aside while paused, so its buttons neither show through nor take focus.
+	if paused and _end_panel.visible:
+		_end_paused_away = true
+		_end_panel.visible = false
+	elif not paused and _end_paused_away:
+		_end_paused_away = false
+		_end_panel.visible = true
 	if paused:
 		if _audio and _audio.has_method("stop_speech"):
 			_audio.stop_speech()
@@ -184,6 +194,7 @@ func _open_journey() -> void:
 ## The end-of-chapter card steps aside once the child walks into another story.
 func hide_end_panel() -> void:
 	_end_token += 1
+	_end_paused_away = false
 	_end_panel.visible = false
 	_set_dialogue_visible(true)
 
