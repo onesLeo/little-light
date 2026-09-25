@@ -201,8 +201,7 @@ func _on_placed(thing: String) -> void:
 	if phase != Phase.MEET:
 		return
 	_busy = false
-	if _camera and _camera.has_method("cut_to_two_shot"):
-		_camera.cut_to_two_shot(_house().jesse(), _house().samuel())
+	_house().meet_shot()
 
 
 ## Jesse's sons pass before Samuel, one by one. The camera stays still while they move.

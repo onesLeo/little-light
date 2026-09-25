@@ -78,11 +78,17 @@ const BROTHERS_START := Vector3(-7.9, 0.0, -3.6)
 const BROTHERS_ALONG := Vector3(0.95, 0.0, 0.0)
 ## At the anointing Samuel stands this close in front of the kneeling David, and this far to
 ## the left, so the horn in his raised right hand is over David's head.
-const ANOINT_GAP := 0.34
+## The horn's mouth, in the forearm bone's units (just past the hand), and how long the horn is.
+## ANOINT_GAP and ANOINT_SIDE are measured from it (beginning_review.gd prints the offset).
+const HORN_MOUTH := Vector3(0.0, 0.24, 0.02)
+const HORN_LENGTH := 0.26
+const ANOINT_GAP := 0.4
 const ANOINT_SIDE := 0.27
 ## How far Samuel steps back once the oil is poured.
 const STEP_BACK := 0.85
 ## A still view of the whole row and Samuel for the procession: from the front, a little aside.
+## How far from Jesse and Samuel the welcome shot stands.
+const MEET_DISTANCE := 4.6
 const PROCESSION_EYE := Vector3(-2.6, 2.8, 6.0)
 const PROCESSION_LOOK := Vector3(-3.7, 0.9, -2.2)
 
@@ -300,13 +306,32 @@ func david_comes_home(seconds: float = 4.2) -> Tween:
 ## Holds the camera still on the brothers' row and Samuel while the brothers pass (the
 ## story cuts back with the camera director afterwards).
 func procession_shot() -> void:
-	var cam := get_node_or_null("ProcessionCamera") as Camera3D
+	_still_shot(PROCESSION_EYE, PROCESSION_LOOK)
+
+
+## Jesse welcoming Samuel, seen from the house side of the two: the table and the welcome
+## things are behind them in the frame rather than filling its front.
+func meet_shot() -> void:
+	var mid := (_jesse.global_position + _samuel.global_position) * 0.5
+	var across := _samuel.global_position - _jesse.global_position
+	across.y = 0.0
+	var side := across.normalized().cross(Vector3.UP)
+	# The side away from the table.
+	if side.dot(TABLE - mid) > 0.0:
+		side = -side
+	_still_shot(mid + side * MEET_DISTANCE + Vector3(0.0, 1.35, 0.0), mid + Vector3(0.0, 0.95, 0.0))
+
+
+## Holds the courtyard's own still camera at `eye`, looking at `look`, until the story cuts
+## back with the camera director.
+func _still_shot(eye: Vector3, look: Vector3) -> void:
+	var cam := get_node_or_null("StillCamera") as Camera3D
 	if cam == null:
 		cam = Camera3D.new()
-		cam.name = "ProcessionCamera"
+		cam.name = "StillCamera"
 		cam.fov = 42.0
 		add_child(cam)
-	cam.look_at_from_position(PROCESSION_EYE, PROCESSION_LOOK, Vector3.UP)
+	cam.look_at_from_position(eye, look, Vector3.UP)
 	cam.current = true
 
 
@@ -517,8 +542,7 @@ func _ground() -> void:
 	collision.shape = shape
 	ground.add_child(collision)
 	# The worn sheep path, from the bright open edge to the courtyard: David comes home by it.
-	Paper.part(self, "SheepPath", Paper.box(Vector3(3.1, 0.05, 12.0)), PATH, Vector3(5.5, 0.025, 4.6),
-			Vector3(0.0, -0.35, 0.0), Vector3.ONE, 0.015)
+	_sheep_path()
 	_footpath()
 	_patio()
 	# Pebbles and dry tufts over the open ground, and grass thick along the foot of the walls.
@@ -632,6 +656,23 @@ func _earth_material() -> StandardMaterial3D:
 	mat.uv1_scale = Vector3.ONE / 14.0
 	mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	return mat
+
+
+## The sheep path David comes home by, from the bright open edge to the courtyard: a
+## winding trail of trodden, slightly darker earth, wider than the footpath.
+func _sheep_path() -> void:
+	var from := DAVID_AWAY + Vector3(-0.8, 0.0, -3.0)
+	var to := Vector3(3.2, 0.0, -0.9)
+	var patches: Array[Transform3D] = []
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 1617
+	for i in 16:
+		var t := float(i) / 15.0
+		var at := from.lerp(to, t) + Vector3(sin(t * PI * 2.0) * 0.6, 0.014, 0.0)
+		var size := Vector3(rng.randf_range(1.6, 2.1), 1.0, rng.randf_range(1.2, 1.5))
+		patches.append(Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(size), at))
+	var trodden := EARTH.darkened(0.1).lerp(PATH, 0.25)
+	_scatter("SheepPath", Paper.cylinder(0.6, 0.02, 9), patches, [trodden, trodden.lightened(0.03)])
 
 
 ## The footpath worn from the courtyard's open front to the welcome table: a chain of flat,
@@ -949,10 +990,7 @@ func _people() -> void:
 	staff.name = "Staff"
 	Paper.part(staff, "Pole", Paper.cylinder(0.018, 1.15, 6), WOOD, Vector3(0.0, 0.06, 0.0), Vector3.ZERO, Vector3.ONE, 0.01)
 	_samuel.attach("LowerArm_L", staff)
-	_horn = Node3D.new()
-	_horn.name = "OilHorn"
-	Paper.part(_horn, "Horn", Paper.cylinder(0.02, 0.14, 7, 0.04), Color(0.86, 0.78, 0.58), Vector3(0.0, 0.16, 0.02),
-			Vector3(0.0, 0.0, 1.2), Vector3.ONE, 0.0)
+	_horn = _oil_horn()
 	_samuel.attach("LowerArm_R", _horn)
 	_horn.visible = false
 	_oil = MeshInstance3D.new()
@@ -975,6 +1013,36 @@ func _people() -> void:
 	_sons.name = "JesseSons"
 	add_child(_sons)
 	_sons.line_up(BROTHERS_START, BROTHERS_ALONG, 1.0, SAMUEL_PLACE)
+
+
+## Samuel's horn of oil: a ram's horn, wide at the mouth and curving to a dark tip, held in his
+## right hand (in the forearm bone's own units, +Y running from elbow to hand). The mouth sits
+## just past his fingers, the horn runs back through his grip and curls up behind it. "Horn"
+## marks the mouth the oil runs from.
+func _oil_horn() -> Node3D:
+	var horn := Node3D.new()
+	horn.name = "OilHorn"
+	var mouth := Node3D.new()
+	mouth.name = "Horn"
+	mouth.position = HORN_MOUTH
+	horn.add_child(mouth)
+	var ivory := Color(0.84, 0.72, 0.5)
+	var segments := 6
+	var prev := HORN_MOUTH
+	for i in segments:
+		var t := float(i + 1) / float(segments)
+		# Back through the hand, then curling away: about half a turn over the horn's length.
+		var angle := t * PI * 0.6
+		var at := HORN_MOUTH + Vector3(-(1.0 - cos(angle)) * HORN_LENGTH * 0.55, -sin(angle) * HORN_LENGTH * 0.55, 0.0)
+		var mid := (prev + at) * 0.5
+		var along := at - prev
+		var radius := lerpf(0.034, 0.008, t)
+		var colour := ivory.lerp(Color(0.42, 0.32, 0.22), maxf(t - 0.6, 0.0) * 2.0)
+		var piece := Paper.part(horn, "Segment%d" % i, Paper.cylinder(radius * 0.8, along.length() * 1.15, 7, radius), colour, mid,
+				Vector3.ZERO, Vector3.ONE, 0.006)
+		piece.basis = Basis(Quaternion(Vector3.UP, along.normalized()))
+		prev = at
+	return horn
 
 
 func _person(who: String, node_name: String, at: Vector3) -> Node3D:

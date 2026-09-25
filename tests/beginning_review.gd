@@ -155,6 +155,10 @@ func _run() -> void:
 	await create_timer(0.8).timeout
 	check(faces(house.jesse(), house.samuel()) and faces(house.samuel(), house.jesse()), "Jesse and Samuel turn to face each other as they talk")
 	check(faces(player.get_node("Model"), house.jesse()), "the Wonder-Walker turns to look at Jesse while he speaks, not at the table")
+	var still: Camera3D = house.get_node_or_null("StillCamera")
+	var pair_mid: Vector3 = (house.jesse().global_position + house.samuel().global_position) * 0.5
+	check(still != null and still.current and still.global_position.distance_to(house.TABLE) > still.global_position.distance_to(pair_mid) + 1.5,
+			"the welcome is seen from the house side, with the table behind Jesse and Samuel, not in front of them")
 	await shot("03_meet")
 	story._advance()
 	check(story.phase == story.Phase.PROCESSION and story.get_action_hint().is_empty() and not player.can_move,
