@@ -153,6 +153,24 @@ repository.
 | `tests/` | the smoke test and review helpers |
 | `docs/` | design notes: `improvement-backlog.md`, `voice-over.md`, `sound-design.md`, `steady-hands.md`, `performance.md`, `faith-journal.md` |
 
+## How the stories fit together
+
+`scripts/game_shell.gd`, on the `Main` root, is the one place a story is started, stopped or
+switched (`switch_to()`), and it holds what every story shares: the end-of-chapter finale, fitting
+the dialogue bar, the nudges at the edge of the play area, the touch button's label, and reloading
+for "Play again" (`reload()`). Stories never call one another.
+
+- The **valley** is the scene itself (`chapter_director.gd`). Choosing it once another story has
+  started reloads the scene.
+- The **camp** and the **ark** are nodes in the scene, listed in the shell's `STORIES`. Each offers
+  `visit()` (start, or carry on) and `stand_down()` (stop listening, put its cards and sounds away),
+  and its story node offers `get_action_hint()`. Only the shell calls `visit()`, after standing every
+  other story down.
+
+A new story in this scene is a node with those three methods and one line in `STORIES`, plus its
+entries in the shared data (voice lines, journal verses and charms, the map's stops).
+`tests/journey_review.gd` checks moving between the stories.
+
 ## Making a change
 
 1. Branch from the latest `main` (or from the last feature branch if it is not merged yet).
