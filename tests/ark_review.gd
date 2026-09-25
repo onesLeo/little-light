@@ -3,6 +3,7 @@ extends SceneTree
 const Profiles := preload("res://scripts/profiles.gd")
 const Settings := preload("res://scripts/game_settings.gd")
 const JournalContent := preload("res://scripts/journal_content.gd")
+const PaperUI := preload("res://scripts/paper_ui.gd")
 
 var failures: int = 0
 var main: Node
@@ -275,6 +276,11 @@ func _run() -> void:
 			and menu._pause_layer.get_index() > menu._end_panel.get_index(), "pausing puts the end card aside under the pause menu")
 	menu.set_paused(false)
 	check(menu._end_panel.visible and not menu._pause_layer.visible, "resuming brings the end card back")
+	var ink: Color = menu.INK
+	var toggles_stay_ink := true
+	for toggle in [menu._read_check, menu._easy_check, PaperUI.button("Age")]:
+		toggles_stay_ink = toggles_stay_ink and (toggle as Button).get_theme_color("font_hover_pressed_color") == ink
+	check(toggles_stay_ink, "switches that are on keep their ink text when hovered")
 
 	# Playing it again from the map, without reloading the scene, starts from a whole ark.
 	journey.open()

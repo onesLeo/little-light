@@ -38,7 +38,8 @@ static func button(text: String, min_size: Vector2 = Vector2(320.0, 62.0), font_
 	b.text = text
 	b.custom_minimum_size = min_size
 	b.add_theme_font_size_override("font_size", font_size)
-	for color_name in ["font_color", "font_hover_color", "font_focus_color", "font_pressed_color"]:
+	# Every state in ink, including hover on a toggled-on button, whose default is white.
+	for color_name in ["font_color", "font_hover_color", "font_focus_color", "font_pressed_color", "font_hover_pressed_color"]:
 		b.add_theme_color_override(color_name, INK)
 	var normal := StyleBoxFlat.new()
 	normal.bg_color = fill

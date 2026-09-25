@@ -22,6 +22,8 @@ const JournalContent := preload("res://scripts/journal_content.gd")
 const PAPER := PaperUI.PAPER
 const INK := PaperUI.INK
 const GOLD := PaperUI.GOLD
+## Every text colour a toggle switch uses, so none falls back to the default white.
+const TOGGLE_TEXT_STATES := ["font_color", "font_hover_color", "font_focus_color", "font_pressed_color", "font_hover_pressed_color"]
 
 @export var end_panel_delay: float = 2.6
 
@@ -325,17 +327,16 @@ func _build_pause_panel() -> void:
 	_read_check = CheckButton.new()
 	_read_check.text = "Read the story aloud"
 	_read_check.add_theme_font_size_override("font_size", 24)
-	_read_check.add_theme_color_override("font_color", INK)
-	_read_check.add_theme_color_override("font_hover_color", INK)
-	_read_check.add_theme_color_override("font_focus_color", INK)
-	_read_check.add_theme_color_override("font_pressed_color", INK)
+	# Ink in every state: a switch that is on and hovered uses font_hover_pressed_color, white by default.
+	for color_name in TOGGLE_TEXT_STATES:
+		_read_check.add_theme_color_override(color_name, INK)
 	_read_check.toggled.connect(_on_read_check_toggled)
 	vbox.add_child(_read_check)
 
 	_easy_check = CheckButton.new()
 	_easy_check.text = "Easy words"
 	_easy_check.add_theme_font_size_override("font_size", 24)
-	for color_name in ["font_color", "font_hover_color", "font_focus_color", "font_pressed_color"]:
+	for color_name in TOGGLE_TEXT_STATES:
 		_easy_check.add_theme_color_override(color_name, INK)
 	_easy_check.toggled.connect(_on_easy_check_toggled)
 	vbox.add_child(_easy_check)
