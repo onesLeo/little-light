@@ -68,6 +68,12 @@ func _run() -> void:
 			"the doorway (%.2f m) is tall enough for an elephant (%.2f m)" % [headroom, elephant_top])
 	check(ark.get_node("Noah")._bones["Thigh_L"] >= 0 and ark.get_node("NoahsWife")._bones["Shin_R"] >= 0, "both parents have the leg bones used for boarding")
 	check("Long before David" in story._line.text, "arrival names the long work")
+	var input_setup: Node = main.get_node("InputSetup")
+	input_setup.set_mode("touch")
+	var on_tablet: String = story._prompt.text
+	input_setup.set_mode("keyboard")
+	check(on_tablet == "Tap NEXT to continue" and story._prompt.text == "Press Space to continue",
+			"switching to a tablet mid-line rewords the ark's prompt, and back again")
 	# The tools lie on three of the allowed spots, well apart, wherever this visit put them.
 	var first_layout: Array[Vector3] = []
 	var on_spots := true
@@ -273,8 +279,11 @@ func _run() -> void:
 	story.press_word(1)
 	check(story.phase == story.Phase.REFLECT and not story._words.visible, "the words can be tapped in any order and then leave")
 	story._advance()
+	input_setup.set_mode("touch")
 	if story._ceremony:
 		story._on_charm_sealed()
+	check(story._prompt.text == "Tap NEXT to keep your charm", "on a tablet the charm's prompt says Tap NEXT, not Press Space")
+	input_setup.set_mode("keyboard")
 	story._advance()
 	await create_timer(0.2).timeout
 	var menu := main.get_node("GameMenu")

@@ -46,6 +46,19 @@ func _run() -> void:
 	var david: Node3D = main.get_node("Valley/DavidMentor")
 	check("turning into night" in story._line.text, "arrival says night")
 	check(not player.can_move, "arrival holds still so she sees the camp")
+	var input_setup: Node = main.get_node("InputSetup")
+	input_setup.set_mode("gamepad")
+	var on_gamepad: String = story._prompt.text
+	input_setup.set_mode("keyboard")
+	check(on_gamepad == "Press A to continue" and story._prompt.text == "Press Space to continue",
+			"switching to a gamepad mid-line rewords the camp's prompt, and back again")
+	# The valley under the camp is stood down: it must not reword the shared prompt with its own.
+	var shown_raw: String = story._prompt_raw
+	story._set_prompt("Hold Space / Enter or the button, then release to tie")
+	main.get_node("Valley/ChapterDirector")._on_device_changed("keyboard")
+	check(story._prompt.text == "Hold Space / Enter or the button, then release to tie",
+			"the valley, stood down under the camp, leaves the camp's prompt alone")
+	story._set_prompt(shown_raw)
 	check((-david.basis.z).dot((jon.position - camp.to_local(david.global_position)).normalized()) > 0.9, "David faces Jonathan")
 	check((-jon.global_basis.z).dot((david.global_position - jon.global_position).normalized()) > 0.9, "Jonathan faces David")
 	story._advance()

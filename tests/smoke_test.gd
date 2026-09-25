@@ -101,6 +101,20 @@ func _initialize() -> void:
 	input_setup.set_mode("keyboard")
 	_check(not touch_controls.visible, "touch controls hide in keyboard mode")
 	_check(director._localize_prompt("Press Space to continue") == "Press Space to continue", "keyboard prompts are unchanged")
+	# Every story words its prompts through device_prompts.gd; each keeps its own name for the gold button.
+	var prompts: GDScript = load("res://scripts/device_prompts.gd")
+	var gold: String = prompts.GOLD_BUTTON
+	_check(prompts.for_mode("Press E to collect, or press E again", "touch", "GRAB") == "Tap GRAB to collect, or tap GRAB again"
+			and prompts.for_mode("[A / D: look around]", "touch", "GRAB") == "[stick: look around]",
+			"the valley names the gold button GRAB on a tablet")
+	_check(prompts.for_mode("Hold Space / Enter or the button, then release to tie", "touch", gold, "LOOP") == "Hold LOOP, then release to tie"
+			and prompts.for_mode("Hold Space / Enter or the button, then release to tie", "gamepad", gold, "LOOP") == "Hold A, then release to tie"
+			and prompts.for_mode("Press Space  •  A / D or arrows: look around", "touch", gold, "LOOP") == "Tap NEXT  •  stick: look around",
+			"the camp's cord says Hold LOOP on a tablet and Hold A on a gamepad")
+	_check(prompts.for_mode("Press E for the next peg", "touch") == "Tap the gold button for the next peg"
+			and prompts.for_mode("Hold E to pull the rope", "touch") == "Hold the gold button to pull the rope"
+			and prompts.for_mode("Hold E to pull the rope", "gamepad") == "Hold A to pull the rope",
+			"the ark calls it the gold button, since its label changes from step to step")
 
 	print("-- pause menu --")
 	game_menu.set_paused(true)

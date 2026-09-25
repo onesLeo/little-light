@@ -10,6 +10,7 @@ const GiftChecklist := preload("res://scripts/gift_checklist.gd")
 const Hints := preload("res://scripts/wonder_item_hints.gd")
 const GameSettings := preload("res://scripts/game_settings.gd")
 const EasyWords := preload("res://scripts/easy_words.gd")
+const DevicePrompts := preload("res://scripts/device_prompts.gd")
 
 enum Phase { IDLE, ARRIVE, HURT, FIND, MEET, PANEL, PAIRS, BOARDING, DOOR, RAIN, DOVE, SKY, LEAF, OLIVE, DRY, VERSE, WORDS, REFLECT, CHARM, DONE }
 
@@ -53,6 +54,7 @@ var _words: HBoxContainer
 var _word_buttons: Array[Button] = []
 var _line: Label
 var _prompt: Label
+var _prompt_raw: String = ""
 var _audio: Node
 var _camera: Node
 var _player: Node3D
@@ -84,6 +86,9 @@ func begin() -> void:
 	_audio = main.get_node_or_null("AudioDirector")
 	_camera = main.get_node_or_null("CameraDirector")
 	_player = main.get_node_or_null("Player") as Node3D
+	var input_setup := main.get_node_or_null("InputSetup")
+	if input_setup and input_setup.has_signal("device_changed") and not input_setup.device_changed.is_connected(_on_device_changed):
+		input_setup.device_changed.connect(_on_device_changed)
 	var banner := main.find_child("CompleteBanner", true, false) as CanvasItem
 	if banner:
 		banner.visible = false
@@ -193,8 +198,7 @@ func _advance() -> void:
 			_show_words(true)
 			if _player and "can_move" in _player:
 				_player.can_move = false
-			if _prompt:
-				_prompt.text = "Tap Rainbow, Sign, and Promise"
+			_set_prompt("Tap Rainbow, Sign, and Promise")
 		Phase.REFLECT:
 			_award_charm()
 		Phase.CHARM:
@@ -445,8 +449,7 @@ func _award_charm() -> void:
 
 func _on_charm_sealed() -> void:
 	_ceremony = false
-	if _prompt:
-		_prompt.text = "Press Space to keep your charm"
+	_set_prompt("Press Space to keep your charm")
 
 
 func _finish() -> void:
@@ -519,23 +522,22 @@ func _pressed(event: InputEvent) -> bool:
 	return false
 
 
+## Prompts are written for the keyboard and worded for the device used last (device_prompts.gd).
+## The prompt is kept as written, so switching device mid-line rewords it.
 func _set_prompt(raw: String) -> void:
+	_prompt_raw = raw
 	if _prompt:
-		_prompt.text = _device_prompt(raw)
+		var input_setup := get_parent().get_parent().get_node_or_null("InputSetup")
+		_prompt.text = DevicePrompts.reword(raw, input_setup, DevicePrompts.GOLD_BUTTON, "the button")
 
 
-## Prompts are written for the keyboard. On a tablet or a gamepad they name that
-## device's buttons instead, as chapters 1 and 2 do.
-func _device_prompt(raw: String) -> String:
-	var input_setup := get_parent().get_parent().get_node_or_null("InputSetup")
-	var mode: String = input_setup.mode if input_setup and "mode" in input_setup else "keyboard"
-	match mode:
-		"touch":
-			return raw.replace("Press Space", "Tap NEXT").replace("Press E", "Tap the gold button") \
-					.replace("Hold E", "Hold the gold button")
-		"gamepad":
-			return raw.replace("Press Space", "Press A").replace("Press E", "Press A").replace("Hold E", "Hold A")
-	return raw
+func _on_device_changed(_mode: String) -> void:
+	if phase == Phase.IDLE:
+		return
+	_set_prompt(_prompt_raw)
+	var shell := get_parent().get_parent()
+	if shell.has_method("fit_dialogue"):
+		shell.fit_dialogue()
 
 
 ## What the on-screen action button says right now ("" = nothing to do), for touch_controls.gd.
