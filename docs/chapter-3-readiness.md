@@ -140,7 +140,11 @@ the table, the olive trunk, the fence and the water jars are solid, and the brot
 the walls. The courtyard is dressed and alive (`courtyard_life.gd`): water jars, a mat and a bread
 basket under the awning, firewood, a low field-stone wall with bushes and a fig tree, wildflowers,
 cloud shadows drifting over the ground and the people, leaves on the breeze, two doves circling and
-two pecking, which flutter off when the child walks up.
+two pecking, which flutter off when the child walks up. The ground is packed earth in soft patches,
+with flagstones in front of the house and a trodden footpath to the table (2026-09-26).
+People turn to whoever is speaking, and all look at the child for the reflection and the charm;
+Samuel steps back from David after the anointing. Carrying a welcome thing, walking up to any side
+of the table sets it on its place (the exact ring was too fiddly).
 Not yet: resume after a reload mid-chapter (Play again restarts it), per-object placement sounds
 beyond the three existing effects, and the family/tablet tests of Milestone C.
 

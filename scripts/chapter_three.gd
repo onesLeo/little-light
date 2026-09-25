@@ -137,6 +137,8 @@ func _advance() -> void:
 			_show_words(true)
 		Phase.ANOINT:
 			phase = Phase.REFLECT
+			if _player:
+				_house().watch_child(_player)
 			_say([&"reflect"], "Press Space to continue")
 		Phase.REFLECT:
 			_award_charm()
@@ -158,7 +160,7 @@ func _process(_delta: float) -> void:
 	if not reached.is_empty() and house.pick_up(reached):
 		if _audio and _audio.has_method("play_pickup"):
 			_audio.play_pickup()
-		_set_prompt("Take the %s to its ring by the table" % reached.to_lower())
+		_set_prompt("Take the %s to the table" % reached.to_lower())
 		_watch()
 		return
 	if house.in_carried_ring(at):
@@ -209,6 +211,7 @@ func _procession() -> void:
 	var sons: Node = _house().sons()
 	# A still view of the whole row and Samuel; only the brothers move.
 	_house().procession_shot()
+	_house().watch_brothers()
 	sons.pass_before(_house().samuel().global_position)
 	await sons.procession_finished
 	if phase != Phase.PROCESSION:

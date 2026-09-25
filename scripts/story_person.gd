@@ -22,6 +22,9 @@ const KNEEL_SHIN := 1.5
 const KNEEL_LEAN := -0.12
 const KNEEL_BOW := -0.4
 
+## How quickly a person turns towards `watch`, as a share of the angle left per second.
+const TURN_RATE := 5.0
+
 ## One of PEOPLE. Set this before the node enters the tree.
 var who: String = "noah"
 var speaking: bool = false
@@ -31,6 +34,9 @@ var reach: float = 0.0
 ## 0 to 1: down on both knees, head bowed (David, to be anointed). The model sinks by the
 ## height of its knees, so the knees rest on the ground.
 var kneel: float = 0.0
+## Who this person turns to look at while standing (the one speaking, or the one spoken to),
+## or null to keep facing the way they are. Walking always faces the way they go.
+var watch: Node3D = null
 var _model: Node3D
 var _knee_height: float = 0.0
 var _height: float = 0.0
@@ -121,6 +127,7 @@ func _process(delta: float) -> void:
 	var breath := CharacterMotion.breath(_time)
 	var gesture := CharacterMotion.speaking_pulse(_time) * _talk
 	_model.position.y = -_knee_height * kneel
+	_turn_to_watch(delta)
 	_pose("Hips", Vector3(0, 0, sin(_time * 0.9) * 0.008))
 	_pose("Spine", Vector3(breath * 0.006 + kneel * KNEEL_LEAN, 0, 0))
 	_pose("Chest", Vector3(0, sin(_time * 1.1) * 0.012, 0))
@@ -134,6 +141,16 @@ func _process(delta: float) -> void:
 		var lift := reach if side == "R" else 0.0
 		_pose("UpperArm_" + side, Vector3(0.02 + gesture * 0.03 * lead - stride * 0.18 + lift * 1.9 + kneel * 0.25, 0, sign_side * 0.02))
 		_pose("LowerArm_" + side, Vector3(0.03 + gesture * 0.05 * lead + lift * 0.2, 0, 0))
+
+
+## Turns smoothly (the models face -Z) towards `watch`, but only while standing still.
+func _turn_to_watch(delta: float) -> void:
+	if watch == null or not is_instance_valid(watch) or walk_amount > 0.0:
+		return
+	var to := watch.global_position - global_position
+	if Vector2(to.x, to.z).length() < 0.05:
+		return
+	rotation.y = lerp_angle(rotation.y, atan2(-to.x, -to.z), minf(1.0, delta * TURN_RATE))
 
 
 func _pose(bone_name: String, angles: Vector3) -> void:

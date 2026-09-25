@@ -51,6 +51,11 @@ const WELCOME := {
 	"Lamp": {"at": Vector3(-5.4, 0.0, 4.2), "ring": Vector3(4.7, 0.0, 0.2), "on": Vector3(4.5, 0.9, -1.2)},
 }
 const RING_RADIUS := 0.62
+## Carrying something, the walker only has to come this near the table (anywhere round its top,
+## measured from the edge) for the thing to go onto its own place there. Finding the exact ring
+## was too fiddly for small hands; the rings still show where each thing will sit.
+const TABLE_REACH := 1.05
+const TABLE_TOP := Vector2(3.4, 1.55)
 ## How near the walker must come to pick up a welcome thing or notice one of David's things.
 const PICK_REACH := 1.1
 const FIND_REACH := 1.3
@@ -75,6 +80,8 @@ const BROTHERS_ALONG := Vector3(0.95, 0.0, 0.0)
 ## the left, so the horn in his raised right hand is over David's head.
 const ANOINT_GAP := 0.34
 const ANOINT_SIDE := 0.27
+## How far Samuel steps back once the oil is poured.
+const STEP_BACK := 0.85
 ## A still view of the whole row and Samuel for the procession: from the front, a little aside.
 const PROCESSION_EYE := Vector3(-2.6, 2.8, 6.0)
 const PROCESSION_LOOK := Vector3(-3.7, 0.9, -2.2)
@@ -103,6 +110,9 @@ var _found: Array = []
 var _carrying: String = ""
 var _breeze: float = 0.0
 var _life: Node3D
+## True from David kneeling to Samuel stepping back: nobody turns to watch anyone then, so the
+## horn stays over David's head.
+var _anointing: bool = false
 
 
 ## Builds the courtyard and starts the story, or carries on with it. Only the shell calls
@@ -190,7 +200,16 @@ func pick_up(thing: String) -> bool:
 	if not _carrying.is_empty() or _placed.has(thing):
 		return false
 	_carrying = thing
+	_fade_rings()
 	return true
+
+
+## While something is carried, the other rings fade back so its own ring stands out.
+func _fade_rings() -> void:
+	for thing in _rings:
+		var faded: bool = not _carrying.is_empty() and thing != _carrying
+		for part in (_rings[thing] as Node3D).find_children("*", "GeometryInstance3D", true, false):
+			(part as GeometryInstance3D).transparency = 0.7 if faded else 0.0
 
 
 ## Sets the carried thing on the table over about 0.6 s. Returns the thing placed.
@@ -200,6 +219,7 @@ func place_carried() -> String:
 		return ""
 	_carrying = ""
 	_placed.append(thing)
+	_fade_rings()
 	var node := _welcome[thing] as Node3D
 	var tw := create_tween().set_parallel(true)
 	tw.tween_property(node, "global_position", WELCOME[thing]["on"], 0.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
@@ -220,9 +240,14 @@ func welcome_within_reach(at: Vector3) -> String:
 	return ""
 
 
-## True when `at` stands in the ring of the thing being carried.
+## True when `at` is near enough the table (or the carried thing's ring) to set it down.
 func in_carried_ring(at: Vector3) -> bool:
-	return not _carrying.is_empty() and _flat_distance(at, WELCOME[_carrying]["ring"]) < RING_RADIUS + 0.25
+	if _carrying.is_empty():
+		return false
+	if _flat_distance(at, WELCOME[_carrying]["ring"]) < RING_RADIUS + 0.4:
+		return true
+	var outside := Vector2(maxf(absf(at.x - TABLE.x) - TABLE_TOP.x * 0.5, 0.0), maxf(absf(at.z - TABLE.z) - TABLE_TOP.y * 0.5, 0.0))
+	return outside.length() < TABLE_REACH
 
 
 ## One of David's things near `at` that has not been noticed yet, marked as noticed, or "".
@@ -284,17 +309,56 @@ func procession_shot() -> void:
 	cam.current = true
 
 
-## Who speaks now, for the talking faces: "Samuel", "Jesse", "David" or "".
+## Who speaks now, for the talking faces: "Samuel", "Jesse", "David" or "". The one speaking
+## turns to the one they talk to, and the others turn to the speaker. Wonder Light's lines leave
+## everyone looking where they were.
 func set_speaking(speaker: String) -> void:
 	for pair in [[_samuel, "Samuel"], [_jesse, "Jesse"], [_david, "David"]]:
 		if pair[0]:
 			pair[0].speaking = speaker == pair[1]
+	if _anointing:
+		return
+	var david_here := _david.visible and _flat_distance(_david.global_position, _samuel.global_position) < 3.0
+	match speaker:
+		"Samuel":
+			_samuel.watch = _david if david_here else _jesse
+			_jesse.watch = _samuel
+			if david_here:
+				_david.watch = _samuel
+		"Jesse":
+			_jesse.watch = _samuel
+			_samuel.watch = _jesse
+			if david_here:
+				_david.watch = _jesse
+		"David":
+			_david.watch = _samuel
+			_samuel.watch = _david
+			_jesse.watch = _david
+
+
+## Samuel, Jesse and David all turn to look at the child (for the reflection and the charm).
+func watch_child(child: Node3D) -> void:
+	if _anointing:
+		return
+	for person in [_samuel, _jesse, _david]:
+		if person.visible:
+			person.watch = child
+
+
+## While the brothers pass, Samuel looks along their row, and Jesse watches his sons with him.
+func watch_brothers() -> void:
+	var middle: Node3D = _sons.brothers()[3]
+	_samuel.watch = middle
+	_jesse.watch = middle
 
 
 ## David kneels and Samuel steps up close to him; Samuel lifts the horn over David's head and a
 ## thin line of oil runs down onto it, over about two seconds, while a warm breeze lifts the
 ## awning and the olive leaves. Then Samuel lowers the horn and David stands. No glow, no crown.
 func anoint(seconds: float = 2.0) -> Tween:
+	_anointing = true
+	_samuel.watch = null
+	_david.watch = null
 	face(_david, _samuel.global_position)
 	var to_samuel := _samuel.global_position - _david.global_position
 	to_samuel.y = 0.0
@@ -319,6 +383,14 @@ func anoint(seconds: float = 2.0) -> Tween:
 	tw.tween_property(_samuel, "reach", 0.0, 0.8).set_trans(Tween.TRANS_SINE)
 	tw.tween_callback(func() -> void: _horn.visible = false)
 	tw.tween_property(_david, "kneel", 0.0, 0.9).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	# Samuel steps back from David, still facing him, so there is room between them again.
+	tw.tween_callback(func() -> void: _samuel.walk_amount = 0.5)
+	tw.tween_property(_samuel, "global_position", close - ahead * STEP_BACK, 0.9).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_callback(func() -> void:
+		_samuel.walk_amount = 0.0
+		_anointing = false
+		_samuel.watch = _david
+		_david.watch = _samuel)
 	return tw
 
 
@@ -358,12 +430,13 @@ func _process(delta: float) -> void:
 			var want := light.global_position + Vector3(0.45, -0.25 + sin(_time * 3.0) * 0.05, 0.0)
 			node.global_position = node.global_position.lerp(want, minf(1.0, delta * 8.0))
 			node.rotation.y += delta * 0.8
-	# The empty rings breathe, the one for the carried thing most.
+	# The empty rings breathe, the one for the carried thing most; the others fade back while
+	# something is carried, so the one it goes to stands out.
 	for thing in _rings:
 		var ring := _rings[thing] as Node3D
 		if ring.visible:
 			var strong := 1.0 if thing == _carrying else 0.45
-			ring.scale = Vector3.ONE * (1.0 + sin(_time * 2.6) * 0.06 * strong)
+			ring.scale = Vector3.ONE * (1.0 + sin(_time * 2.6) * 0.06 * strong) * (1.15 if thing == _carrying else 1.0)
 			ring.position.y = 0.04
 	for thing in _finds:
 		var glow := (_finds[thing] as Node3D).get_node_or_null("Glow") as Node3D
@@ -423,7 +496,8 @@ func _ground() -> void:
 	ground.name = "CourtyardGround"
 	ground.position = Vector3(0.0, -0.3, 0.0)
 	add_child(ground)
-	Paper.part(ground, "Earth", Paper.box(Vector3(GROUND.x, 0.6, GROUND.y)), EARTH, Vector3.ZERO, Vector3.ZERO, Vector3.ONE, 0.04)
+	var earth := Paper.part(ground, "Earth", Paper.box(Vector3(GROUND.x, 0.6, GROUND.y)), EARTH, Vector3.ZERO, Vector3.ZERO, Vector3.ONE, 0.04)
+	earth.material_override = _earth_material()
 	var collision := CollisionShape3D.new()
 	var shape := BoxShape3D.new()
 	shape.size = Vector3(GROUND.x, 0.6, GROUND.y)
@@ -432,20 +506,155 @@ func _ground() -> void:
 	# The worn sheep path, from the bright open edge to the courtyard: David comes home by it.
 	Paper.part(self, "SheepPath", Paper.box(Vector3(3.1, 0.05, 12.0)), PATH, Vector3(5.5, 0.025, 4.6),
 			Vector3(0.0, -0.35, 0.0), Vector3.ONE, 0.015)
-	# A few stones and dry tufts, so the ground is not one flat colour.
+	_footpath()
+	_patio()
+	# Pebbles and dry tufts over the open ground, and grass thick along the foot of the walls.
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 1616
-	for i in 18:
-		var at := Vector3(rng.randf_range(-11.5, 11.5), 0.02, rng.randf_range(-9.5, 9.5))
-		if at.distance_to(ARRIVE) < 2.0 or Vector2(at.x - TABLE.x, at.z - TABLE.z).length() < 2.6:
+	var pebbles: Array[Transform3D] = []
+	var pebble_tints: Array[Color] = []
+	var tufts: Array[Transform3D] = []
+	for i in 70:
+		var at := Vector3(rng.randf_range(-12.0, 12.0), 0.0, rng.randf_range(-10.0, 10.5))
+		if not _clear_of_busy(at, 1.3) or Vector2(at.x - TABLE.x, at.z - TABLE.z).length() < 2.4:
 			continue
 		if i % 2 == 0:
-			Paper.part(self, "Stone%d" % i, Paper.sphere(0.18, 6), LIMESTONE.darkened(0.12), at,
-					Vector3(0.0, rng.randf() * TAU, 0.0), Vector3(1.4, 0.55, 1.0), 0.012)
+			var size := rng.randf_range(0.6, 1.3)
+			pebbles.append(Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3(1.4, 0.55, 1.0) * size), at + Vector3(0.0, 0.03, 0.0)))
+			pebble_tints.append(LIMESTONE.darkened(rng.randf_range(0.06, 0.22)))
 		else:
-			for k in 3:
-				Paper.part(self, "Tuft%d_%d" % [i, k], Paper.cylinder(0.02, 0.28, 4, 0.0), OLIVE.lightened(0.15),
-						at + Vector3(k * 0.07 - 0.07, 0.13, 0.0), Vector3(0.0, 0.0, (k - 1) * 0.35), Vector3.ONE, 0.0)
+			_tuft(tufts, rng, at)
+	for i in 90:
+		# Along the inside of the low wall (x = +-12.3, z = -9) and the house's foot.
+		var side := i % 4
+		var at := Vector3(-11.8, 0.0, rng.randf_range(-8.6, 9.5))
+		if side == 1:
+			at = Vector3(11.8, 0.0, rng.randf_range(-8.6, 1.8))
+		elif side == 2:
+			at = Vector3(rng.randf_range(-11.8, 11.8), 0.0, -8.5)
+		elif side == 3:
+			at = Vector3(rng.randf_range(1.4, 11.0), 0.0, rng.randf_range(-8.6, -7.2))
+		_tuft(tufts, rng, at + Vector3(rng.randf_range(-0.3, 0.3), 0.0, rng.randf_range(-0.3, 0.3)))
+	var pebble_tint_array: Array = pebble_tints
+	_scatter("Pebbles", Paper.sphere(0.16, 6), pebbles, pebble_tint_array)
+	_scatter("Tufts", Paper.cylinder(0.02, 0.3, 4, 0.0), tufts, [OLIVE.lightened(0.15), OLIVE, OLIVE.lightened(0.3)])
+
+
+## True when `at` is at least `margin` from every spot where someone stands or something waits
+## (the arrival, the table, the people, the welcome things and rings, David's things, the doves).
+func _clear_of_busy(at: Vector3, margin: float) -> bool:
+	var busy: Array[Vector3] = [ARRIVE, TABLE, SAMUEL_START, SAMUEL_PLACE, JESSE_PLACE, DAVID_PLACE]
+	for thing in WELCOME:
+		busy.append(WELCOME[thing]["at"])
+		busy.append(WELCOME[thing]["ring"])
+	for thing in FINDS:
+		busy.append(FINDS[thing])
+	busy.append_array(CourtyardLife.DOVE_SPOTS)
+	for spot in busy:
+		if Vector2(at.x - spot.x, at.z - spot.z).length() < margin:
+			return false
+	return true
+
+
+## A few blades of dry grass leaning out from `at`.
+func _tuft(into: Array[Transform3D], rng: RandomNumberGenerator, at: Vector3) -> void:
+	var turn := rng.randf() * TAU
+	for k in 3:
+		var lean := Basis(Vector3.UP, turn) * Basis(Vector3.BACK, (k - 1) * 0.4)
+		into.append(Transform3D(lean.scaled(Vector3.ONE * rng.randf_range(0.8, 1.3)), at + Vector3(0.0, 0.14, 0.0)))
+
+
+## Many copies of one small mesh in one draw call (pebbles, tufts, flowers), each with its
+## own colour from `tints`. Flat colour like the paper parts; too small to need an ink rim.
+func _scatter(scatter_name: String, mesh: Mesh, where: Array[Transform3D], tints: Array) -> MultiMeshInstance3D:
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.use_colors = true
+	mm.mesh = mesh
+	mm.instance_count = where.size()
+	for i in where.size():
+		mm.set_instance_transform(i, where[i])
+		mm.set_instance_color(i, tints[i % tints.size()])
+	var mat := StandardMaterial3D.new()
+	mat.vertex_color_use_as_albedo = true
+	# The tints are the same sRGB colours the paper parts use, not linear values.
+	mat.vertex_color_is_srgb = true
+	mat.roughness = 1.0
+	mat.specular_mode = BaseMaterial3D.SPECULAR_DISABLED
+	var mmi := MultiMeshInstance3D.new()
+	mmi.name = scatter_name
+	mmi.multimesh = mm
+	mmi.material_override = mat
+	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(mmi)
+	return mmi
+
+
+## Packed earth in a few close tones laid in soft patches, so the ground reads as ground and
+## not one flat sheet of colour. Mapped from above in world space, so it lies the same way
+## however the box is cut.
+func _earth_material() -> StandardMaterial3D:
+	var noise := FastNoiseLite.new()
+	noise.noise_type = FastNoiseLite.TYPE_CELLULAR
+	noise.cellular_return_type = FastNoiseLite.RETURN_CELL_VALUE
+	noise.cellular_jitter = 0.9
+	noise.frequency = 0.05
+	noise.seed = 1616
+	var tones := Gradient.new()
+	tones.interpolation_mode = Gradient.GRADIENT_INTERPOLATE_CONSTANT
+	tones.offsets = PackedFloat32Array([0.0, 0.3, 0.55, 0.8])
+	tones.colors = PackedColorArray([EARTH.darkened(0.06), EARTH, EARTH.lightened(0.05), EARTH.darkened(0.03)])
+	var texture := NoiseTexture2D.new()
+	texture.width = 256
+	texture.height = 256
+	texture.seamless = true
+	texture.noise = noise
+	texture.color_ramp = tones
+	var mat := StandardMaterial3D.new()
+	mat.albedo_texture = texture
+	mat.roughness = 1.0
+	mat.specular_mode = BaseMaterial3D.SPECULAR_DISABLED
+	mat.uv1_triplanar = true
+	mat.uv1_world_triplanar = true
+	mat.uv1_scale = Vector3.ONE / 14.0
+	mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	return mat
+
+
+## The footpath worn from the courtyard's open front to the welcome table: a chain of flat,
+## lighter patches of trodden earth.
+func _footpath() -> void:
+	var from := ARRIVE + Vector3(0.0, 0.0, 2.2)
+	var to := TABLE + Vector3(-0.6, 0.0, 1.9)
+	var steps: Array[Transform3D] = []
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 1604
+	for i in 11:
+		var t := float(i) / 10.0
+		var at := from.lerp(to, t) + Vector3(sin(t * PI * 1.6) * 0.5, 0.012, 0.0)
+		var size := Vector3(rng.randf_range(1.2, 1.6), 1.0, rng.randf_range(0.9, 1.2))
+		steps.append(Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(size), at))
+	_scatter("Footpath", Paper.cylinder(0.6, 0.02, 9), steps, [EARTH.lerp(LIMESTONE, 0.35), EARTH.lerp(LIMESTONE, 0.28)])
+
+
+## Flagstones in front of the house, under and around the awning, where the family sits: flat
+## many-sided stones in a loose grid, each a slightly different limestone.
+func _patio() -> void:
+	var stones: Array[Transform3D] = []
+	var tints: Array = []
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 1610
+	var x := -8.1
+	while x < 1.0:
+		var z := -5.5
+		while z < -2.7:
+			var at := Vector3(x + rng.randf_range(-0.08, 0.08), 0.015, z + rng.randf_range(-0.08, 0.08))
+			var size := Vector3(rng.randf_range(0.9, 1.1), 1.0, rng.randf_range(0.85, 1.05))
+			stones.append(Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(size), at))
+			tints.append(LIMESTONE.lightened(rng.randf_range(0.02, 0.12)))
+			z += 0.78
+		x += 0.8
+	_scatter("Flagstones", Paper.cylinder(0.37, 0.03, 6), stones, tints)
 
 
 ## Low hills all round, soft in the haze, so the courtyard sits on a hillside above Bethlehem
@@ -567,10 +776,10 @@ func _yard() -> void:
 		Paper.part(yard, "Jar", Paper.cylinder(0.24 * s, 0.62 * s, 9, 0.16 * s), CLAY, jar[0] + Vector3(0.0, 0.31 * s, 0.0))
 		Paper.part(yard, "JarNeck", Paper.cylinder(0.1 * s, 0.14 * s, 8, 0.13 * s), CLAY.darkened(0.08), jar[0] + Vector3(0.0, 0.68 * s, 0.0))
 	_solid(yard, "JarsBody", Vector3(1.5, 0.8, 0.7), Vector3(-0.7, 0.4, -5.05))
-	Paper.part(yard, "Mat", Paper.box(Vector3(2.2, 0.02, 1.3)), Color(0.82, 0.62, 0.36), Vector3(-2.7, 0.012, -4.7), Vector3(0.0, 0.08, 0.0), Vector3.ONE, 0.0)
+	Paper.part(yard, "Mat", Paper.box(Vector3(2.2, 0.02, 1.3)), Color(0.82, 0.62, 0.36), Vector3(-2.7, 0.042, -4.7), Vector3(0.0, 0.08, 0.0), Vector3.ONE, 0.0)
 	for i in 4:
 		Paper.part(yard, "MatStripe", Paper.box(Vector3(2.2, 0.022, 0.1)), Color(0.66, 0.34, 0.26),
-				Vector3(-2.7, 0.014, -5.15 + i * 0.3), Vector3(0.0, 0.08, 0.0), Vector3.ONE, 0.0)
+				Vector3(-2.7, 0.044, -5.15 + i * 0.3), Vector3(0.0, 0.08, 0.0), Vector3.ONE, 0.0)
 	Paper.part(yard, "Basket", Paper.cylinder(0.3, 0.2, 10, 0.34), Color(0.72, 0.56, 0.32), Vector3(-2.2, 0.1, -4.5))
 	for i in 3:
 		Paper.part(yard, "Bread", Paper.sphere(0.12, 7), Color(0.86, 0.66, 0.4), Vector3(-2.3 + i * 0.1, 0.22, -4.55 + (i % 2) * 0.1),
@@ -609,30 +818,27 @@ func _yard() -> void:
 				Vector3(cos(angle) * 0.8, 2.7 + 0.2 * float(i % 2), sin(angle) * 0.7), Vector3.ZERO, Vector3(1.2, 0.75, 1.0))
 	# Wildflowers: little clusters of red anemones, yellow, white and purple, off the busy ground.
 	var colours := [Color(0.86, 0.3, 0.3), Color(0.96, 0.84, 0.36), Color(0.97, 0.95, 0.9), Color(0.72, 0.5, 0.82)]
-	var busy: Array[Vector3] = [ARRIVE, TABLE, SAMUEL_START, SAMUEL_PLACE, JESSE_PLACE, DAVID_PLACE]
-	for thing in WELCOME:
-		busy.append(WELCOME[thing]["at"])
-		busy.append(WELCOME[thing]["ring"])
-	for thing in FINDS:
-		busy.append(FINDS[thing])
-	for dove in CourtyardLife.DOVE_SPOTS:
-		busy.append(dove)
+	var stems: Array[Transform3D] = []
+	var blooms: Array[Transform3D] = []
+	var bloom_tints: Array = []
 	var placed := 0
 	while placed < 26:
 		var at := Vector3(rng.randf_range(-11.0, 11.5), 0.0, rng.randf_range(-8.2, 9.8))
 		# Not on the sheep path, nor where the brothers stand and walk.
 		var clear := absf(at.x - 5.5) > 1.9 or at.z < -1.6
 		clear = clear and not (at.z < -2.4 and at.x > -9.2 and at.x < 1.4)
-		for spot in busy:
-			clear = clear and Vector2(at.x - spot.x, at.z - spot.z).length() > 1.6
+		clear = clear and _clear_of_busy(at, 1.6)
 		if not clear:
 			continue
 		var colour: Color = colours[placed % colours.size()]
 		for k in 4:
 			var petal := at + Vector3(rng.randf_range(-0.22, 0.22), 0.0, rng.randf_range(-0.22, 0.22))
-			Paper.part(yard, "Stem", Paper.cylinder(0.008, 0.16, 3), OLIVE, petal + Vector3(0.0, 0.08, 0.0), Vector3.ZERO, Vector3.ONE, 0.0)
-			Paper.part(yard, "Flower", Paper.sphere(0.045, 5), colour, petal + Vector3(0.0, 0.17, 0.0), Vector3.ZERO, Vector3(1.0, 0.6, 1.0), 0.0)
+			stems.append(Transform3D(Basis.IDENTITY, petal + Vector3(0.0, 0.08, 0.0)))
+			blooms.append(Transform3D(Basis.from_scale(Vector3(1.0, 0.6, 1.0)), petal + Vector3(0.0, 0.17, 0.0)))
+			bloom_tints.append(colour)
 		placed += 1
+	_scatter("FlowerStems", Paper.cylinder(0.008, 0.16, 3), stems, [OLIVE])
+	_scatter("Flowers", Paper.sphere(0.045, 5), blooms, bloom_tints)
 
 
 ## The cushion, the cup of water and the oil lamp for Samuel, each waiting somewhere in the

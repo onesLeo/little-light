@@ -182,6 +182,7 @@ func _breeze_leaves() -> void:
 	var leaf := StandardMaterial3D.new()
 	leaf.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	leaf.vertex_color_use_as_albedo = true
+	leaf.vertex_color_is_srgb = true
 	leaf.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
 	leaf.cull_mode = BaseMaterial3D.CULL_DISABLED
 	quad.material = leaf

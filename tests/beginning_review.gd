@@ -63,6 +63,13 @@ func prompt_text() -> String:
 	return (main.find_child("PromptLabel", true, false) as Label).text
 
 
+## Whether `who` (a person, facing -Z) is turned towards `other`, within 25 degrees.
+func faces(who: Node3D, other: Node3D) -> bool:
+	var forward := -who.global_basis.z
+	var to := other.global_position - who.global_position
+	return Vector2(forward.x, forward.z).angle_to(Vector2(to.x, to.z)) < deg_to_rad(25.0) and Vector2(forward.x, forward.z).angle_to(Vector2(to.x, to.z)) > -deg_to_rad(25.0)
+
+
 ## Whether a solid body (a wall the walker cannot pass) is at `point`.
 func solid_at(space: PhysicsDirectSpaceState3D, point: Vector3) -> bool:
 	var query := PhysicsPointQueryParameters3D.new()
@@ -127,12 +134,12 @@ func _run() -> void:
 	check(house.carrying() == "Cup", "walking to the cup picks it up")
 	await walk_to(player, house.WELCOME["Cushion"]["at"])
 	check(house.carrying() == "Cup", "while carrying the cup, the cushion stays where it is")
-	await walk_to(player, house.WELCOME["Lamp"]["ring"])
-	check(house.placed().is_empty() and house.carrying() == "Cup", "the lamp's ring does not take the cup: nothing goes wrong, it just waits")
+	await walk_to(player, Vector3(-2.0, 0.0, 5.5))
+	check(house.placed().is_empty() and house.carrying() == "Cup", "away from the table, the cup stays with the child")
 	await shot("02_carrying")
-	await walk_to(player, house.WELCOME["Cup"]["ring"])
+	await walk_to(player, house.TABLE + Vector3(2.5, 0.0, 0.1))
 	check(house.placed() == ["Cup"] and house.carrying().is_empty() and "1 / 3" in story._checklist._title.text,
-			"the cup's ring takes the cup and ticks it on the list")
+			"walking up to any side of the table sets the cup on its place and ticks it on the list")
 	for thing in ["Lamp", "Cushion"]:
 		await walk_to(player, house.WELCOME[thing]["at"])
 		await walk_to(player, house.WELCOME[thing]["ring"])
@@ -145,6 +152,8 @@ func _run() -> void:
 	check(story.phase == story.Phase.MEET and "Welcome to our home" in line_text(), "with everything ready, Jesse welcomes Samuel")
 	await create_timer(2.8).timeout
 	check(house.samuel().global_position.distance_to(house.SAMUEL_PLACE) < 0.1, "Samuel has walked to the table")
+	await create_timer(0.8).timeout
+	check(faces(house.jesse(), house.samuel()) and faces(house.samuel(), house.jesse()), "Jesse and Samuel turn to face each other as they talk")
 	await shot("03_meet")
 	story._advance()
 	check(story.phase == story.Phase.PROCESSION and story.get_action_hint().is_empty() and not player.can_move,
@@ -181,6 +190,9 @@ func _run() -> void:
 	await create_timer(4.6).timeout
 	check(story.phase == story.Phase.DAVID and house.david().global_position.distance_to(house.DAVID_PLACE) < 0.1
 			and "You called for me" in line_text(), "David stands before Samuel: \"You called for me?\"")
+	await create_timer(1.0).timeout
+	check(faces(house.samuel(), house.david()) and faces(house.david(), house.samuel()) and faces(house.jesse(), house.david()),
+			"when David speaks, Samuel and Jesse turn to him, and he faces Samuel")
 	await shot("05_david")
 
 	print("-- the verse and the anointing --")
@@ -206,11 +218,16 @@ func _run() -> void:
 			"the horn is held over David's head, so the oil runs down onto it, not across to him (%.2f m aside, %.2f m above)"
 			% [Vector2(horn.global_position.x - head.x, horn.global_position.z - head.z).length(), horn.global_position.y - head.y])
 	await shot("06_anoint")
-	await create_timer(4.4).timeout
+	await create_timer(5.4).timeout
 	check(not house.oil_shown() and house.david().kneel < 0.01 and story.get_action_hint() == "NEXT",
 			"the oil is gone again, David stands, and the story waits for the child")
+	check(house.samuel().global_position.distance_to(house.david().global_position) > 0.9,
+			"afterwards Samuel steps back from David, so there is room between them (%.2f m)" % house.samuel().global_position.distance_to(house.david().global_position))
 	story._advance()
 	check(story.phase == story.Phase.REFLECT and "God sees you too" in line_text(), "the reflection: God saw his heart, and sees you too")
+	await create_timer(1.2).timeout
+	check(faces(house.samuel(), player) and faces(house.jesse(), player) and faces(house.david(), player),
+			"Samuel, Jesse and David turn to look at the child")
 
 	print("-- the charm --")
 	story._advance()
