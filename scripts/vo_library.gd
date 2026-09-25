@@ -10,53 +10,20 @@ const DIR := "res://assets/audio/vo/"
 
 ## text -> clip id
 const LINES := {
-	"This is David's valley. He looks after sheep. God looks after him.": "wl_arrive",
-	"David needs his stone, his staff, and his little lamb. Find them for him!": "wl_explore",
-	"Oh! Hello there. Are you lost too?": "dv_hello",
-	"Everyone's scared of the big giant. But God gave me these sheep to keep safe.": "dv_giant",
-	"The Lord kept me safe from the lion and the bear. He will keep me safe now.": "dv_lion_bear",
-	"God gave David a job: keep the sheep safe. That's why he will go.": "wl_david_scared",
-	"Thanks. Will you stay close while I get ready?": "dv_stay_close",
-	"Let's breathe God's promise with David. In: God is with you. Out: don't be afraid.": "wl_steady_intro",
-	"In... and out. Just like counting sheep.": "dv_in_and_out",
-	"Breathe with David...": "wl_breathe",
-	"I still feel small. But I'm not alone. Thank you for staying.": "dv_steady_now",
-	"David took the small stone. God can use even a small thing.": "wl_took_stone",
-	"David walked out to the valley. When it was over, the camp cheered his name.": "wl_resolution",
-	"David trusted God, faced Goliath with his sling, and defeated him. The people were safe.": "wl_resolution_clear",
-	"Being brave doesn't mean you're not scared. It means you go with God anyway.": "wl_reflect",
-	"God had a job for David. He has one for you too. Stay close, and remember the words.": "wl_purpose",
+	# Chapter 1, the valley: its story lines are in assets/dialogue/bethlehem_valley.tres. These are
+	# spoken by their words: the verse and charm the journal reads too, the word chips, and the
+	# nudges at the edge of the play area (play_bounds.gd).
 	"Joshua, chapter one, verse nine.": "wl_verse_ref",
 	"Haven't I commanded you? Be strong and of good courage; don't be afraid, neither be dismayed: for Yahweh your God is with you wherever you go.": "wl_verse",
-	"This verse has three special words. Can you say them with me?": "wl_three_words",
-	"Don't. Be. Afraid.": "wl_dont_be_afraid",
 	"Don't.": "wl_word_dont",
 	"Be.": "wl_word_be",
 	"Afraid.": "wl_word_afraid",
-	"Yahweh is God's name. It means He is with you.": "wl_yahweh",
 	"A Courage charm — for staying with David, and breathing God's promise with him.": "wl_charm",
-	"Keep this close. Courage is yours to carry.": "wl_keep_close",
-	"God was with David. God is with you.": "wl_complete",
 	"That's the edge of our little valley. Let's stay close!": "wl_edge_a",
 	"There's so much to find right here. Let's turn back!": "wl_edge_b",
-	"A small stone. God can use even a small thing.": "wl_item_stone",
-	"A shepherd's staff. David stays with his sheep.": "wl_item_staff",
-	"A lamb David is keeping safe. That is his job.": "wl_item_lamb",
+	# "Who is playing?" (profile_screen.gd).
 	"Who is playing? Tap your picture.": "wl_who_playing",
 	"What is your name? Type it, pick a picture, and tell me how old you are.": "wl_your_name",
-	# The story in easier words (easy_words.gd), for a child who said they are 8 or younger.
-	"This is David's valley. God looks after him.": "ez_arrive",
-	"Find David's stone, staff, and little lamb.": "ez_explore",
-	"Everyone is afraid of the big giant. God gave me these sheep to keep safe.": "ez_giant",
-	"God kept me safe before. He will keep me safe now.": "ez_lion_bear",
-	"God gave David a job: keep the sheep safe.": "ez_david_scared",
-	"Let's breathe God's words with David. In... God is with you. Out... do not be afraid.": "ez_steady_intro",
-	"I am still small. But I am not alone.": "ez_steady_now",
-	"David walked out to the valley. Then everyone cheered.": "ez_resolution",
-	"Being brave does not mean you are never scared. It means you go with God.": "ez_reflect",
-	"God had a job for David. He has one for you too. Stay close.": "ez_purpose",
-	"Keep it close. Courage is yours.": "ez_keep_close",
-	"David's staff. He stays with his sheep.": "ez_item_staff",
 	# Chapter 2, The King's Camp: its story lines are in assets/dialogue/kings_camp.tres. These are
 	# spoken by their words: the word chips, and the verse and charm the journal reads too.
 	"Knit.": "jn_word_knit",

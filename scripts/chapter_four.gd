@@ -9,7 +9,6 @@ const PaperUI := preload("res://scripts/paper_ui.gd")
 const GiftChecklist := preload("res://scripts/gift_checklist.gd")
 const Hints := preload("res://scripts/wonder_item_hints.gd")
 const GameSettings := preload("res://scripts/game_settings.gd")
-const EasyWords := preload("res://scripts/easy_words.gd")
 const DevicePrompts := preload("res://scripts/device_prompts.gd")
 
 enum Phase { IDLE, ARRIVE, HURT, FIND, MEET, PANEL, PAIRS, BOARDING, DOOR, RAIN, DOVE, SKY, LEAF, OLIVE, DRY, VERSE, WORDS, REFLECT, CHARM, DONE }
@@ -471,8 +470,6 @@ func _finish() -> void:
 
 
 func _say(text: String, prompt: String) -> void:
-	if GameSettings.easy_words:
-		text = EasyWords.apply(text)
 	if _checklist:
 		_checklist.visible = phase in [Phase.FIND, Phase.MEET]
 	var ark := get_parent()

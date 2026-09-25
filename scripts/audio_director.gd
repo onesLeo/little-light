@@ -15,6 +15,7 @@ extends Node
 const ChimeSynth := preload("res://scripts/chime_synth.gd")
 const GameSettings := preload("res://scripts/game_settings.gd")
 const VoLibrary := preload("res://scripts/vo_library.gd")
+const DialogueLine := preload("res://scripts/dialogue_line.gd")
 const SoundBus := preload("res://scripts/sound_bus.gd")
 const SoundLibrary := preload("res://scripts/sound_library.gd")
 
@@ -252,43 +253,9 @@ func _on_vo_finished() -> void:
 	if run == _clip_run:
 		_play_next_clip()
 
-## Splits a dialogue block into spoken lines: {"speaker", "text"}. A line with no
-## speaker of its own (the verse itself, "Don't. Be. Afraid.") keeps the previous one.
+## Splits a dialogue block into spoken lines: {"speaker", "text"} (dialogue_line.gd spoken_in).
 func _spoken_lines(text: String) -> Array[Dictionary]:
-	var out: Array[Dictionary] = []
-	var speaker := "Reader"
-	for raw in text.split("\n", false):
-		var line := raw.strip_edges()
-		if line.is_empty() or line.begins_with("("):
-			continue
-		if line.begins_with("Wonder Light:"):
-			line = line.substr(13)
-			speaker = "Wonder Light"
-		elif line.begins_with("David:"):
-			line = line.substr(6)
-			speaker = "David"
-		elif line.begins_with("Jonathan:"):
-			line = line.substr(10)
-			speaker = "Jonathan"
-		elif line.begins_with("Noah's wife:"):
-			line = line.substr("Noah's wife:".length())
-			speaker = "Noah's wife"
-		elif line.begins_with("Noah:"):
-			line = line.substr("Noah:".length())
-			speaker = "Noah"
-		elif line.begins_with("Joshua 1:9"):
-			line = "Joshua, chapter one, verse nine."
-			speaker = "Reader"
-		elif line.begins_with("1 Samuel 18:1"):
-			line = "First Samuel, chapter eighteen, verse one."
-			speaker = "Reader"
-		elif line.begins_with("Genesis 9:13"):
-			line = "Genesis, chapter nine, verse thirteen."
-			speaker = "Reader"
-		line = line.replace("\"", "").strip_edges()
-		if not line.is_empty():
-			out.append({"speaker": speaker, "text": line})
-	return out
+	return DialogueLine.spoken_in(text)
 
 ## Fallback: the operating system's voices. David gets a second English voice
 ## when the machine has one; otherwise the two are told apart by pitch alone.
