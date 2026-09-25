@@ -26,6 +26,20 @@ It starts the real main scene without a window and checks the story beats, input
 area, the living world, where trees and rocks stand, a triangle budget, who is playing, the Faith Journal and colouring the charm, the voice-over, the soundscape and Steady Hands. It prints `SMOKE TEST PASSED`
 when every check is OK and exits with code 1 otherwise. It takes about a minute.
 
+Three review tests play the stories through, each printing `<NAME> REVIEW PASSED`:
+
+```bash
+godot --headless --path . --script tests/camp_review.gd      # chapter 2, The King's Camp
+godot --headless --path . --script tests/ark_review.gd       # chapter 4, Noah's Ark
+godot --headless --path . --script tests/journey_review.gd   # moving between the stories
+```
+
+`journey_review.gd` is the safety net for how the game moves from one story to another: every
+chapter entered from the Faith Journey map, "Play again" in every chapter as a real scene reload,
+and switching between stories with nothing of the last one left running or on screen. It makes
+the main scene the tree's current scene, so reloads happen exactly as in the game. Run it (and the
+chapter reviews) after any change to how a chapter starts, stops or is chosen.
+
 For a repeatable visual pass with the real Forward+ renderer, run this without `--headless`:
 
 ```bash
@@ -36,10 +50,10 @@ It captures every major Chapter 1 beat to `.godot/chapter-visual-review/`, inclu
 handoff, Steady Hands, the clarified resolution, the verse, and the charm. It uses a scratch child
 profile, so it does not change the profiles or journals saved on the device.
 
-**On GitHub** the same test runs on every pull request and on every push to `main`
-(`.github/workflows/smoke-test.yml`). It downloads Godot 4.7.2 for Linux, so it also catches
-problems that Windows hides, such as a file referenced with the wrong letter case. The log is kept
-as a build artifact.
+**On GitHub** the smoke test and the three review tests run on every pull request and on every
+push to `main` (`.github/workflows/smoke-test.yml`). It downloads Godot 4.7.2 for Linux, so it also catches
+problems that Windows hides, such as a file referenced with the wrong letter case. The logs are
+kept as a build artifact.
 
 A few things learned the hard way when writing tests:
 
@@ -143,7 +157,7 @@ repository.
 
 1. Branch from the latest `main` (or from the last feature branch if it is not merged yet).
 2. Make the change, import, and run the smoke test.
-3. Commit only what the change touches, then open a pull request. CI runs the smoke test on it.
+3. Commit only what the change touches, then open a pull request. CI runs the smoke test and the review tests on it.
 4. Update the docs and `docs/improvement-backlog.md` in the same pull request.
 
 ## Adding sound
