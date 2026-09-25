@@ -3,6 +3,7 @@ extends Node
 ## The item GLB ships them in a neat row, so this moves each item's visual
 ## (and its outline) plus its pickup Area3D together onto valid ground.
 
+const GameShell := preload("res://scripts/game_shell.gd")
 const ITEM_NAMES := ["WonderItem_Stone", "WonderItem_Staff", "WonderItem_Lamb"]
 
 ## Meadow rectangle (x, z) the items may land in.
@@ -35,11 +36,9 @@ func _ready() -> void:
 	else:
 		rng.randomize()
 
-	var main := items_root.get_parent()
 	var avoid: Array[Vector3] = []
-	for path in ["Player", "DavidMentor"]:
-		var n := main.get_node_or_null(path) as Node3D
-		if n:
+	for n in [GameShell.of(self).get_node_or_null("Player"), items_root.get_parent().get_node_or_null("DavidMentor")]:
+		if n is Node3D:
 			avoid.append(n.global_position)
 
 	var space := items_root.get_world_3d().direct_space_state

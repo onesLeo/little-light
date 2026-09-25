@@ -28,7 +28,6 @@ const TOGGLE_TEXT_STATES := ["font_color", "font_hover_color", "font_focus_color
 @export var end_panel_delay: float = 2.6
 
 var _audio: Node
-var _director: Node
 var _journal: CanvasLayer
 var _colour: CanvasLayer
 var _journey: CanvasLayer
@@ -109,7 +108,6 @@ func _ready() -> void:
 	GameSettings.load_settings()
 	var main := get_parent()
 	_audio = main.get_node_or_null("%AudioDirector")
-	_director = main.get_node_or_null("ChapterDirector")
 	_journal = main.get_node_or_null("JournalScreen")
 	_colour = main.get_node_or_null("ColourScreen")
 	_journey = main.get_node_or_null("FaithJourney")
@@ -124,8 +122,6 @@ func _ready() -> void:
 	_build_end_panel()
 	_build_pause_panel()
 
-	if _director and _director.has_signal("chapter_finished"):
-		_director.chapter_finished.connect(_on_chapter_finished)
 	if _audio and _audio.has_signal("read_aloud_changed"):
 		_audio.read_aloud_changed.connect(func(_on: bool) -> void: _refresh_speaker())
 	if _journal and _journal.has_signal("player_removed"):

@@ -27,7 +27,6 @@ var _stick_pos: Vector2 = Vector2.ZERO
 var _time: float = 0.0
 var _canvas: Control
 var _input_setup: Node
-var _director: Node
 
 
 class TouchCanvas extends Control:
@@ -47,7 +46,6 @@ func _ready() -> void:
 	add_child(_canvas)
 	var main := get_parent()
 	_input_setup = main.get_node_or_null("InputSetup")
-	_director = main.get_node_or_null("ChapterDirector")
 	if _input_setup:
 		_input_setup.device_changed.connect(_on_device_changed)
 		_apply_mode(_input_setup.mode)
@@ -158,8 +156,6 @@ func _hint() -> String:
 	var shell := get_parent()
 	if shell and shell.has_method("action_hint"):
 		return shell.action_hint()
-	if _director and _director.has_method("get_action_hint"):
-		return _director.get_action_hint()
 	return ""
 
 

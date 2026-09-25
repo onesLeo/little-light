@@ -28,12 +28,13 @@ func _initialize() -> void:
 	Profiles.set_active(id)
 	_main = (load("res://scenes/main.tscn") as PackedScene).instantiate()
 	root.add_child(_main)
-	_director = _main.get_node("ChapterDirector")
-	_steady = _main.get_node("SteadyHands")
 	_run.call_deferred()
 
 
 func _run() -> void:
+	# The shell loads the valley once the scene is ready, after this script's _initialize().
+	_director = _main.get_node("Valley/ChapterDirector")
+	_steady = _main.get_node("Valley/SteadyHands")
 	await _settle(12)
 	await _shot("01_arrive")
 
@@ -43,7 +44,7 @@ func _run() -> void:
 
 	var item_names := ["WonderItem_Stone", "WonderItem_Staff", "WonderItem_Lamb"]
 	for i in item_names.size():
-		_director._near_item = _main.get_node("WonderItems/" + item_names[i])
+		_director._near_item = _main.get_node("Valley/WonderItems/" + item_names[i])
 		_director._try_collect_near_item()
 		await _settle(5)
 		if i == 0:

@@ -87,22 +87,22 @@ func _start_variant() -> void:
 # ---- what can be switched off ---------------------------------------------------------------------
 
 func _make_variants() -> Array:
-	var valley: Node = _main.get_node("BethlehemValley")
+	var valley: Node = _main.get_node("Valley/BethlehemValley")
 	var environment: Environment = (_main.get_node("WorldEnvironment") as WorldEnvironment).environment
 	var sun: DirectionalLight3D = _main.get_node("Sun")
 	var in_valley := func(prefix: String, node: Node) -> bool:
 		return node is MeshInstance3D and valley.is_ancestor_of(node) and String(node.name).begins_with(prefix)
 	return [
 		["as the game is", func() -> Callable: return func() -> void: pass],
-		["without David", func() -> Callable: return _hide([_main.get_node("DavidMentor")])],
+		["without David", func() -> Callable: return _hide([_main.get_node("Valley/DavidMentor")])],
 		["without Wonder-Walker", func() -> Callable: return _hide([_main.get_node("Player")])],
-		["without both characters", func() -> Callable: return _hide([_main.get_node("DavidMentor"), _main.get_node("Player")])],
+		["without both characters", func() -> Callable: return _hide([_main.get_node("Valley/DavidMentor"), _main.get_node("Player")])],
 		["without outline hulls", func() -> Callable: return _hide(_nodes(func(n: Node) -> bool: return n is MeshInstance3D and String(n.name).ends_with("_Outline")))],
 		["without trees", func() -> Callable: return _hide(_nodes(func(n: Node) -> bool: return in_valley.call("Cypress", n) or in_valley.call("Olive", n)))],
 		["without shrubs", func() -> Callable: return _hide(_nodes(func(n: Node) -> bool: return in_valley.call("Shrub", n)))],
 		["without terrain", func() -> Callable: return _hide(_nodes(func(n: Node) -> bool: return in_valley.call("Valley_Terrain", n)))],
-		["without stream pack and fish", func() -> Callable: return _hide([_main.get_node("StreamFishAlive"), _main.get_node("StreamFish")])],
-		["without meadow grass and flowers", func() -> Callable: return _hide([_main.get_node("MeadowDressing")])],
+		["without stream pack and fish", func() -> Callable: return _hide([_main.get_node("Valley/StreamFishAlive"), _main.get_node("Valley/StreamFish")])],
+		["without meadow grass and flowers", func() -> Callable: return _hide([_main.get_node("Valley/MeadowDressing")])],
 		["sun shadows off", func() -> Callable:
 			sun.shadow_enabled = false
 			return func() -> void: sun.shadow_enabled = true],
@@ -143,16 +143,17 @@ func _group_of(node: Node) -> String:
 	var node_name: String = String(node.name)
 	var path: String = str(_main.get_path_to(node))
 	var group: String
-	if path.begins_with("BethlehemValley"):
+	if path.begins_with("Valley/BethlehemValley"):
 		group = "valley: terrain" if node_name.begins_with("Valley_Terrain") else "valley: " + node_name.get_slice("_", 0).to_lower()
-	elif path.begins_with("StreamFishAlive"):
+	elif path.begins_with("Valley/StreamFishAlive"):
 		group = "stream pack"
 	elif path.begins_with("Player"):
 		group = "Wonder-Walker"
-	elif path.begins_with("DavidMentor"):
+	elif path.begins_with("Valley/DavidMentor"):
 		group = "David"
 	else:
-		group = "other: " + path.get_slice("/", 0)
+		# The valley's own pieces (meadow, items, hills, butterflies) by name, not all as "Valley".
+		group = "other: " + (path.get_slice("/", 1) if path.begins_with("Valley/") else path.get_slice("/", 0))
 	return group + (" (outline)" if node_name.ends_with("_Outline") else "")
 
 

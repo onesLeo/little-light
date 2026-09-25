@@ -6,6 +6,7 @@ extends Node
 ## Sits under WonderItems and waits for the scatter to place the items first.
 
 const SoundBus := preload("res://scripts/sound_bus.gd")
+const GameShell := preload("res://scripts/game_shell.gd")
 const SoundLibrary := preload("res://scripts/sound_library.gd")
 
 const LAMB := "WonderItem_Lamb"
@@ -34,8 +35,9 @@ var _rng := RandomNumberGenerator.new()
 func _ready() -> void:
 	_rng.randomize()
 	var items := get_parent()
-	_audio = items.get_parent().get_node_or_null("AudioDirector")
-	_player = items.get_parent().get_node_or_null("Player") as Node3D
+	var shell := GameShell.of(self)
+	_audio = shell.get_node_or_null("AudioDirector")
+	_player = shell.get_node_or_null("Player") as Node3D
 	var scatter := items.get_node_or_null("Scatter")
 	if scatter and scatter.has_signal("scattered"):
 		scatter.scattered.connect(func(_positions: Dictionary) -> void: _capture())

@@ -14,9 +14,9 @@ const Shapes := preload("res://scripts/ark_shapes.gd")
 const Shelter := preload("res://scripts/ark_shelter.gd")
 const ArkPerson := preload("res://scripts/ark_person.gd")
 
-## The mountaintop is lifted well above the valley and the camp, whose ground lies
-## hidden under the cloud sea.
-const ORIGIN := Vector3(96.0, 40.0, 8.0)
+## The ark has the world to itself (the valley is not loaded under it), so the
+## mountaintop stands at the origin. Everything is placed relative to it (_at).
+const ORIGIN := Vector3.ZERO
 const START_LOCAL := Vector3(-1.2, 0.2, 7.0)
 ## The hull's centre line runs along x at this z; its side faces the arriving child.
 const HULL_Z := -5.8
@@ -74,7 +74,7 @@ const MATE_OF := {
 ## How the mountaintop looks when the story starts (chapter_look.gd); the shell applies it.
 @export var look: Resource = preload("res://assets/looks/ark_mountain_day.tres")
 ## Where the walker can go: the mountaintop plain around the ark (world x, z; see ORIGIN).
-@export var play_area: Resource = PlayArea.new(Vector2(96.0, 8.0), Vector2(18.0, 16.0))
+@export var play_area: Resource = PlayArea.new(Vector2(0.0, 0.0), Vector2(18.0, 16.0))
 var _built: bool = false
 ## A new layout each visit: where the tools lie, and the animals' spots and facing.
 var _layout := RandomNumberGenerator.new()

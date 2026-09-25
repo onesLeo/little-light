@@ -14,6 +14,7 @@ extends Node3D
 @export var arrow_height: float = 2.0
 @export var edge_margin := Vector4(60.0, 60.0, 60.0, 230.0) ## left, top, right, bottom (bottom clears the dialogue panel)
 
+const GameShell := preload("res://scripts/game_shell.gd")
 const GOLD := Color(0.98, 0.78, 0.2)
 const INK := Color(0.35, 0.2, 0.08)
 
@@ -34,10 +35,10 @@ var _arrow2d: Node2D
 func _ready() -> void:
 	var auto := main == null
 	if auto:
-		main = get_parent().get_parent()
+		main = GameShell.of(self)
 	_player = main.get_node_or_null("Player") as Node3D
 	if auto:
-		_director = main.get_node_or_null("ChapterDirector")
+		_director = get_parent().get_parent().get_node_or_null("ChapterDirector")
 		for child in get_parent().get_children():
 			if child is Area3D and String(child.name).begins_with("WonderItem_"):
 				_items.append(child)

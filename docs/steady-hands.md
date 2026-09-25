@@ -44,7 +44,7 @@ Now:
 
 ## Where the numbers are
 
-They are exported on the `SteadyHands` node in `scenes/main.tscn`, so they can be tuned in the
+They are exported on the `SteadyHands` node in `scenes/chapters/bethlehem_valley.tscn`, so they can be tuned in the
 editor:
 
 | Setting | Default | What it does |

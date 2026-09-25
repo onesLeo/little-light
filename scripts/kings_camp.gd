@@ -136,7 +136,7 @@ func visit() -> void:
 		line.text = "Jonathan is by the fire. His hair is long, and his tunic is red."
 	if story and story.has_method("begin"):
 		story.begin()
-	var david := main.get_node_or_null("DavidMentor") as Node3D
+	var david := main.get_node_or_null("Valley/DavidMentor") as Node3D
 	if david:
 		david.global_position = _at(Vector2(2.7, 1.0))
 		var jon := get_node_or_null("Jonathan") as Node3D
@@ -428,7 +428,7 @@ func _dist_to_path(p: Vector2) -> float:
 
 ## Trees from the valley itself, so the camp is the same ridge and not a new forest.
 func _build_trees() -> void:
-	var valley := get_parent().get_node_or_null("BethlehemValley")
+	var valley := get_parent().get_node_or_null("Valley/BethlehemValley")
 	if valley == null:
 		return
 	var sources := {0: [], 1: []}
@@ -474,7 +474,7 @@ func _copy_with_outline(src: MeshInstance3D, holder: Node3D, node_name: String, 
 
 func _valley_rocks() -> Array:
 	var rocks := []
-	var valley := get_parent().get_node_or_null("BethlehemValley")
+	var valley := get_parent().get_node_or_null("Valley/BethlehemValley")
 	if valley == null:
 		return rocks
 	for n in valley.find_children("Rock_*", "MeshInstance3D", true, false):
@@ -982,7 +982,7 @@ func _keep_people_paper() -> void:
 		_white_tex = ImageTexture.create_from_image(img)
 	var main := get_parent()
 	_paint_people(get_node_or_null("Jonathan"))
-	_paint_people(main.get_node_or_null("DavidMentor"))
+	_paint_people(main.get_node_or_null("Valley/DavidMentor"))
 	_paint_people(main.get_node_or_null("Player"))
 	for child in get_children():
 		if str(child.name).begins_with("Guard"):

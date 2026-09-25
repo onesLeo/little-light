@@ -10,6 +10,7 @@ extends Node3D
 @export var max_height: float = 1.5
 
 const SoundBus := preload("res://scripts/sound_bus.gd")
+const GameShell := preload("res://scripts/game_shell.gd")
 const SoundLibrary := preload("res://scripts/sound_library.gd")
 
 const COLORS := [Color(1.0, 0.86, 0.3), Color(1.0, 1.0, 0.95), Color(1.0, 0.6, 0.72),
@@ -26,7 +27,7 @@ var _flutter_cool: float = 0.0
 
 func _ready() -> void:
 	_rng.randomize()
-	_player = get_parent().get_node_or_null("Player") as Node3D
+	_player = GameShell.of(self).get_node_or_null("Player") as Node3D
 	_wing_tex = _make_wing_texture()
 	_make_flutter_players()
 	for i in count:

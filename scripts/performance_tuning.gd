@@ -24,7 +24,7 @@ const OUTLINE_SUFFIX := "_Outline"
 
 func _ready() -> void:
 	# Deferred, so scripts that build or restyle meshes in _ready (the brook rocks) are done first.
-	call_deferred("_stop_outline_shadows")
+	stop_outline_shadows.call_deferred(get_parent())
 	get_window().size_changed.connect(_update_render_scale)
 	_update_render_scale()
 	apply_glow(OS.has_feature("mobile"))
@@ -52,6 +52,7 @@ func apply_glow(handheld: bool) -> void:
 			env.glow_enabled = not handheld or glow_on_handhelds
 
 
-func _stop_outline_shadows() -> void:
-	for node in get_parent().find_children("*" + OUTLINE_SUFFIX, "MeshInstance3D", true, false):
+## Also called by the shell for each story it loads (game_shell.gd), since they come later.
+func stop_outline_shadows(root: Node) -> void:
+	for node in root.find_children("*" + OUTLINE_SUFFIX, "MeshInstance3D", true, false):
 		(node as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
