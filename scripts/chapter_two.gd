@@ -13,6 +13,7 @@ const GiftChecklist := preload("res://scripts/gift_checklist.gd")
 const Hints := preload("res://scripts/wonder_item_hints.gd")
 const GameSettings := preload("res://scripts/game_settings.gd")
 const EasyWords := preload("res://scripts/easy_words.gd")
+const DevicePrompts := preload("res://scripts/device_prompts.gd")
 
 const Paper := preload("res://scripts/camp_paper.gd")
 const SoundLibrary := preload("res://scripts/sound_library.gd")
@@ -37,6 +38,7 @@ var _camera: Node
 var _player: Node3D
 var _line: Label
 var _prompt: Label
+var _prompt_raw: String = ""
 var _audio: Node
 ## Loops already given the chapter-1 tap, so a new loop chimes once.
 var _heard_loops: int = 0
@@ -65,6 +67,9 @@ func begin() -> void:
 	_audio = main.get_node_or_null("AudioDirector")
 	_camera = main.get_node_or_null("CameraDirector")
 	_player = main.get_node_or_null("Player")
+	var input_setup := main.get_node_or_null("InputSetup")
+	if input_setup and input_setup.has_signal("device_changed") and not input_setup.device_changed.is_connected(_on_device_changed):
+		input_setup.device_changed.connect(_on_device_changed)
 	_build_ui()
 	if _hints:
 		_hints.stop()
@@ -355,8 +360,7 @@ func _on_charm_sealed() -> void:
 	if _line:
 		var line := CHARM_LINE + "\n(Friendship charm sealed on the Virtue Bracelet.)"
 		_line.text = EasyWords.apply(line) if GameSettings.easy_words else line
-	if _prompt:
-		_prompt.text = _device_prompt("Press Space to keep your charm")
+	_set_prompt("Press Space to keep your charm")
 
 
 ## Chapter complete: back to the wide view, the cheer and confetti, the banner, and
@@ -434,8 +438,7 @@ func press_word(index: int) -> void:
 	if _words_done:
 		return
 	_words_done = true
-	if _prompt:
-		_prompt.text = _device_prompt("Press Space to loop the cord")
+	_set_prompt("Press Space to loop the cord")
 	if _audio and _audio.has_method("play_success"):
 		_audio.play_success()
 
@@ -570,8 +573,7 @@ func _say(text: String, prompt: String) -> void:
 	var shell := get_parent().get_parent()
 	if _line:
 		_line.text = text
-	if _prompt:
-		_prompt.text = _device_prompt(prompt)
+	_set_prompt(prompt)
 	# The bar fits this line (not the last one of chapter 1), then the cards sit above it.
 	if shell.has_method("fit_dialogue"):
 		shell.fit_dialogue()
@@ -583,19 +585,22 @@ func _say(text: String, prompt: String) -> void:
 		_audio.speak_dialogue(text)
 
 
-## Prompts are written for the keyboard. On a tablet or a gamepad they name that
-## device's buttons instead, as chapter 1's do.
-func _device_prompt(raw: String) -> String:
-	var input_setup := get_parent().get_parent().get_node_or_null("InputSetup")
-	var mode: String = input_setup.mode if input_setup and "mode" in input_setup else "keyboard"
-	match mode:
-		"touch":
-			return raw.replace("Press Space", "Tap NEXT").replace("Hold Space / Enter or the button", "Hold LOOP") \
-				.replace("A / D or arrows: look around", "stick: look around")
-		"gamepad":
-			return raw.replace("Press Space", "Press A").replace("Hold Space / Enter or the button", "Hold A") \
-				.replace("A / D or arrows: look around", "stick: look around")
-	return raw
+## Prompts are written for the keyboard and worded for the device used last (device_prompts.gd).
+## The prompt is kept as written, so switching device mid-line rewords it.
+func _set_prompt(raw: String) -> void:
+	_prompt_raw = raw
+	if _prompt:
+		var input_setup := get_parent().get_parent().get_node_or_null("InputSetup")
+		_prompt.text = DevicePrompts.reword(raw, input_setup, DevicePrompts.GOLD_BUTTON, "LOOP")
+
+
+func _on_device_changed(_mode: String) -> void:
+	if phase == Phase.IDLE:
+		return
+	_set_prompt(_prompt_raw)
+	var shell := get_parent().get_parent()
+	if shell.has_method("fit_dialogue"):
+		shell.fit_dialogue()
 
 
 func _pressed(event: InputEvent) -> bool:

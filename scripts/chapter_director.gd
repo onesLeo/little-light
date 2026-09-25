@@ -14,6 +14,7 @@ const JournalContent := preload("res://scripts/journal_content.gd")
 const GameSettings := preload("res://scripts/game_settings.gd")
 const EasyWords := preload("res://scripts/easy_words.gd")
 const PaperUI := preload("res://scripts/paper_ui.gd")
+const DevicePrompts := preload("res://scripts/device_prompts.gd")
 const WordChip := preload("res://scripts/word_chip.gd")
 const GameShell := preload("res://scripts/game_shell.gd")
 
@@ -477,22 +478,15 @@ func _set_prompt(raw: String) -> void:
 	call_deferred("_fit_dialogue_panel")
 
 func _on_device_changed(_mode: String) -> void:
+	# Stood down under the camp, the valley must not reword the camp's prompt with its own.
+	if beat == Beat.CAMP:
+		return
 	prompt_label.text = _localize_prompt(_prompt_raw)
 	call_deferred("_fit_dialogue_panel")
 
+## On a tablet the gold button says GRAB while exploring, and BREATHE in Steady Hands.
 func _localize_prompt(raw: String) -> String:
-	var input_setup := shell.get_node_or_null("InputSetup")
-	var mode: String = input_setup.mode if input_setup else "keyboard"
-	match mode:
-		"touch":
-			return raw.replace("Hold Space", "Hold BREATHE") \
-				.replace("Press Space", "Tap NEXT").replace("Press E", "Tap GRAB") \
-				.replace("press E", "tap GRAB").replace("[A / D: look around]", "[stick: look around]")
-		"gamepad":
-			return raw.replace("Hold Space", "Hold A") \
-				.replace("Press Space", "Press A").replace("Press E", "Press A") \
-				.replace("press E", "press A").replace("[A / D: look around]", "[stick: look around]")
-	return raw
+	return DevicePrompts.reword(raw, shell.get_node_or_null("InputSetup"), "GRAB", "BREATHE")
 
 ## What the on-screen action button should say right now ("" = nothing to do).
 func get_action_hint() -> String:
