@@ -164,7 +164,7 @@ for "Play again" (`reload()`). Stories never call one another.
   started reloads the scene.
 - The **camp** and the **ark** are nodes in the scene, listed in the shell's `STORIES`. Each offers
   `visit()` (start, or carry on), `stand_down()` (stop listening, put its cards and sounds away),
-  `in_progress()`, and a `look`; its story node offers `get_action_hint()`. Only the shell calls
+  `in_progress()`, a `look` and a `play_area`; its story node offers `get_action_hint()`. Only the shell calls
   `visit()`, after standing every other story down.
 - Each story's **look** is a `chapter_look.gd` resource in `assets/looks/` (`valley_day`,
   `camp_blue_hour`, `ark_mountain_day`): the sky, ambient light and haze, sun and fill lights, the
@@ -174,7 +174,11 @@ for "Play again" (`reload()`). Stories never call one another.
   the look (`apply_lighting()`) and tweens on. Tapping a story that is under way carries on without
   applying its look again, so the ark's rain stays.
 
-A new story in this scene is a node with those methods and a look, and one line in `STORIES`, plus
+- Each story's **play area** is a `play_area.gd` resource on its node (the valley's is on the
+  director): the rounded rectangle the Wonder-Walker can walk in, with its soft edge. The shell
+  hands it to `PlayBounds` when the story starts; tune it in the inspector.
+
+A new story in this scene is a node with those methods, a look and a play area, and one line in `STORIES`, plus
 its entries in the shared data (voice lines, journal verses and charms, the map's stops).
 `tests/journey_review.gd` checks moving between the stories.
 

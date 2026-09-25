@@ -90,6 +90,15 @@ func looks_like(look: Resource) -> bool:
 	return sky.sky_top_color.is_equal_approx(look.sky_top) and sky.ground_bottom_color.is_equal_approx(look.ground_bottom) 			and env.ambient_light_color.is_equal_approx(look.ambient_color) and is_equal_approx(env.fog_density, look.fog_density) 			and sun.light_color.is_equal_approx(look.sun_color) and is_equal_approx(sun.light_energy, look.sun_energy) 			and fill.light_color.is_equal_approx(look.fill_color) and is_equal_approx(fill.light_energy, look.fill_energy) 			and backdrop.visible == (look.backdrop != "hidden") and main.get_node("Soundscape")._night == look.night 			and cam.offset.is_equal_approx(look.camera_offset) and is_equal_approx(cam.fov, look.camera_fov)
 
 
+## True when PlayBounds keeps the walker in `area` (play_area.gd) and the walker is inside it,
+## a few physics steps after the story put them there.
+func kept_in(area: Resource) -> bool:
+	var bounds: Node = main.get_node("PlayBounds")
+	var player := main.get_node("Player") as Node3D
+	var at: Vector2 = Vector2(player.global_position.x, player.global_position.z) - bounds.center
+	return bounds.center.is_equal_approx(area.center) and bounds.half_extents.is_equal_approx(area.half_extents) 			and bounds._edge_info(at)["sd"] <= 0.0
+
+
 ## How many of the UI's own children are named like `pattern` and showing.
 func showing(pattern: String) -> int:
 	var n := 0
@@ -121,6 +130,8 @@ func _run() -> void:
 			"the camp starts from its first line")
 	check(director.beat == director.Beat.CAMP, "the valley's story stands down for the camp")
 	check(looks_like(main.get_node("KingsCamp").look), "the world takes the camp's look: blue hour, night sounds")
+	await settle(10)
+	check(kept_in(main.get_node("KingsCamp").play_area), "the walker is kept to the camp's play area")
 
 	print("-- the ark from the map, mid-camp --")
 	await map_stop("ark")
@@ -129,6 +140,8 @@ func _run() -> void:
 	check(camp_story().phase == camp_story().Phase.IDLE and showing("Camp*") == 0,
 			"the camp's story stops, and none of its cards stay on screen")
 	check(looks_like(main.get_node("NoahsArk").look), "the world takes the ark's look: daylight, no hills, its own framing")
+	await settle(10)
+	check(kept_in(main.get_node("NoahsArk").play_area), "the walker is kept to the ark's play area, far from the valley")
 	# Leave the ark mid-rain: its crossfade must not keep painting over the next story.
 	main.get_node("NoahsArk").set_weather("rain")
 
@@ -159,6 +172,7 @@ func _run() -> void:
 	check(director.beat == director.Beat.ARRIVE and Profiles.current_chapter == Profiles.CHAPTER_VALLEY,
 			"the valley reloads the scene and starts chapter 1 from its first line")
 	check(looks_like(director.look), "in the valley's daylight")
+	check(kept_in(director.play_area), "and kept to the valley's play area")
 	check(camp_story() == null or camp_story().phase == camp_story().Phase.IDLE, "and the camp is not running behind it")
 	check(not main.get_node("NoahsArk")._built, "and the ark is not built")
 

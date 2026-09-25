@@ -7,6 +7,7 @@ extends Node3D
 
 const Paper := preload("res://scripts/camp_paper.gd")
 const ChapterFour := preload("res://scripts/chapter_four.gd")
+const PlayArea := preload("res://scripts/play_area.gd")
 const Profiles := preload("res://scripts/profiles.gd")
 const Mountain := preload("res://scripts/ark_mountain.gd")
 const Shapes := preload("res://scripts/ark_shapes.gd")
@@ -72,6 +73,8 @@ const MATE_OF := {
 
 ## How the mountaintop looks when the story starts (chapter_look.gd); the shell applies it.
 @export var look: Resource = preload("res://assets/looks/ark_mountain_day.tres")
+## Where the walker can go: the mountaintop plain around the ark (world x, z; see ORIGIN).
+@export var play_area: Resource = PlayArea.new(Vector2(96.0, 8.0), Vector2(18.0, 16.0))
 var _built: bool = false
 ## A new layout each visit: where the tools lie, and the animals' spots and facing.
 var _layout := RandomNumberGenerator.new()
@@ -124,9 +127,6 @@ func visit() -> void:
 		return
 	_build()
 	var main := get_parent()
-	var bounds := main.get_node_or_null("PlayBounds")
-	if bounds and bounds.has_method("open_ark"):
-		bounds.open_ark()
 	set_weather("building")
 	var player := main.get_node_or_null("Player") as CharacterBody3D
 	if player:

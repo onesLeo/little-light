@@ -35,6 +35,8 @@ enum Beat {
 
 ## The valley's daylight (chapter_look.gd); the shell applies it when the valley starts.
 @export var look: Resource = preload("res://assets/looks/valley_day.tres")
+## Where the walker can go in the valley (play_area.gd); the shell hands it to PlayBounds.
+@export var play_area: Resource = preload("res://scripts/play_area.gd").new(Vector2(0.0, 2.4), Vector2(10.4, 8.2))
 @onready var dialogue_label: Label = %DialogueLabel
 @onready var prompt_label: Label = %PromptLabel
 @onready var dialogue_panel: PanelContainer = get_node_or_null("../UI/Panel") as PanelContainer

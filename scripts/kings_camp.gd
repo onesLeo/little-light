@@ -14,6 +14,7 @@ extends Node3D
 
 const Paper := preload("res://scripts/camp_paper.gd")
 const ChapterTwo := preload("res://scripts/chapter_two.gd")
+const PlayArea := preload("res://scripts/play_area.gd")
 const Guard := preload("res://scripts/camp_guard.gd")
 const Owl := preload("res://scripts/camp_owl.gd")
 const Fireflies := preload("res://scripts/camp_fireflies.gd")
@@ -87,6 +88,8 @@ void fragment() {
 var _clearing := Vector3.ZERO
 ## The blue hour the camp starts in (chapter_look.gd); the shell applies it.
 @export var look: Resource = preload("res://assets/looks/camp_blue_hour.tres")
+## Where the walker can go: the ridge behind the waterfall and the wide camp ground beyond it.
+@export var play_area: Resource = PlayArea.new(Vector2(-1.0, 21.5), Vector2(11.5, 27.0))
 var _built: bool = false
 var _grid_x: PackedFloat32Array = PackedFloat32Array()
 var _grid_z: PackedFloat32Array = PackedFloat32Array()
@@ -119,9 +122,6 @@ func tent_count() -> int:
 func visit() -> void:
 	_build()
 	var main := get_parent()
-	var bounds := main.get_node_or_null("PlayBounds")
-	if bounds and bounds.has_method("open_camp"):
-		bounds.open_camp()
 	_night_sky()
 	_sounds.start(_at(FIRE))
 	var player := main.get_node_or_null("Player") as CharacterBody3D
