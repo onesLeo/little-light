@@ -10,6 +10,7 @@ extends Node3D
 ##   stand_down()        stop it: its story stops listening, its cards and sounds go away
 ##   in_progress()       true while its story is under way (then switching to it carries on)
 ##   look                its chapter_look.gd resource: sky, lights, backdrop, night, camera
+##   play_area           its play_area.gd resource: where the walker can go
 ##   get_action_hint()   on its story node, for the touch button
 ## The valley is the scene itself (chapter_director.gd): choosing it once another story
 ## has started loads the scene again, which also starts every other story clean.
@@ -75,6 +76,7 @@ func switch_to(id: String) -> void:
 		menu.hide_end_panel()
 	if not carry_on:
 		apply_look(story.get("look"))
+	_use_play_area(story.get("play_area"))
 	story.visit()
 
 
@@ -96,6 +98,7 @@ func _begin_valley() -> void:
 	var director := get_node_or_null("ChapterDirector")
 	if director:
 		apply_look(director.get("look"))
+		_use_play_area(director.get("play_area"))
 	if director and director.has_method("begin_valley"):
 		director.begin_valley()
 
@@ -109,6 +112,12 @@ func _open_map_first() -> void:
 		journey.open_to_choose()
 	else:
 		_begin_valley()
+
+
+func _use_play_area(area: Resource) -> void:
+	var bounds := get_node_or_null("PlayBounds")
+	if bounds and bounds.has_method("use_area"):
+		bounds.use_area(area)
 
 
 ## True when story `id` can be played in this scene (the valley always can).
