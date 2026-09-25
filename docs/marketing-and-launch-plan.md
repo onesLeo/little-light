@@ -195,13 +195,91 @@ Higgsfield references:
 - [Higgsfield Marketing Studio](https://higgsfield.ai/blog/new-marketing-studio-higgsfield)
 - [Higgsfield URL-to-ad overview](https://higgsfield.ai/ads)
 
-## What to do next
+## Step-by-step plan
 
-1. Finish the current Chapter 2 polish and the real-device family checks.
-2. Export a private browser build and prepare a one-page five-minute parent feedback form.
-3. Capture clean 1080p gameplay from Chapters 1 and 2: exploration, item finding, dialogue,
-   Steady Hands, checklist, Faith Journey and charm/journal.
-4. Build the 15-second storyboard above from those frames before spending video-generation credits.
-5. Recruit the first 10 families and record the baseline completion/replay signals.
-6. Publish the public preview page only after the private pilot resolves its largest problems.
-7. Revisit packaging and price when at least 10 parents have answered after observing play.
+Accounts, website, payments, store declarations and licences are covered in
+[launch-preparation.md](launch-preparation.md). This section is the order to do things in.
+
+**Where the project is (September 2026):** Journeys 1, 2 and 4 are playable. Journeys 3 and 5 are
+concepts. Band B (ages 9–12) is not decided or built, so Volume 1 is marketed for **ages 5–8** only.
+Marketing starts now, alongside development. It does not wait for Journey 5.
+
+### Phase 0 — foundations (weeks 1–2, free)
+
+- [ ] Finish the Chapter 2 polish and real-device checks.
+- [ ] Start the slow paperwork now, because it takes weeks: seller name, D-U-N-S number if selling as
+      an organisation, domain name, support email and name check (launch-preparation.md, Step 1).
+- [ ] Register the Google Play Console account. New personal accounts must run a closed test before
+      publishing, and the pilot families can be those testers.
+- [ ] Capture clean 1080p gameplay from Chapters 1, 2 and 4 (`promo-production-checklist.md`).
+- [ ] Put up a one-page website with the promise, three trust points, one still and a **Join the
+      launch list** form. Link the privacy policy from day one.
+- [ ] Create the social accounts under one handle: Instagram, YouTube, TikTok, Facebook page,
+      Pinterest.
+
+### Phase 1 — private family pilot (weeks 3–8, free)
+
+- [ ] Export the browser build and upload it to itch.io as **unlisted** (release-plan.md).
+- [ ] Write the five-minute parent feedback form, including the price question after play.
+- [ ] Recruit 10–20 families through church, Sunday school and homeschool contacts. Watch at least
+      five sessions.
+- [ ] Record the baseline: started → finished Journey 1 → started Journey 2 → replayed within a week.
+- [ ] Collect up to three parent quotes, with written permission.
+- [ ] Fix the largest problems before anything goes public.
+
+### Phase 2 — organic audience building (from week 5, continuous, free)
+
+- [ ] Edit the 15-second vertical preview and 30-second trailer (storyboard above). Add the trailer
+      to the website.
+- [ ] Post three or four times a week, rotating: gameplay clip, Bible story/value, behind the
+      scenes (building a chapter), playtest lesson. Show Journeys 3 and 5 only as map stops or
+      clearly labelled story concepts until they are playable.
+- [ ] Each week, contact two or three group administrators (Christian parenting, homeschool,
+      Sunday-school leaders) and ask permission before posting.
+- [ ] Each week, contact two or three small creators (about 1k–50k followers). Offer a private build
+      and fact sheet. No scripted or undisclosed paid praise.
+- [ ] Pin a Pinterest board of the six stills linking to the website. Parents search there for Bible
+      activities.
+- [ ] Make the itch.io preview public, labelled **work in progress**, once the pilot's biggest
+      issues are fixed.
+- [ ] Track weekly: website visitors, preview starts, email signups. **Target before paid ads: 200+
+      email signups or a steady weekly rise.**
+
+### Phase 3 — finish the volume (in parallel with Phase 2)
+
+- [ ] Build Journey 3 (The Beginning), then a real-device family playtest.
+- [ ] Build Journey 5 (Jonah and the Great Fish), then a real-device family playtest.
+- [ ] Post one behind-the-scenes clip per milestone and send one email-list update per finished
+      journey.
+
+### Phase 4 — store preparation (about 6 weeks before launch)
+
+- [ ] Complete payments profiles, Apple Paid Apps Agreement, tax forms and bank details
+      (launch-preparation.md, Step 2).
+- [ ] Complete the rights check for voices, models, sounds and video (Step 5).
+- [ ] Set the price from the pilot answers. Plan a launch-week discount.
+- [ ] Run the Android closed test and iOS TestFlight with pilot families.
+- [ ] Build store assets: icon, screenshots, preview videos, descriptions, Families/Kids declarations
+      (Step 4).
+- [ ] Run the small paid test: **US$150–300 of Meta ads aimed at parents**, two hooks by two audiences,
+      sending people to the website. Use the decision table above and stop if people click but don't
+      sign up.
+
+### Phase 5 — launch (Android first, iOS about 2–4 weeks later)
+
+- [ ] Launch-day email to the list with the discount and the store link. Ask for honest reviews,
+      never for positive ones.
+- [ ] Ask partner churches, groups and creators to share the link during launch week.
+- [ ] Replace the website buttons with store badges.
+- [ ] Start **Apple Search Ads** and **Google App campaigns** on high-intent searches ("bible games
+      for kids", "christian kids app") with a small daily budget.
+- [ ] Only increase spend while the cost per purchase stays below net revenue per sale (price after
+      the stores' 15% commission and local taxes).
+
+### Phase 6 — after launch (monthly)
+
+- [ ] Run store A/B tests one element at a time: first screenshot, then icon, then video.
+- [ ] Answer every review and support email.
+- [ ] Decide the next step from data (launch-preparation.md, Step 7): free first journey plus unlock,
+      Volume 2, or Band B. **No subscription** until there are 10+ journeys and a monthly release
+      rhythm.
