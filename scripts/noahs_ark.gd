@@ -10,6 +10,7 @@ const ChapterFour := preload("res://scripts/chapter_four.gd")
 const Profiles := preload("res://scripts/profiles.gd")
 const Mountain := preload("res://scripts/ark_mountain.gd")
 const Shapes := preload("res://scripts/ark_shapes.gd")
+const Shelter := preload("res://scripts/ark_shelter.gd")
 const ArkPerson := preload("res://scripts/ark_person.gd")
 
 ## The mountaintop is lifted well above the valley and the camp, whose ground lies
@@ -72,6 +73,12 @@ var _family_in: bool = false
 signal boarding_finished
 var _boarding_pending: int = 0
 var _ramp_available: float = 0.0
+var _shelter: Node3D
+var _light_transition: Tween
+var _rainbow_transition: Tween
+var _story_camera: Camera3D
+var weather_state := "building"
+var _exited := false
 
 
 func is_boarding() -> bool:
@@ -659,7 +666,16 @@ func _dove() -> void:
 	add_child(dove)
 	Paper.part(dove, "Body", Paper.sphere(0.14, 8), Color(0.97, 0.97, 0.94), Vector3.ZERO, Vector3.ZERO, Vector3(1.4, 0.8, 1.0), 0.012)
 	Paper.part(dove, "Head", Paper.sphere(0.08, 8), Color(0.97, 0.97, 0.94), Vector3(0.16, 0.08, 0.0), Vector3.ZERO, Vector3.ONE, 0.01)
-	var leaf := Paper.part(dove, "Leaf", Paper.box(Vector3(0.16, 0.05, 0.08)), Color(0.4, 0.62, 0.32), Vector3(0.26, 0.04, 0.04), Vector3.ZERO, Vector3.ONE, 0.0)
+	for side in [-1.0, 1.0]:
+		Paper.part(dove, "Eye", Paper.sphere(0.012, 7), Color(0.12, 0.1, 0.08), Vector3(0.19, 0.105, side * 0.063), Vector3.ZERO, Vector3.ONE, 0)
+	Paper.part(dove, "Beak", Paper.cylinder(0.026, 0.09, 6, 0.0), Color(0.69, 0.51, 0.28), Vector3(0.26, 0.07, 0), Vector3(0, 0, -PI / 2.0), Vector3.ONE, 0.005)
+	Paper.part(dove, "Tail", Paper.sphere(0.1, 7), Color(0.87, 0.88, 0.84), Vector3(-0.23, 0.02, 0), Vector3(0, 0, -0.2), Vector3(1.3, 0.15, 0.75), 0.006)
+	var leaf := Node3D.new()
+	leaf.name = "Leaf"
+	dove.add_child(leaf)
+	Paper.part(leaf, "Twig", Paper.cylinder(0.008, 0.23, 6), Color(0.39, 0.33, 0.17), Vector3(0.36, 0.05, 0), Vector3(0, 0, PI / 2.0), Vector3.ONE, 0)
+	for side in [-1.0, 1.0]:
+		Paper.part(leaf, "OliveLeaf", Paper.sphere(0.08, 8), Color(0.35, 0.53, 0.24), Vector3(0.38, 0.055, side * 0.045), Vector3(0, side * 0.5, 0), Vector3(1.25, 0.12, 0.55), 0.004)
 	leaf.visible = false
 
 
@@ -667,14 +683,13 @@ func _dove() -> void:
 ## (rain stopped, water still high, soft grey-blue), "receding" (the water going down)
 ## and "morning" (dry ground and the rainbow).
 func set_weather(state: String) -> void:
+	weather_state = state
 	if _rain:
 		_rain.visible = state == "rain"
-	if state in ["rain", "waiting"]:
-		_set_rain_light(get_parent())
-		if state == "waiting":
-			_brighten_waiting(get_parent())
-	elif _built:
-		_set_building_light(get_parent())
+	_transition_light(state)
+	if _shelter:
+		_shelter.rain.visible = state == "rain"
+		_shelter.set_sky(state)
 	if _mountain and _mountain.has_method("set_flood"):
 		match state:
 			"rain":
@@ -684,14 +699,99 @@ func set_weather(state: String) -> void:
 			"receding":
 				_mountain.set_flood(FLOOD_MID, 3.0)
 			_:
-				_mountain.set_flood(-100.0, 4.0 if state == "morning" else 0.0)
-	if _rainbow:
-		_rainbow.visible = state == "morning"
-	if state == "morning":
-		var tw := create_tween()
-		for band in _bands:
-			band.scale = Vector3(0.05, 1.0, 1.0)
-			tw.tween_property(band, "scale", Vector3.ONE, 0.35)
+				_mountain.set_flood(-100.0, 3.0 if state == "morning" else 0.0)
+	if state != "morning":
+		if _rainbow_transition:
+			_rainbow_transition.kill()
+		_rainbow.visible = false
+
+
+## Capture the current lighting before setting the new palette, then crossfade.
+## Killing the previous tween makes quick NEXT/sky turns converge on the newest state.
+func _transition_light(state: String) -> void:
+	if _light_transition:
+		_light_transition.kill()
+	var main := get_parent()
+	var env: Environment = main.get_node("WorldEnvironment").environment
+	var sky: ProceduralSkyMaterial = env.sky.sky_material
+	var sun: Node = main.get_node("Sun")
+	var fill: Node = main.get_node("FillLight")
+	var groups := [
+		[env, ["ambient_light_color", "ambient_light_energy", "fog_light_color", "fog_density"]],
+		[sky, ["sky_top_color", "sky_horizon_color", "ground_horizon_color", "ground_bottom_color"]],
+		[sun, ["light_color", "light_energy"]], [fill, ["light_color", "light_energy"]],
+	]
+	var previous: Array = []
+	for group in groups:
+		for property in group[1]:
+			previous.append(group[0].get(property))
+	_set_building_light(main)
+	if state in ["rain", "waiting", "receding"]:
+		_set_rain_light(main)
+		if state != "rain":
+			_brighten_waiting(main)
+	elif state == "morning":
+		sky.sky_top_color = Color(0.55, 0.77, 0.88)
+		sky.sky_horizon_color = Color(0.93, 0.91, 0.81)
+		sky.ground_horizon_color = Color(0.91, 0.88, 0.75)
+		env.ambient_light_color = Color(0.88, 0.91, 0.84)
+		env.ambient_light_energy = 0.75
+		env.fog_light_color = Color(0.86, 0.91, 0.9)
+		env.fog_density = 0.002
+		sun.light_color = Color(1.0, 0.95, 0.84)
+		sun.light_energy = 1.02
+		fill.light_color = Color(0.72, 0.86, 0.91)
+	if state == "building":
+		return
+	_light_transition = create_tween().set_parallel(true).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	var i := 0
+	for group in groups:
+		for property in group[1]:
+			var target: Variant = group[0].get(property)
+			group[0].set(property, previous[i])
+			_light_transition.tween_property(group[0], property, target, 2.5)
+			i += 1
+
+
+func show_story_shot(shot: String) -> void:
+	if shot in ["shelter", "window", "leaf"]:
+		if _shelter == null:
+			_shelter = Shelter.new()
+			_shelter.name = "Shelter"
+			_shelter.position = ORIGIN + Vector3(0, 60, 0)
+			add_child(_shelter)
+			_shelter.build(self)
+		_shelter.rain.visible = weather_state == "rain"
+		_shelter.set_sky(weather_state)
+		_shelter.show_shot(shot)
+	else:
+		if _shelter:
+			_shelter.visible = false
+			_shelter.process_mode = Node.PROCESS_MODE_DISABLED
+		if shot == "rainbow":
+			if _story_camera == null:
+				_story_camera = Camera3D.new()
+				_story_camera.name = "RainbowCamera"
+				add_child(_story_camera)
+			_story_camera.fov = 55.0
+			_story_camera.global_position = _at(Vector3(0, 9.5, 28))
+			_story_camera.look_at(_at(Vector3(0, 6.5, -7)), Vector3.UP)
+			_story_camera.current = true
+
+
+func reveal_rainbow() -> void:
+	if _rainbow_transition:
+		_rainbow_transition.kill()
+	_rainbow.visible = true
+	_rainbow_transition = create_tween().set_parallel(true).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	for i in _bands.size():
+		_bands[i].scale = Vector3(1, 0.01, 1)
+		_rainbow_transition.tween_property(_bands[i], "scale:y", 1.0, 1.5).set_delay(i * 0.12)
+
+
+func fly_dove(with_leaf: bool) -> void:
+	show_story_shot("window")
+	await _shelter.fly(with_leaf)
 
 
 func set_speaking(who: String) -> void:
@@ -999,7 +1099,7 @@ func keep_guest_outside(player: Node3D) -> void:
 
 
 func dove() -> Node3D:
-	return get_node_or_null("WindowDove") as Node3D
+	return _shelter.bird if _shelter and _shelter.visible else get_node_or_null("WindowDove") as Node3D
 
 
 func show_leaf(on: bool) -> void:
@@ -1097,3 +1197,31 @@ func _work(delta: float) -> void:
 		person.rotation.x = maxf(sin(_time * 0.6 + i), 0.0) * 0.28
 		person.rotation.y = home_yaw + sin(_time * 0.35 + i * 2.0) * 0.5
 		person.rotation.z = sin(_time * 1.1 + i) * 0.03
+
+
+## The morning has people in it: the saved family and animals emerge into daylight.
+func leave_ark() -> void:
+	if _exited:
+		return
+	_exited = true
+	var actors: Array[Node3D] = [_noah, _wife]
+	for i in 6:
+		actors.append(get_node("Family%d" % i))
+	for pair in MATE_OF:
+		actors.append(get_node(pair))
+		actors.append(get_node(MATE_OF[pair]))
+	var door_z := HULL_Z + Shapes.side_z(0.0, 1.95)
+	for i in actors.size():
+		var actor := actors[i]
+		var lane := -0.45 if i % 2 == 0 else 0.45
+		var start := _at(Vector3(lane, 1.27, door_z + 0.25))
+		var foot := _at(Vector3(lane, 0.12, RAMP_FOOT_Z + 0.4))
+		var target := _at(Vector3((-1.0 if i % 2 == 0 else 1.0) * (2.8 + (i % 5) * 1.15), 0.12, 5.8 + (i / 5) * 1.1))
+		var tw := create_tween()
+		tw.tween_interval(1.0 + i * 0.35)
+		tw.tween_callback(func() -> void:
+			actor.position = start
+			actor.rotation.y = 0.0
+			actor.visible = true)
+		_walk_segment(tw, actor, start, foot)
+		_walk_segment(tw, actor, foot, target)

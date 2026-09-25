@@ -133,11 +133,26 @@ func _run() -> void:
 			"the guest stays outside while the family goes in")
 	story._advance()
 	check(ark.get_node("Rain").visible and "animals with them" in story._line.text, "rain stays on the ark and names who was kept safe")
+	check(ark.get_node("Shelter").visible and ark.get_node("Shelter/ShelterCamera").current, "rain uses the sheltered interior camera")
+	check(ark.get_node("Shelter/WindowRain").visible and ark.get_node("Shelter/ShelterNoah").visible, "rain is outside the window while Noah is safe inside")
+	check(not player.can_move, "the child cannot wander off during the shelter scene")
+	await capture("rain-shelter")
 	await create_timer(0.3).timeout
 	check(ark.get_node("Mountain/Flood").visible and not ark.get_node("Mountain/CloudSea").visible, "the water rises over the cloud sea while it rains")
 	story._advance()
+	var perch: Vector3 = ark.dove().position
 	story._send_dove()
-	story._on_dove_back()
+	story._send_dove()
+	check(story._dove_flights == 1 and story.get_action_hint().is_empty(), "repeated SEND cannot start a second flight")
+	await create_timer(1.2).timeout
+	check(ark.dove().position.y > perch.y + 0.5 and absf(ark.dove().position.x - perch.x) > 0.5, "the dove climbs along a curved flight path")
+	await capture("dove-flight")
+	var flying_at: Vector3 = ark.dove().position
+	paused = true
+	await create_timer(0.2, true).timeout
+	check(ark.dove().position == flying_at, "pausing freezes the dove flight")
+	paused = false
+	await create_timer(4.3).timeout
 	check(story.phase == story.Phase.SKY and "came back safe" in story._line.text, "the first dove returns safe")
 	var before: String = story._line.text
 	story._turn_sky()
@@ -145,9 +160,22 @@ func _run() -> void:
 	story._turn_sky()
 	check(story.phase == story.Phase.LEAF, "turning the sky opens the second send")
 	story._send_dove()
-	story._on_dove_back()
-	check(ark.get_node("WindowDove/Leaf").visible and ark.get_node("Rainbow").visible, "the olive leaf and the rainbow arrive together")
+	await create_timer(5.5).timeout
+	check(story.phase == story.Phase.OLIVE and ark.dove().get_node("Leaf").visible, "the dove lands with a visible olive leaf")
+	await capture("olive-leaf")
+	check(not ark.get_node("Rainbow").visible and ark.weather_state == "receding", "the leaf discovery happens before dry ground and rainbow")
 	story._advance()
+	check(story.phase == story.Phase.DRY and not ark.get_node("Shelter").visible, "dry ground returns to the exterior")
+	check(not ark.get_node("Rainbow").visible, "dry ground has its own beat before the rainbow")
+	await create_timer(2.7).timeout
+	check(main.get_node("Sun").light_energy > 1.0, "morning has brighter sunlight than the building scene")
+	await capture("dry-morning")
+	check(ark.get_node("Noah").visible and ark.get_node("NoahsWife").visible, "the family emerges into the new morning")
+	await create_timer(0.5).timeout
+	check(not ark.get_node("Mountain/Flood").visible and ark.get_node("Mountain/CloudSea").visible, "the morning finishes draining the flood")
+	story._advance()
+	check(ark.get_node("Rainbow").visible and ark.get_node("RainbowCamera").current, "the verse reveals the rainbow in its wide story shot")
+	await capture("rainbow")
 	check(Profiles.has_verse(kid, JournalContent.VERSE_GENESIS_9_13), "Genesis 9:13 is in the journal")
 	check("I set my rainbow in the cloud" in story._line.text, "the verse is the World English Bible wording")
 	story._advance()
@@ -167,3 +195,13 @@ func _run() -> void:
 	check(menu._end_charm == JournalContent.CHARM_TRUST and "Trust" in menu._end_title.text, "the end card names the Trust charm")
 	print("ARK REVIEW %s" % ("PASSED" if failures == 0 else "FAILED"))
 	quit(0 if failures == 0 else 1)
+
+
+## Optional real-renderer captures: -- --capture-ark (omit --headless).
+func capture(label: String) -> void:
+	if not OS.get_cmdline_user_args().has("--capture-ark"):
+		return
+	await create_timer(2.7).timeout
+	await RenderingServer.frame_post_draw
+	DirAccess.make_dir_recursive_absolute("res://.godot/ark-visual-review")
+	root.get_texture().get_image().save_png("res://.godot/ark-visual-review/%s.png" % label)

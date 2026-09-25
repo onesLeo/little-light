@@ -38,6 +38,7 @@ const CLOUD := Color(0.97, 0.96, 0.93)
 const PEAK := Color(0.54, 0.6, 0.63)
 const SNOW := Color(0.93, 0.94, 0.95)
 
+var _flood_tween: Tween
 var _rng := RandomNumberGenerator.new()
 var _rim: PackedVector2Array = []
 var _sky_clouds: Node3D
@@ -470,7 +471,10 @@ func set_flood(level: float, seconds: float) -> void:
 		_water.visible = true
 		if _cloud_sea:
 			_cloud_sea.visible = false
+	if _flood_tween:
+		_flood_tween.kill()
 	var tw := create_tween()
+	_flood_tween = tw
 	tw.tween_property(self, "_water_level", target, maxf(seconds, 0.01)).from(maxf(_water_level, low)).set_trans(Tween.TRANS_SINE)
 	if target <= low:
 		tw.tween_callback(func() -> void:

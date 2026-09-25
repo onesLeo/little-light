@@ -11,7 +11,7 @@ const Hints := preload("res://scripts/wonder_item_hints.gd")
 const GameSettings := preload("res://scripts/game_settings.gd")
 const EasyWords := preload("res://scripts/easy_words.gd")
 
-enum Phase { IDLE, ARRIVE, HURT, FIND, MEET, PANEL, PAIRS, BOARDING, DOOR, RAIN, DOVE, SKY, LEAF, DRY, VERSE, WORDS, REFLECT, CHARM, DONE }
+enum Phase { IDLE, ARRIVE, HURT, FIND, MEET, PANEL, PAIRS, BOARDING, DOOR, RAIN, DOVE, SKY, LEAF, OLIVE, DRY, VERSE, WORDS, REFLECT, CHARM, DONE }
 
 const WORD_LABELS: PackedStringArray = ["Rainbow", "Sign", "Promise"]
 const WORD_LINES: PackedStringArray = ["Rainbow.", "Sign.", "Promise."]
@@ -161,7 +161,14 @@ func _advance() -> void:
 			phase = Phase.DOVE
 			get_parent().set_weather("waiting")
 			_say("Wonder Light: \"Let's open the window and send the dove.\"", "Press E to send the dove")
+		Phase.OLIVE:
+			phase = Phase.DRY
+			get_parent().set_weather("morning")
+			get_parent().close_door(false)
+			get_parent().leave_ark()
+			_say("Noah: \"Dry ground. Thank you for keeping us safe.\"", "Press Space to continue")
 		Phase.DRY:
+			get_parent().reveal_rainbow()
 			phase = Phase.VERSE
 			Profiles.unlock_verse(JournalContent.VERSE_GENESIS_9_13)
 			_say("Genesis 9:13 (WEB):\n\"I set my rainbow in the cloud, and it will be a sign of a covenant between me and the earth.\"", "Press Space to continue")
@@ -293,17 +300,9 @@ func _send_dove() -> void:
 	_dove_busy = true
 	_dove_flights += 1
 	var ark := get_parent()
-	var dove: Node3D = ark.dove()
-	if dove == null:
-		_on_dove_back()
-		return
-	ark.show_leaf(false)
-	var home: Vector3 = dove.global_position
-	var away := home + Vector3(0.0, 5.5, 8.0)
-	var tw := create_tween()
-	tw.tween_property(dove, "global_position", away, 0.8)
-	tw.tween_property(dove, "global_position", home, 0.8)
-	tw.tween_callback(_on_dove_back)
+	_set_prompt("Watch the dove fly")
+	await ark.fly_dove(_dove_flights == 2)
+	_on_dove_back()
 
 
 func _on_dove_back() -> void:
@@ -316,10 +315,8 @@ func _on_dove_back() -> void:
 		_say("Wonder Light: \"The dove came back safe. The water is still too high.\"", "Press E to turn the sky")
 	else:
 		ark.show_leaf(true)
-		phase = Phase.DRY
-		ark.set_weather("morning")
-		ark.close_door(false)
-		_say("Wonder Light: \"Look, an olive leaf. The water is going down.\"\nNoah: \"Dry ground. Thank you for keeping us safe.\"", "Press Space to continue")
+		phase = Phase.OLIVE
+		_say("Wonder Light: \"Look, an olive leaf. The water is going down.\"", "Press Space to continue")
 
 
 func _turn_sky() -> void:
@@ -437,7 +434,7 @@ func _say(text: String, prompt: String) -> void:
 	elif text.begins_with("Noah:"):
 		speaker = "Noah"
 	ark.set_speaking(speaker)
-	var moving := phase in [Phase.FIND, Phase.PANEL, Phase.PAIRS, Phase.DOVE, Phase.SKY, Phase.LEAF, Phase.DONE]
+	var moving := phase in [Phase.FIND, Phase.PANEL, Phase.PAIRS, Phase.DONE]
 	if _player and "can_move" in _player:
 		_player.can_move = moving
 	if _camera:
@@ -445,6 +442,16 @@ func _say(text: String, prompt: String) -> void:
 			_camera.cut_to_closeup(ark.get_node("Noah"))
 		elif phase != Phase.CHARM:
 			_camera.cut_to_tabletop()
+	if phase == Phase.RAIN:
+		ark.show_story_shot("shelter")
+	elif phase in [Phase.DOVE, Phase.SKY, Phase.LEAF]:
+		ark.show_story_shot("window")
+	elif phase == Phase.OLIVE:
+		ark.show_story_shot("leaf")
+	elif phase in [Phase.VERSE, Phase.REFLECT]:
+		ark.show_story_shot("rainbow")
+	else:
+		ark.show_story_shot("")
 	if _line:
 		_line.text = text
 	_set_prompt(prompt)
