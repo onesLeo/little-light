@@ -1,0 +1,23 @@
+[gd_resource type="Resource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/chapter_look.gd" id="1_look"]
+
+[resource]
+script = ExtResource("1_look")
+sky_top = Color(0.5, 0.72, 0.92, 1)
+sky_horizon = Color(0.98, 0.91, 0.78, 1)
+ground_horizon = Color(0.98, 0.91, 0.78, 1)
+ground_bottom = Color(0.7, 0.8, 0.6, 1)
+ambient_color = Color(1.0, 0.92, 0.78, 1)
+ambient_energy = 1.15
+fog_color = Color(0.96, 0.9, 0.78, 1)
+fog_density = 0.003
+sun_color = Color(1.0, 0.93, 0.78, 1)
+sun_energy = 1.1
+fill_color = Color(0.75, 0.85, 1.0, 1)
+fill_energy = 0.55
+backdrop = "day"
+night = false
+camera_offset = Vector3(0, 8.7, 10.1)
+camera_look_height = 0.7
+camera_fov = 40.0

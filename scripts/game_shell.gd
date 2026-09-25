@@ -8,6 +8,8 @@ extends Node3D
 ## A story that lives in this scene as a node (see STORIES) offers:
 ##   visit()             start it, or carry on if it is already under way
 ##   stand_down()        stop it: its story stops listening, its cards and sounds go away
+##   in_progress()       true while its story is under way (then switching to it carries on)
+##   look                its chapter_look.gd resource: sky, lights, backdrop, night, camera
 ##   get_action_hint()   on its story node, for the touch button
 ## The valley is the scene itself (chapter_director.gd): choosing it once another story
 ## has started loads the scene again, which also starts every other story clean.
@@ -58,6 +60,8 @@ func switch_to(id: String) -> void:
 	if story == null or not story.has_method("visit"):
 		push_warning("GameShell: no story called %s in this scene" % id)
 		return
+	# Tapping the story already under way only closes the map: its look (the ark's rain) stays.
+	var carry_on: bool = Profiles.current_chapter == id and story.has_method("in_progress") and story.in_progress()
 	var director := get_node_or_null("ChapterDirector")
 	if director and director.has_method("stand_down"):
 		director.stand_down()
@@ -69,6 +73,8 @@ func switch_to(id: String) -> void:
 	var menu := get_node_or_null("GameMenu")
 	if menu and menu.has_method("hide_end_panel"):
 		menu.hide_end_panel()
+	if not carry_on:
+		apply_look(story.get("look"))
 	story.visit()
 
 
@@ -88,6 +94,8 @@ func reload(id: String) -> void:
 func _begin_valley() -> void:
 	_first_map = false
 	var director := get_node_or_null("ChapterDirector")
+	if director:
+		apply_look(director.get("look"))
 	if director and director.has_method("begin_valley"):
 		director.begin_valley()
 
@@ -115,6 +123,57 @@ func _story_node(id: String) -> Node:
 
 
 ## -- Shared by every story ------------------------------------------------------
+
+## Dresses the world for a story (chapter_look.gd): its lighting, the backdrop of hills,
+## night or day sounds, and the tabletop camera's framing. The story before it is never undone
+## by hand: this sets every one of them.
+func apply_look(look: Resource) -> void:
+	if look == null:
+		return
+	apply_lighting(look)
+	var backdrop := get_node_or_null("HorizonBackdrop") as Node3D
+	if backdrop:
+		if look.backdrop == "blue_hour" and backdrop.has_method("set_blue_hour"):
+			backdrop.set_blue_hour()
+		elif backdrop.has_method("set_daylight"):
+			backdrop.set_daylight()
+		backdrop.visible = look.backdrop != "hidden"
+	var soundscape := get_node_or_null("Soundscape")
+	if soundscape and soundscape.has_method("set_night"):
+		soundscape.set_night(look.night)
+	var cam := get_node_or_null("TabletopCamera") as Camera3D
+	if cam and "offset" in cam:
+		cam.offset = look.camera_offset
+		cam.set("look_height", look.camera_look_height)
+		cam.fov = look.camera_fov
+
+
+## Only the look's sky, air and lights: the base a story's own weather tweens from.
+func apply_lighting(look: Resource) -> void:
+	if look == null:
+		return
+	var world := get_node_or_null("WorldEnvironment") as WorldEnvironment
+	if world and world.environment:
+		var env := world.environment
+		var sky := env.sky.sky_material as ProceduralSkyMaterial if env.sky else null
+		if sky:
+			sky.sky_top_color = look.sky_top
+			sky.sky_horizon_color = look.sky_horizon
+			sky.ground_horizon_color = look.ground_horizon
+			sky.ground_bottom_color = look.ground_bottom
+		env.ambient_light_color = look.ambient_color
+		env.ambient_light_energy = look.ambient_energy
+		env.fog_light_color = look.fog_color
+		env.fog_density = look.fog_density
+	var sun := get_node_or_null("Sun") as DirectionalLight3D
+	if sun:
+		sun.light_color = look.sun_color
+		sun.light_energy = look.sun_energy
+	var fill := get_node_or_null("FillLight") as DirectionalLight3D
+	if fill:
+		fill.light_color = look.fill_color
+		fill.light_energy = look.fill_energy
+
 
 ## What the touch button says now ("" = nothing to do): the running story answers.
 func action_hint() -> String:
