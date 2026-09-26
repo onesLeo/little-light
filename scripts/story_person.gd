@@ -1,7 +1,7 @@
 extends Node3D
 ## A person the child meets and hears, from the Blender paper models on the shared
 ## Wonder-Walker skeleton (art/blender/scripts/characters/): Noah and his wife in the ark,
-## Samuel, Jesse and the younger David in Bethlehem. They breathe, blink, talk while their
+## Samuel, Jesse, the younger David and Jesse's seven older sons in Bethlehem. They breathe, blink, talk while their
 ## line plays, gesture a little, and walk. The block people stay for the crowds.
 const CharacterMotion := preload("res://scripts/chapter_two_character_motion.gd")
 
@@ -13,6 +13,9 @@ const PEOPLE := {
 	"samuel": {"scene": "res://assets/samuel_v1.glb", "body": "SamuelBody", "outline": "SamuelOutline", "scale": 1.26},
 	"jesse": {"scene": "res://assets/jesse_v1.glb", "body": "JesseBody", "outline": "JesseOutline", "scale": 1.22},
 	"young_david": {"scene": "res://assets/young_david_v1.glb", "body": "YoungDavidBody", "outline": "YoungDavidOutline", "scale": 1.06},
+	# Jesse's sons: light, even cloth and hair, tinted per brother with tint() (jesse_sons.gd).
+	"brother": {"scene": "res://assets/brother_v1.glb", "body": "BrotherBody", "outline": "BrotherOutline", "scale": 1.2},
+	"brother_young": {"scene": "res://assets/brother_young_v1.glb", "body": "YoungBrotherBody", "outline": "YoungBrotherOutline", "scale": 1.14},
 }
 
 ## The kneeling pose, in radians at kneel = 1: the knees bend right back under the body, the
@@ -31,6 +34,8 @@ var speaking: bool = false
 var walk_amount: float = 0.0
 ## 0 to 1: the right arm lifts forward and a little up (Samuel raising the oil horn).
 var reach: float = 0.0
+## A turn of the head to one side, in radians (a brother glancing about while he waits).
+var look_aside: float = 0.0
 ## 0 to 1: down on both knees, head bowed (David, to be anointed). The model sinks by the
 ## height of its knees, so the knees rest on the ground.
 var kneel: float = 0.0
@@ -95,6 +100,23 @@ func head_top() -> Vector3:
 	return global_position + Vector3(0.0, _height - _knee_height * kneel, 0.0)
 
 
+## Colours this person's own cloth and hair: `colours` maps a material's part name (the end of
+## its name: "Tunic", "UnderTunic", "Sash", "Hair", "Skin") to a colour its paper is multiplied
+## by. Each person gets copies, so seven brothers from one model each keep their own.
+func tint(colours: Dictionary) -> void:
+	if _body == null:
+		return
+	for i in _body.mesh.get_surface_count():
+		var mat := _body.get_active_material(i) as StandardMaterial3D
+		if mat == null:
+			continue
+		var part := mat.resource_name.get_slice("_", mat.resource_name.get_slice_count("_") - 1)
+		if colours.has(part):
+			mat = mat.duplicate() as StandardMaterial3D
+			mat.albedo_color = colours[part]
+			_body.set_surface_override_material(i, mat)
+
+
 ## Hangs `prop` on one of the skeleton's bones (a staff in a hand), so it moves with it.
 func attach(bone_name: String, prop: Node3D) -> void:
 	if _skeleton == null or _skeleton.find_bone(bone_name) < 0:
@@ -131,7 +153,7 @@ func _process(delta: float) -> void:
 	_pose("Hips", Vector3(0, 0, sin(_time * 0.9) * 0.008))
 	_pose("Spine", Vector3(breath * 0.006 + kneel * KNEEL_LEAN, 0, 0))
 	_pose("Chest", Vector3(0, sin(_time * 1.1) * 0.012, 0))
-	_pose("Head", Vector3(sin(_time * 2.4) * (0.012 + _talk * 0.025) + kneel * KNEEL_BOW, sin(_time * 0.7) * 0.035, 0))
+	_pose("Head", Vector3(sin(_time * 2.4) * (0.012 + _talk * 0.025) + kneel * KNEEL_BOW, sin(_time * 0.7) * 0.035 + look_aside, 0))
 	for side in ["L", "R"]:
 		var sign_side := -1.0 if side == "L" else 1.0
 		var lead := 1.0 if side == "R" else 0.25

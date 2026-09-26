@@ -14,6 +14,10 @@ the shared rig's joints sit at fixed heights, so a stretched body would bend a l
   never reads as a second Samuel.
 - Younger David: clearly the David of Chapters 1-2 (his own skin, golden tunic, olive sash,
   hair cap and sandals), a little shorter and rounder in the cheek.
+- Jesse's seven older sons, from two models: "brother" (a grown man with a short beard and
+  Jesse's sturdier build, for the three eldest) and "brother_young" (clean-shaven, David's
+  build). Their tunic, under-tunic, sash and hair are a light, even paper, so Godot tints
+  each of the seven his own colours (jesse_sons.gd) from these two files.
 
 None overwrites another model. Every file lands in LITTLE_LIGHT_ART_OUT (or
 art/blender/output); copy just the .glb into assets/.
@@ -22,6 +26,8 @@ Run from the repo root, once per person:
   blender --background --python art/blender/scripts/characters/generate_bethlehem_people_v1.py -- samuel
   blender --background --python art/blender/scripts/characters/generate_bethlehem_people_v1.py -- jesse
   blender --background --python art/blender/scripts/characters/generate_bethlehem_people_v1.py -- young_david
+  blender --background --python art/blender/scripts/characters/generate_bethlehem_people_v1.py -- brother
+  blender --background --python art/blender/scripts/characters/generate_bethlehem_people_v1.py -- brother_young
 """
 import importlib.util
 import sys
@@ -41,7 +47,11 @@ PEOPLE = {
     "samuel": ("samuel_v1", "Samuel", "S"),
     "jesse": ("jesse_v1", "Jesse", "J"),
     "young_david": ("young_david_v1", "YoungDavid", "Y"),
+    "brother": ("brother_v1", "Brother", "B"),
+    "brother_young": ("brother_young_v1", "YoungBrother", "YB"),
 }
+## The brothers' cloth and hair: a light, even paper that Godot multiplies by each brother's colour.
+TINTABLE = (0.93, 0.92, 0.90)
 
 
 def palette_for(kind, p):
@@ -63,6 +73,16 @@ def palette_for(kind, p):
             "Trousers": mat(p + "_UnderTunic", (0.52, 0.53, 0.32), 0.25),
             "Sash": mat(p + "_Sash", (0.44, 0.46, 0.25), 0.22),
             "Hair": mat(p + "_Hair", (0.40, 0.34, 0.29), 0.25),
+            "Eye": mat(p + "_Eye", (0.08, 0.05, 0.03), 0),
+            "Mouth": mat(p + "_Mouth", (0.40, 0.18, 0.12), 0),
+        }
+    if kind in ("brother", "brother_young"):
+        return {
+            "Skin": mat(p + "_Skin", (0.78, 0.54, 0.36), 0.16),
+            "Tunic": mat(p + "_Tunic", TINTABLE, 0.28),
+            "Trousers": mat(p + "_UnderTunic", TINTABLE, 0.25),
+            "Sash": mat(p + "_Sash", TINTABLE, 0.22),
+            "Hair": mat(p + "_Hair", TINTABLE, 0.25),
             "Eye": mat(p + "_Eye", (0.08, 0.05, 0.03), 0),
             "Mouth": mat(p + "_Mouth", (0.40, 0.18, 0.12), 0),
         }
@@ -94,12 +114,16 @@ def shape(kind):
                     v.co.x *= 0.98
                     if v.co.z < 0.90:
                         v.co.z -= 0.006
-            elif kind == "jesse":
+            elif kind in ("jesse", "brother"):
                 if clothing and 0.40 < v.co.z < 0.80:
                     v.co.x *= 1.12
                     v.co.y *= 1.06
                 if v.co.z > 0.82:
                     v.co.x *= 1.06
+            elif kind == "brother_young":
+                # A tunic to just above the knee, like the eldest's; the face as David's.
+                if obj.name == "Tunic":
+                    v.co.z -= 0.08 * (1 - ww.smoothstep(0.41, 0.505, v.co.z))
             else:
                 if obj.name == "Tunic":
                     v.co.z -= 0.05 * (1 - ww.smoothstep(0.41, 0.505, v.co.z))
@@ -139,9 +163,9 @@ def build(kind):
         ww.weighted(david.hair_cap(hair), ww.fixed("Head"))
     else:
         ww.weighted(noah.work_hair(hair, tied=False), ww.fixed("Head"))
-    if kind == "samuel":
+    if kind in ("samuel", "brother"):
         ww.weighted(noah.beard(hair), ww.fixed("Head"))
-    if kind == "jesse":
+    if kind in ("jesse", "brother", "brother_young"):
         ww.weighted(noah.belt(palette["Sash"]), ww.torso_weights, False)
     highlight = ww.old.paper_mat(p + "_Catchlight", (0.98, 0.93, 0.82), 0)
     for side, sign in [("L", -1), ("R", 1)]:

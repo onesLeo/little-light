@@ -150,6 +150,12 @@ The chapter carries on after the game is closed: the child's profile keeps the l
 David home, after the anointing), and opening The Beginning again sets the courtyard as it stood
 and reads that beat's line again. Finishing the chapter, or "Start this chapter again", forgets it.
 Twelve lines have easy words for children of 8 or younger (the verse never changes).
+Jesse's seven sons are Blender paper people like Samuel and Jesse, from two models (three bearded,
+four clean-shaven), each tinted his own colours. The far hills are rounded and terraced in sage
+and khaki with olive trees, and Bethlehem's flat roofs stand on the hill to the east, behind the
+table in the welcome shot. The first time a device shows these materials, Godot compiles their
+shaders and the first seconds can stutter (the desktop renderer here fell to 16 fps briefly);
+once cached it is a steady 30 fps, as before, on both renderers.
 Not yet: per-object placement sounds beyond the three existing effects, and the family/tablet tests
 of Milestone C.
 

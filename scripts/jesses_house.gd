@@ -39,6 +39,14 @@ const CLAY := Color(0.7, 0.44, 0.34)
 const WOOD := Color(0.39, 0.25, 0.13)
 const OLIVE := Color(0.46, 0.55, 0.33)
 const HILLS := Color(0.78, 0.66, 0.48)
+## Dry grass on the hillside below the courtyard, and the terraces of the far hills: sage greens
+## and dry khaki, not sand.
+const HILLSIDE := Color(0.7, 0.64, 0.44)
+const TERRACES := [Color(0.66, 0.64, 0.44), Color(0.72, 0.66, 0.46), Color(0.6, 0.6, 0.42), Color(0.76, 0.7, 0.5)]
+## Where the town of Bethlehem stands, on its own hill to the east (behind the table in the
+## welcome shot), and that hill's size.
+const TOWN := Vector3(40.0, 0.0, -2.5)
+const TOWN_HILL := Vector2(13.0, 10.0)
 const WOOL := Color(0.92, 0.88, 0.8)
 const GOLD := Color(0.98, 0.8, 0.36)
 
@@ -740,23 +748,87 @@ func _patio() -> void:
 	_scatter("Flagstones", Paper.cylinder(0.37, 0.03, 6), stones, tints)
 
 
-## Low hills all round, soft in the haze, so the courtyard sits on a hillside above Bethlehem
-## rather than on a board in empty sky.
+## The hills of Judah all round, soft in the haze: rounded hills in sage and dry khaki, their
+## slopes stepped into terraces, with olive trees here and there along the terraces, and the
+## flat roofs of Bethlehem on its own hill to the east, so the courtyard sits on a
+## hillside above the town, not on a board among sand dunes. Everything far off is a MultiMesh
+## (a few draw calls for the lot).
 func _hills() -> void:
-	# The hillside the courtyard is cut into: wide, a little lower, the colour of the far hills,
+	# The hillside the courtyard is cut into: wide, a little lower, dry grass rather than sand,
 	# so the courtyard's edge is a step down onto open ground and never a board over nothing.
-	Paper.part(self, "Hillside", Paper.cylinder(60.0, 0.4, 24), HILLS.darkened(0.04), Vector3(0.0, -0.55, 0.0),
+	Paper.part(self, "Hillside", Paper.cylinder(60.0, 0.4, 24), HILLSIDE, Vector3(0.0, -0.55, 0.0),
 			Vector3.ZERO, Vector3.ONE, 0.0)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 316
+	var hills := {"tiers": [] as Array[Transform3D], "tints": [], "trees": [] as Array[Transform3D], "tree_tints": []}
+	var town_angle := atan2(TOWN.z, TOWN.x)
 	for i in 14:
 		var angle := TAU * float(i) / 14.0 + rng.randf_range(-0.1, 0.1)
-		var distance := rng.randf_range(34.0, 46.0)
-		var at := Vector3(cos(angle) * distance, -2.0, sin(angle) * distance)
-		var size := Vector3(rng.randf_range(14.0, 22.0), rng.randf_range(4.0, 7.5), rng.randf_range(10.0, 16.0))
-		Paper.part(self, "Hill%d" % i, Paper.sphere(1.0, 10), HILLS.lightened(rng.randf_range(0.0, 0.12)), at,
-				Vector3(0.0, angle, 0.0), size, 0.0)
+		# The town's own hill stands in for the one that would be there.
+		if absf(wrapf(angle - town_angle, -PI, PI)) < 0.25:
+			continue
+		var distance := rng.randf_range(36.0, 48.0)
+		var base := Vector3(cos(angle) * distance, -1.2, sin(angle) * distance)
+		_terraced_hill(hills, rng, base, Vector2(rng.randf_range(11.0, 17.0), rng.randf_range(8.0, 12.0)),
+				rng.randi_range(6, 8), rng.randf_range(0.65, 0.9), angle + rng.randf_range(-0.4, 0.4), 0.55)
+	# Bethlehem's hill: broad and a little lower, so the houses on top show against the sky.
+	var town_steps := 4
+	var town_step := 0.75
+	var town_hill := {"tiers": [] as Array[Transform3D], "tints": [], "trees": [] as Array[Transform3D], "tree_tints": []}
+	_terraced_hill(town_hill, rng, Vector3(TOWN.x, -1.2, TOWN.z), TOWN_HILL, town_steps, town_step, town_angle, 0.3)
+	for key in hills:
+		(hills[key] as Array).append_array(town_hill[key])
+	_scatter("Terraces", Paper.cylinder(1.0, 1.0, 14), hills["tiers"], hills["tints"])
+	_scatter("HillOlives", Paper.sphere(0.9, 6), hills["trees"], hills["tree_tints"])
+	_bethlehem(rng, town_steps, town_step)
 
+
+## One rounded hill of `steps` terraces, `step` high, `radius` across at its foot: each terrace a
+## little narrower than the one below, so the outline is a dome, with small olive trees on some
+## terraces (`olives`: the share of terraces that have them), on the side facing the courtyard.
+func _terraced_hill(into: Dictionary, rng: RandomNumberGenerator, base: Vector3, radius: Vector2, steps: int,
+		step: float, turn_angle: float, olives: float) -> void:
+	var turn := Basis(Vector3.UP, turn_angle)
+	var facing := atan2(-base.z, -base.x)
+	for k in steps:
+		var dome := sqrt(maxf(1.0 - pow(float(k) / float(steps), 2.0), 0.0))
+		var size := Vector3(radius.x * dome, step, radius.y * dome)
+		var at := base + Vector3(0.0, step * (float(k) + 0.5), 0.0) + turn * Vector3(rng.randf_range(-0.4, 0.4), 0.0, rng.randf_range(-0.4, 0.4))
+		(into["tiers"] as Array).append(Transform3D(turn.scaled(size), at))
+		(into["tints"] as Array).append(TERRACES[posmod(k + int(base.x), TERRACES.size())])
+		if rng.randf() > olives or k == steps - 1:
+			continue
+		var rim := at + Vector3(0.0, step * 0.5, 0.0)
+		for t in rng.randi_range(2, 4):
+			var around := facing + rng.randf_range(-1.1, 1.1)
+			var local := turn.inverse() * Vector3(cos(around), 0.0, sin(around))
+			var spot := rim + turn * Vector3(local.x * size.x * 0.85, 0.0, local.z * size.z * 0.85)
+			var crown := rng.randf_range(0.45, 0.65)
+			(into["trees"] as Array).append(Transform3D(Basis.from_scale(Vector3(1.2, 0.9, 1.2) * crown), spot + Vector3(0.0, 0.6 * crown, 0.0)))
+			(into["tree_tints"] as Array).append(OLIVE.darkened(rng.randf_range(0.05, 0.2)))
+
+
+## The little town of Bethlehem on its hill: flat-roofed houses of pale stone crowded on the
+## broad hilltop, of different heights, many with a dark doorway facing the courtyard.
+func _bethlehem(rng: RandomNumberGenerator, steps: int, step: float) -> void:
+	var houses: Array[Transform3D] = []
+	var tints: Array = []
+	var doors: Array[Transform3D] = []
+	var toward := Vector3(-TOWN.x, 0.0, -TOWN.z).normalized()
+	var face := Basis(Vector3.UP, atan2(toward.x, toward.z))
+	# The houses crowd the hill's flat top (its highest terrace), the nearer ones a little lower.
+	var top := sqrt(maxf(1.0 - pow(float(steps - 1) / float(steps), 2.0), 0.0))
+	for i in 14:
+		var around := rng.randf() * TAU
+		var reach := sqrt(rng.randf()) * top * 0.8
+		var at := Vector3(TOWN.x + cos(around) * TOWN_HILL.x * reach, -1.2 + step * float(steps), TOWN.z + sin(around) * TOWN_HILL.y * reach)
+		var size := Vector3(rng.randf_range(1.6, 2.4), rng.randf_range(1.2, 2.4), rng.randf_range(1.6, 2.2))
+		houses.append(Transform3D(face.scaled(size), at + Vector3(0.0, size.y * 0.5, 0.0)))
+		tints.append(LIMESTONE.lightened(rng.randf_range(0.02, 0.14)))
+		if i % 3 != 2:
+			doors.append(Transform3D(face.scaled(Vector3(0.5, 0.9, 0.06)), at + Vector3(0.0, 0.45, 0.0) + toward * (size.z * 0.5 + 0.03)))
+	_scatter("TownHouses", Paper.box(Vector3.ONE), houses, tints)
+	_scatter("TownDoors", Paper.box(Vector3.ONE), doors, [Color(0.36, 0.26, 0.18)])
 
 func _house() -> void:
 	var house := Node3D.new()

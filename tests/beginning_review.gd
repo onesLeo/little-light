@@ -102,6 +102,17 @@ func _run() -> void:
 			and house.david().find_child("YoungDavidBody", true, false) != null,
 			"Samuel, Jesse and the younger David are the Blender models")
 	check(house.sons().brothers().size() == 7, "all seven of Jesse's older sons stand in the courtyard")
+	var tunics: Dictionary = {}
+	var modelled := true
+	for brother in house.sons().brothers():
+		var body := brother.find_child("*BrotherBody", true, false) as MeshInstance3D
+		modelled = modelled and body != null
+		if body:
+			for i in body.mesh.get_surface_count():
+				var mat := body.get_active_material(i) as StandardMaterial3D
+				if mat and mat.resource_name.ends_with("_Tunic"):
+					tunics[mat.albedo_color.to_html()] = true
+	check(modelled and tunics.size() == 7, "the brothers are the Blender paper people too, each in his own tunic (%d colours)" % tunics.size())
 	check(not house.david().visible, "David is away with the sheep")
 	check(not player.can_move and story.get_action_hint() == "NEXT", "the first line holds the child still, and the button says NEXT")
 	var space := (house as Node3D).get_world_3d().direct_space_state
