@@ -82,8 +82,9 @@ static func wave_band(length: float, height: float, colour: Color) -> Node3D:
 	return band
 
 
-## A strip from y = `base` to `base` + `height`, with a scalloped top edge (both edges follow the
-## scallops when `base` > 0, so the crest runs along the wave's top), `thickness` deep.
+## A tapered swell from y = `base` to `base` + `height`. Both edges meet the water at the ends,
+## and a pair of sine curves makes the crest roll smoothly instead of reading as a moving block.
+## When `base` is above zero this makes the thin cream crest that follows the wave's top.
 static func _scalloped(length: float, height: float, thickness: float, base: float) -> ArrayMesh:
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
@@ -92,10 +93,13 @@ static func _scalloped(length: float, height: float, thickness: float, base: flo
 	var prev_top := Vector3.ZERO
 	var prev_bottom := Vector3.ZERO
 	for i in steps + 1:
-		var x := -length * 0.5 + length * float(i) / float(steps)
-		var scallop := absf(sin(x * 1.6)) * 0.22 + sin(x * 0.37) * 0.08
-		var top := Vector3(x, base + height + scallop, 0.0)
-		var bottom := Vector3(x, (base + scallop) if base > 0.0 else -0.4, 0.0)
+		var t := float(i) / float(steps)
+		var x := -length * 0.5 + length * t
+		var envelope := pow(sin(PI * t), 0.72)
+		var ripple := (sin(x * 1.05 + 0.35) + sin(x * 2.1 - 0.6) * 0.38) * 0.11
+		var top := Vector3(x, ((base + height) + ripple) * envelope, 0.0)
+		var bottom_level := base if base > 0.0 else -0.22
+		var bottom := Vector3(x, (bottom_level + ripple * 0.42) * envelope, 0.0)
 		if i > 0:
 			for side in [half, -half]:
 				var s: float = side

@@ -491,12 +491,23 @@ func set_storm(amount: float, seconds: float) -> Tween:
 ## throws him, and the child does nothing here but watch (Jonah 1:15).
 func jonah_into_sea(seconds: float = 6.0) -> Tween:
 	_jonah.watch = null
+	# Grow a swell out of the water instead of lifting a rigid card through the scene. It settles
+	# completely before the fish arrives, so the fish never clips through it.
+	_cover_wave.visible = true
+	_cover_wave.position = COVER_WAVE
+	_cover_wave.scale = Vector3(0.78, 0.12, 1.0)
 	var tw := walk(_jonah, AT_SEA + OVER_SIDE, 1.6, AT_SEA + OVER_SIDE + Vector3(0.0, 0.0, 2.0))
-	tw.tween_property(_cover_wave, "position:y", COVER_WAVE.y + 2.7, seconds * 0.3).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_property(_cover_wave, "scale:y", 1.72, seconds * 0.3).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.parallel().tween_property(_cover_wave, "position:y", COVER_WAVE.y + 0.46, seconds * 0.3).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	tw.tween_callback(func() -> void: _jonah.visible = false)
 	tw.tween_interval(seconds * 0.1)
 	tw.tween_callback(func() -> void: set_storm(0.0, seconds * 0.5))
-	tw.tween_property(_cover_wave, "position:y", COVER_WAVE.y, seconds * 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_property(_cover_wave, "scale:y", 0.12, seconds * 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.parallel().tween_property(_cover_wave, "position:y", COVER_WAVE.y, seconds * 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_callback(func() -> void:
+		_cover_wave.visible = false
+		_cover_wave.position = COVER_WAVE
+		_cover_wave.scale = Vector3.ONE)
 	return tw
 
 
@@ -511,7 +522,13 @@ func fish_shot() -> void:
 
 
 func cover_wave_top() -> float:
-	return _cover_wave.global_position.y
+	if not _cover_wave.visible:
+		return COVER_WAVE.y
+	return _cover_wave.global_position.y + 1.72 * _cover_wave.scale.y
+
+
+func cover_wave_visible() -> bool:
+	return _cover_wave.visible
 
 
 ## -- the deep --------------------------------------------------------------------------------
@@ -1160,7 +1177,8 @@ func _build_at_sea(root: Node3D) -> void:
 		{"at": Vector3(-6.0, 0.0, 35.0), "length": 26.0, "height": 0.7, "speed": 0.42},
 		{"at": Vector3(8.0, 0.0, 30.0), "length": 30.0, "height": 0.9, "speed": 0.33},
 		{"at": Vector3(-2.0, 0.0, 24.0), "length": 36.0, "height": 1.1, "speed": 0.27},
-		{"at": Vector3(3.0, 0.0, 45.5), "length": 34.0, "height": 0.4, "speed": 0.36},
+		# Behind the fish's z = 5 rise lane, so the rounded body always surfaces in front of water.
+		{"at": Vector3(3.0, 0.0, 41.0), "length": 34.0, "height": 0.4, "speed": 0.36},
 	]
 	root.add_child(_sea)
 	_fish = GreatFish.new()
@@ -1172,6 +1190,7 @@ func _build_at_sea(root: Node3D) -> void:
 	_cover_wave = JonahSea.wave_band(9.0, 1.5, Color(0.28, 0.4, 0.5))
 	_cover_wave.name = "CoverWave"
 	_cover_wave.position = COVER_WAVE
+	_cover_wave.visible = false
 	root.add_child(_cover_wave)
 	for piece in CARGO:
 		var node := _spot_area(piece, CARGO_REACH)

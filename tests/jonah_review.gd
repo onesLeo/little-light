@@ -223,8 +223,15 @@ func _run() -> void:
 	check(story.phase == story.Phase.OVERBOARD and story.get_action_hint() == "", "Jonah goes to the ship's side; nothing for the child to press")
 	var hidden: bool = await wait_for(func() -> bool: return not world.jonah().visible, 6.0)
 	check(hidden and world.cover_wave_top() > world.COVER_WAVE.y + 2.0, "the great wave rises, and Jonah is gone behind it (never thrown)")
+	await shot("05_swell")
 	var fish_came: bool = await wait_for(func() -> bool: return story.phase == story.Phase.FISH, 8.0)
-	check(fish_came and world.sea().storm < 0.1, "the storm has calmed with the wave")
+	check(fish_came and world.sea().storm < 0.1 and not world.cover_wave_visible(),
+			"the storm swell settles out of sight before the fish comes")
+	var fish_lane_clear := true
+	for wave: Node3D in world.sea().band_nodes():
+		if absf(wave.global_position.z - world.fish().global_position.z) < 2.5:
+			fish_lane_clear = false
+	check(fish_lane_clear, "the great fish has a clear lane between the background wave bands")
 	await shot("05_calm")
 	var surfaced: bool = await wait_for(func() -> bool: return world.fish().surfaced(), 6.0)
 	check(surfaced and "great fish" in line_text() and world.fish().find_child("Eye", true, false) != null
