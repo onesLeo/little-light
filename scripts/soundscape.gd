@@ -42,6 +42,9 @@ var _night_gain: float = 1.0
 ## 0..1, set while she stands at the camp lookout. Brings a little of the valley stream back.
 var _lookout: float = 0.0
 var _lookout_gain: float = 0.0
+## Another chapter can provide its own location bed; fade the meadow's wind, stream and birds away.
+var _external_ambience: bool = false
+var _external_gain: float = 1.0
 
 
 func _ready() -> void:
@@ -79,9 +82,11 @@ func _process(delta: float) -> void:
 	var fade_db := linear_to_db(maxf(_ambience_gain, 0.0001))
 	_night_gain = move_toward(_night_gain, 0.0 if _night else 1.0, delta / 3.0)
 	_lookout_gain = move_toward(_lookout_gain, _lookout, delta / 0.6)
-	_wind.volume_db = wind_db + (6.0 if _night else 0.0) + fade_db
+	_external_gain = move_toward(_external_gain, 0.0 if _external_ambience else 1.0, delta / 1.5)
+	var external_db := linear_to_db(maxf(_external_gain, 0.0001))
+	_wind.volume_db = wind_db + (6.0 if _night else 0.0) + fade_db + external_db
 	var stream_gain := _night_gain if not _night else maxf(_night_gain, _lookout_gain * 0.42)
-	_stream.volume_db = stream_db + fade_db + linear_to_db(maxf(stream_gain, 0.0001))
+	_stream.volume_db = stream_db + fade_db + linear_to_db(maxf(stream_gain, 0.0001)) + external_db
 	_update_ducking(delta)
 	_update_birds(delta)
 
@@ -96,6 +101,10 @@ func set_night(on: bool) -> void:
 ## Faint valley stream while she stands at the ridge lookout. 0 away from it, 1 on the stone.
 func set_lookout(amount: float) -> void:
 	_lookout = clampf(amount, 0.0, 1.0)
+
+
+func set_external_ambience(on: bool) -> void:
+	_external_ambience = on
 
 
 func _make_player(stream: AudioStream, bus: String, volume_db: float) -> AudioStreamPlayer:
@@ -181,7 +190,7 @@ func _update_birds(delta: float) -> void:
 
 ## Birds stay quiet while somebody is speaking, so they never compete with the voice.
 func _call_bird(extra_db: float) -> void:
-	if _player == null or _is_speaking() or _night:
+	if _player == null or _is_speaking() or _night or _external_ambience:
 		return
 	for bird in _birds:
 		if bird.playing:

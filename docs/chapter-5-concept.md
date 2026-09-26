@@ -137,7 +137,7 @@ Same two-tier character approach as Chapters 3 and 4, plus the animal/creature t
 character the doc calls for real facial range ("expressive shoulders and hands because much of
 the story is reluctance, prayer and honest frustration"):
 
-- **Jonah** — a new `generate_jonah_v1.py`, wrapping the same `generate_wonder_walker_v5.py` base
+- **Jonah** — `generate_jonah_v1.py`, wrapping the same shared paper-person rig
   as David, Jonathan, Samuel, Jesse and Noah. New geometry: short dark curls, a compact beard, a
   strong-nose face profile distinct from every other named character so far (**Voice design**'s
   "must not resemble Dylan's Jonathan or Bram's David" is a visual requirement too, not only a

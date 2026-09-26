@@ -337,7 +337,7 @@ func _set_sail() -> void:
 func _start_cargo(first_time: bool = false) -> void:
 	phase = Phase.CARGO
 	_world().open_cargo()
-	_world().sea().set_storm(0.35, 8.0)
+	_world().set_storm(0.35, 8.0)
 	_say([&"sail", &"cargo"] if first_time else [&"cargo"], CARGO_PROMPT)
 	if _cargo_list:
 		_cargo_list.set_found(_world().secured())

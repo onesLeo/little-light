@@ -63,6 +63,7 @@ Run the examples from the repository root. The current character/props generator
 | `scripts/characters/generate_noahs_wife_v1.py` | `noahs_wife_v1.glb` |
 | `scripts/characters/generate_bethlehem_people_v1.py -- samuel` (`jesse`, `young_david`) | `samuel_v1.glb`, `jesse_v1.glb`, `young_david_v1.glb` (Chapter 3; design stills in `output/previews/`) |
 | `scripts/characters/generate_bethlehem_people_v1.py -- brother` (`brother_young`), one Blender run each | `brother_v1.glb`, `brother_young_v1.glb`: Jesse's seven sons, light cloth and hair tinted per brother in Godot (`story_person.gd` tint) |
+| `scripts/characters/generate_jonah_v1.py` | `jonah_v1.glb`: Jonah's dedicated Chapter 5 model, with close curls, compact beard and a strong nose |
 | `scripts/props/generate_david_and_items_v3.py` | `david_mentor_v9.glb`, `wonder_items_v7.glb` |
 
 `wonder_walker_v12.glb`, `david_mentor_v9.glb` and `david_mentor_v12.glb` are no longer in

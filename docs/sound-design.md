@@ -21,6 +21,9 @@ real recordings (see `assets/audio/CREDITS.md`).
 | Crickets, 12 s loop (a few soft chirps) | at The King's Camp; the valley's birds stop and its stream fades out up there | `camp_sounds.gd` |
 | Campfire crackle, 8 s loop | at The King's Camp, sitting on the fire, louder as you walk up to it | `camp_sounds.gd` |
 | Owl "hoo-hoo" | only while the owl is perched, every 15-25 s, never while somebody is speaking; a soft wing rustle as it lands; the call carries a +3 dB local lift so it remains audible across the clearing | `camp_owl.gd` |
+| Joppa harbour, 12 s loop | while Chapter 5 is at Joppa: water against stone, timber and rope movement, distant gulls | `jonah_sounds.gd` |
+| Storm, 12 s loop | at sea, rising with the visual storm and easing away with it: wind, rain and low hull strain | `jonah_sounds.gd` |
+| Nineveh market, 12 s loop | on land: indistinct crowd, sandals, baskets and pottery, with no intelligible speech | `jonah_sounds.gd` |
 
 ## The mix
 
@@ -29,7 +32,7 @@ Everything plays on one of four buses under Master (`scripts/sound_bus.gd`):
 | Bus | Carries | Base level |
 |-----|---------|-----------|
 | Music | the lullaby | -11 dB |
-| Ambience | wind, stream, birds; at the camp crickets, the fire and the owl | -7 dB |
+| Ambience | wind, stream, birds; camp sounds; Chapter 5's harbour, storm and market | -7 dB |
 | Effects | chimes, footsteps, lamb, butterflies | -2 dB |
 | Voice | Wonder Light and David | 0 dB |
 
@@ -67,6 +70,8 @@ the screen. The stream sounds as if it is at the nearest point of the water.
 
 ```bash
 python tools/make_sounds.py
+# Or only Chapter 5's three beds:
+python tools/make_sounds.py --jonah
 ```
 
 It needs only Python's standard library, takes about 20 seconds, uses a fixed random seed, and prints
@@ -86,10 +91,12 @@ Where to change what:
   (each takes 0.5 s of the file, starting 20 ms before the foot lands).
 - Overall balance: `BASE_DB` and `DUCK_DB` in `scripts/sound_bus.gd`, and the exported values on the
   `Soundscape` node (bird interval and distance, music fade-in, pause ducking).
+- Chapter 5: `render_jonah_harbour`, `render_jonah_storm` and `render_jonah_market`; their in-game
+  levels and crossfades are in `scripts/jonah_sounds.gd`.
 
 ## What was checked, and what was not
 
-Checked by the smoke test: all 17 files load; the four buses exist and the players are routed to them;
+Checked by the smoke test: all 31 files load; the four buses exist and the players are routed to them;
 music and wind loop; the stream follows the player along the water; a footstep plays when walking
 and none when standing; the lamb says "baa" once when it notices you, then waits; a group of
 butterflies taking off makes one rustle; birds and the lamb stay quiet during speech; the master limiter

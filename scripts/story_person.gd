@@ -16,6 +16,7 @@ const PEOPLE := {
 	# Jesse's sons: light, even cloth and hair, tinted per brother with tint() (jesse_sons.gd).
 	"brother": {"scene": "res://assets/brother_v1.glb", "body": "BrotherBody", "outline": "BrotherOutline", "scale": 1.2},
 	"brother_young": {"scene": "res://assets/brother_young_v1.glb", "body": "YoungBrotherBody", "outline": "YoungBrotherOutline", "scale": 1.14},
+	"jonah": {"scene": "res://assets/jonah_v1.glb", "body": "JonahBody", "outline": "JonahOutline", "scale": 1.2},
 }
 
 ## The kneeling pose, in radians at kneel = 1: the knees bend right back under the body, the

@@ -124,6 +124,10 @@ func _run() -> void:
 			and not world.place_root("land").visible, "only Joppa is in view; the other places wait, hidden")
 	check(world.jonah().find_child("*Body", true, false) != null and world.captain().find_child("*Body", true, false) != null,
 			"Jonah and the captain are the Blender paper people")
+	check(world.jonah().find_child("JonahBody", true, false) != null,
+			"Jonah uses his own Blender model, not a tinted brother")
+	check(world._sounds.is_playing() and world._sounds._harbour.stream != null,
+			"Joppa starts its harbour sound bed")
 	check(not player.can_move and story.get_action_hint() == "NEXT", "the first line holds the child still, and the button says NEXT")
 	var space := (world as Node3D).get_world_3d().direct_space_state
 	check(solid_at(space, Vector3(2.0, 1.0, world.QUAY_EDGE - 0.1)), "the quay's edge is solid: nobody walks off it into the water")
@@ -148,8 +152,8 @@ func _run() -> void:
 	story._advance()
 	await settle()
 	check(story.phase == story.Phase.BOARD and player.can_move and world.gangway_ring().visible, "Jonah boards, and a ring shows the child where to follow")
-	await create_timer(4.0).timeout
-	check(world.jonah().global_position.y > 0.7, "Jonah has walked up the gangway onto the deck")
+	# A child can reach the ring before Jonah's boarding tween finishes; changing place must cancel
+	# that tween so it cannot pull him back to Joppa after he has been placed on the ship.
 	await walk_to(player, world.GANGWAY_SPOT)
 	var sailed: bool = await wait_for(func() -> bool: return story.phase == story.Phase.CARGO, 3.0)
 	check(sailed and world.place == "sea" and world.place_root("sea").visible and not world.place_root("joppa").visible,
@@ -157,6 +161,15 @@ func _run() -> void:
 	var on_deck: Vector3 = player.global_position - world.AT_SEA
 	check(absf(on_deck.x) < world.DECK_SIZE.x * 0.5 and absf(on_deck.z) < world.DECK_SIZE.y * 0.5 and absf(on_deck.y) < 0.3
 			and world.jonah().global_position.distance_to(world.AT_SEA + world.JONAH_AT_SEA) < 0.1, "the child and Jonah are on the ship's deck")
+	check(world._sounds._storm.playing and world._sounds._storm.stream != null, "the ship brings in the storm sound bed")
+	# Reopening the current stop used to restore Joppa's bounds and push the child hundreds of metres
+	# off the distant ship. Closing the map must restore the sea area's bounds without moving them.
+	var before_map := player.global_position
+	journey.open()
+	journey._on_stop("jonah")
+	await settle(3)
+	check(player.global_position.distance_to(before_map) < 0.2 and main.get_node("PlayBounds").center.distance_to(world.sea_area.center) < 0.01,
+			"reopening Jonah from the map keeps the child and the play bounds on the ship")
 	await shot("03_at_sea")
 
 	print("-- Secure the Cargo --")
@@ -274,6 +287,7 @@ func _run() -> void:
 			kneeling += 1
 	check(story.phase == story.Phase.LISTENED and kneeling >= 3 and "turned away from the wrong" in line_text(),
 			"they are sorry, and turn away from the wrong they did (%d kneel)" % kneeling)
+	check(world._sounds._market.playing and world._sounds._market.stream != null, "Nineveh has its market sound bed")
 	var kneeler: Node3D = null
 	for person in world.crowd().people():
 		if person.kneel > 0.9:

@@ -20,8 +20,12 @@ identically and tuned here instead of being edited by hand. Output is mono, 16-b
   ambience/crickets.wav        12 s seamless loop for The King's Camp: a few soft chirps, not a wall of summer noise
   ambience/campfire.wav        8 s seamless loop: a small, dry crackle over a low warm hush
   sfx/owl_hoot.wav             the camp owl: two low, soft notes, "hoo-hoo"
+  ambience/jonah_harbour.wav   12 s seamless Joppa bed: water, timber, rope and distant gulls
+  ambience/jonah_storm.wav     12 s seamless wind, rain and low hull rumble
+  ambience/jonah_market.wav    12 s seamless Nineveh bed: indistinct crowd and market movement
 
     python tools/make_sounds.py --camp   renders only the three King's Camp sounds
+    python tools/make_sounds.py --jonah  renders only the three Chapter 5 ambience beds
 """
 import math
 import os
@@ -590,6 +594,103 @@ def render_camp():
     save("sfx/owl_hoot.wav", render_owl(), 0.55)
 
 
+# -- Jonah and the Great Fish (chapter 5) --------------------------------------------------------
+jonah_rng = random.Random(505)
+
+
+def jonah_noise(n):
+    return [jonah_rng.uniform(-1.0, 1.0) for _ in range(n)]
+
+
+def render_jonah_harbour():
+    """Gentle water against stone, timber and rope movement, with very distant gull shapes."""
+    n, fade, lead = 12 * SR, SR, SR // 2
+    raw = jonah_noise(n + fade + lead)
+    water = biquad(biquad(raw, "bp", 520.0, 0.45), "lp", 1800.0)
+    wash = biquad(biquad(raw, "bp", 1800.0, 0.55), "lp", 4200.0)
+    water = make_loop(water[lead:], n, fade)
+    wash = make_loop(wash[lead:], n, fade)
+    out = [0.0] * n
+    for i in range(n):
+        t = i / SR
+        lap = 0.28 + 0.42 * max(0.0, math.sin(TAU * t / 2.7)) ** 2
+        out[i] = water[i] * (0.75 + 0.18 * math.sin(TAU * t / 7.0)) + wash[i] * lap * 0.34
+    # Hull/jetty creaks: short, low pitch falls, sparse enough to feel inhabited rather than busy.
+    for t0 in (1.1, 4.8, 7.4, 10.6):
+        dur = jonah_rng.uniform(0.18, 0.42)
+        phase = 0.0
+        creak = []
+        for j in range(int(dur * SR)):
+            t = j / SR
+            phase += TAU * (420.0 + (170.0 - 420.0) * (t / dur)) / SR
+            creak.append((math.sin(phase) + 0.25 * math.sin(phase * 2.03)) * math.sin(math.pi * t / dur) ** 2 * 0.20)
+        add_at(out, int(t0 * SR), creak, wrap=True)
+    # Two remote gull calls, deliberately soft and without a close bird's sharp edge.
+    for t0, base in ((2.7, 1120.0), (8.9, 980.0)):
+        call = chirp([("t", base, base * 1.25, 0.18, 0.10, 18, 5), ("g", 0.08),
+                      ("t", base * 1.08, base * 0.9, 0.24, 0.08, 12, 4)], echo=True)
+        add_at(out, int(t0 * SR), call, wrap=True)
+    return out
+
+
+def render_jonah_storm():
+    """Broad wind and rain with a low wooden-hull strain; no sudden thunder or startling hits."""
+    n, fade, lead = 12 * SR, SR, SR // 2
+    raw = jonah_noise(n + fade + lead)
+    wind = biquad(biquad(raw, "bp", 440.0, 0.40), "lp", 1500.0)
+    rain = biquad(biquad(raw, "hp", 2300.0), "lp", 7800.0)
+    low = biquad(biquad(raw, "lp", 150.0), "lp", 180.0)
+    wind = make_loop(wind[lead:], n, fade)
+    rain = make_loop(rain[lead:], n, fade)
+    low = make_loop(low[lead:], n, fade)
+    out = [0.0] * n
+    for i in range(n):
+        t = i / SR
+        gust = 0.62 + 0.24 * math.sin(TAU * t / 5.7) + 0.12 * math.sin(TAU * t / 2.3 + 1.2)
+        hull = math.sin(TAU * 43.0 * t + 0.8 * math.sin(TAU * t / 3.2)) * (0.025 + 0.020 * max(0.0, math.sin(TAU * t / 4.1)))
+        out[i] = wind[i] * gust * 1.1 + rain[i] * (0.34 + gust * 0.18) + low[i] * 1.8 + hull
+    return out
+
+
+def render_jonah_market():
+    """An indistinct human murmur with cloth, sandals and baskets; no intelligible speech."""
+    n, fade, lead = 12 * SR, SR, SR // 2
+    raw = jonah_noise(n + fade + lead)
+    room = biquad(biquad(raw, "bp", 650.0, 0.55), "lp", 2100.0)
+    shuffle = biquad(biquad(raw, "bp", 220.0, 0.7), "lp", 700.0)
+    room = make_loop(room[lead:], n, fade)
+    shuffle = make_loop(shuffle[lead:], n, fade)
+    out = [room[i] * 0.23 + shuffle[i] * 0.18 for i in range(n)]
+    # Overlapping vowel-like tones imply people at a distance without creating words.
+    for _ in range(24):
+        start = jonah_rng.uniform(0.0, 12.0)
+        dur = jonah_rng.uniform(0.35, 1.2)
+        fundamental = jonah_rng.uniform(105.0, 210.0)
+        wobble_rate = jonah_rng.uniform(2.5, 4.5)
+        phase = 0.0
+        voice = []
+        for j in range(int(dur * SR)):
+            t = j / SR
+            wobble = 1.0 + 0.018 * math.sin(TAU * wobble_rate * t)
+            phase += TAU * fundamental * wobble / SR
+            env = math.sin(math.pi * t / dur) ** 2
+            voice.append((math.sin(phase) + 0.22 * math.sin(phase * 2.0) + 0.08 * math.sin(phase * 3.0)) * env * 0.018)
+        add_at(out, int(start * SR), voice, wrap=True)
+    # Occasional dry handling sounds from baskets or pottery, kept very soft.
+    for t0 in (0.8, 3.6, 6.2, 9.7, 11.3):
+        m = int(0.055 * SR)
+        tap = biquad(jonah_noise(m), "bp", jonah_rng.uniform(700.0, 1400.0), 1.1)
+        tap = [v * 0.08 * math.exp(-(j / SR) / 0.014) for j, v in enumerate(tap)]
+        add_at(out, int(t0 * SR), tap, wrap=True)
+    return out
+
+
+def render_jonah():
+    save("ambience/jonah_harbour.wav", render_jonah_harbour(), 0.48, loop=True)
+    save("ambience/jonah_storm.wav", render_jonah_storm(), 0.58, loop=True)
+    save("ambience/jonah_market.wav", render_jonah_market(), 0.40, loop=True)
+
+
 # -- Render everything ---------------------------------------------------------------------------
 
 def main():
@@ -619,11 +720,16 @@ def main():
     save("sfx/flutter.wav", render_flutter(), 0.40)
     save("sfx/breath_loop.wav", render_breath(), 0.50, loop=True)
     render_camp()
+    # Chapter-specific location beds share the same deterministic build.
+    render_jonah()
 
 
 if __name__ == "__main__":
     if "--camp" in sys.argv:
         print("rendering to", os.path.normpath(OUT))
         render_camp()
+    elif "--jonah" in sys.argv:
+        print("rendering to", os.path.normpath(OUT))
+        render_jonah()
     else:
         main()

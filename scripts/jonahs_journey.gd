@@ -26,6 +26,7 @@ const JonahSea := preload("res://scripts/jonah_sea.gd")
 const GreatFish := preload("res://scripts/great_fish.gd")
 const NinevehCrowd := preload("res://scripts/nineveh_crowd.gd")
 const ShadePlant := preload("res://scripts/shade_plant.gd")
+const JonahSounds := preload("res://scripts/jonah_sounds.gd")
 
 ## Where each place stands. Far apart, so the haze hides one from another.
 const JOPPA := Vector3(0.0, 0.0, 0.0)
@@ -160,12 +161,21 @@ var _glance: Array[float] = []
 var _deep_light: OmniLight3D
 var _gangway_ring: Area3D
 var _gate_ring: Area3D
+var _sounds: Node
+var _boarding_tween: Tween
 
 
 ## Builds the world and starts the story, or carries on with it. Only the shell calls this.
 func visit() -> void:
 	_build()
 	if in_progress():
+		# The shell briefly restores the chapter's default (Joppa) bounds when the map closes.
+		# Put back the bounds for the place actually under way without moving the child.
+		var bounds := get_parent().get_node_or_null("PlayBounds")
+		if bounds and bounds.has_method("use_area"):
+			bounds.use_area({"joppa": play_area, "sea": sea_area, "deep": deep_area, "land": land_area}[place])
+		if _sounds:
+			_sounds.set_place(place)
 		return
 	_show_place("joppa")
 	var story := get_node_or_null("ChapterFive")
@@ -180,6 +190,11 @@ func in_progress() -> bool:
 
 func stand_down() -> void:
 	set_child_watch(null)
+	if _boarding_tween:
+		_boarding_tween.kill()
+		_boarding_tween = null
+	if _sounds:
+		_sounds.stop()
 	var story := get_node_or_null("ChapterFive")
 	if story and story.has_method("stand_down"):
 		story.stand_down()
@@ -258,6 +273,8 @@ func go_to(which: String, then: Callable = Callable(), seconds: float = 0.45) ->
 
 func _show_place(which: String) -> void:
 	place = which
+	if _sounds:
+		_sounds.set_place(which)
 	for key in _roots:
 		var root := _roots[key] as Node3D
 		root.visible = key == which
@@ -392,7 +409,10 @@ func at_gangway(at: Vector3) -> bool:
 ## Jonah walks from where he stands, along the quay and up the gangway onto the ship's deck.
 func jonah_boards() -> Tween:
 	_jonah.watch = null
+	if _boarding_tween:
+		_boarding_tween.kill()
 	var tw := walk(_jonah, GANGWAY_FOOT, 2.2, MOORED + Vector3(0.0, MOORED_DECK, 0.0))
+	_boarding_tween = tw
 	tw.tween_callback(func() -> void: _jonah.walk_amount = 1.0)
 	tw.tween_property(_jonah, "global_position", Vector3(GANGWAY_FOOT.x, MOORED_DECK, MOORED.z + 1.0), 1.4)
 	tw.tween_callback(func() -> void:
@@ -678,6 +698,9 @@ func feel(beat: String) -> void:
 
 ## Jonah for this place: on the quay at Joppa, on deck at sea, kneeling in the deep.
 func place_jonah(which: String) -> void:
+	if _boarding_tween:
+		_boarding_tween.kill()
+		_boarding_tween = null
 	_jonah.visible = true
 	_jonah.walk_amount = 0.0
 	match which:
@@ -849,6 +872,10 @@ func _build() -> void:
 	_build_deep(_roots["deep"])
 	_build_land(_roots["land"])
 	_people()
+	_sounds = JonahSounds.new()
+	_sounds.name = "JonahSounds"
+	add_child(_sounds)
+	_sounds.start()
 	var story := Node.new()
 	story.name = "ChapterFive"
 	story.set_script(ChapterFive)
@@ -1455,8 +1482,8 @@ func _people() -> void:
 ## Who each person is: which model (story_person.gd) and its colours. Jonah in dusty indigo
 ## over muted ochre; the sailors in sea green, cream and rust, the captain grey-haired.
 const CAST := {
-	"jonah": {"model": "brother", "height": 1.02,
-			"tint": {"Tunic": Color(0.4, 0.44, 0.66), "UnderTunic": Color(0.84, 0.66, 0.36), "Sash": Color(0.78, 0.58, 0.3), "Hair": Color(0.18, 0.12, 0.08)}},
+	"jonah": {"model": "jonah", "height": 1.02,
+			"tint": {"Tunic": Color(0.4, 0.44, 0.66), "UnderTunic": Color(0.84, 0.66, 0.36), "Sash": Color(0.78, 0.58, 0.3), "Hair": Color(0.24, 0.16, 0.11)}},
 	"captain": {"model": "brother", "height": 1.0,
 			"tint": {"Tunic": Color(0.42, 0.62, 0.56), "UnderTunic": Color(0.9, 0.86, 0.74), "Sash": Color(0.7, 0.4, 0.26), "Hair": Color(0.66, 0.64, 0.6)}},
 	"deckhand": {"model": "brother_young", "height": 0.98,
