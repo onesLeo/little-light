@@ -28,6 +28,8 @@ const SPEAKERS := {
 	"Jesse": {"fill": Color(0.5, 0.42, 0.24), "ink": Color(1.0, 0.95, 0.86), "text": Color(0.4, 0.33, 0.14)},
 	"Noah": {"fill": Color(0.62, 0.32, 0.16), "ink": Color(1.0, 0.95, 0.86), "text": Color(0.45, 0.22, 0.08)},
 	"Noah's wife": {"fill": Color(0.28, 0.55, 0.52), "ink": Color(1.0, 0.96, 0.9), "text": Color(0.12, 0.36, 0.34)},
+	"Jonah": {"fill": Color(0.36, 0.4, 0.62), "ink": Color(1.0, 0.94, 0.8), "text": Color(0.26, 0.3, 0.52)},
+	"Captain": {"fill": Color(0.4, 0.6, 0.54), "ink": Color(1.0, 0.97, 0.9), "text": Color(0.2, 0.42, 0.36)},
 	"Bible": {"fill": Color(0.52, 0.36, 0.2), "ink": Color(1.0, 0.95, 0.85), "text": Color(0.45, 0.28, 0.1)},
 }
 const INK := Color(0.3, 0.17, 0.06)
@@ -267,6 +269,17 @@ func _draw_face(c: Vector2, r: float) -> void:
 		"Noah's wife":
 			_person(c, r, Color(0.28, 0.55, 0.52), Color(0.25, 0.16, 0.1), false)
 			_tag.draw_circle(c + Vector2(0.0, -r * 0.62), r * 0.16, Color(0.25, 0.16, 0.1))
+		"Jonah":
+			# Short dark curls and a compact dark beard, over dusty indigo.
+			_person(c, r, Color(0.36, 0.4, 0.62), Color(0.16, 0.1, 0.07), false)
+			for k in 5:
+				_tag.draw_circle(c + Vector2(-r * 0.36 + k * r * 0.18, -r * 0.56), r * 0.11, Color(0.16, 0.1, 0.07))
+			_tag.draw_arc(c + Vector2(0.0, r * 0.02), r * 0.3, 0.15 * PI, 0.85 * PI, 12, Color(0.16, 0.1, 0.07), r * 0.14, true)
+		"Captain":
+			# An older sailor: grey hair and a sea-green head cloth, over cream.
+			_person(c, r, Color(0.9, 0.86, 0.74), Color(0.66, 0.64, 0.6), false)
+			_tag.draw_rect(Rect2(c + Vector2(-r * 0.46, -r * 0.62), Vector2(r * 0.92, r * 0.22)), Color(0.4, 0.6, 0.54))
+			_tag.draw_line(c + Vector2(-r * 0.46, -r * 0.4), c + Vector2(r * 0.46, -r * 0.4), PaperUI.INK, 1.5)
 		"Bible":
 			for side in [-1.0, 1.0]:
 				var page := PackedVector2Array([c + Vector2(side * 2.0, -r * 0.42), c + Vector2(side * r * 0.72, -r * 0.34),

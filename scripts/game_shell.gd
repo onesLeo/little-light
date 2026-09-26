@@ -34,6 +34,7 @@ const STORIES := {
 			"over": Profiles.CHAPTER_VALLEY},
 	Profiles.CHAPTER_BEGINNING: {"scene": "res://scenes/chapters/jesses_house.tscn", "node": "JessesHouse", "story": "ChapterThree"},
 	Profiles.CHAPTER_ARK: {"scene": "res://scenes/chapters/noahs_ark.tscn", "node": "NoahsArk", "story": "ChapterFour"},
+	Profiles.CHAPTER_JONAH: {"scene": "res://scenes/chapters/jonahs_journey.tscn", "node": "JonahsJourney", "story": "ChapterFive"},
 }
 
 ## True while the map is the first stop and no story has started behind it: the valley

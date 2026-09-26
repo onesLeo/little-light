@@ -7,8 +7,8 @@ extends RefCounted
 ##
 ## What a child chose is a list with one number per region: an index into PALETTE, or -1 for "not
 ## coloured yet" (shown as blank paper). Profiles keeps that list for each child and charm.
-## Courage, Friendship, Trust and Faithful Heart each have their own picture; an unknown charm id
-## shows Courage's.
+## Courage, Friendship, Trust, Faithful Heart and Mercy each have their own picture; an unknown
+## charm id shows Courage's.
 
 const INK := Color(0.35, 0.2, 0.08)
 const PAPER := Color(0.99, 0.97, 0.9)
@@ -76,6 +76,28 @@ static func regions(charm_id: String) -> Array:
 			_band(Vector2(0.5, 0.86), 0.34, 0.42, 3.55, 5.87),
 			_band(Vector2(0.5, 0.86), 0.26, 0.33, 3.55, 5.87),
 			_band(Vector2(0.5, 0.86), 0.18, 0.25, 3.55, 5.87),
+		]
+	if charm_id == "mercy":
+		# A small warm light held safe between two curved waves: shelter and another chance, never
+		# anyone caught. Back to front: the two ribbon tails, the lower wave, the upper wave, the
+		# light's glow, the light.
+		var lower := PackedVector2Array()
+		var upper := PackedVector2Array()
+		for i in 13:
+			var t := float(i) / 12.0
+			lower.append(Vector2(lerpf(0.14, 0.86, t), 0.6 + sin(t * PI) * 0.12))
+			upper.append(Vector2(lerpf(0.86, 0.14, t), 0.28 - sin(t * PI) * 0.1 + 0.06 * sin(t * TAU)))
+		for i in 13:
+			var t := float(i) / 12.0
+			lower.append(Vector2(lerpf(0.86, 0.14, t), 0.52 + sin((1.0 - t) * PI) * 0.02 - 0.05 * sin((1.0 - t) * TAU)))
+			upper.append(Vector2(lerpf(0.14, 0.86, t), 0.34 - sin(t * PI) * 0.02))
+		return [
+			PackedVector2Array([Vector2(0.27, 0.66), Vector2(0.15, 0.97), Vector2(0.31, 0.89), Vector2(0.41, 0.99), Vector2(0.5, 0.7)]),
+			PackedVector2Array([Vector2(0.73, 0.66), Vector2(0.85, 0.97), Vector2(0.69, 0.89), Vector2(0.59, 0.99), Vector2(0.5, 0.7)]),
+			lower,
+			upper,
+			_circle(Vector2(0.5, 0.43), 0.1, 24),
+			_star(Vector2(0.5, 0.43), 0.07, 0.035),
 		]
 	if charm_id == "faithful_heart":
 		# A heart sitting in a small clay lamp dish, with one steady flame in its notch: caring well

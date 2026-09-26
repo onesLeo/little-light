@@ -3,7 +3,7 @@
 This is the fifth planned journey and the ending of the first store-release volume. The familiar
 name is often "Jonah and the whale," but the Bible says that God appointed a great fish. The game
 uses **Great Fish** in its title and dialogue; parent-facing store text may mention the familiar name
-once for recognition. The chapter is not built yet.
+once for recognition. The chapter is playable; see [chapter-5-readiness.md](chapter-5-readiness.md).
 
 ## Where chapter 4 leaves off
 

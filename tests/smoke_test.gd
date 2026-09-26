@@ -471,7 +471,8 @@ func _initialize() -> void:
 	for story in [["res://assets/dialogue/bethlehem_valley.tres", "res://scripts/chapter_director.gd"],
 			["res://assets/dialogue/kings_camp.tres", "res://scripts/chapter_two.gd"],
 			["res://assets/dialogue/noahs_ark.tres", "res://scripts/chapter_four.gd"],
-			["res://assets/dialogue/jesses_house.tres", "res://scripts/chapter_three.gd"]]:
+			["res://assets/dialogue/jesses_house.tres", "res://scripts/chapter_three.gd"],
+			["res://assets/dialogue/jonahs_journey.tres", "res://scripts/chapter_five.gd"]]:
 		var book: Resource = load(story[0])
 		var seen: Dictionary = {}
 		var faults: Array = []

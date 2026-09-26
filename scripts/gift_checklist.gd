@@ -1,6 +1,7 @@
 extends PanelContainer
 ## A hunt list in pictures a child who cannot read yet can follow: "Gifts for David" in
-## chapter 2, "Getting ready for Samuel" in chapter 3, "Tools for Noah" in chapter 4. Each thing has its own small drawing, faded
+## chapter 2, "Getting ready for Samuel" in chapter 3, "Tools for Noah" in chapter 4, Jonah's
+## things and the ship's cargo in chapter 5. Each thing has its own small drawing, faded
 ## with a dashed circle until it is found, then in full colour with a green tick that
 ## pops in. The count sits in the title.
 ## Use through a preload constant (no class_name):
@@ -70,7 +71,7 @@ class GiftRow extends Control:
 				draw_colored_polygon(head, Color(0.55, 0.38, 0.24, fade))
 				head.append(head[0])
 				draw_polyline(head, ink, 2.5, true)
-			"RopeCoil":
+			"RopeCoil", "Rope":
 				for k in 3:
 					draw_arc(c + Vector2(0.0, 6.0 - k * 6.0), 18.0 - k * 3.0, 0.0, TAU, 28, ink, 7.0, true)
 					draw_arc(c + Vector2(0.0, 6.0 - k * 6.0), 18.0 - k * 3.0, 0.0, TAU, 28, Color(0.76, 0.62, 0.4, fade), 4.0, true)
@@ -81,6 +82,36 @@ class GiftRow extends Control:
 				draw_polyline(jar, ink, 2.5, true)
 				draw_rect(Rect2(c + Vector2(-10.0, -20.0), Vector2(20.0, 6.0)), Color(0.14, 0.1, 0.08, fade))
 				draw_rect(Rect2(c + Vector2(-10.0, -20.0), Vector2(20.0, 6.0)), ink, false, 2.0)
+			"Bag":
+				var bag := PackedVector2Array([c + Vector2(-16.0, -4.0), c + Vector2(-8.0, -14.0), c + Vector2(8.0, -14.0),
+						c + Vector2(16.0, -4.0), c + Vector2(18.0, 10.0), c + Vector2(10.0, 16.0), c + Vector2(-10.0, 16.0), c + Vector2(-18.0, 10.0)])
+				draw_colored_polygon(bag, Color(0.56, 0.44, 0.3, fade))
+				bag.append(bag[0])
+				draw_polyline(bag, ink, 2.5, true)
+				draw_line(c + Vector2(-8.0, -14.0), c + Vector2(-2.0, -22.0), ink, 3.0, true)
+				draw_line(c + Vector2(8.0, -14.0), c + Vector2(2.0, -22.0), ink, 3.0, true)
+				draw_line(c + Vector2(-9.0, -10.0), c + Vector2(9.0, -10.0), Color(0.78, 0.66, 0.44, fade), 3.0, true)
+			"Message":
+				draw_rect(Rect2(c + Vector2(-16.0, -12.0), Vector2(32.0, 24.0)), Color(0.97, 0.92, 0.78, fade))
+				draw_rect(Rect2(c + Vector2(-16.0, -12.0), Vector2(32.0, 24.0)), ink, false, 2.5)
+				for side in [-1.0, 1.0]:
+					draw_circle(c + Vector2(side * 18.0, 0.0), 6.0, Color(0.9, 0.84, 0.68, fade))
+					draw_arc(c + Vector2(side * 18.0, 0.0), 6.0, 0.0, TAU, 12, ink, 2.0, true)
+				for k in 3:
+					draw_line(c + Vector2(-9.0, -6.0 + k * 6.0), c + Vector2(9.0, -6.0 + k * 6.0), Color(0.4, 0.28, 0.16, fade), 2.0)
+			"Jar":
+				var amphora := PackedVector2Array([c + Vector2(-5.0, -20.0), c + Vector2(5.0, -20.0), c + Vector2(6.0, -12.0), c + Vector2(15.0, -4.0),
+						c + Vector2(12.0, 12.0), c + Vector2(4.0, 20.0), c + Vector2(-4.0, 20.0), c + Vector2(-12.0, 12.0), c + Vector2(-15.0, -4.0), c + Vector2(-6.0, -12.0)])
+				draw_colored_polygon(amphora, Color(0.78, 0.46, 0.32, fade))
+				amphora.append(amphora[0])
+				draw_polyline(amphora, ink, 2.5, true)
+			"Sack":
+				var sack := PackedVector2Array([c + Vector2(-6.0, -16.0), c + Vector2(6.0, -16.0), c + Vector2(4.0, -10.0), c + Vector2(18.0, 2.0),
+						c + Vector2(16.0, 14.0), c + Vector2(-16.0, 14.0), c + Vector2(-18.0, 2.0), c + Vector2(-4.0, -10.0)])
+				draw_colored_polygon(sack, Color(0.82, 0.72, 0.52, fade))
+				sack.append(sack[0])
+				draw_polyline(sack, ink, 2.5, true)
+				draw_line(c + Vector2(-6.0, -11.0), c + Vector2(6.0, -11.0), Color(0.5, 0.4, 0.26, fade), 3.0, true)
 			"Robe":
 				var robe := Rect2(c + Vector2(-22.0, -14.0), Vector2(44.0, 28.0))
 				draw_rect(robe, Color(0.28, 0.42, 0.68, fade))

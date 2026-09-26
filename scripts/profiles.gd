@@ -38,7 +38,9 @@ const CHAPTER_VALLEY := "valley"
 const CHAPTER_CAMP := "camp"
 const CHAPTER_BEGINNING := "beginning"
 const CHAPTER_ARK := "ark"
-const CHAPTERS := [CHAPTER_VALLEY, CHAPTER_CAMP, CHAPTER_BEGINNING, CHAPTER_ARK]
+## Jonah and the Great Fish, the last story of the first journey.
+const CHAPTER_JONAH := "jonah"
+const CHAPTERS := [CHAPTER_VALLEY, CHAPTER_CAMP, CHAPTER_BEGINNING, CHAPTER_ARK, CHAPTER_JONAH]
 ## The order before The Beginning was added. A save written then has no "opened_early" entry; the
 ## chapters it had open are worked out from this order when it is loaded, so none closes again.
 const CHAPTERS_BEFORE_BEGINNING := [CHAPTER_VALLEY, CHAPTER_CAMP, CHAPTER_ARK]

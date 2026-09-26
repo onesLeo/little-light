@@ -1,0 +1,206 @@
+[gd_resource type="Resource" load_steps=33 format=3]
+
+[ext_resource type="Script" path="res://scripts/dialogue_lines.gd" id="1_lines"]
+[ext_resource type="Script" path="res://scripts/dialogue_line.gd" id="2_line"]
+
+[sub_resource type="Resource" id="Line_arrive"]
+script = ExtResource("2_line")
+id = &"arrive"
+speaker = "Wonder Light"
+text = "Noah trusted God before he could see the rain. Jonah heard God too, but Jonah ran the other way."
+easy_text = "Noah trusted God. Jonah heard God too, but he ran the other way."
+
+[sub_resource type="Resource" id="Line_road"]
+script = ExtResource("2_line")
+id = &"road"
+speaker = "Wonder Light"
+text = "God asked Jonah to go to Nineveh, down that road. But Jonah's ship is sailing the other way."
+easy_text = "God said: go to Nineveh. But Jonah's ship goes the other way."
+
+[sub_resource type="Resource" id="Line_find"]
+script = ExtResource("2_line")
+id = &"find"
+speaker = "Wonder Light"
+text = "Let's find Jonah's bag, his message and his lamp."
+easy_text = "Find Jonah's bag, his message and his lamp."
+
+[sub_resource type="Resource" id="Line_found_bag"]
+script = ExtResource("2_line")
+id = &"found_bag"
+speaker = "Wonder Light"
+text = "Jonah's travelling bag. He packed for a long way from home."
+
+[sub_resource type="Resource" id="Line_found_message"]
+script = ExtResource("2_line")
+id = &"found_message"
+speaker = "Wonder Light"
+text = "God's message for Nineveh. It keeps turning toward the road."
+
+[sub_resource type="Resource" id="Line_found_lamp"]
+script = ExtResource("2_line")
+id = &"found_lamp"
+speaker = "Wonder Light"
+text = "A little oil lamp, for dark nights on the way."
+
+[sub_resource type="Resource" id="Line_meet"]
+script = ExtResource("2_line")
+id = &"meet"
+speaker = "Jonah"
+text = "I know where God wants me to go. I don't want to go there."
+easy_text = "I know where God wants me to go. I don't want to go."
+
+[sub_resource type="Resource" id="Line_board"]
+script = ExtResource("2_line")
+id = &"board"
+speaker = "Wonder Light"
+text = "Jonah is getting on the ship. Let's go with him."
+
+[sub_resource type="Resource" id="Line_sail"]
+script = ExtResource("2_line")
+id = &"sail"
+speaker = "Wonder Light"
+text = "The ship sails far from Nineveh. The sky is growing dark."
+easy_text = "The ship sails away. The sky is getting dark."
+
+[sub_resource type="Resource" id="Line_cargo"]
+script = ExtResource("2_line")
+id = &"cargo"
+speaker = "Wonder Light"
+text = "Let's help the sailors put the cargo in its place before the storm."
+easy_text = "A storm is coming. Let's help put the cargo away."
+
+[sub_resource type="Resource" id="Line_captain"]
+script = ExtResource("2_line")
+id = &"captain"
+speaker = "Captain"
+text = "Hold on! This storm isn't like the others."
+
+[sub_resource type="Resource" id="Line_admit"]
+script = ExtResource("2_line")
+id = &"admit"
+speaker = "Jonah"
+text = "This storm is because of me. I was running away from God."
+easy_text = "This storm is my fault. I ran away from God."
+
+[sub_resource type="Resource" id="Line_put_me"]
+script = ExtResource("2_line")
+id = &"put_me"
+speaker = "Jonah"
+text = "Put me into the sea, and the sea will be calm for you."
+
+[sub_resource type="Resource" id="Line_plead"]
+script = ExtResource("2_line")
+id = &"plead"
+speaker = "Captain"
+text = "We don't want to do this. God, please be kind to us."
+
+[sub_resource type="Resource" id="Line_calm"]
+script = ExtResource("2_line")
+id = &"calm"
+speaker = "Wonder Light"
+text = "The sailors did not want to. But Jonah went into the sea, and the storm stopped."
+easy_text = "Jonah went into the sea, and the storm stopped."
+
+[sub_resource type="Resource" id="Line_fish"]
+script = ExtResource("2_line")
+id = &"fish"
+speaker = "Wonder Light"
+text = "God sent a great fish to keep Jonah safe."
+
+[sub_resource type="Resource" id="Line_pray"]
+script = ExtResource("2_line")
+id = &"pray"
+speaker = "Wonder Light"
+text = "Inside the great fish, Jonah prayed. Let's pray with him: Call, Hear, Go."
+easy_text = "Jonah prayed inside the fish. Let's pray with him. Tap Call, Hear and Go."
+
+[sub_resource type="Resource" id="Line_thanks"]
+script = ExtResource("2_line")
+id = &"thanks"
+speaker = "Jonah"
+text = "You heard me, God. Thank you for another chance."
+
+[sub_resource type="Resource" id="Line_shore"]
+script = ExtResource("2_line")
+id = &"shore"
+speaker = "Wonder Light"
+text = "Then the great fish brought Jonah safely to dry land."
+easy_text = "The fish put Jonah safely on the shore."
+
+[sub_resource type="Resource" id="Line_again"]
+script = ExtResource("2_line")
+id = &"again"
+speaker = "Wonder Light"
+text = "God asked Jonah a second time: go to Nineveh. And this time, Jonah went."
+easy_text = "God asked again. This time, Jonah went."
+
+[sub_resource type="Resource" id="Line_warning"]
+script = ExtResource("2_line")
+id = &"warning"
+speaker = "Jonah"
+text = "Forty more days, and Nineveh will be overturned!"
+
+[sub_resource type="Resource" id="Line_listened"]
+script = ExtResource("2_line")
+id = &"listened"
+speaker = "Wonder Light"
+text = "The people of Nineveh listened. They were sorry, and they turned away from the wrong they did."
+easy_text = "The people listened. They were sorry, and they stopped doing wrong."
+
+[sub_resource type="Resource" id="Line_mercy"]
+script = ExtResource("2_line")
+id = &"mercy"
+speaker = "Wonder Light"
+text = "God saw them change, and God was kind to the city."
+
+[sub_resource type="Resource" id="Line_cross"]
+script = ExtResource("2_line")
+id = &"cross"
+speaker = "Wonder Light"
+text = "But Jonah was cross that God was kind to Nineveh. He sat on a hill, and God made a plant grow to shade him."
+easy_text = "Jonah was cross. He sat on a hill, and God grew a plant to shade him."
+
+[sub_resource type="Resource" id="Line_wither"]
+script = ExtResource("2_line")
+id = &"wither"
+speaker = "Wonder Light"
+text = "The next day the plant dried up, and Jonah was sad."
+easy_text = "Next day the plant dried up. Jonah was sad."
+
+[sub_resource type="Resource" id="Line_question"]
+script = ExtResource("2_line")
+id = &"question"
+speaker = "Wonder Light"
+text = "Jonah cared about one plant. God cares about a whole city full of people."
+easy_text = "Jonah cared about a plant. God cares about a whole city."
+
+[sub_resource type="Resource" id="Line_reflect"]
+script = ExtResource("2_line")
+id = &"reflect"
+speaker = "Wonder Light"
+text = "God gave Jonah another chance. And God cared for the people Jonah did not want to forgive."
+easy_text = "God gave Jonah another chance. And God loved the people of Nineveh too."
+
+[sub_resource type="Resource" id="Line_charm"]
+script = ExtResource("2_line")
+id = &"charm"
+speaker = "Wonder Light"
+text = "A Mercy charm, for another chance, and for a city God would not give up on."
+easy_text = "A Mercy charm, for another chance."
+
+[sub_resource type="Resource" id="Line_charm_arrives"]
+script = ExtResource("2_line")
+id = &"charm_arrives"
+text = "Virtue Bracelet receives the charm."
+
+[sub_resource type="Resource" id="Line_keep_close"]
+script = ExtResource("2_line")
+id = &"keep_close"
+speaker = "Wonder Light"
+text = "Keep it close. God gives second chances, even to the people we find hard to forgive."
+easy_text = "Keep it close. God gives second chances to everyone."
+
+[resource]
+script = ExtResource("1_lines")
+lines = Array[Resource]([SubResource("Line_arrive"), SubResource("Line_road"), SubResource("Line_find"), SubResource("Line_found_bag"), SubResource("Line_found_message"), SubResource("Line_found_lamp"), SubResource("Line_meet"), SubResource("Line_board"), SubResource("Line_sail"), SubResource("Line_cargo"), SubResource("Line_captain"), SubResource("Line_admit"), SubResource("Line_put_me"), SubResource("Line_plead"), SubResource("Line_calm"), SubResource("Line_fish"), SubResource("Line_pray"), SubResource("Line_thanks"), SubResource("Line_shore"), SubResource("Line_again"), SubResource("Line_warning"), SubResource("Line_listened"), SubResource("Line_mercy"), SubResource("Line_cross"), SubResource("Line_wither"), SubResource("Line_question"), SubResource("Line_reflect"), SubResource("Line_charm"), SubResource("Line_charm_arrives"), SubResource("Line_keep_close")])
+recorded = false
