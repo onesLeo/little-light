@@ -5,19 +5,22 @@ extends RefCounted
 ##   const JournalContent := preload("res://scripts/journal_content.gd")
 ##
 ## Everything here is read aloud with the recorded clips in vo_library.gd, so a new verse or charm
-## needs its text (and its "spoken_ref" for a verse) recorded and listed there first. The smoke
-## test checks that every line below has a clip.
+## needs its text (and its "spoken_ref" for a verse) recorded and listed there. The smoke test checks
+## that every line below has a clip, except an entry marked "recorded": false, which the system voice
+## reads until its chapter is cast (The Beginning, for now).
 
 const VERSE_JOSHUA_1_9 := "joshua_1_9"
 const VERSE_SAMUEL_18_1 := "samuel_18_1"
 const VERSE_GENESIS_9_13 := "genesis_9_13"
+const VERSE_SAMUEL_16_7 := "samuel_16_7"
 const CHARM_COURAGE := "courage"
 const CHARM_FRIENDSHIP := "friendship"
 const CHARM_TRUST := "trust"
+const CHARM_FAITHFUL_HEART := "faithful_heart"
 
 ## Charm slots shown as a dashed "?" after the earned charms, for adventures still to come.
-## Chapter 3's charm is not on this branch, so two slots stay open for The Beginning and Jonah.
-const MYSTERY_SLOTS := 2
+## With The Beginning's Faithful Heart in, one slot stays open, for Jonah.
+const MYSTERY_SLOTS := 1
 
 const VERSES := [
 	{
@@ -40,6 +43,14 @@ const VERSES := [
 		"spoken_ref": "Genesis, chapter nine, verse thirteen.",
 		"text": "I set my rainbow in the cloud, and it will be a sign of a covenant between me and the earth.",
 		"why": "The rainbow is the sign of God's covenant, a promise God chooses to keep. It is not a prize Noah earned.",
+	},
+	{
+		"id": VERSE_SAMUEL_16_7,
+		"ref": "1 Samuel 16:7",
+		"spoken_ref": "First Samuel, chapter sixteen, verse seven.",
+		# World English Bible Classic, verified in docs/chapter-3-concept.md.
+		"text": "But Yahweh said to Samuel, ‘Don't look on his face, or on the height of his stature, because I have rejected him; for I don't see as man sees. For man looks at the outward appearance, but Yahweh looks at the heart.’",
+		"why": "David was out caring for the sheep when Samuel came. People look at the outside first. God sees the heart.",
 	},
 ]
 
@@ -65,6 +76,13 @@ const CHARMS := [
 		"spoken": "A Trust charm. Noah kept building before he could see the rain.",
 		"color": Color(0.4, 0.66, 0.92),
 	},
+	{
+		"id": CHARM_FAITHFUL_HEART,
+		"name": "Faithful Heart",
+		"reason": "For caring well in quiet places.",
+		"spoken": "A Faithful Heart charm, for caring well in quiet places.",
+		"color": Color(0.9, 0.52, 0.42),
+	},
 ]
 
 
@@ -83,6 +101,13 @@ static func charm(id: String) -> Dictionary:
 
 
 ## The text handed to AudioDirector.speak_dialogue for a verse: its reference, then the verse.
+## The verse as a story shows it on the dialogue bar: `Joshua 1:9 (WEB):` over the words in
+## quote marks. The voice reads the reference the way the journal does (dialogue_line.gd).
+static func verse_card(id: String) -> String:
+	var v := verse(id)
+	return "" if v.is_empty() else "%s (WEB):\n\"%s\"" % [v["ref"], v["text"]]
+
+
 static func verse_dialogue(id: String) -> String:
 	var v := verse(id)
 	return "" if v.is_empty() else "%s\n%s" % [v["spoken_ref"], v["text"]]

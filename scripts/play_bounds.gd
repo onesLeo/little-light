@@ -5,6 +5,8 @@ extends Node
 ## rubber band); at the very edge it cannot go further. The first time it is
 ## felt, Wonder Light says a friendly line.
 ## Runs after the Player in the tree, so it corrects the position each physics step.
+## Which area it keeps is the running story's play area (play_area.gd), handed over by the
+## shell (use_area); until then, the valley's (the defaults below).
 
 @export var center: Vector2 = Vector2(0.0, 2.4)
 @export var half_extents: Vector2 = Vector2(10.4, 8.2)
@@ -19,27 +21,23 @@ const NUDGE_LINES := [
 	"Wonder Light: \"There's so much to find right here. Let's turn back!\"",
 ]
 
-## Opens the ridge behind the waterfall, where The King's Camp stands.
-## The camp ground behind it is much wider than the ridge top, so the edge moves out to it.
-func open_camp() -> void:
-	center = Vector2(-1.0, 21.5)
-	half_extents = Vector2(11.5, 27.0)
-
-
-## The ark plain sits far from the valley and the camp, and is built only when that story is chosen.
-func open_ark() -> void:
-	center = Vector2(96.0, 8.0)
-	half_extents = Vector2(18.0, 16.0)
+## Keeps the walker inside `area` (play_area.gd) from now on.
+func use_area(area: Resource) -> void:
+	if area == null:
+		return
+	center = area.center
+	half_extents = area.half_extents
+	corner_radius = area.corner_radius
 
 var _player: CharacterBody3D
-var _director: Node
+var _shell: Node
 var _nudge_index: int = 0
 
 
 func _ready() -> void:
 	var main := get_parent()
 	_player = main.get_node_or_null("Player") as CharacterBody3D
-	_director = main.get_node_or_null("ChapterDirector")
+	_shell = main
 
 
 func _physics_process(delta: float) -> void:
@@ -59,8 +57,8 @@ func _physics_process(delta: float) -> void:
 	if sd - push > 0.0:
 		moved = inward * sd
 	_player.global_position += Vector3(moved.x, 0.0, moved.y)
-	if depth > 0.35 and _director and _director.has_method("show_nudge"):
-		_director.show_nudge(NUDGE_LINES[_nudge_index % NUDGE_LINES.size()])
+	if depth > 0.35 and _shell and _shell.has_method("nudge"):
+		_shell.nudge(NUDGE_LINES[_nudge_index % NUDGE_LINES.size()])
 		_nudge_index += 1
 
 

@@ -1,0 +1,182 @@
+"""Samuel, Jesse and the younger David, for Chapter 3 (The Beginning, 1 Samuel 16).
+
+All three reuse the shared paper-people build that Noah and his wife use (David's connected
+body on the Wonder-Walker skeleton, generate_noah_v1.py), so they walk, blink and talk the
+same way in Godot (ark_person.gd / bethlehem_person.gd):
+
+Heights are set in Godot (bethlehem_person.gd scales each model), never by stretching the mesh:
+the shared rig's joints sit at fixed heights, so a stretched body would bend a little off its joints.
+
+- Samuel: an older visitor. Cream outer robe over muted blue, grey textured hair and a short
+  grey beard, a longer robe (to the knee, so his legs never push through it when he
+  walks), and the tallest of the three in the game. Calm rather than stern: no heavy brow.
+- Jesse: a sturdy older father in warm brown and olive, greying brown hair, no beard, so he
+  never reads as a second Samuel.
+- Younger David: clearly the David of Chapters 1-2 (his own skin, golden tunic, olive sash,
+  hair cap and sandals), a little shorter and rounder in the cheek.
+
+None overwrites another model. Every file lands in LITTLE_LIGHT_ART_OUT (or
+art/blender/output); copy just the .glb into assets/.
+
+Run from the repo root, once per person:
+  blender --background --python art/blender/scripts/characters/generate_bethlehem_people_v1.py -- samuel
+  blender --background --python art/blender/scripts/characters/generate_bethlehem_people_v1.py -- jesse
+  blender --background --python art/blender/scripts/characters/generate_bethlehem_people_v1.py -- young_david
+"""
+import importlib.util
+import sys
+from pathlib import Path
+import bpy
+
+HERE = Path(__file__).resolve().parent
+spec = importlib.util.spec_from_file_location("noah_builder", HERE / "generate_noah_v1.py")
+noah = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(noah)
+david = noah.david
+ww = noah.ww
+OUT = ww.OUT
+
+# kind -> (file stem, node prefix, material prefix)
+PEOPLE = {
+    "samuel": ("samuel_v1", "Samuel", "S"),
+    "jesse": ("jesse_v1", "Jesse", "J"),
+    "young_david": ("young_david_v1", "YoungDavid", "Y"),
+}
+
+
+def palette_for(kind, p):
+    mat = ww.old.paper_mat
+    if kind == "samuel":
+        return {
+            "Skin": mat(p + "_Skin", (0.80, 0.60, 0.45), 0.16),
+            "Tunic": mat(p + "_Robe", (0.91, 0.86, 0.73), 0.28),
+            "Trousers": mat(p + "_UnderRobe", (0.42, 0.51, 0.63), 0.25),
+            "Sash": mat(p + "_Sash", (0.42, 0.51, 0.63), 0.22),
+            "Hair": mat(p + "_Hair", (0.70, 0.69, 0.66), 0.28),
+            "Eye": mat(p + "_Eye", (0.09, 0.05, 0.03), 0),
+            "Mouth": mat(p + "_Mouth", (0.45, 0.24, 0.18), 0),
+        }
+    if kind == "jesse":
+        return {
+            "Skin": mat(p + "_Skin", (0.78, 0.54, 0.36), 0.16),
+            "Tunic": mat(p + "_Tunic", (0.52, 0.37, 0.22), 0.28),
+            "Trousers": mat(p + "_UnderTunic", (0.52, 0.53, 0.32), 0.25),
+            "Sash": mat(p + "_Sash", (0.44, 0.46, 0.25), 0.22),
+            "Hair": mat(p + "_Hair", (0.40, 0.34, 0.29), 0.25),
+            "Eye": mat(p + "_Eye", (0.08, 0.05, 0.03), 0),
+            "Mouth": mat(p + "_Mouth", (0.40, 0.18, 0.12), 0),
+        }
+    # Younger David: David's own colours (generate_david_mentor_v4.py), unchanged.
+    return {
+        "Skin": mat(p + "_Skin", (0.79, 0.52, 0.32), 0.16),
+        "Tunic": mat(p + "_Tunic", (0.76, 0.54, 0.22), 0.28),
+        "Trousers": mat(p + "_Skin", (0.79, 0.52, 0.32), 0.16),
+        "Sash": mat(p + "_Sash", (0.27, 0.40, 0.21), 0.25),
+        "Hair": mat(p + "_Hair", (0.15, 0.065, 0.025), 0.25),
+        "Eye": mat(p + "_Eye", (0.045, 0.028, 0.017), 0),
+        "Mouth": mat(p + "_Mouth", (0.30, 0.10, 0.053), 0),
+    }
+
+
+def shape(kind):
+    """Body and face, before the rig is built (the weights move with the vertices)."""
+    for obj, _outlined in ww.PARTS:
+        clothing = obj.name in ("Tunic", "ClothSash", "SashKnot", "SashTail")
+        for v in obj.data.vertices:
+            if kind == "samuel":
+                # A robe to mid-shin, not the ankle: the robe follows the hips, so a longer one
+                # would let his shins push through it as he walks.
+                if obj.name == "Tunic":
+                    v.co.z -= 0.12 * (1 - ww.smoothstep(0.41, 0.52, v.co.z))
+                    v.co.x *= 1.0 + 0.05 * (1 - ww.smoothstep(0.30, 0.50, v.co.z))
+                if v.co.z > 0.82:
+                    # An older, longer face, but no heavy brow: calm, not stern.
+                    v.co.x *= 0.98
+                    if v.co.z < 0.90:
+                        v.co.z -= 0.006
+            elif kind == "jesse":
+                if clothing and 0.40 < v.co.z < 0.80:
+                    v.co.x *= 1.12
+                    v.co.y *= 1.06
+                if v.co.z > 0.82:
+                    v.co.x *= 1.06
+            else:
+                if obj.name == "Tunic":
+                    v.co.z -= 0.05 * (1 - ww.smoothstep(0.41, 0.505, v.co.z))
+                if v.co.z > 0.84:
+                    # Rounder, younger cheeks.
+                    cheek = ww.smoothstep(0.86, 0.93, v.co.z) * (1 - ww.smoothstep(0.96, 1.02, v.co.z))
+                    v.co.x *= 1.0 + 0.05 * cheek
+
+
+
+def build(kind):
+    stem, node, p = PEOPLE[kind]
+    OUT.mkdir(parents=True, exist_ok=True)
+    (OUT / ".gdignore").touch()
+    ww.old.clear()
+    ww.PARTS.clear()
+    original_profile = ww.profile
+    ww.profile = lambda name, rings, mat, sides=18, steps=2: original_profile(name, rings, mat, sides, steps)
+    ww.blob = lambda name, pos, scale, mat: ww.old.make_soft_blob(name, pos, scale, mat, subdiv=2, j=0)
+    ww.build_geometry()
+    palette = palette_for(kind, p)
+    leather = ww.old.paper_mat(p + "_Leather", (0.26, 0.15, 0.08), 0.22)
+    kept = []
+    for obj, outlined in ww.PARTS:
+        if obj.name.startswith(("HairCap", "SideLock", "Shoe_")):
+            bpy.data.objects.remove(obj, do_unlink=True)
+            continue
+        david.rematerialize(obj, palette)
+        kept.append((obj, outlined))
+    ww.PARTS[:] = kept
+    shape(kind)
+    for obj, outlined in david.build_sandals(palette["Skin"], leather):
+        side = "L" if obj.name.endswith("L") else "R"
+        ww.weighted(obj, ww.fixed("Shin_" + side), outlined)
+    hair = palette["Hair"]
+    if kind == "young_david":
+        ww.weighted(david.hair_cap(hair), ww.fixed("Head"))
+    else:
+        ww.weighted(noah.work_hair(hair, tied=False), ww.fixed("Head"))
+    if kind == "samuel":
+        ww.weighted(noah.beard(hair), ww.fixed("Head"))
+    if kind == "jesse":
+        ww.weighted(noah.belt(palette["Sash"]), ww.torso_weights, False)
+    highlight = ww.old.paper_mat(p + "_Catchlight", (0.98, 0.93, 0.82), 0)
+    for side, sign in [("L", -1), ("R", 1)]:
+        ww.weighted(ww.blob("Catchlight_" + side, (sign * 0.047, 0.109, 0.981),
+                            (0.0025, 0.0015, 0.0025), highlight), ww.fixed("Head"), False)
+    # The same tablet budget as Noah: decimate the dense parts, keep the smile.
+    for obj, _outlined in ww.PARTS:
+        if len(obj.data.vertices) > 100 and obj.name != "Smile":
+            bpy.context.view_layer.objects.active = obj
+            decimate = obj.modifiers.new("Tablet budget", "DECIMATE")
+            decimate.ratio = 0.40
+            bpy.ops.object.modifier_apply(modifier=decimate.name)
+    arm = ww.rig()
+    arm.name = node + "Rig"
+    body = next(o for o in arm.children if o.name == "WonderWalker_Body")
+    hull = next(o for o in arm.children if o.name == "WonderWalker_Outline")
+    body.name = node + "Body"
+    hull.name = node + "Outline"
+    noah.facial_shapes(body, p)
+    noah.stills(arm, stem, measure=False)
+    bpy.ops.wm.save_as_mainfile(filepath=str(OUT / f"{stem}.blend"))
+    bpy.ops.object.select_all(action="DESELECT")
+    for obj in (arm, body, hull):
+        obj.select_set(True)
+    bpy.context.view_layer.objects.active = arm
+    # export_apply stays off: it would drop the Blink/Talk shape keys (see the David generator).
+    bpy.ops.export_scene.gltf(
+        filepath=str(OUT / f"{stem}.glb"), export_format="GLB", use_selection=True,
+        export_apply=False, export_morph=True, export_skins=True,
+        export_animations=False, export_yup=True)
+    tris = sum(len(poly.vertices) - 2 for poly in body.data.polygons)
+    print("BETHLEHEM_PERSON_COMPLETE", stem, len(body.data.vertices), "vertices", tris, "triangles")
+
+
+if __name__ == "__main__":
+    args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else ["samuel"]
+    for who in args:
+        build(who)

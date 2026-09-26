@@ -6,7 +6,8 @@
 > the complete release target.
 
 The audience, free/paid offer, launch funnel and promotional-video plan are in
-[marketing-and-launch-plan.md](marketing-and-launch-plan.md).
+[marketing-and-launch-plan.md](marketing-and-launch-plan.md). Developer accounts, the website,
+payments and store declarations are in [launch-preparation.md](launch-preparation.md).
 
 A plan, not a done thing: the near-term goal is a **free validation demo / portfolio piece** — enough
 to let target families try the idea while the five-journey first volume is built. It is not the paid

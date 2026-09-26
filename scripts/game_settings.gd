@@ -9,7 +9,7 @@ const PATH := "user://settings.cfg"
 const Profiles := preload("res://scripts/profiles.gd")
 
 static var read_aloud: bool = true
-## Show and read the story in easier words (easy_words.gd). Set from the age a child gives, and in the pause menu.
+## Show and read the story in easier words (a line's easy_text, dialogue_line.gd). Set from the age a child gives, and in the pause menu.
 static var easy_words: bool = false
 static var master_volume: float = 1.0
 static var music_volume: float = 1.0

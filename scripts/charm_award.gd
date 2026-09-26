@@ -11,7 +11,8 @@ const CharmArt := preload("res://scripts/charm_art.gd")
 const JournalContent := preload("res://scripts/journal_content.gd")
 
 @export var player_path: NodePath = ^"../Player"
-@export var david_path: NodePath = ^"../DavidMentor"
+## David nods at the end of chapter 1; he is in the valley's scene, so he is looked up then.
+@export var david_path: NodePath = ^"../Valley/DavidMentor"
 @export var float_height: float = 1.35
 @export var snap_duration: float = 0.55
 @export var pulse_duration: float = 0.45
@@ -33,7 +34,6 @@ var _rest_charm_pos: Vector3 = Vector3(0.0, 0.08, 0.12)
 
 func _ready() -> void:
 	_player = get_node_or_null(player_path) as Node3D
-	_david = get_node_or_null(david_path) as Node3D
 	_audio = get_node_or_null("%AudioDirector")
 	_confetti = get_node_or_null("%ConfettiBurst")
 	_build_placeholders()
@@ -168,6 +168,7 @@ func _play_reactions() -> void:
 		hop.tween_property(target, "position:y", base_y + 0.18, 0.12).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 		hop.tween_property(target, "position:y", base_y, 0.18).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
 	# David soft nod.
+	_david = get_node_or_null(david_path) as Node3D
 	if _david:
 		var base_rx := _david.rotation.x
 		var nod := create_tween()

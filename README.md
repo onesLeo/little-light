@@ -42,7 +42,8 @@ The speaker button (top right) turns **read-aloud** on or off; settings are save
 
 ## Current scene assets
 
-`scenes/main.tscn` loads these assets; older versions were moved to `art/archive/models/` (see its README).
+`scenes/main.tscn` (the Wonder-Walker) and `scenes/chapters/bethlehem_valley.tscn` (the rest) load these assets;
+older versions were moved to `art/archive/models/` (see its README).
 
 | Scene role | Asset |
 |------------|-------|
@@ -51,13 +52,15 @@ The speaker button (top right) turns **read-aloud** on or off; settings are save
 | David mentor | `assets/david_mentor_v13.glb` |
 | Wonder Items | `assets/wonder_items_v7.glb` |
 | Animated stream | `assets/bethlehem_stream_fish_alive_v7.glb` |
+| Samuel, Jesse, younger David (Chapter 3) | `assets/samuel_v1.glb`, `assets/jesse_v1.glb`, `assets/young_david_v1.glb` |
 
 ## Project layout
 
 ```
 little-light-godot/
   project.godot
-  scenes/main.tscn
+  scenes/main.tscn          # what every story shares: the Wonder-Walker, cameras, UI, menus, sound
+  scenes/chapters/          # one scene per story: bethlehem_valley, kings_camp, noahs_ark
   scripts/
     wonder_walker.gd
     steady_hands_minigame.gd

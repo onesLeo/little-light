@@ -1,8 +1,11 @@
 extends RefCounted
-## Recorded voice-over for every spoken line, keyed by the exact text that is
-## read aloud (speaker name and quotation marks removed). Each clip lives at
-## res://assets/audio/vo/<id>.wav. A line with no entry, or whose file is
-## missing, falls back to the system text-to-speech voice.
+## Recorded voice-over for what is spoken by its words, keyed by the exact text
+## that is read aloud (speaker name and quotation marks removed): the verses and
+## charms the journal reads, the Faith Journey map, "Who is playing?", the word
+## chips and the edge nudges. A story's own lines carry their clips with them
+## (assets/dialogue/, dialogue_line.gd). Each clip lives at
+## res://assets/audio/vo/<id>.wav. A line with no clip, or whose file is missing,
+## falls back to the system text-to-speech voice.
 ##
 ## Wonder Light is voiced by "Juno" and David by "Bram" (see docs/voice-over.md).
 
@@ -10,79 +13,28 @@ const DIR := "res://assets/audio/vo/"
 
 ## text -> clip id
 const LINES := {
-	"This is David's valley. He looks after sheep. God looks after him.": "wl_arrive",
-	"David needs his stone, his staff, and his little lamb. Find them for him!": "wl_explore",
-	"Oh! Hello there. Are you lost too?": "dv_hello",
-	"Everyone's scared of the big giant. But God gave me these sheep to keep safe.": "dv_giant",
-	"The Lord kept me safe from the lion and the bear. He will keep me safe now.": "dv_lion_bear",
-	"God gave David a job: keep the sheep safe. That's why he will go.": "wl_david_scared",
-	"Thanks. Will you stay close while I get ready?": "dv_stay_close",
-	"Let's breathe God's promise with David. In: God is with you. Out: don't be afraid.": "wl_steady_intro",
-	"In... and out. Just like counting sheep.": "dv_in_and_out",
-	"Breathe with David...": "wl_breathe",
-	"I still feel small. But I'm not alone. Thank you for staying.": "dv_steady_now",
-	"David took the small stone. God can use even a small thing.": "wl_took_stone",
-	"David walked out to the valley. When it was over, the camp cheered his name.": "wl_resolution",
-	"David trusted God, faced Goliath with his sling, and defeated him. The people were safe.": "wl_resolution_clear",
-	"Being brave doesn't mean you're not scared. It means you go with God anyway.": "wl_reflect",
-	"God had a job for David. He has one for you too. Stay close, and remember the words.": "wl_purpose",
+	# Chapter 1, the valley: its story lines are in assets/dialogue/bethlehem_valley.tres. These are
+	# spoken by their words: the verse and charm the journal reads too, the word chips, and the
+	# nudges at the edge of the play area (play_bounds.gd).
 	"Joshua, chapter one, verse nine.": "wl_verse_ref",
 	"Haven't I commanded you? Be strong and of good courage; don't be afraid, neither be dismayed: for Yahweh your God is with you wherever you go.": "wl_verse",
-	"This verse has three special words. Can you say them with me?": "wl_three_words",
-	"Don't. Be. Afraid.": "wl_dont_be_afraid",
 	"Don't.": "wl_word_dont",
 	"Be.": "wl_word_be",
 	"Afraid.": "wl_word_afraid",
-	"Yahweh is God's name. It means He is with you.": "wl_yahweh",
 	"A Courage charm — for staying with David, and breathing God's promise with him.": "wl_charm",
-	"Keep this close. Courage is yours to carry.": "wl_keep_close",
-	"God was with David. God is with you.": "wl_complete",
 	"That's the edge of our little valley. Let's stay close!": "wl_edge_a",
 	"There's so much to find right here. Let's turn back!": "wl_edge_b",
-	"A small stone. God can use even a small thing.": "wl_item_stone",
-	"A shepherd's staff. David stays with his sheep.": "wl_item_staff",
-	"A lamb David is keeping safe. That is his job.": "wl_item_lamb",
+	# "Who is playing?" (profile_screen.gd).
 	"Who is playing? Tap your picture.": "wl_who_playing",
 	"What is your name? Type it, pick a picture, and tell me how old you are.": "wl_your_name",
-	# The story in easier words (easy_words.gd), for a child who said they are 8 or younger.
-	"This is David's valley. God looks after him.": "ez_arrive",
-	"Find David's stone, staff, and little lamb.": "ez_explore",
-	"Everyone is afraid of the big giant. God gave me these sheep to keep safe.": "ez_giant",
-	"God kept me safe before. He will keep me safe now.": "ez_lion_bear",
-	"God gave David a job: keep the sheep safe.": "ez_david_scared",
-	"Let's breathe God's words with David. In... God is with you. Out... do not be afraid.": "ez_steady_intro",
-	"I am still small. But I am not alone.": "ez_steady_now",
-	"David walked out to the valley. Then everyone cheered.": "ez_resolution",
-	"Being brave does not mean you are never scared. It means you go with God.": "ez_reflect",
-	"God had a job for David. He has one for you too. Stay close.": "ez_purpose",
-	"Keep it close. Courage is yours.": "ez_keep_close",
-	"David's staff. He stays with his sheep.": "ez_item_staff",
-	"This is the king's camp. The day is turning into night.": "jn_arrive",
-	"I am Jonathan. David was brave today, because God was with him.": "jn_hello",
-	"Find Jonathan's robe, his bow, and his belt. They are gifts for David.": "jn_find",
-	"A folded robe. Jonathan is giving it to David.": "jn_robe",
-	"A bow with no arrow. It is a gift, not a fight.": "jn_bow",
-	"A belt with one gold square. A friend shares what he has.": "jn_belt",
-	"These were mine. I give them to David, because he is my friend.": "jn_give",
-	"Hold still, and loop the cord. Three slow loops.": "jn_cord",
+	# Chapter 2, The King's Camp: its story lines are in assets/dialogue/kings_camp.tres. These are
+	# spoken by their words: the word chips, and the verse and charm the journal reads too.
 	"Knit.": "jn_word_knit",
 	"Loved.": "jn_word_loved",
 	"Friend.": "jn_word_friend",
-	"Friends stay tied together.": "jn_tied",
 	"First Samuel, chapter eighteen, verse one.": "jn_verse_ref",
 	"The soul of Jonathan was knit with the soul of David, and Jonathan loved him as his own soul.": "jn_verse",
 	"A Friendship charm, for Jonathan giving David what was his.": "jn_charm",
-	"Look. David's valley is still down there.": "jn_lookout",
-	# Chapter 2 in easier words (easy_words.gd).
-	"This is the king's camp. It is almost night.": "ez_jn_arrive",
-	"I am Jonathan. God was with David today.": "ez_jn_hello",
-	"Find the robe, the bow, and the belt. They are gifts for David.": "ez_jn_find",
-	"A robe. It is a gift for David.": "ez_jn_robe",
-	"A bow. It is a gift, not for fighting.": "ez_jn_bow",
-	"A belt. Friends share what they have.": "ez_jn_belt",
-	"These were mine. Now they are David's. He is my friend.": "ez_jn_give",
-	"Loop the cord. Three slow loops.": "ez_jn_cord",
-	"A Friendship charm, because Jonathan gave to his friend.": "ez_jn_charm",
 	# The Faith Journey map (faith_journey_screen.gd). The child's name is shown, not spoken.
 	"One story at a time.": "wl_map_open",
 	"Hello!": "wl_hello",
@@ -92,33 +44,27 @@ const LINES := {
 	"Finish Chapter 1, The valley, first. Then The King's Camp will open for you.": "wl_locked_camp",
 	"This part of the path is still ahead. New stories will be waiting here.": "wl_path_ahead",
 	"Noah's Ark is next.": "ark_map",
-	"Finish Chapter 2, The King's Camp, first. Then Noah's Ark will open for you.": "ark_locked",
-	# Chapter 4: Wonder Light in Juno, Noah in Arthur, his wife in Helena (docs/voice-over.md).
-	"Long before David, God asked Noah to trust him and build something no one had seen before.": "ark_arrive",
-	"People were hurting one another, and the world was full of violence.": "ark_hurt",
-	"Find the mallet, the rope, and the jar of pitch. Bring them to Noah.": "ark_find",
-	"A wooden mallet. Noah builds with it.": "ark_mallet",
-	"A coil of rope. It holds the ark together.": "ark_rope",
-	"A jar of sticky pitch. It keeps water out.": "ark_pitch",
-	"God told me to build this ark. I cannot see the rain yet, but I trust him.": "ark_noah",
-	"Let's finish this panel. Three pegs, then draw the rope tight.": "ark_panel",
-	"Two by two, they're coming. Help these animals find their partners.": "ark_pairs",
-	"This way. Walk together up the wide ramp.": "ark_wife",
-	"This friend is looking for its match.": "ark_match",
-	"Noah's family and the animals are safely inside. God closes the door and keeps them safe.": "ark_door",
-	"The water covered the land. God kept Noah's family, and the animals with them, safe inside.": "ark_rain",
-	"Let's open the window and send the dove.": "ark_send",
-	"The dove came back safe. The water is still too high.": "ark_dove_back",
-	"Look, an olive leaf. The water is going down.": "ark_leaf",
-	"Dry ground. Thank you for keeping us safe.": "ark_dry",
+	# Chapter 4, Noah's Ark: its story lines are in assets/dialogue/noahs_ark.tres (Wonder Light in
+	# Juno, Noah in Arthur, his wife in Helena; docs/voice-over.md). These are spoken by their words:
+	# the word chips, and the verse and charm the journal reads too.
 	"Genesis, chapter nine, verse thirteen.": "ark_verse_ref",
 	"I set my rainbow in the cloud, and it will be a sign of a covenant between me and the earth.": "ark_verse",
-	"God's covenant is a promise God chooses to keep.": "ark_covenant",
 	"Rainbow.": "ark_word_rainbow",
 	"Sign.": "ark_word_sign",
 	"Promise.": "ark_word_promise",
 	"A Trust charm. Noah kept building before he could see the rain.": "ark_charm",
-	"Keep it close. Trust God, even before you see the way through.": "ark_keep",
+	# Chapter 3, The Beginning: its story lines are in assets/dialogue/jesses_house.tres (Wonder
+	# Light in Juno, Samuel in Gideon, Jesse in Desmond, David in Bram). These are spoken by their
+	# words: the map, the locked cards, the verse, the word chips and the charm the journal reads.
+	"A Faithful Heart charm, for caring well in quiet places.": "bg_charm",
+	"The Beginning is next.": "bg_map",
+	"Finish Chapter 2, The King's Camp, first. Then The Beginning will open for you.": "bg_locked",
+	"Finish Chapter 3, The Beginning, first. Then Noah's Ark will open for you.": "bg_locked_ark",
+	"First Samuel, chapter sixteen, verse seven.": "bg_verse_ref",
+	"But Yahweh said to Samuel, ‘Don't look on his face, or on the height of his stature, because I have rejected him; for I don't see as man sees. For man looks at the outward appearance, but Yahweh looks at the heart.’": "bg_verse",
+	"God.": "bg_word_god",
+	"Sees.": "bg_word_sees",
+	"Heart.": "bg_word_heart",
 }
 
 static var _cache: Dictionary = {}

@@ -28,7 +28,6 @@ const TOGGLE_TEXT_STATES := ["font_color", "font_hover_color", "font_focus_color
 @export var end_panel_delay: float = 2.6
 
 var _audio: Node
-var _director: Node
 var _journal: CanvasLayer
 var _colour: CanvasLayer
 var _journey: CanvasLayer
@@ -109,7 +108,6 @@ func _ready() -> void:
 	GameSettings.load_settings()
 	var main := get_parent()
 	_audio = main.get_node_or_null("%AudioDirector")
-	_director = main.get_node_or_null("ChapterDirector")
 	_journal = main.get_node_or_null("JournalScreen")
 	_colour = main.get_node_or_null("ColourScreen")
 	_journey = main.get_node_or_null("FaithJourney")
@@ -124,8 +122,6 @@ func _ready() -> void:
 	_build_end_panel()
 	_build_pause_panel()
 
-	if _director and _director.has_signal("chapter_finished"):
-		_director.chapter_finished.connect(_on_chapter_finished)
 	if _audio and _audio.has_signal("read_aloud_changed"):
 		_audio.read_aloud_changed.connect(func(_on: bool) -> void: _refresh_speaker())
 	if _journal and _journal.has_signal("player_removed"):
@@ -165,16 +161,22 @@ func set_paused(paused: bool) -> void:
 		get_viewport().gui_release_focus()
 
 
+## "Start this chapter again": forgets where the child got to in it, then starts it over.
+func start_chapter_again() -> void:
+	Profiles.forget_place(Profiles.current_chapter)
+	_restart()
+
+
 ## Loads the scene again. With a child still playing, the chapter they were on starts over
 ## (Profiles.current_chapter); with nobody, "Who is playing?" and then the map come first.
 func _restart() -> void:
+	var shell := get_parent()
+	if shell and shell.has_method("reload"):
+		shell.reload(Profiles.current_chapter)
+		return
 	if Profiles.active_id.is_empty():
 		Profiles.current_chapter = ""
 	get_tree().paused = false
-	if _audio and _audio.has_method("stop_speech"):
-		_audio.stop_speech()
-	for action in ["move_left", "move_right", "move_forward", "move_back"]:
-		Input.action_release(action)
 	get_tree().reload_current_scene()
 
 
@@ -347,7 +349,7 @@ func _build_pause_panel() -> void:
 	_voice_slider = _add_slider_row(vbox, "Voices", _on_voice_changed)
 
 	var restart := _make_button("Start this chapter again")
-	restart.pressed.connect(_restart)
+	restart.pressed.connect(start_chapter_again)
 	vbox.add_child(restart)
 
 	var change_player := _make_button("Change player")

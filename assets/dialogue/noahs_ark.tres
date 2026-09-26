@@ -1,0 +1,173 @@
+[gd_resource type="Resource" load_steps=44 format=3]
+
+[ext_resource type="Script" path="res://scripts/dialogue_lines.gd" id="1_lines"]
+[ext_resource type="Script" path="res://scripts/dialogue_line.gd" id="2_line"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ark_arrive.wav" id="ark_arrive"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ark_hurt.wav" id="ark_hurt"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ark_find.wav" id="ark_find"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ark_mallet.wav" id="ark_mallet"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ark_rope.wav" id="ark_rope"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ark_pitch.wav" id="ark_pitch"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ark_noah.wav" id="ark_noah"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ark_panel.wav" id="ark_panel"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ark_pairs.wav" id="ark_pairs"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ark_wife.wav" id="ark_wife"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ark_match.wav" id="ark_match"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ark_door.wav" id="ark_door"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ark_rain.wav" id="ark_rain"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ark_send.wav" id="ark_send"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ark_dove_back.wav" id="ark_dove_back"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ark_leaf.wav" id="ark_leaf"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ark_dry.wav" id="ark_dry"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ark_covenant.wav" id="ark_covenant"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ark_charm.wav" id="ark_charm"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ark_keep.wav" id="ark_keep"]
+
+[sub_resource type="Resource" id="Line_arrive"]
+script = ExtResource("2_line")
+id = &"arrive"
+speaker = "Wonder Light"
+text = "Long before David, God asked Noah to trust him and build something no one had seen before."
+clip = ExtResource("ark_arrive")
+
+[sub_resource type="Resource" id="Line_hurt"]
+script = ExtResource("2_line")
+id = &"hurt"
+speaker = "Wonder Light"
+text = "People were hurting one another, and the world was full of violence."
+clip = ExtResource("ark_hurt")
+
+[sub_resource type="Resource" id="Line_find"]
+script = ExtResource("2_line")
+id = &"find"
+speaker = "Wonder Light"
+text = "Find the mallet, the rope, and the jar of pitch. Bring them to Noah."
+clip = ExtResource("ark_find")
+
+[sub_resource type="Resource" id="Line_mallet"]
+script = ExtResource("2_line")
+id = &"mallet"
+speaker = "Wonder Light"
+text = "A wooden mallet. Noah builds with it."
+clip = ExtResource("ark_mallet")
+
+[sub_resource type="Resource" id="Line_rope"]
+script = ExtResource("2_line")
+id = &"rope"
+speaker = "Wonder Light"
+text = "A coil of rope. It holds the ark together."
+clip = ExtResource("ark_rope")
+
+[sub_resource type="Resource" id="Line_pitch"]
+script = ExtResource("2_line")
+id = &"pitch"
+speaker = "Wonder Light"
+text = "A jar of sticky pitch. It keeps water out."
+clip = ExtResource("ark_pitch")
+
+[sub_resource type="Resource" id="Line_noah_trust"]
+script = ExtResource("2_line")
+id = &"noah_trust"
+speaker = "Noah"
+text = "God told me to build this ark. I cannot see the rain yet, but I trust him."
+clip = ExtResource("ark_noah")
+
+[sub_resource type="Resource" id="Line_panel"]
+script = ExtResource("2_line")
+id = &"panel"
+speaker = "Wonder Light"
+text = "Let's finish this panel. Three pegs, then draw the rope tight."
+clip = ExtResource("ark_panel")
+
+[sub_resource type="Resource" id="Line_pairs"]
+script = ExtResource("2_line")
+id = &"pairs"
+speaker = "Wonder Light"
+text = "Two by two, they're coming. Help these animals find their partners."
+clip = ExtResource("ark_pairs")
+
+[sub_resource type="Resource" id="Line_wife_ramp"]
+script = ExtResource("2_line")
+id = &"wife_ramp"
+speaker = "Noah's wife"
+text = "This way. Walk together up the wide ramp."
+clip = ExtResource("ark_wife")
+
+[sub_resource type="Resource" id="Line_match"]
+script = ExtResource("2_line")
+id = &"match"
+speaker = "Wonder Light"
+text = "This friend is looking for its match."
+clip = ExtResource("ark_match")
+
+[sub_resource type="Resource" id="Line_door"]
+script = ExtResource("2_line")
+id = &"door"
+speaker = "Wonder Light"
+text = "Noah's family and the animals are safely inside. God closes the door and keeps them safe."
+clip = ExtResource("ark_door")
+
+[sub_resource type="Resource" id="Line_rain"]
+script = ExtResource("2_line")
+id = &"rain"
+speaker = "Wonder Light"
+text = "The water covered the land. God kept Noah's family, and the animals with them, safe inside."
+clip = ExtResource("ark_rain")
+
+[sub_resource type="Resource" id="Line_send_dove"]
+script = ExtResource("2_line")
+id = &"send_dove"
+speaker = "Wonder Light"
+text = "Let's open the window and send the dove."
+clip = ExtResource("ark_send")
+
+[sub_resource type="Resource" id="Line_dove_back"]
+script = ExtResource("2_line")
+id = &"dove_back"
+speaker = "Wonder Light"
+text = "The dove came back safe. The water is still too high."
+clip = ExtResource("ark_dove_back")
+
+[sub_resource type="Resource" id="Line_olive_leaf"]
+script = ExtResource("2_line")
+id = &"olive_leaf"
+speaker = "Wonder Light"
+text = "Look, an olive leaf. The water is going down."
+clip = ExtResource("ark_leaf")
+
+[sub_resource type="Resource" id="Line_dry"]
+script = ExtResource("2_line")
+id = &"dry"
+speaker = "Noah"
+text = "Dry ground. Thank you for keeping us safe."
+clip = ExtResource("ark_dry")
+
+[sub_resource type="Resource" id="Line_covenant"]
+script = ExtResource("2_line")
+id = &"covenant"
+speaker = "Wonder Light"
+text = "God's covenant is a promise God chooses to keep."
+clip = ExtResource("ark_covenant")
+
+[sub_resource type="Resource" id="Line_charm"]
+script = ExtResource("2_line")
+id = &"charm"
+speaker = "Wonder Light"
+text = "A Trust charm. Noah kept building before he could see the rain."
+clip = ExtResource("ark_charm")
+
+[sub_resource type="Resource" id="Line_charm_arrives"]
+script = ExtResource("2_line")
+id = &"charm_arrives"
+text = "Virtue Bracelet receives the charm."
+
+[sub_resource type="Resource" id="Line_keep_close"]
+script = ExtResource("2_line")
+id = &"keep_close"
+speaker = "Wonder Light"
+text = "Keep it close. Trust God, even before you see the way through."
+clip = ExtResource("ark_keep")
+
+[resource]
+script = ExtResource("1_lines")
+lines = Array[Resource]([SubResource("Line_arrive"), SubResource("Line_hurt"), SubResource("Line_find"), SubResource("Line_mallet"), SubResource("Line_rope"), SubResource("Line_pitch"), SubResource("Line_noah_trust"), SubResource("Line_panel"), SubResource("Line_pairs"), SubResource("Line_wife_ramp"), SubResource("Line_match"), SubResource("Line_door"), SubResource("Line_rain"), SubResource("Line_send_dove"), SubResource("Line_dove_back"), SubResource("Line_olive_leaf"), SubResource("Line_dry"), SubResource("Line_covenant"), SubResource("Line_charm"), SubResource("Line_charm_arrives"), SubResource("Line_keep_close")])

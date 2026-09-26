@@ -5,6 +5,7 @@ extends Node3D
 ## whole meadow costs three draw calls.
 
 const SWAY_SHADER := preload("res://assets/shaders/meadow_sway.gdshader")
+const GameShell := preload("res://scripts/game_shell.gd")
 
 ## Meadow rectangle on the ground plane (x, z).
 @export var area_min: Vector2 = Vector2(-11.0, -8.5)
@@ -20,7 +21,8 @@ const SWAY_SHADER := preload("res://assets/shaders/meadow_sway.gdshader")
 @export var ground_y_range: Vector2 = Vector2(-0.05, 0.35)
 ## Round spots to leave bare: (x, z, radius) in world space.
 @export var clear_circles: Array[Vector3] = []
-@export var player_path: NodePath = ^"../Player"
+## Who the grass leans away from; empty means the shell's Wonder-Walker.
+@export var player_path: NodePath = ^""
 
 var _mat: ShaderMaterial
 var _player: Node3D
@@ -49,7 +51,8 @@ func _ready() -> void:
 	var mat := ShaderMaterial.new()
 	mat.shader = SWAY_SHADER
 	_mat = mat
-	_player = get_node_or_null(player_path) as Node3D
+	var from_shell := player_path.is_empty()
+	_player = (GameShell.of(self).get_node_or_null("Player") if from_shell else get_node_or_null(player_path)) as Node3D
 
 	var tuft_spots := _pick_spots(space, rng, tuft_count)
 	var half := tuft_spots.size() / 2

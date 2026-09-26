@@ -12,10 +12,12 @@ extends Node
 const Profiles := preload("res://scripts/profiles.gd")
 const JournalContent := preload("res://scripts/journal_content.gd")
 const GameSettings := preload("res://scripts/game_settings.gd")
-const EasyWords := preload("res://scripts/easy_words.gd")
+## The valley's lines, with their easier versions and clips (dialogue_lines.gd).
+const LINES := preload("res://assets/dialogue/bethlehem_valley.tres")
 const PaperUI := preload("res://scripts/paper_ui.gd")
+const DevicePrompts := preload("res://scripts/device_prompts.gd")
 const WordChip := preload("res://scripts/word_chip.gd")
-const DialogueView := preload("res://scripts/dialogue_view.gd")
+const GameShell := preload("res://scripts/game_shell.gd")
 
 enum Beat {
 	ARRIVE,
@@ -33,18 +35,20 @@ enum Beat {
 	CAMP,           # on hold: The King's Camp (chapter_two.gd) has the screen
 }
 
-@onready var dialogue_label: Label = %DialogueLabel
-@onready var prompt_label: Label = %PromptLabel
-@onready var dialogue_panel: PanelContainer = get_node_or_null("../UI/Panel") as PanelContainer
-@onready var player: CharacterBody3D = %Player
+## The shell (game_shell.gd): the shared player, cameras, UI and sound are reached through it.
+@onready var shell: Node = GameShell.of(self)
+@onready var dialogue_label: Label = shell.get_node("%DialogueLabel")
+@onready var prompt_label: Label = shell.get_node("%PromptLabel")
+@onready var dialogue_panel: PanelContainer = shell.get_node_or_null("UI/Panel") as PanelContainer
+@onready var player: CharacterBody3D = shell.get_node("%Player")
 @onready var steady_hands: Node = %SteadyHands
-@onready var camera_director: Node = %CameraDirector
-@onready var wonder_light: Node3D = %WonderLight
-@onready var audio_director: Node = get_node_or_null("%AudioDirector")
-@onready var confetti: Node = get_node_or_null("%ConfettiBurst")
-@onready var complete_banner: Label = get_node_or_null("%CompleteBanner") as Label
+@onready var camera_director: Node = shell.get_node("%CameraDirector")
+@onready var wonder_light: Node3D = shell.get_node("%WonderLight")
+@onready var audio_director: Node = shell.get_node_or_null("%AudioDirector")
+@onready var confetti: Node = shell.get_node_or_null("%ConfettiBurst")
+@onready var complete_banner: Label = shell.get_node_or_null("%CompleteBanner") as Label
 @onready var david_mentor: Node3D = get_node_or_null("../DavidMentor") as Node3D
-@onready var charm_award: Node3D = get_node_or_null("%CharmAward") as Node3D
+@onready var charm_award: Node3D = shell.get_node_or_null("%CharmAward") as Node3D
 
 signal explore_started
 signal wonder_item_collected(item_name: String)
@@ -55,10 +59,11 @@ var beat: Beat = Beat.ARRIVE
 var wonder_items_found: int = 0
 const WONDER_ITEMS_NEEDED: int = 3
 
+## What Wonder Light says about each Wonder Item when it is picked up (a line's id).
 const ITEM_FLAVOR := {
-	"WonderItem_Stone": "A small stone. God can use even a small thing.",
-	"WonderItem_Staff": "A shepherd's staff. David stays with his sheep.",
-	"WonderItem_Lamb": "A lamb David is keeping safe. That is his job.",
+	"WonderItem_Stone": &"item_stone",
+	"WonderItem_Staff": &"item_staff",
+	"WonderItem_Lamb": &"item_lamb",
 }
 const ITEM_LABELS := {
 	"WonderItem_Stone": "stone",
@@ -78,10 +83,10 @@ const WORD_LABELS: PackedStringArray = ["Don't", "Be", "Afraid"]
 const WORD_LINES: PackedStringArray = ["Don't.", "Be.", "Afraid."]
 var _word_phase: String = "" ## "", verse (page one), listen, tap, done
 
-## Joshua 1:9 comes in two short pages instead of one wall of text. Page one: the verse and what
-## "Yahweh" means. Page two: the three words to say with David, then her turn to tap them.
-const VERSE_PAGE_ONE := "Joshua 1:9 (WEB):\n\"Haven't I commanded you? Be strong and of good courage; don't be afraid, neither be dismayed: for Yahweh your God is with you wherever you go.\"\nWonder Light: \"Yahweh is God's name. It means He is with you.\""
-const VERSE_PAGE_TWO := "Wonder Light: \"This verse has three special words. Can you say them with me?\nDon't. Be. Afraid.\""
+## Joshua 1:9 comes in two short pages instead of one wall of text. Page one: the verse (from the
+## journal, JournalContent.verse_card) and what "Yahweh" means. Page two: the three words to say
+## with David, then her turn to tap them.
+const VERSE_PAGE_TWO := [&"three_words", &"dont_be_afraid"]
 var _word_said: Array[bool] = [false, false, false]
 var _word_row: HBoxContainer
 var _word_buttons: Array[Button] = []
@@ -89,7 +94,7 @@ var _word_buttons: Array[Button] = []
 func _ready() -> void:
 	dialogue_label.text = ""
 	_set_prompt("")
-	var input_setup := get_node_or_null("../InputSetup")
+	var input_setup := shell.get_node_or_null("InputSetup")
 	if input_setup and input_setup.has_signal("device_changed"):
 		input_setup.device_changed.connect(_on_device_changed)
 	if steady_hands and steady_hands.has_signal("minigame_completed"):
@@ -103,45 +108,21 @@ func _ready() -> void:
 	if audio_director and audio_director.has_signal("speech_finished"):
 		audio_director.speech_finished.connect(_on_speech_finished)
 	_build_word_buttons()
-	_build_dialogue_view()
-	_start_story()
 
 
-## Starts the story. Nobody playing yet: the "Who is playing?" screen comes first, then the Faith
-## Journey map, where the child picks a chapter. A reload for "Play again" goes straight back into
-## the chapter they were on (Profiles.current_chapter).
+## The word row lives in the shared UI, outside the valley, so it goes with the valley when the
+## shell frees it (another story is starting); a valley loaded again builds its own.
+func _exit_tree() -> void:
+	for node in [_word_row]:
+		if is_instance_valid(node):
+			if node.get_parent():
+				node.get_parent().remove_child(node)
+			node.queue_free()
+
+
+## Starts what the game was loaded for, as after "Play again": the shell decides which story.
 func _start_story() -> void:
-	var picker := get_node_or_null("../ProfileScreen")
-	if Profiles.active_id.is_empty() and picker != null:
-		picker.profile_chosen.connect(func(_id: String) -> void: _open_journey_first(), CONNECT_ONE_SHOT)
-		return
-	match Profiles.current_chapter:
-		Profiles.CHAPTER_VALLEY:
-			_enter_beat(Beat.ARRIVE)
-		Profiles.CHAPTER_CAMP:
-			var camp := get_node_or_null("../KingsCamp")
-			if camp and camp.has_method("visit"):
-				camp.visit.call_deferred()
-			else:
-				_enter_beat(Beat.ARRIVE)
-		Profiles.CHAPTER_ARK:
-			var ark := get_node_or_null("../NoahsArk")
-			if ark and ark.has_method("visit"):
-				ark.visit.call_deferred()
-			else:
-				_open_journey_first.call_deferred()
-		_:
-			_open_journey_first.call_deferred()
-
-
-## The Faith Journey map as the first stop, before any chapter. Without it (a trimmed scene), the
-## valley starts as before.
-func _open_journey_first() -> void:
-	var journey := get_node_or_null("../FaithJourney")
-	if journey and journey.has_method("open_to_choose"):
-		journey.open_to_choose()
-	else:
-		begin_valley()
+	shell.start_story()
 
 
 ## Chapter 1 from its first line, in the scene as it is (the map uses it when nothing has started yet).
@@ -190,20 +171,14 @@ func _enter_beat(next: Beat) -> void:
 			_set_player_move(false)
 			_cut_tabletop()
 			_point_light(null)
-			_show(
-				"Wonder Light: \"This is David's valley. He looks after sheep. God looks after him.\"",
-				"Press Space to continue"
-			)
+			_show([&"arrive"], "Press Space to continue")
 			_advance_ready = true
 
 		Beat.EXPLORE:
 			_set_player_move(true)
 			_cut_tabletop()
 			_point_light(null)
-			_show(
-				"Wonder Light: \"David needs his stone, his staff, and his little lamb. Find them for him!\"",
-				_explore_prompt(false)
-			)
+			_show([&"explore"], _explore_prompt(false))
 			_advance_ready = false
 			explore_started.emit()
 
@@ -217,20 +192,14 @@ func _enter_beat(next: Beat) -> void:
 			await _face_player(david_mentor)
 			_cut_closeup(david_mentor)
 			_point_light(david_mentor)
-			_show(
-				"(You bring David the stone, staff, and little lamb.)\nDavid: \"Oh! Hello there. Are you lost too?\"\nDavid: \"Everyone's scared of the big giant. But God gave me these sheep to keep safe.\"\nDavid: \"The Lord kept me safe from the lion and the bear. He will keep me safe now.\"",
-				"Press Space to continue"
-			)
+			_show([&"bring_items", &"david_hello", &"david_giant", &"david_lion_bear"], "Press Space to continue")
 			_advance_ready = true
 
 		Beat.MEET_DAVID_B:
 			# Band A: Wonder Light speaks for the child — no reply choices.
 			_cut_closeup(david_mentor)
 			_point_light(david_mentor)
-			_show(
-				"Wonder Light: \"God gave David a job: keep the sheep safe. That's why he will go.\"\nDavid: \"Thanks. Will you stay close while I get ready?\"",
-				"Press Space to continue"
-			)
+			_show([&"david_job", &"david_stay_close"], "Press Space to continue")
 			_advance_ready = true
 
 		Beat.VERSE_REWARD:
@@ -245,25 +214,19 @@ func _enter_beat(next: Beat) -> void:
 			_restyle_words()
 			if _word_row:
 				_word_row.visible = false
-			_show(VERSE_PAGE_ONE, "Press Space to continue   ● ○")
+			_show(verse_page_one(), "Press Space to continue   ● ○")
 			_advance_ready = false
 
 		Beat.STEADY_INTRO:
 			_set_player_move(false)
 			_cut_closeup(david_mentor)
 			_point_light(david_mentor)
-			_show(
-				"Wonder Light: \"Let's breathe God's promise with David. In: God is with you. Out: don't be afraid.\"\nDavid: \"In... and out. Just like counting sheep.\"",
-				"Press Space to begin Steady Hands"
-			)
+			_show([&"steady_intro", &"in_and_out"], "Press Space to begin Steady Hands")
 			_advance_ready = true
 
 		Beat.STEADY_PLAY:
 			_cut_closeup(david_mentor)
-			_show(
-				"Wonder Light: \"Breathe with David...\"",
-				"Hold Space to breathe in, let go to breathe out"
-			)
+			_show([&"breathe"], "Hold Space to breathe in, let go to breathe out")
 			_advance_ready = false
 			if steady_hands and steady_hands.has_method("start_minigame"):
 				steady_hands.start_minigame()
@@ -271,10 +234,7 @@ func _enter_beat(next: Beat) -> void:
 		Beat.STEADY_DONE:
 			_cut_closeup(david_mentor)
 			_celebrate_light()
-			_show(
-				"David: \"I still feel small. But I'm not alone. Thank you for staying.\"",
-				"Press Space to continue"
-			)
+			_show([&"steady_now"], "Press Space to continue")
 			_advance_ready = true
 
 		Beat.RESOLUTION:
@@ -282,19 +242,13 @@ func _enter_beat(next: Beat) -> void:
 			# camera staying on David's determined face here.
 			_cut_closeup(david_mentor)
 			_point_light(david_mentor)
-			_show(
-				"Wonder Light: \"David took the small stone. God can use even a small thing.\"\nWonder Light: \"David walked out to the valley. When it was over, the camp cheered his name.\"\nWonder Light: \"David trusted God, faced Goliath with his sling, and defeated him. The people were safe.\"",
-				"Press Space to continue"
-			)
+			_show([&"took_stone", &"resolution", &"resolution_clear"], "Press Space to continue")
 			_advance_ready = true
 
 		Beat.REFLECT:
 			_cut_tabletop()
 			_point_light(null)
-			_show(
-				"Wonder Light: \"Being brave doesn't mean you're not scared. It means you go with God anyway.\"\nWonder Light: \"God had a job for David. He has one for you too. Stay close, and remember the words.\"",
-				"Press Space to continue"
-			)
+			_show([&"reflect", &"purpose"], "Press Space to continue")
 			_advance_ready = true
 
 		Beat.CHARM_AWARD:
@@ -302,10 +256,7 @@ func _enter_beat(next: Beat) -> void:
 			_set_player_move(false)
 			_advance_ready = false
 			_celebrate_light()
-			_show(
-				"Wonder Light: \"A Courage charm — for staying with David, and breathing God's promise with him.\"\n(Virtue Bracelet receives the charm.)",
-				"…"
-			)
+			_show([&"charm", &"charm_arrives"], "…")
 			if charm_award and camera_director and camera_director.has_method("cut_to_charm"):
 				camera_director.cut_to_charm(charm_award)
 			elif charm_award:
@@ -316,10 +267,7 @@ func _enter_beat(next: Beat) -> void:
 				charm_award.play_ceremony()
 			else:
 				# Fallback if node missing — still allow advance.
-				_show(
-					"Wonder Light: \"A Courage charm — for staying with David, and breathing God's promise with him.\"",
-					"Press Space to keep your charm"
-				)
+				_show([&"charm"], "Press Space to keep your charm")
 				_advance_ready = true
 
 		Beat.DONE:
@@ -327,13 +275,13 @@ func _enter_beat(next: Beat) -> void:
 			_set_player_move(true)
 			_cut_tabletop()
 			_point_light(null)
-			_show(
-				"Wonder Light: \"God was with David. God is with you.\"",
-				"Well done, Wonder-Walker!"
-			)
+			_show([&"complete"], "Well done, Wonder-Walker!")
 			_advance_ready = false
 			play_finale("Chapter 1 Complete!")
 			chapter_finished.emit()
+			var menu := shell.get_node_or_null("GameMenu")
+			if menu and menu.has_method("show_end_panel"):
+				menu.show_end_panel(JournalContent.CHARM_COURAGE)
 
 func _on_advance() -> void:
 	match beat:
@@ -397,8 +345,7 @@ func _try_collect_near_item() -> void:
 	wonder_item_collected.emit(String(_near_item.name))
 	if audio_director and audio_director.has_method("play_pickup"):
 		audio_director.play_pickup()
-	var flavor: String = ITEM_FLAVOR.get(_near_item.name, "A Wonder Item!")
-	_say(flavor)
+	_say([ITEM_FLAVOR.get(String(_near_item.name), "A Wonder Item!")])
 	# Hide placeholder marker + matching mesh inside wonder_items.glb
 	var mesh := _near_item.get_node_or_null("Marker")
 	if mesh:
@@ -434,8 +381,14 @@ func _explore_prompt(near_item: bool) -> String:
 	var action := "Press E to collect" if near_item else "Find these for David"
 	return "%s   %s   (%d / %d)" % [action, "  ".join(parts), wonder_items_found, WONDER_ITEMS_NEEDED]
 
-func _show(dialogue: String, prompt: String) -> void:
-	_say(dialogue)
+## Page one of Joshua 1:9: the verse, then what "Yahweh" means.
+func verse_page_one() -> Array:
+	return [JournalContent.verse_card(JournalContent.VERSE_JOSHUA_1_9), &"yahweh"]
+
+
+## Shows `parts` (see _say) and the prompt under them.
+func _show(parts: Array, prompt: String) -> void:
+	_say(parts)
 	if camera_director and camera_director.has_method("is_orbiting") and camera_director.is_orbiting():
 		prompt += "   [A / D: look around]"
 	_set_prompt(prompt)
@@ -444,16 +397,13 @@ func _show(dialogue: String, prompt: String) -> void:
 
 ## Short lines no longer sit at the top of a mostly empty 200 px panel. Long
 ## story beats (especially Joshua 1:9) still grow enough to wrap comfortably.
+## The bar itself is sized by the shell (fit_dialogue); the valley's word row sits above it.
 func _fit_dialogue_panel() -> void:
 	if dialogue_panel == null:
 		return
-	var dialogue_height := dialogue_label.get_combined_minimum_size().y
-	var prompt_height := prompt_label.get_combined_minimum_size().y
-	var wanted := dialogue_height + prompt_height + 44.0
-	var viewport_height := get_viewport().get_visible_rect().size.y
-	var max_height := maxf(116.0, minf(240.0, viewport_height * 0.38))
-	var height := clampf(wanted, 116.0, max_height)
-	dialogue_panel.offset_top = dialogue_panel.offset_bottom - height
+	if shell.has_method("fit_dialogue"):
+		shell.fit_dialogue()
+	var height := dialogue_panel.offset_bottom - dialogue_panel.offset_top
 	if _word_row:
 		# A very long line (Joshua 1:9) makes the bar taller than `height`: go by what it needs.
 		var bar_top := dialogue_panel.offset_bottom - maxf(height, dialogue_panel.get_combined_minimum_size().y)
@@ -461,15 +411,16 @@ func _fit_dialogue_panel() -> void:
 		_word_row.offset_bottom = bar_top - 64.0
 		_word_row.offset_top = _word_row.offset_bottom - 96.0
 
-## Shows a line of story text and reads it aloud (if the player has read-aloud on). With "Easy words" on for the
-## child playing, lines that have an easier version (easy_words.gd) are swapped for it. Returns what was shown.
-func _say(text: String) -> String:
-	if GameSettings.easy_words:
-		text = EasyWords.apply(text)
-	dialogue_label.text = text
-	if audio_director and audio_director.has_method("speak_dialogue"):
-		audio_director.speak_dialogue(text)
-	return text
+## Shows `parts` on the dialogue bar and reads them aloud (if the player has read-aloud on).
+## A part is one of the valley's lines by id (assets/dialogue/bethlehem_valley.tres), in its
+## easier version for a child with Easy words on and in its own clip; or text that is not the
+## valley's own (the verse, a nudge), read by its words. Returns what was shown.
+func _say(parts: Array) -> String:
+	var said: Dictionary = LINES.block(parts, GameSettings.easy_words)
+	dialogue_label.text = said["text"]
+	if audio_director and audio_director.has_method("speak_lines"):
+		audio_director.speak_lines(said["spoken"])
+	return said["text"]
 
 ## A short friendly line from Wonder Light while the player is free to roam
 ## (used when they wander toward the edge of the valley). It replaces the
@@ -484,7 +435,7 @@ func show_nudge(text: String) -> void:
 	var prev_dialogue := dialogue_label.text
 	var prev_prompt := _prompt_raw
 	var prev_beat := beat
-	var shown := _say(text)
+	var shown := _say([text])
 	await get_tree().create_timer(3.5).timeout
 	if beat == prev_beat and dialogue_label.text == shown:
 		dialogue_label.text = prev_dialogue
@@ -499,22 +450,15 @@ func _set_prompt(raw: String) -> void:
 	call_deferred("_fit_dialogue_panel")
 
 func _on_device_changed(_mode: String) -> void:
+	# Stood down under the camp, the valley must not reword the camp's prompt with its own.
+	if beat == Beat.CAMP:
+		return
 	prompt_label.text = _localize_prompt(_prompt_raw)
 	call_deferred("_fit_dialogue_panel")
 
+## On a tablet the gold button says GRAB while exploring, and BREATHE in Steady Hands.
 func _localize_prompt(raw: String) -> String:
-	var input_setup := get_node_or_null("../InputSetup")
-	var mode: String = input_setup.mode if input_setup else "keyboard"
-	match mode:
-		"touch":
-			return raw.replace("Hold Space", "Hold BREATHE") \
-				.replace("Press Space", "Tap NEXT").replace("Press E", "Tap GRAB") \
-				.replace("press E", "tap GRAB").replace("[A / D: look around]", "[stick: look around]")
-		"gamepad":
-			return raw.replace("Hold Space", "Hold A") \
-				.replace("Press Space", "Press A").replace("Press E", "Press A") \
-				.replace("press E", "press A").replace("[A / D: look around]", "[stick: look around]")
-	return raw
+	return DevicePrompts.reword(raw, shell.get_node_or_null("InputSetup"), "GRAB", "BREATHE")
 
 ## What the on-screen action button should say right now ("" = nothing to do).
 func get_action_hint() -> String:
@@ -612,23 +556,10 @@ func _face_david(target: Node3D) -> void:
 
 ## The chapter-complete moment: applause, a big confetti pop over the
 ## Wonder-Walker, the light celebrating, and a banner that pops in.
-## The end-of-chapter celebration: a cheer, confetti, Wonder Light's burst and the
-## "Chapter Complete!" banner. The King's Camp uses it too, so both chapters end alike.
+## The end-of-chapter celebration, shared by every story: the shell plays it (game_shell.gd).
 func play_finale(title: String = "Chapter Complete!") -> void:
-	if audio_director and audio_director.has_method("play_cheer"):
-		audio_director.play_cheer()
-	if confetti and confetti.has_method("burst") and player:
-		confetti.burst(player.global_position + Vector3(0.0, 2.8, 0.0), 220, 1.4, 6.5, 0.95)
-	_celebrate_light()
-	if complete_banner:
-		complete_banner.text = title
-		complete_banner.visible = true
-		complete_banner.modulate.a = 0.0
-		complete_banner.pivot_offset = complete_banner.size * 0.5
-		complete_banner.scale = Vector2(0.4, 0.4)
-		var tw := create_tween().set_parallel(true)
-		tw.tween_property(complete_banner, "modulate:a", 1.0, 0.25)
-		tw.tween_property(complete_banner, "scale", Vector2.ONE, 0.55).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	if shell.has_method("play_finale"):
+		shell.play_finale(title)
 
 
 func _celebrate_light() -> void:
@@ -637,26 +568,12 @@ func _celebrate_light() -> void:
 
 
 func _on_charm_ceremony_finished() -> void:
-	_show(
-		"Wonder Light: \"Keep this close. Courage is yours to carry.\"\n(Courage charm sealed on the Virtue Bracelet.)",
-		"Press Space to keep your charm"
-	)
+	_show([&"keep_close", &"charm_sealed"], "Press Space to keep your charm")
 	_advance_ready = true
 
 
-## The speaker's name tag and face over the dialogue bar, shared by both chapters (dialogue_view.gd).
-func _build_dialogue_view() -> void:
-	var ui := get_node_or_null("../UI")
-	if ui == null or dialogue_panel == null:
-		return
-	var view := DialogueView.new()
-	view.name = "DialogueView"
-	view.setup(dialogue_panel, dialogue_label, audio_director)
-	ui.add_child(view)
-
-
 func _build_word_buttons() -> void:
-	var ui := get_node_or_null("../UI")
+	var ui := shell.get_node_or_null("UI")
 	if ui == null:
 		return
 	_word_row = HBoxContainer.new()

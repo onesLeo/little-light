@@ -3,10 +3,10 @@ extends Node3D
 ## The valley's ridge top is only a few steps deep, so the camp stands on its
 ## own stretch of ground that carries on from it: a wide, gently rolling
 ## clearing with trees at its edges, and the whole of chapter 1 below the
-## lookout. It is built the first time the child visits, so chapter 1 never pays
-## for it. visit() is what lets the child walk up there: the soft edge of the
-## valley opens, the light becomes the blue hour, and she arrives at the back of
-## the camp with the fire in front of her.
+## lookout. It is its own scene (scenes/chapters/kings_camp.tscn), loaded by the
+## shell when the story starts and freed when another one does, so chapter 1 never
+## pays for it. visit() builds it and brings the child up there: she arrives at the
+## back of the camp with the fire in front of her.
 ##
 ## Layout, looking the way the tabletop camera looks (toward the valley):
 ## the lookout stone at the far edge, the fire in the middle, the king's round
@@ -14,6 +14,7 @@ extends Node3D
 
 const Paper := preload("res://scripts/camp_paper.gd")
 const ChapterTwo := preload("res://scripts/chapter_two.gd")
+const PlayArea := preload("res://scripts/play_area.gd")
 const Guard := preload("res://scripts/camp_guard.gd")
 const Owl := preload("res://scripts/camp_owl.gd")
 const Fireflies := preload("res://scripts/camp_fireflies.gd")
@@ -85,6 +86,10 @@ void fragment() {
 """
 
 var _clearing := Vector3.ZERO
+## The blue hour the camp starts in (chapter_look.gd); the shell applies it.
+@export var look: Resource = preload("res://assets/looks/camp_blue_hour.tres")
+## Where the walker can go: the ridge behind the waterfall and the wide camp ground beyond it.
+@export var play_area: Resource = PlayArea.new(Vector2(-1.0, 21.5), Vector2(11.5, 27.0))
 var _built: bool = false
 var _grid_x: PackedFloat32Array = PackedFloat32Array()
 var _grid_z: PackedFloat32Array = PackedFloat32Array()
@@ -112,27 +117,12 @@ func tent_count() -> int:
 	return n
 
 
+## Starts the camp, or carries on with it. Only the shell calls this (game_shell.gd
+## switch_to), after every other story has stood down.
 func visit() -> void:
-	# "Play again" from here comes back to the camp, not to the valley.
-	Profiles.current_chapter = Profiles.CHAPTER_CAMP
 	_build()
 	var main := get_parent()
-	var ark := main.get_node_or_null("NoahsArk")
-	if ark and ark.has_method("stand_down"):
-		ark.stand_down()
-	var director := main.get_node_or_null("ChapterDirector")
-	if director and director.has_method("stand_down"):
-		director.stand_down()
-	var menu := main.get_node_or_null("GameMenu")
-	if menu and menu.has_method("hide_end_panel"):
-		menu.hide_end_panel()
-	var bounds := main.get_node_or_null("PlayBounds")
-	if bounds and bounds.has_method("open_camp"):
-		bounds.open_camp()
-	_blue_hour()
-	var soundscape := main.get_node_or_null("Soundscape")
-	if soundscape and soundscape.has_method("set_night"):
-		soundscape.set_night(true)
+	_night_sky()
 	_sounds.start(_at(FIRE))
 	var player := main.get_node_or_null("Player") as CharacterBody3D
 	if player:
@@ -146,7 +136,7 @@ func visit() -> void:
 		line.text = "Jonathan is by the fire. His hair is long, and his tunic is red."
 	if story and story.has_method("begin"):
 		story.begin()
-	var david := main.get_node_or_null("DavidMentor") as Node3D
+	var david := main.get_node_or_null("Valley/DavidMentor") as Node3D
 	if david:
 		david.global_position = _at(Vector2(2.7, 1.0))
 		var jon := get_node_or_null("Jonathan") as Node3D
@@ -163,6 +153,12 @@ func visit() -> void:
 	if _fireflies:
 		_fireflies.light_up()
 	_keep_people_paper()
+
+
+## True while the camp's story is under way; the shell then carries on instead of starting it.
+func in_progress() -> bool:
+	var story := get_node_or_null("ChapterTwo")
+	return story != null and story.phase != ChapterTwo.Phase.IDLE and story.phase != ChapterTwo.Phase.DONE
 
 
 ## Another story is starting: the camp goes quiet and its story puts its cards away.
@@ -432,7 +428,7 @@ func _dist_to_path(p: Vector2) -> float:
 
 ## Trees from the valley itself, so the camp is the same ridge and not a new forest.
 func _build_trees() -> void:
-	var valley := get_parent().get_node_or_null("BethlehemValley")
+	var valley := get_parent().get_node_or_null("Valley/BethlehemValley")
 	if valley == null:
 		return
 	var sources := {0: [], 1: []}
@@ -478,7 +474,7 @@ func _copy_with_outline(src: MeshInstance3D, holder: Node3D, node_name: String, 
 
 func _valley_rocks() -> Array:
 	var rocks := []
-	var valley := get_parent().get_node_or_null("BethlehemValley")
+	var valley := get_parent().get_node_or_null("Valley/BethlehemValley")
 	if valley == null:
 		return rocks
 	for n in valley.find_children("Rock_*", "MeshInstance3D", true, false):
@@ -864,35 +860,9 @@ func _build_grass() -> void:
 
 ## -- The blue hour ------------------------------------------------------------------
 
-## A calm blue hour, bright enough to play in: a clear mid-blue sky, blue light
-## on the ground, the far hills a step toward violet, and a soft moon. The fire
-## and the lantern stay the only warm lights.
-func _blue_hour() -> void:
-	var world := get_parent().get_node_or_null("WorldEnvironment") as WorldEnvironment
-	if world and world.environment:
-		var env := world.environment
-		if env.sky:
-			var sky := env.sky.sky_material as ProceduralSkyMaterial
-			if sky:
-				sky.sky_top_color = Color(0.24, 0.38, 0.7)
-				sky.sky_horizon_color = Color(0.6, 0.66, 0.88)
-				sky.ground_horizon_color = Color(0.52, 0.58, 0.8)
-				sky.ground_bottom_color = Color(0.3, 0.36, 0.56)
-		env.ambient_light_color = Color(0.6, 0.68, 0.96)
-		env.ambient_light_energy = 0.95
-		env.fog_light_color = Color(0.46, 0.54, 0.8)
-		env.fog_density = 0.0045
-	var sun := get_parent().get_node_or_null("Sun") as DirectionalLight3D
-	if sun:
-		sun.light_color = Color(0.66, 0.74, 1.0)
-		sun.light_energy = 0.5
-	var fill := get_parent().get_node_or_null("FillLight") as DirectionalLight3D
-	if fill:
-		fill.light_color = Color(0.5, 0.56, 0.9)
-		fill.light_energy = 0.25
-	var backdrop := get_parent().get_node_or_null("HorizonBackdrop")
-	if backdrop and backdrop.has_method("set_blue_hour"):
-		backdrop.set_blue_hour()
+## The camp's own night sky: a paper crescent moon and a few stars. The blue-hour light
+## itself is the camp's look (assets/looks/camp_blue_hour.tres).
+func _night_sky() -> void:
 	if _moon == null:
 		_moon = MeshInstance3D.new()
 		_moon.name = "Moon"
@@ -1012,7 +982,7 @@ func _keep_people_paper() -> void:
 		_white_tex = ImageTexture.create_from_image(img)
 	var main := get_parent()
 	_paint_people(get_node_or_null("Jonathan"))
-	_paint_people(main.get_node_or_null("DavidMentor"))
+	_paint_people(main.get_node_or_null("Valley/DavidMentor"))
 	_paint_people(main.get_node_or_null("Player"))
 	for child in get_children():
 		if str(child.name).begins_with("Guard"):

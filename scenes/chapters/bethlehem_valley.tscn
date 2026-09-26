@@ -1,0 +1,179 @@
+[gd_scene load_steps=31 format=3]
+
+[ext_resource type="Script" path="res://scripts/valley.gd" id="0_valley"]
+[ext_resource type="PackedScene" path="res://assets/bethlehem_valley_v7.glb" id="2_valley"]
+[ext_resource type="Script" path="res://scripts/steady_hands_minigame.gd" id="4_sh"]
+[ext_resource type="Script" path="res://scripts/chapter_director.gd" id="5_dir"]
+[ext_resource type="PackedScene" path="res://assets/david_mentor_v13.glb" id="6_david"]
+[ext_resource type="PackedScene" path="res://assets/wonder_items_v7.glb" id="7_items"]
+[ext_resource type="Script" path="res://scripts/mesh_collision_baker.gd" id="9_bake"]
+[ext_resource type="Script" path="res://scripts/wonder_item_glow.gd" id="12_glow"]
+[ext_resource type="PackedScene" path="res://assets/bethlehem_stream_fish_alive_v7.glb" id="14_stream"]
+[ext_resource type="Script" path="res://scripts/play_all_animation_loops.gd" id="15_loops"]
+[ext_resource type="Script" path="res://scripts/hide_static_valley_water.gd" id="16_hidewater"]
+[ext_resource type="Script" path="res://scripts/stream_alive_clean.gd" id="17_streamclean"]
+[ext_resource type="Script" path="res://scripts/stream_placement.gd" id="19_place"]
+[ext_resource type="Script" path="res://scripts/stream_rocks.gd" id="30_streamrocks"]
+[ext_resource type="Script" path="res://scripts/foliage_colour.gd" id="34_foliage"]
+[ext_resource type="Script" path="res://scripts/companion_sheep_life.gd" id="37_sheep"]
+[ext_resource type="Script" path="res://scripts/stream_fish_swim.gd" id="20_fish"]
+[ext_resource type="Script" path="res://scripts/wonder_item_scatter.gd" id="21_scatter"]
+[ext_resource type="Script" path="res://scripts/wonder_item_hints.gd" id="22_hints"]
+[ext_resource type="Script" path="res://scripts/stream_water_fx.gd" id="26_water"]
+[ext_resource type="Script" path="res://scripts/horizon_backdrop.gd" id="27_horizon"]
+[ext_resource type="Script" path="res://scripts/meadow_dressing.gd" id="28_meadow"]
+[ext_resource type="Script" path="res://scripts/lamb_life.gd" id="30_lamb"]
+[ext_resource type="Script" path="res://scripts/butterflies.gd" id="31_fly"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
+size = Vector3(80, 1, 80)
+
+[sub_resource type="BoxMesh" id="BoxMesh_floor"]
+size = Vector3(80, 1, 80)
+
+[sub_resource type="StandardMaterial3D" id="Mat_floor"]
+albedo_color = Color(0.55, 0.68, 0.48, 1)
+roughness = 0.95
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_item"]
+radius = 1.6
+
+[sub_resource type="SphereMesh" id="SphereMesh_marker"]
+radius = 0.25
+height = 0.5
+
+[sub_resource type="StandardMaterial3D" id="Mat_gold"]
+albedo_color = Color(0.95, 0.78, 0.25, 1)
+emission_enabled = true
+emission = Color(0.9, 0.7, 0.2, 1)
+emission_energy_multiplier = 0.6
+
+[node name="Valley" type="Node3D"]
+script = ExtResource("0_valley")
+
+[node name="HorizonBackdrop" type="Node3D" parent="."]
+script = ExtResource("27_horizon")
+
+[node name="MeadowDressing" type="Node3D" parent="."]
+script = ExtResource("28_meadow")
+
+[node name="SafetyFloor" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2.5, 0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SafetyFloor"]
+shape = SubResource("BoxShape3D_floor")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="SafetyFloor"]
+mesh = SubResource("BoxMesh_floor")
+surface_material_override/0 = SubResource("Mat_floor")
+
+[node name="BethlehemValley" parent="." instance=ExtResource("2_valley")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+script = ExtResource("9_bake")
+
+[node name="HideStaticValleyWater" type="Node3D" parent="BethlehemValley"]
+script = ExtResource("16_hidewater")
+
+[node name="StreamFishAlive" type="Node3D" parent="."]
+transform = Transform3D(1.1, 0, 0, 0, 1.1, 0, 0, 0, 1.1, -6.2, 0.28, -3.8)
+script = ExtResource("9_bake")
+
+[node name="Art" parent="StreamFishAlive" instance=ExtResource("14_stream")]
+script = ExtResource("15_loops")
+
+[node name="StreamAliveClean" type="Node3D" parent="StreamFishAlive"]
+script = ExtResource("17_streamclean")
+
+[node name="StreamPlacement" type="Node3D" parent="StreamFishAlive"]
+script = ExtResource("19_place")
+
+[node name="StreamRocks" type="Node3D" parent="StreamFishAlive"]
+script = ExtResource("30_streamrocks")
+
+[node name="WaterFx" type="Node3D" parent="StreamFishAlive"]
+script = ExtResource("26_water")
+
+[node name="StreamFish" type="Node3D" parent="."]
+script = ExtResource("20_fish")
+
+[node name="DavidMentor" parent="." instance=ExtResource("6_david")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -3)
+script = ExtResource("9_bake")
+
+[node name="CompanionSheepLife" type="Node" parent="DavidMentor"]
+script = ExtResource("37_sheep")
+
+[node name="WonderItems" type="Node3D" parent="."]
+script = ExtResource("12_glow")
+
+[node name="WonderItemsVisual" parent="WonderItems" instance=ExtResource("7_items")]
+transform = Transform3D(1.35, 0, 0, 0, 1.35, 0, 0, 0, 1.35, 0, 0, 0)
+
+[node name="Scatter" type="Node" parent="WonderItems"]
+script = ExtResource("21_scatter")
+
+[node name="LambLife" type="Node" parent="WonderItems"]
+script = ExtResource("30_lamb")
+
+[node name="Hints" type="Node3D" parent="WonderItems"]
+script = ExtResource("22_hints")
+
+[node name="WonderItem_Stone" type="Area3D" parent="WonderItems"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+collision_layer = 4
+collision_mask = 2
+monitoring = true
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WonderItems/WonderItem_Stone"]
+shape = SubResource("SphereShape3D_item")
+
+[node name="Marker" type="MeshInstance3D" parent="WonderItems/WonderItem_Stone"]
+visible = false
+mesh = SubResource("SphereMesh_marker")
+surface_material_override/0 = SubResource("Mat_gold")
+
+[node name="WonderItem_Staff" type="Area3D" parent="WonderItems"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, 0.5, 0)
+collision_layer = 4
+collision_mask = 2
+monitoring = true
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WonderItems/WonderItem_Staff"]
+shape = SubResource("SphereShape3D_item")
+
+[node name="Marker" type="MeshInstance3D" parent="WonderItems/WonderItem_Staff"]
+visible = false
+mesh = SubResource("SphereMesh_marker")
+surface_material_override/0 = SubResource("Mat_gold")
+
+[node name="WonderItem_Lamb" type="Area3D" parent="WonderItems"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.2, 0.5, 0)
+collision_layer = 4
+collision_mask = 2
+monitoring = true
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WonderItems/WonderItem_Lamb"]
+shape = SubResource("SphereShape3D_item")
+
+[node name="Marker" type="MeshInstance3D" parent="WonderItems/WonderItem_Lamb"]
+visible = false
+mesh = SubResource("SphereMesh_marker")
+surface_material_override/0 = SubResource("Mat_gold")
+
+[node name="SteadyHands" type="Node" parent="."]
+unique_name_in_owner = true
+script = ExtResource("4_sh")
+
+[node name="Butterflies" type="Node3D" parent="."]
+script = ExtResource("31_fly")
+
+[node name="ChapterDirector" type="Node" parent="."]
+script = ExtResource("5_dir")
+
+[node name="FoliageColour" type="Node" parent="."]
+script = ExtResource("34_foliage")

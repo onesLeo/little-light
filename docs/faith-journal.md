@@ -9,7 +9,7 @@ Backlog item 3.5. Each child on a tablet has their own name, picture and journal
    and a dashed **New** button. A new child types a name (up to 12 letters), picks one of six paper pictures
    (lamb, star, sun, cloud, heart, olive branch) and taps **Let's go**. Up to **4 children** fit on one tablet.
    A child also says **How old they are**: "8 or younger" turns on Easy words, twelve lines of the story shown
-   and read aloud in simpler wording (`scripts/easy_words.gd`); "9 or older" keeps the story exactly as
+   and read aloud in simpler wording (each line's `easy_text` in `assets/dialogue/`); "9 or older" keeps the story exactly as
    written. It can be switched later in the pause menu, and is kept with the child.
 2. **The Faith Journey map** comes next, before any story (see below). The child taps where their story
    starts; a bouncing **Start here** tag shows them where. *Play again* keeps the same child and replays
@@ -44,7 +44,12 @@ Each story is a numbered paper label under its place on the map, so the tents an
 
 - **1 The valley**, on the river and the sheep. Always open.
 - **2 The King's Camp**, on the tents and the fire. Opens once the valley is finished.
-- **3 Coming soon**, on the pale hill. A tap says "This part of the path is still ahead."
+- **3 The Beginning**, at Jesse's house in Bethlehem, inked onto the plain below the camp
+  (`map_house_sketch.gd`); its trail curls back like a turned page. Opens once the camp is finished.
+- **4 Noah's Ark**, on its hill left of the camp (`map_ark_sketch.gd`). Opens once The Beginning is
+  finished. A child whose save had the ark open before The Beginning was added (they had finished the
+  camp) keeps it open (`Profiles.is_unlocked`, `opened_early`), and a finished chapter always stays open.
+- **5 Coming soon**, on the pale hill. A tap says "This part of the path is still ahead."
 
 Markers, so she can see where she is and what comes after:
 

@@ -1,6 +1,6 @@
 extends PanelContainer
 ## A hunt list in pictures a child who cannot read yet can follow: "Gifts for David" in
-## chapter 2, "Tools for Noah" in chapter 4. Each thing has its own small drawing, faded
+## chapter 2, "Getting ready for Samuel" in chapter 3, "Tools for Noah" in chapter 4. Each thing has its own small drawing, faded
 ## with a dashed circle until it is found, then in full colour with a green tick that
 ## pops in. The count sits in the title.
 ## Use through a preload constant (no class_name):
@@ -87,6 +87,27 @@ class GiftRow extends Control:
 				draw_rect(Rect2(c + Vector2(-22.0, 6.0), Vector2(44.0, 8.0)), Color(0.86, 0.68, 0.28, fade))
 				draw_line(c + Vector2(-22.0, -2.0), c + Vector2(22.0, -2.0), Color(0.2, 0.3, 0.5, fade), 2.0)
 				draw_rect(robe, ink, false, 2.5)
+			"Cushion":
+				var cushion := PackedVector2Array([c + Vector2(-22.0, -6.0), c + Vector2(-14.0, -14.0), c + Vector2(14.0, -14.0),
+						c + Vector2(22.0, -6.0), c + Vector2(20.0, 10.0), c + Vector2(-20.0, 10.0)])
+				draw_colored_polygon(cushion, Color(0.62, 0.3, 0.3, fade))
+				cushion.append(cushion[0])
+				draw_polyline(cushion, ink, 2.5, true)
+				draw_line(c + Vector2(-16.0, -2.0), c + Vector2(16.0, -2.0), Color(0.86, 0.68, 0.28, fade), 3.0, true)
+			"Cup":
+				var cup := PackedVector2Array([c + Vector2(-13.0, -14.0), c + Vector2(13.0, -14.0), c + Vector2(9.0, 14.0), c + Vector2(-9.0, 14.0)])
+				draw_colored_polygon(cup, Color(0.7, 0.46, 0.26, fade))
+				cup.append(cup[0])
+				draw_polyline(cup, ink, 2.5, true)
+				draw_line(c + Vector2(-11.0, -9.0), c + Vector2(11.0, -9.0), Color(0.55, 0.72, 0.9, fade), 3.0, true)
+			"Lamp":
+				var dish := PackedVector2Array([c + Vector2(-22.0, 2.0), c + Vector2(20.0, 2.0), c + Vector2(24.0, -3.0),
+						c + Vector2(12.0, 14.0), c + Vector2(-14.0, 14.0)])
+				draw_colored_polygon(dish, Color(0.74, 0.5, 0.26, fade))
+				dish.append(dish[0])
+				draw_polyline(dish, ink, 2.5, true)
+				var flame := PackedVector2Array([c + Vector2(20.0, -20.0), c + Vector2(25.0, -8.0), c + Vector2(20.0, -2.0), c + Vector2(15.0, -8.0)])
+				draw_colored_polygon(flame, Color(0.98, 0.76, 0.26, fade))
 			"Bow":
 				var hub := c + Vector2(-14.0, 0.0)
 				var top := hub + Vector2(cos(-1.1), sin(-1.1)) * 24.0

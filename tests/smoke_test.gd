@@ -12,7 +12,6 @@ const Profiles := preload("res://scripts/profiles.gd")
 const JournalContent := preload("res://scripts/journal_content.gd")
 const GameSettings := preload("res://scripts/game_settings.gd")
 const CharmArt := preload("res://scripts/charm_art.gd")
-const EasyWords := preload("res://scripts/easy_words.gd")
 const GroundSurface := preload("res://scripts/ground_surface.gd")
 const SoundLibraryFile := preload("res://scripts/sound_library.gd")
 const TEST_PROFILES := "user://smoke_test_profiles.cfg"
@@ -71,13 +70,13 @@ func _initialize() -> void:
 	root.add_child(main)
 	await process_frame  # let _ready() propagate through the tree first
 
-	var director: Node = main.get_node("ChapterDirector")
+	var director: Node = main.get_node("Valley/ChapterDirector")
 	var wonder_light: Node = main.get_node("WonderLight")
-	var steady_hands: Node = main.get_node("SteadyHands")
+	var steady_hands: Node = main.get_node("Valley/SteadyHands")
 	var breath: Control = main.get_node("UI/BreathIndicator")
 	var closeup_cam: Camera3D = main.get_node("CloseUpCamera")
 	var tabletop_cam: Camera3D = main.get_node("TabletopCamera")
-	var david: Node3D = main.get_node("DavidMentor")
+	var david: Node3D = main.get_node("Valley/DavidMentor")
 	var input_setup: Node = main.get_node("InputSetup")
 	var touch_controls: CanvasLayer = main.get_node("TouchControls")
 	var game_menu: CanvasLayer = main.get_node("GameMenu")
@@ -101,6 +100,20 @@ func _initialize() -> void:
 	input_setup.set_mode("keyboard")
 	_check(not touch_controls.visible, "touch controls hide in keyboard mode")
 	_check(director._localize_prompt("Press Space to continue") == "Press Space to continue", "keyboard prompts are unchanged")
+	# Every story words its prompts through device_prompts.gd; each keeps its own name for the gold button.
+	var prompts: GDScript = load("res://scripts/device_prompts.gd")
+	var gold: String = prompts.GOLD_BUTTON
+	_check(prompts.for_mode("Press E to collect, or press E again", "touch", "GRAB") == "Tap GRAB to collect, or tap GRAB again"
+			and prompts.for_mode("[A / D: look around]", "touch", "GRAB") == "[stick: look around]",
+			"the valley names the gold button GRAB on a tablet")
+	_check(prompts.for_mode("Hold Space / Enter or the button, then release to tie", "touch", gold, "LOOP") == "Hold LOOP, then release to tie"
+			and prompts.for_mode("Hold Space / Enter or the button, then release to tie", "gamepad", gold, "LOOP") == "Hold A, then release to tie"
+			and prompts.for_mode("Press Space  •  A / D or arrows: look around", "touch", gold, "LOOP") == "Tap NEXT  •  stick: look around",
+			"the camp's cord says Hold LOOP on a tablet and Hold A on a gamepad")
+	_check(prompts.for_mode("Press E for the next peg", "touch") == "Tap the gold button for the next peg"
+			and prompts.for_mode("Hold E to pull the rope", "touch") == "Hold the gold button to pull the rope"
+			and prompts.for_mode("Hold E to pull the rope", "gamepad") == "Hold A to pull the rope",
+			"the ark calls it the gold button, since its label changes from step to step")
 
 	print("-- pause menu --")
 	game_menu.set_paused(true)
@@ -123,12 +136,12 @@ func _initialize() -> void:
 	var after: Dictionary = bounds._edge_info(Vector2(player.global_position.x, player.global_position.z) - bounds.center)
 	_check(float(after["sd"]) <= 0.01, "a player far outside is brought back to the edge")
 	_check(director.dialogue_label.text.contains("valley"), "Wonder Light gives a friendly nudge at the edge")
-	var lamb_life: Node = main.get_node("WonderItems/LambLife")
+	var lamb_life: Node = main.get_node("Valley/WonderItems/LambLife")
 	_check(lamb_life._ready_to_animate, "the lamb is set up after the items are scattered")
-	_check(main.get_node("StreamFish")._fish.size() == 3, "three shy fish are swimming")
-	_check(main.get_node("Butterflies")._flies.size() == 8, "eight butterflies are fluttering")
+	_check(main.get_node("Valley/StreamFish")._fish.size() == 3, "three shy fish are swimming")
+	_check(main.get_node("Valley/Butterflies")._flies.size() == 8, "eight butterflies are fluttering")
 	var walls := 0
-	for bank in main.get_node("StreamFishAlive/Art").find_children("Bank_*", "MeshInstance3D", true, false):
+	for bank in main.get_node("Valley/StreamFishAlive/Art").find_children("Bank_*", "MeshInstance3D", true, false):
 		if bank.get_node_or_null("BakedCollision") != null:
 			walls += 1
 	_check(walls == 0, "hidden stream banks have no collision (no invisible walls)")
@@ -141,7 +154,7 @@ func _initialize() -> void:
 	var steepest: float = 0.0
 	var worst_gap: float = 0.0
 	var lost: Array = []
-	for tree in main.get_node("BethlehemValley").find_children("*", "MeshInstance3D", true, false):
+	for tree in main.get_node("Valley/BethlehemValley").find_children("*", "MeshInstance3D", true, false):
 		var tree_name: String = String(tree.name)
 		if tree_name.ends_with("_Outline") or not (tree_name.begins_with("Cypress_") or tree_name.begins_with("Olive_")):
 			continue
@@ -158,7 +171,7 @@ func _initialize() -> void:
 	_check(worst_gap <= 0.35, "no tree floats or is buried, even after the stream nudges it (worst %.2f m)" % worst_gap)
 	var plants: int = 0
 	var white_or_split: Array = []
-	for plant in main.get_node("BethlehemValley").find_children("*", "MeshInstance3D", true, false):
+	for plant in main.get_node("Valley/BethlehemValley").find_children("*", "MeshInstance3D", true, false):
 		var plant_name: String = String(plant.name)
 		if plant_name.ends_with("_Outline") or not (plant_name.begins_with("Cypress_") or plant_name.begins_with("Olive_") or plant_name.begins_with("Shrub_")):
 			continue
@@ -170,7 +183,7 @@ func _initialize() -> void:
 	_check(plants == 32 and white_or_split.is_empty(), "all %d trees and bushes are one painted surface (two draws with the outline) %s" % [plants, white_or_split])
 	var ledge_rocks: int = 0
 	var ledge_problems: Array = []
-	for outcrop in main.get_node("BethlehemValley").find_children("LedgeRock_*", "MeshInstance3D", true, false):
+	for outcrop in main.get_node("Valley/BethlehemValley").find_children("LedgeRock_*", "MeshInstance3D", true, false):
 		var outcrop_name: String = String(outcrop.name)
 		if outcrop_name.ends_with("_Outline"):
 			continue
@@ -182,7 +195,7 @@ func _initialize() -> void:
 	var brook_rocks: int = 0
 	var not_stone: Array = []
 	var no_outline: Array = []
-	var brook_art: Node = main.get_node("StreamFishAlive/Art")
+	var brook_art: Node = main.get_node("Valley/StreamFishAlive/Art")
 	for rock in brook_art.find_children("Rock_*", "MeshInstance3D", true, false):
 		var rock_name: String = String(rock.name)
 		if rock_name.ends_with("_Outline"):
@@ -392,13 +405,13 @@ func _initialize() -> void:
 	await process_frame
 	var panel_height: float = director.dialogue_panel.offset_bottom - director.dialogue_panel.offset_top
 	_check(panel_height <= 150.0, "a short line uses a compact dialogue panel instead of hiding the valley (%.0f px)" % panel_height)
-	var stone: Area3D = main.get_node("WonderItems/WonderItem_Stone")
+	var stone: Area3D = main.get_node("Valley/WonderItems/WonderItem_Stone")
 	director._near_item = stone
 	director._try_collect_near_item()
 	_check(director.wonder_items_found == 1, "collecting an item increments the counter")
 	_check("Stone ✓" in director.prompt_label.text, "the hunt checks off the thing that was found")
 	var foreground_fade: Node = main.get_node("ForegroundFade")
-	var olive: GeometryInstance3D = main.get_node("BethlehemValley").find_children("Olive*", "MeshInstance3D", true, false)[0]
+	var olive: GeometryInstance3D = main.get_node("Valley/BethlehemValley").find_children("Olive*", "MeshInstance3D", true, false)[0]
 	_check(foreground_fade._is_foreground_foliage(olive), "foreground foliage can soften instead of hiding the player")
 
 	print("-- reflect beat returns to the wide tabletop shot --")
@@ -424,48 +437,76 @@ func _initialize() -> void:
 			director.Beat.STEADY_DONE, director.Beat.RESOLUTION, director.Beat.REFLECT, director.Beat.VERSE_REWARD]:
 		director._enter_beat(b)
 		spoken_texts.append(director.dialogue_label.text)
-	spoken_texts.append(director.VERSE_PAGE_TWO)
+	spoken_texts.append(director.LINES.block(director.VERSE_PAGE_TWO, false)["text"])
 	spoken_texts.append("Wonder Light: \"Breathe with David...\"")
 	spoken_texts.append("Wonder Light: \"Keep this close. Courage is yours to carry.\"")
 	spoken_texts.append("Wonder Light: \"A Courage charm — for staying with David, and breathing God's promise with him.\"")
 	spoken_texts.append("Wonder Light: \"God was with David. God is with you.\"")
-	for flavor in director.ITEM_FLAVOR.values():
-		spoken_texts.append(flavor)
+	spoken_texts.append(director.LINES.block(director.ITEM_FLAVOR.values(), false)["text"])
 	for nudge in main.get_node("PlayBounds").NUDGE_LINES:
 		spoken_texts.append(nudge)
+	# The valley's own lines carry their clips (checked with the lines below); anything else on the
+	# bar is read by its words, so it needs an entry in the library.
+	var valley_words: Dictionary = {}
+	for l in director.LINES.lines:
+		valley_words[l.text] = true
+		valley_words[l.easy_text] = true
 	for block in spoken_texts:
 		for line in audio._spoken_lines(block):
-			if vo_lib.clip_for(line["text"]) == null:
+			if vo_lib.clip_for(line["text"]) == null and not valley_words.has(line["text"]):
 				unrecorded.append(line["text"])
-	_check(unrecorded.is_empty(), "no spoken line in the game is missing from the library %s" % [unrecorded])
+	_check(unrecorded.is_empty(), "no spoken line in the game is missing its recording %s" % [unrecorded])
 	var map_script := load("res://scripts/faith_journey_screen.gd")
 	var map_unrecorded: Array = []
 	for block in ["Hello!\nYour journey starts in the valley.", "Hello!\nThe King's Camp is next.", "Hello!\nNoah's Ark is next.", "Hello!\nTap a story to begin.",
+			"Hello!\nThe Beginning is next.", "Finish Chapter 2, The King's Camp, first. Then The Beginning will open for you.",
+			"Finish Chapter 3, The Beginning, first. Then Noah's Ark will open for you.",
 			"One story at a time.", "Finish Chapter 1, The valley, first. Then The King's Camp will open for you.",
-			"Finish Chapter 2, The King's Camp, first. Then Noah's Ark will open for you.",
-			"This part of the path is still ahead. New stories will be waiting here.", "Look. David's valley is still down there."]:
+			"This part of the path is still ahead. New stories will be waiting here."]:
 		for line in audio._spoken_lines(map_script._wonder_light(block)):
 			if vo_lib.clip_for(line["text"]) == null:
 				map_unrecorded.append(line["text"])
-	_check(map_unrecorded.is_empty(), "the Faith Journey map and the camp lookout speak in the recorded voice too %s" % [map_unrecorded])
+	_check(map_unrecorded.is_empty(), "the Faith Journey map speaks in the recorded voice too %s" % [map_unrecorded])
+	# A story's own lines are data (assets/dialogue/*.tres, dialogue_line.gd), each with its clips.
+	for story in [["res://assets/dialogue/bethlehem_valley.tres", "res://scripts/chapter_director.gd"],
+			["res://assets/dialogue/kings_camp.tres", "res://scripts/chapter_two.gd"],
+			["res://assets/dialogue/noahs_ark.tres", "res://scripts/chapter_four.gd"],
+			["res://assets/dialogue/jesses_house.tres", "res://scripts/chapter_three.gd"]]:
+		var book: Resource = load(story[0])
+		var seen: Dictionary = {}
+		var faults: Array = []
+		for l in book.lines:
+			if String(l.id).is_empty() or seen.has(l.id):
+				faults.append("id '%s' empty or used twice" % l.id)
+			seen[l.id] = true
+			if book.recorded and l.is_spoken() and l.clip == null:
+				faults.append("%s has no clip" % l.id)
+			if book.recorded and l.has_easy() and (l.easy_clip == null or not l.is_spoken()):
+				faults.append("%s has an easier version with no clip" % l.id)
+		var asked := RegEx.create_from_string("&\"(\\w+)\"")
+		for m in asked.search_all(FileAccess.get_file_as_string(story[1])):
+			if not seen.has(StringName(m.get_string(1))):
+				faults.append("%s asks for '%s', which is not in its lines" % [story[1].get_file(), m.get_string(1)])
+		_check(faults.is_empty(), "%s: every line has its clip, and every line the story asks for is there %s" % [story[0].get_file(), faults])
 
 	print("-- voice-over: playback, chaining and fast skipping --")
 	var settings := load("res://scripts/game_settings.gd")
 	settings.read_aloud = true
 	var vo_player: AudioStreamPlayer = audio.get_node("Vo")
 	audio.stop_speech()
-	audio.speak_dialogue("David: \"Oh! Hello there. Are you lost too?\"\nDavid: \"Everyone's scared of the big giant. But God gave me these sheep to keep safe.\"")
-	_check(vo_player.playing and vo_player.stream == vo_lib.clip_for("Oh! Hello there. Are you lost too?"), "the first line of a block plays its recorded clip")
+	var valley_lines: Resource = director.LINES
+	audio.speak_lines(valley_lines.block([&"david_hello", &"david_giant"], false)["spoken"])
+	_check(vo_player.playing and vo_player.stream == valley_lines.line(&"david_hello").clip, "the first line of a block plays its recorded clip")
 	_check(audio._clip_queue.size() == 1, "the second line waits in the queue")
 	vo_player.finished.emit()
-	audio.speak_dialogue("Wonder Light: \"Breathe with David...\"")
+	audio.speak_lines(director.LINES.block([&"breathe"], false)["spoken"])
 	await create_timer(0.5).timeout
-	_check(vo_player.stream == vo_lib.clip_for("Breathe with David...") and audio._clip_queue.is_empty(),
+	_check(vo_player.stream == valley_lines.line(&"breathe").clip and audio._clip_queue.is_empty(),
 			"skipping ahead cuts the old line and a stale queued line never plays")
-	audio.speak_dialogue("Wonder Light: \"David needs his stone, his staff, and his little lamb. Find them for him!\"\nDavid: \"Thanks. Will you stay close while I get ready?\"")
+	audio.speak_lines(valley_lines.block([&"explore", &"david_stay_close"], false)["spoken"])
 	vo_player.finished.emit()
 	await create_timer(0.5).timeout
-	_check(vo_player.stream == vo_lib.clip_for("Thanks. Will you stay close while I get ready?"), "clips of one block play one after another")
+	_check(vo_player.stream == valley_lines.line(&"david_stay_close").clip, "clips of one block play one after another")
 	audio.stop_speech()
 	_check(not vo_player.playing and not audio._speaking_clips, "stop_speech silences the clip")
 	audio.speak_dialogue("Wonder Light: \"A line nobody has recorded yet.\"")
@@ -504,7 +545,7 @@ func _initialize() -> void:
 	_check(soundscape._birds.any(func(b): return b.playing), "a bird calls")
 	for b in soundscape._birds:
 		b.stop()
-	audio.speak_dialogue("Wonder Light: \"Breathe with David...\"")
+	audio.speak_lines(director.LINES.block([&"breathe"], false)["spoken"])
 	soundscape._call_bird(0.0)
 	_check(not soundscape._birds.any(func(b): return b.playing), "birds stay quiet while somebody is speaking")
 	audio.stop_speech()
@@ -537,7 +578,7 @@ func _initialize() -> void:
 		p.stop()
 	audio.play_step("water")
 	_check(audio._step_players.any(func(p): return p.playing and p.stream.resource_path.contains("step_water_")), "a step in the stream makes the splashy sound")
-	var lamb_node: Node = main.get_node("WonderItems/LambLife")
+	var lamb_node: Node = main.get_node("Valley/WonderItems/LambLife")
 	_check(lamb_node._bleat != null, "the lamb has a voice")
 	lamb_node._excite = 0.0
 	lamb_node._bleat_wait = 0.0
@@ -548,13 +589,13 @@ func _initialize() -> void:
 	_check(lamb_node._bleat.playing and lamb_node._bleat_wait > 5.0, "the lamb says baa when it notices the Wonder-Walker, then waits")
 	lamb_node._bleat.stop()
 	lamb_node._bleat_wait = 0.0
-	audio.speak_dialogue("Wonder Light: \"Breathe with David...\"")
+	audio.speak_lines(director.LINES.block([&"breathe"], false)["spoken"])
 	lamb_node._update_bleat(0.1, 1.0)
 	_check(not lamb_node._bleat.playing, "the lamb does not bleat over a voice")
 	audio.stop_speech()
 	lamb_node._update_bleat(0.1, 1.0)
 	_check(lamb_node._bleat.playing, "and bleats as soon as the voice has finished")
-	var flies: Node = main.get_node("Butterflies")
+	var flies: Node = main.get_node("Valley/Butterflies")
 	flies._flutter_cool = 0.0
 	walker.global_position = (flies._flies[0]["root"] as Node3D).global_position
 	await process_frame
@@ -590,7 +631,7 @@ func _initialize() -> void:
 	print("-- sound: the music ducks under speech and while paused --")
 	walker.global_position = Vector3(0.0, 1.0, 4.0)
 	settings.read_aloud = true
-	audio.speak_dialogue("Wonder Light: \"Being brave doesn't mean you're not scared. It means you go with God anyway.\"")
+	audio.speak_lines(director.LINES.block([&"reflect"], false)["spoken"])
 	await create_timer(0.8).timeout
 	var music_idx := AudioServer.get_bus_index("Music")
 	_check(audio.is_speaking() and sound_bus.duck > 0.5, "the music ducks while somebody is speaking")
@@ -608,7 +649,7 @@ func _initialize() -> void:
 	print("-- who is talking: the name tag over the dialogue bar --")
 	var talk_view: Control = main.get_node("UI/DialogueView")
 	audio.stop_speech()
-	director._say("Wonder Light: \"God gave David a job: keep the sheep safe. That's why he will go.\"\nDavid: \"Thanks. Will you stay close while I get ready?\"")
+	director._say([&"david_job", &"david_stay_close"])
 	await process_frame
 	await process_frame
 	_check(talk_view.speaker == "Wonder Light" and talk_view._current == 0 and talk_view._tag.visible
@@ -618,13 +659,13 @@ func _initialize() -> void:
 	await create_timer(audio.CLIP_GAP + 0.2).timeout
 	_check(talk_view.speaker == "David" and talk_view._current == 1, "when David's line starts, the tag turns to David")
 	audio.stop_speech()
-	director._say("Jonathan: \"I am Jonathan. David was brave today, because God was with him.\"")
+	director._say(["Jonathan: \"I am Jonathan. David was brave today, because God was with him.\""])
 	await process_frame
 	_check(talk_view.speaker == "Jonathan", "Jonathan has his own tag")
-	director._say(director.VERSE_PAGE_ONE)
+	director._say(director.verse_page_one())
 	await process_frame
 	_check(talk_view.speaker == "Bible", "a verse shows the Bible tag")
-	director._say("(Virtue Bracelet receives the charm.)")
+	director._say([&"charm_arrives"])
 	await process_frame
 	_check(not talk_view._tag.visible, "a line with nobody speaking has no tag")
 	audio.stop_speech()
@@ -671,16 +712,16 @@ func _initialize() -> void:
 	director._enter_beat(director.Beat.REFLECT)
 	_check("for you too" in director.dialogue_label.text and "Stay close" in director.dialogue_label.text and "remember the words" in director.dialogue_label.text,
 			"the child is given a purpose: stay close and remember the words")
-	_check("sheep to keep safe" in FileAccess.get_file_as_string("res://scripts/chapter_director.gd"), "David names his job: keep the sheep safe")
-	_check("small thing" in director.ITEM_FLAVOR["WonderItem_Stone"], "the stone flavour names God, not just a sling")
+	_check("sheep to keep safe" in director.LINES.line(&"david_giant").text, "David names his job: keep the sheep safe")
+	_check("small thing" in director.LINES.line(director.ITEM_FLAVOR["WonderItem_Stone"]).text, "the stone flavour names God, not just a sling")
 	director._enter_beat(director.Beat.ARRIVE)
 	_check("David's valley" in director.dialogue_label.text and "God looks after him" in director.dialogue_label.text,
 			"God is named through David from the first beat")
 	director._enter_beat(director.Beat.VERSE_REWARD)
 	_check("Yahweh is God's name" in director.dialogue_label.text, "Yahweh is explained so a child (and a parent) can hear it")
-	_check("lion and the bear" in FileAccess.get_file_as_string("res://scripts/chapter_director.gd"),
+	_check("lion and the bear" in director.LINES.line(&"david_lion_bear").text,
 			"David speaks 1 Samuel 17:37 in his own words")
-	_check("God was with David" in FileAccess.get_file_as_string("res://scripts/chapter_director.gd"),
+	_check("God was with David" in director.LINES.line(&"complete").text,
 			"the ending names God, not a secular slogan")
 	director.beat = director.Beat.STEADY_DONE
 	director._advance_ready = true
@@ -733,7 +774,7 @@ func _initialize() -> void:
 			and journey._ring.visible, "a bouncing Start here tag and rings mark the valley")
 	journey._on_stop("camp")
 	_check(journey._notice.visible and "Chapter 1" in journey._notice_body.text and journey._notice_go.visible
-			and journey._notice_go.text == "Play Chapter 1" and main.get_node("KingsCamp").tent_count() == 0,
+			and journey._notice_go.text == "Play Chapter 1" and main.get_node_or_null("KingsCamp") == null,
 			"tapping the King's Camp first says to finish Chapter 1, and offers to play it")
 	var pause_key := InputEventAction.new()
 	pause_key.action = "pause"
@@ -754,14 +795,37 @@ func _initialize() -> void:
 	_check(Profiles.has_finished("p1", Profiles.CHAPTER_VALLEY) and Profiles.is_unlocked("p1", Profiles.CHAPTER_CAMP),
 			"a save from before chapters were told apart still has the valley finished")
 	DirAccess.remove_absolute("user://smoke-legacy-profiles.cfg")
+	# Saves from before The Beginning was put ahead of the ark: nobody loses a chapter they had open.
+	var pre_beginning := ConfigFile.new()
+	pre_beginning.set_value("app", "order", ["p1", "p2"])
+	pre_beginning.set_value("profile_p1", "name", "Ahead")
+	pre_beginning.set_value("profile_p1", "finished", [Profiles.CHAPTER_VALLEY, Profiles.CHAPTER_CAMP])
+	pre_beginning.set_value("profile_p2", "name", "Behind")
+	pre_beginning.set_value("profile_p2", "finished", [Profiles.CHAPTER_VALLEY])
+	pre_beginning.save("user://smoke-pre-beginning.cfg")
+	Profiles.use_file("user://smoke-pre-beginning.cfg")
+	_check(Profiles.is_unlocked("p1", Profiles.CHAPTER_ARK) and Profiles.is_unlocked("p1", Profiles.CHAPTER_BEGINNING)
+			and Profiles.next_chapter("p1") == Profiles.CHAPTER_BEGINNING,
+			"a child who had finished the camp keeps Noah's Ark open, and The Beginning opens for them too")
+	Profiles.set_active("p2")
+	Profiles.finish_chapter(Profiles.CHAPTER_CAMP)
+	_check(Profiles.is_unlocked("p2", Profiles.CHAPTER_BEGINNING) and not Profiles.is_unlocked("p2", Profiles.CHAPTER_ARK),
+			"a child who finishes the camp now goes on to The Beginning before the ark")
+	Profiles.use_file("user://smoke-pre-beginning.cfg")
+	_check(Profiles.is_unlocked("p1", Profiles.CHAPTER_ARK) and not Profiles.is_unlocked("p2", Profiles.CHAPTER_ARK),
+			"saved again and read back, that stays the same")
+	Profiles.set_active("p2")
+	Profiles.finish_chapter(Profiles.CHAPTER_ARK)
+	_check(Profiles.is_unlocked("p2", Profiles.CHAPTER_ARK), "a chapter a child has finished always stays open to replay")
+	DirAccess.remove_absolute("user://smoke-pre-beginning.cfg")
 	Profiles.use_file(TEST_PROFILES)
 	Profiles.set_active(finished_kid)
 	journey.open()
-	var camp: Node = main.get_node("KingsCamp")
-	_check(camp.tent_count() == 0, "the camp is not built while the child is still in the valley")
+	_check(main.get_node_or_null("KingsCamp") == null, "the camp is not loaded while the child is still in the valley")
 	# As after Play again: chapter 1 is waiting for Space when the child jumps to the camp.
 	director._advance_ready = true
 	journey._on_stop("camp")
+	var camp: Node = main.get_node("KingsCamp")
 	var camp_walker: Node3D = main.get_node("Player")
 	_check(camp.tent_count() >= 4, "the king's camp has its tents on the ridge")
 	_check(camp_walker.global_position.z > 20.0, "the journey can walk up to the camp")
@@ -938,32 +1002,35 @@ func _initialize() -> void:
 	Profiles.set_active(kid_id)
 
 	print("-- easy words: the story for younger readers --")
-	var director_source: String = FileAccess.get_file_as_string("res://scripts/chapter_director.gd") \
-			+ FileAccess.get_file_as_string("res://scripts/chapter_two.gd")
-	var missing_original: Array = []
-	var no_clip: Array = []
-	for original in EasyWords.LINES:
-		if not director_source.contains(original):
-			missing_original.append(original)
-		if vo_lib.clip_for(EasyWords.LINES[original]) == null:
-			no_clip.append(EasyWords.LINES[original])
-	_check(missing_original.is_empty(), "every line that has an easier version is still in the story as written %s" % [missing_original])
-	_check(no_clip.is_empty(), "and every easier line has a recorded clip %s" % [no_clip])
-	var verse_block: String = JournalContent.verse_dialogue(JournalContent.VERSE_JOSHUA_1_9)
-	_check(EasyWords.apply(verse_block) == verse_block, "the Joshua 1:9 verse is never changed")
-	var arrive_line: String = "Wonder Light: \"This is David's valley. He looks after sheep. God looks after him.\""
-	GameSettings.easy_words = false
-	director._say(arrive_line)
-	_check(director.dialogue_label.text == arrive_line and vo_player.stream == vo_lib.clip_for("This is David's valley. He looks after sheep. God looks after him."), "a child who is 9 or older gets the story as written, in the original voice clip")
+	var easy_count := 0
+	for l in director.LINES.lines:
+		easy_count += 1 if l.has_easy() else 0
+	_check(easy_count == 12, "twelve of the valley's lines have an easier version (%d)" % easy_count)
 	GameSettings.easy_words = true
-	director._say(arrive_line)
-	_check(director.dialogue_label.text == "Wonder Light: \"This is David's valley. God looks after him.\"" and vo_player.stream == vo_lib.clip_for("This is David's valley. God looks after him."), "with Easy words on, the easier line is shown and read aloud")
+	director._say(director.verse_page_one())
+	_check(director.dialogue_label.text.begins_with(JournalContent.verse_card(JournalContent.VERSE_JOSHUA_1_9)),
+			"the Joshua 1:9 verse is never changed")
+	director._say(director.VERSE_PAGE_TWO)
+	_check(director.dialogue_label.text == "Wonder Light: \"This verse has three special words. Can you say them with me?\nDon't. Be. Afraid.\"",
+			"the three words carry on Wonder Light's line, in the same quote marks, on a row of their own")
+	var arrive: Resource = director.LINES.line(&"arrive")
+	GameSettings.easy_words = false
+	director._say([&"arrive"])
+	_check(director.dialogue_label.text == "Wonder Light: \"This is David's valley. He looks after sheep. God looks after him.\""
+			and vo_player.stream == arrive.clip and vo_player.stream.resource_path.ends_with("wl_arrive.wav"),
+			"a child who is 9 or older gets the story as written, in the original voice clip")
+	GameSettings.easy_words = true
+	director._say([&"arrive"])
+	_check(director.dialogue_label.text == "Wonder Light: \"This is David's valley. God looks after him.\""
+			and vo_player.stream == arrive.easy_clip and vo_player.stream.resource_path.ends_with("ez_arrive.wav"),
+			"with Easy words on, the easier line is shown and read aloud")
 	var camp_story: Node = main.get_node("KingsCamp/ChapterTwo")
-	camp_story._say("Jonathan: \"I am Jonathan. David was brave today, because God was with him.\"", "")
+	camp_story._say([&"jonathan_hello"], "")
 	_check(director.dialogue_label.text == "Jonathan: \"I am Jonathan. God was with David today.\"", "the King's Camp has easier words too")
-	_check(vo_player.stream != null and vo_player.stream == vo_lib.clip_for("I am Jonathan. God was with David today."),
+	_check(vo_player.stream != null and vo_player.stream == camp_story.LINES.line(&"jonathan_hello").easy_clip
+			and vo_player.stream.resource_path.ends_with("ez_jn_hello.wav"),
 			"and Jonathan reads his easier line in his own recorded voice")
-	var mixed: String = director._say("David: \"Thanks. Will you stay close while I get ready?\"")
+	var mixed: String = director._say([&"david_stay_close"])
 	_check(mixed == "David: \"Thanks. Will you stay close while I get ready?\"", "a line with no easier version stays as it is")
 	GameSettings.easy_words = false
 
@@ -973,12 +1040,13 @@ func _initialize() -> void:
 	_check(Profiles.has_charm(kid_id, JournalContent.CHARM_COURAGE), "the Courage charm is in it too")
 	_check(int(kid["chapters"]) == 1, "and the finished chapter is counted")
 	var unrecorded_journal: Array = []
+	# A chapter not cast yet marks its entries "recorded": false; the system voice reads those.
 	for v in JournalContent.VERSES:
 		for line in [v["spoken_ref"], v["text"]]:
-			if not vo_lib.LINES.has(line):
+			if v.get("recorded", true) and not vo_lib.LINES.has(line):
 				unrecorded_journal.append(line)
 	for c in JournalContent.CHARMS:
-		if not vo_lib.LINES.has(c["spoken"]):
+		if c.get("recorded", true) and not vo_lib.LINES.has(c["spoken"]):
 			unrecorded_journal.append(c["spoken"])
 	_check(unrecorded_journal.is_empty(), "every verse and charm in the journal has a recorded clip %s" % [unrecorded_journal])
 	var journal: CanvasLayer = main.get_node("JournalScreen")

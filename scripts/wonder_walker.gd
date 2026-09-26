@@ -13,6 +13,11 @@ const GroundSurface := preload("res://scripts/ground_surface.gd")
 
 ## When false, chapter director freezes walk during dialogue.
 var can_move: bool = true
+## Someone the Wonder-Walker turns to look at while standing still (whoever is speaking in a
+## story's conversation), or null to keep facing the way it last walked. Walking always wins.
+var watch: Node3D = null
+## How quickly it turns towards `watch`: slower than a walking turn, like looking up.
+@export var watch_turn_speed: float = 5.0
 
 ## Movement is always relative to this camera's framing, even while a
 ## cinematic/close-up camera (see camera_director.gd) is the active
@@ -57,6 +62,7 @@ func _physics_process(delta: float) -> void:
 			velocity.y = 0.0
 		move_and_slide()
 		_set_walking(false)
+		_turn_to_watch(delta)
 		return
 
 	# WASD / arrows → camera-relative flat direction (tabletop feel).
@@ -96,6 +102,7 @@ func _physics_process(delta: float) -> void:
 	else:
 		velocity.x = 0.0
 		velocity.z = 0.0
+		_turn_to_watch(delta)
 
 	if not is_on_floor():
 		velocity.y -= gravity * delta
@@ -105,6 +112,16 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	_set_walking(walking)
 	_update_footsteps(walking and is_on_floor(), delta)
+
+
+## Standing still, the model turns smoothly to face `watch` (Node3D forward is -Z).
+func _turn_to_watch(delta: float) -> void:
+	if _model == null or watch == null or not is_instance_valid(watch) or not watch.is_inside_tree():
+		return
+	var to := watch.global_position - global_position
+	if Vector2(to.x, to.z).length() < 0.3:
+		return
+	_model.rotation.y = lerp_angle(_model.rotation.y, atan2(-to.x, -to.z), clampf(watch_turn_speed * delta, 0.0, 1.0))
 
 
 ## One soft step per foot, timed to the walk animation (two steps per cycle).

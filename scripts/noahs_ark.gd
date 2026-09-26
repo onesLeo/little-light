@@ -1,24 +1,23 @@
 extends Node3D
-## Noah's Ark, built the first time it is visited so the valley and the camp
-## do not pay for it. The ark stands on a mountaintop above a sea of clouds
+## Noah's Ark, in its own scene (scenes/chapters/noahs_ark.tscn): the shell loads it
+## when the story starts and frees it when another one does, so every start is fresh. The ark stands on a mountaintop above a sea of clouds
 ## (ark_mountain.gd): a curved plank hull with its house finished at one end and bare
 ## ribs still going up at the other, a work bench, six animal pairs that wander and
 ## graze, a family at work, and three weather states, all in the camp's paper style.
 
 const Paper := preload("res://scripts/camp_paper.gd")
 const ChapterFour := preload("res://scripts/chapter_four.gd")
+const PlayArea := preload("res://scripts/play_area.gd")
 const Profiles := preload("res://scripts/profiles.gd")
 const Mountain := preload("res://scripts/ark_mountain.gd")
 const Shapes := preload("res://scripts/ark_shapes.gd")
 const Shelter := preload("res://scripts/ark_shelter.gd")
-const ArkPerson := preload("res://scripts/ark_person.gd")
+const ArkPerson := preload("res://scripts/story_person.gd")
 
-## The mountaintop is lifted well above the valley and the camp, whose ground lies
-## hidden under the cloud sea.
-const ORIGIN := Vector3(96.0, 40.0, 8.0)
+## The ark has the world to itself (the valley is not loaded under it), so the
+## mountaintop stands at the origin. Everything is placed relative to it (_at).
+const ORIGIN := Vector3.ZERO
 const START_LOCAL := Vector3(-1.2, 0.2, 7.0)
-const CAMERA_OFFSET := Vector3(0.0, 5.4, 10.0)
-const CAMERA_LOOK := 2.6
 ## The hull's centre line runs along x at this z; its side faces the arriving child.
 const HULL_Z := -5.8
 ## The work bench, in front of the unfinished stern.
@@ -72,6 +71,10 @@ const MATE_OF := {
 	"GoatA": "GoatB", "RabbitA": "RabbitB", "GiraffeA": "GiraffeB",
 }
 
+## How the mountaintop looks when the story starts (chapter_look.gd); the shell applies it.
+@export var look: Resource = preload("res://assets/looks/ark_mountain_day.tres")
+## Where the walker can go: the mountaintop plain around the ark (world x, z; see ORIGIN).
+@export var play_area: Resource = PlayArea.new(Vector2(0.0, 0.0), Vector2(18.0, 16.0))
 var _built: bool = false
 ## A new layout each visit: where the tools lie, and the animals' spots and facing.
 var _layout := RandomNumberGenerator.new()
@@ -110,52 +113,24 @@ func _unavailable(animal: Node3D) -> bool:
 	return bool(animal.get_meta("aboard", false)) or bool(animal.get_meta("boarding", false))
 
 
+## Starts the ark, or carries on with it. Only the shell calls this (game_shell.gd
+## switch_to), after every other story has stood down.
 func visit() -> void:
-	# A finished run leaves the tools taken, the pegs in, the animals and family moved and
-	# the door used. A fresh ark puts every piece back, including ones added later.
-	var last_run := get_node_or_null("ChapterFour")
-	if last_run and last_run.phase == ChapterFour.Phase.DONE:
-		_fresh_ark().visit()
-		return
 	# Tapping the ark on the map mid-story only closes the map; the story carries on.
-	if last_run and last_run.phase != ChapterFour.Phase.IDLE:
+	if in_progress():
 		return
-	Profiles.current_chapter = Profiles.CHAPTER_ARK
 	_build()
 	var main := get_parent()
-	var camp := main.get_node_or_null("KingsCamp")
-	if camp and camp.has_method("stand_down"):
-		camp.stand_down()
-	var director := main.get_node_or_null("ChapterDirector")
-	if director and director.has_method("stand_down"):
-		director.stand_down()
-	var menu := main.get_node_or_null("GameMenu")
-	if menu and menu.has_method("hide_end_panel"):
-		menu.hide_end_panel()
-	var bounds := main.get_node_or_null("PlayBounds")
-	if bounds and bounds.has_method("open_ark"):
-		bounds.open_ark()
-	var soundscape := main.get_node_or_null("Soundscape")
-	if soundscape and soundscape.has_method("set_night"):
-		soundscape.set_night(false)
 	set_weather("building")
 	var player := main.get_node_or_null("Player") as CharacterBody3D
 	if player:
 		player.velocity = Vector3.ZERO
 		player.global_position = _at(START_LOCAL)
+		# The look set the framing: low and pulled back, so the hull rises behind the child.
 		var cam := main.get_node_or_null("TabletopCamera") as Camera3D
 		if cam and "offset" in cam:
-			# The other stories do not set the framing, so stand_down() gives it back.
-			if not cam.has_meta("before_ark"):
-				cam.set_meta("before_ark", [cam.offset, cam.get("look_height"), cam.fov])
-			# Low and pulled back, so the hull rises out of the plain behind the child.
-			cam.offset = CAMERA_OFFSET
-			if "look_height" in cam:
-				cam.set("look_height", CAMERA_LOOK)
-			cam.fov = 42.0
 			cam.global_position = player.global_position + cam.offset
-			cam.look_at(player.global_position + Vector3(0.0, CAMERA_LOOK, 0.0), Vector3.UP)
-		_set_building_light(main)
+			cam.look_at(player.global_position + Vector3(0.0, cam.get("look_height"), 0.0), Vector3.UP)
 		var light := main.get_node_or_null("WonderLight") as Node3D
 		if light and "hover_offset" in light:
 			light.global_position = player.global_position + light.hover_offset
@@ -164,39 +139,19 @@ func visit() -> void:
 		story.begin()
 
 
-## Another story is starting: the ark gives back the camera framing and makes way for an
-## unbuilt ark, so nothing of this run keeps playing and the next visit starts whole.
+## True while the ark's story is under way; the shell then carries on instead of starting it.
+func in_progress() -> bool:
+	var story := get_node_or_null("ChapterFour")
+	return story != null and story.phase != ChapterFour.Phase.IDLE and story.phase != ChapterFour.Phase.DONE
+
+
+## Another story is starting, and the shell frees the ark after this, with its tweens and
+## cards. The next story's look resets the world.
 func stand_down() -> void:
-	if not _built:
-		return
-	var main := get_parent()
-	var cam := main.get_node_or_null("TabletopCamera") as Camera3D
-	if cam and cam.has_meta("before_ark"):
-		var before: Array = cam.get_meta("before_ark")
-		cam.offset = before[0]
-		cam.set("look_height", before[1])
-		cam.fov = before[2]
-		cam.remove_meta("before_ark")
 	# The shelter or rainbow shot may be the live camera, and it goes with this ark.
-	var shots := main.get_node_or_null("CameraDirector")
+	var shots := get_parent().get_node_or_null("CameraDirector")
 	if shots and shots.has_method("cut_to_tabletop"):
 		shots.cut_to_tabletop()
-	_fresh_ark()
-
-
-## Swaps this ark for an unbuilt one with the same name and place in the scene, so the
-## map, the director and the touch button still find it. Its tweens go with it.
-func _fresh_ark() -> Node3D:
-	var main := get_parent()
-	var index := get_index()
-	var fresh := Node3D.new()
-	fresh.set_script(get_script())
-	main.remove_child(self)
-	fresh.name = name
-	main.add_child(fresh)
-	main.move_child(fresh, index)
-	queue_free()
-	return fresh
 
 
 func _build() -> void:
@@ -271,39 +226,6 @@ func _ground() -> void:
 	mountain.position = ORIGIN
 	add_child(mountain)
 	_mountain = mountain
-
-
-func _set_building_light(main: Node) -> void:
-	# Chapter 2 leaves the shared world at blue hour; the mountaintop opens in a calm,
-	# soft daylight: a pale blue sky, gentle sun and a light haze that fades the far peaks.
-	var world := main.get_node_or_null("WorldEnvironment") as WorldEnvironment
-	if world and world.environment:
-		var env := world.environment
-		if env.sky:
-			var sky := env.sky.sky_material as ProceduralSkyMaterial
-			if sky:
-				sky.sky_top_color = Color(0.58, 0.73, 0.86)
-				sky.sky_horizon_color = Color(0.87, 0.89, 0.88)
-				sky.ground_horizon_color = Color(0.84, 0.87, 0.88)
-				sky.ground_bottom_color = Color(0.72, 0.76, 0.8)
-		env.ambient_light_color = Color(0.84, 0.86, 0.86)
-		env.ambient_light_energy = 0.8
-		env.fog_light_color = Color(0.84, 0.88, 0.9)
-		env.fog_density = 0.0035
-	var sun := main.get_node_or_null("Sun") as DirectionalLight3D
-	if sun:
-		sun.light_color = Color(1.0, 0.95, 0.86)
-		sun.light_energy = 0.95
-	var fill := main.get_node_or_null("FillLight") as DirectionalLight3D
-	if fill:
-		fill.light_color = Color(0.8, 0.86, 0.94)
-		fill.light_energy = 0.3
-	# The valley's ring of hills would stand in the middle of the cloud sea.
-	var backdrop := main.get_node_or_null("HorizonBackdrop") as Node3D
-	if backdrop:
-		if backdrop.has_method("set_daylight"):
-			backdrop.set_daylight()
-		backdrop.visible = false
 
 
 func _set_rain_light(main: Node) -> void:
@@ -939,7 +861,9 @@ func _transition_light(state: String) -> void:
 	for group in groups:
 		for property in group[1]:
 			previous.append(group[0].get(property))
-	_set_building_light(main)
+	# Every weather starts from the story's own look, then changes what it needs.
+	if main.has_method("apply_lighting"):
+		main.apply_lighting(look)
 	if state in ["rain", "waiting", "receding"]:
 		_set_rain_light(main)
 		if state != "rain":

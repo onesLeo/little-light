@@ -7,7 +7,8 @@ extends RefCounted
 ##
 ## What a child chose is a list with one number per region: an index into PALETTE, or -1 for "not
 ## coloured yet" (shown as blank paper). Profiles keeps that list for each child and charm.
-## Only the Courage charm has a picture so far; any other charm id shows the same one until it gets its own.
+## Courage, Friendship, Trust and Faithful Heart each have their own picture; an unknown charm id
+## shows Courage's.
 
 const INK := Color(0.35, 0.2, 0.08)
 const PAPER := Color(0.99, 0.97, 0.9)
@@ -46,6 +47,18 @@ static func _band(center: Vector2, inner: float, outer: float, a0: float, a1: fl
 	return pts
 
 
+## A heart, point down, `width` across, centred on `center` (the classic parametric heart curve).
+static func _heart(center: Vector2, width: float, sides: int = 40) -> PackedVector2Array:
+	var pts := PackedVector2Array()
+	for i in sides:
+		# Half a step off the curve's two cusps, which would triangulate as a zero-width sliver.
+		var t := TAU * (float(i) + 0.5) / float(sides)
+		var x := 16.0 * pow(sin(t), 3.0)
+		var y := 13.0 * cos(t) - 5.0 * cos(2.0 * t) - 2.0 * cos(3.0 * t) - cos(4.0 * t)
+		pts.append(center + Vector2(x, -y) * (width / 32.0))
+	return pts
+
+
 static func _star(center: Vector2, outer: float, inner: float) -> PackedVector2Array:
 	var pts := PackedVector2Array()
 	for i in 10:
@@ -63,6 +76,17 @@ static func regions(charm_id: String) -> Array:
 			_band(Vector2(0.5, 0.86), 0.34, 0.42, 3.55, 5.87),
 			_band(Vector2(0.5, 0.86), 0.26, 0.33, 3.55, 5.87),
 			_band(Vector2(0.5, 0.86), 0.18, 0.25, 3.55, 5.87),
+		]
+	if charm_id == "faithful_heart":
+		# A heart sitting in a small clay lamp dish, with one steady flame in its notch: caring well
+		# in quiet places. Back to front: the two ribbon tails, the heart, its middle, the dish, the flame.
+		return [
+			PackedVector2Array([Vector2(0.27, 0.62), Vector2(0.15, 0.97), Vector2(0.31, 0.89), Vector2(0.41, 0.99), Vector2(0.5, 0.66)]),
+			PackedVector2Array([Vector2(0.73, 0.62), Vector2(0.85, 0.97), Vector2(0.69, 0.89), Vector2(0.59, 0.99), Vector2(0.5, 0.66)]),
+			_heart(Vector2(0.5, 0.42), 0.52),
+			_heart(Vector2(0.5, 0.43), 0.28),
+			PackedVector2Array([Vector2(0.22, 0.62), Vector2(0.78, 0.62), Vector2(0.7, 0.75), Vector2(0.3, 0.75)]),
+			PackedVector2Array([Vector2(0.5, 0.13), Vector2(0.555, 0.24), Vector2(0.53, 0.33), Vector2(0.47, 0.33), Vector2(0.445, 0.24)]),
 		]
 	if charm_id == "friendship":
 		return [

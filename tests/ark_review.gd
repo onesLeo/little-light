@@ -39,18 +39,21 @@ func _run() -> void:
 	# The scene's own framing, before the ark borrows the camera.
 	var framing: Array = [cam.offset, cam.look_height, cam.fov]
 	var kid := Profiles.active_id
-	check(not Profiles.is_unlocked(kid, Profiles.CHAPTER_ARK), "the ark stays closed until the camp is finished")
+	check(not Profiles.is_unlocked(kid, Profiles.CHAPTER_ARK), "the ark stays closed at the start")
 	Profiles.finish_chapter(Profiles.CHAPTER_VALLEY)
 	Profiles.finish_chapter(Profiles.CHAPTER_CAMP)
-	check(Profiles.is_unlocked(kid, Profiles.CHAPTER_ARK), "finishing the camp opens Noah's Ark")
+	check(not Profiles.is_unlocked(kid, Profiles.CHAPTER_ARK), "a new child's ark waits for The Beginning, after the camp")
+	Profiles.finish_chapter(Profiles.CHAPTER_BEGINNING)
+	check(Profiles.is_unlocked(kid, Profiles.CHAPTER_ARK), "finishing The Beginning opens Noah's Ark")
 
-	var ark: Node = main.get_node("NoahsArk")
+	check(main.get_node_or_null("NoahsArk") == null, "the ark is not in the scene until its story starts")
 	# The game opens the ark from the Faith Journey map, which closes first and unpauses.
 	var journey: Node = main.get_node("FaithJourney")
 	if journey.is_open():
 		journey.close()
-	ark.visit()
+	main.switch_to(Profiles.CHAPTER_ARK)
 	await settle()
+	var ark: Node = main.get_node("NoahsArk")
 	var story: Node = ark.get_node("ChapterFour")
 	var player: Node3D = main.get_node("Player")
 	check(ark.get_node("Noah").find_child("NoahBody", true, false) != null, "Noah in the scene is the designed model")
@@ -67,6 +70,12 @@ func _run() -> void:
 			"the doorway (%.2f m) is tall enough for an elephant (%.2f m)" % [headroom, elephant_top])
 	check(ark.get_node("Noah")._bones["Thigh_L"] >= 0 and ark.get_node("NoahsWife")._bones["Shin_R"] >= 0, "both parents have the leg bones used for boarding")
 	check("Long before David" in story._line.text, "arrival names the long work")
+	var input_setup: Node = main.get_node("InputSetup")
+	input_setup.set_mode("touch")
+	var on_tablet: String = story._prompt.text
+	input_setup.set_mode("keyboard")
+	check(on_tablet == "Tap NEXT to continue" and story._prompt.text == "Press Space to continue",
+			"switching to a tablet mid-line rewords the ark's prompt, and back again")
 	# The tools lie on three of the allowed spots, well apart, wherever this visit put them.
 	var first_layout: Array[Vector3] = []
 	var on_spots := true
@@ -213,6 +222,16 @@ func _run() -> void:
 	check(ark.get_node("Shelter").visible and ark.get_node("Shelter/ShelterCamera").current, "rain uses the sheltered interior camera")
 	check(ark.get_node("Shelter/WindowRain").visible and ark.get_node("Shelter/ShelterNoah").visible, "rain is outside the window while Noah is safe inside")
 	check(not player.can_move, "the child cannot wander off during the shelter scene")
+	# The map mid-rain, then the ark again: the story and its weather carry on. Wait for the
+	# rain's crossfade to finish first, so the light is settled when it is compared.
+	await create_timer(2.8).timeout
+	var rain_sun: float = (main.get_node("Sun") as DirectionalLight3D).light_energy
+	journey.open()
+	journey._on_stop("ark")
+	await settle(2)
+	check(story.phase == story.Phase.RAIN and ark.weather_state == "rain" and ark.get_node("Rain").visible
+			and is_equal_approx((main.get_node("Sun") as DirectionalLight3D).light_energy, rain_sun),
+			"tapping the ark on the map mid-rain keeps the rain and its light")
 	await capture("rain-shelter")
 	await create_timer(0.3).timeout
 	check(ark.get_node("Mountain/Flood").visible and not ark.get_node("Mountain/CloudSea").visible, "the water rises over the cloud sea while it rains")
@@ -262,8 +281,11 @@ func _run() -> void:
 	story.press_word(1)
 	check(story.phase == story.Phase.REFLECT and not story._words.visible, "the words can be tapped in any order and then leave")
 	story._advance()
+	input_setup.set_mode("touch")
 	if story._ceremony:
 		story._on_charm_sealed()
+	check(story._prompt.text == "Tap NEXT to keep your charm", "on a tablet the charm's prompt says Tap NEXT, not Press Space")
+	input_setup.set_mode("keyboard")
 	story._advance()
 	await create_timer(0.2).timeout
 	var menu := main.get_node("GameMenu")
@@ -315,8 +337,7 @@ func _run() -> void:
 	await settle()
 	var camp: Node = main.get_node("KingsCamp")
 	var camp_story: Node = camp.get_node("ChapterTwo")
-	var ark_now: Node = main.get_node("NoahsArk")
-	check(not is_instance_valid(story_again) and not ark_now._built, "leaving the ark for the camp puts the ark's story away")
+	check(not is_instance_valid(story_again) and main.get_node_or_null("NoahsArk") == null, "leaving the ark for the camp frees the ark and its story")
 	check(main.get_node("UI").find_children("Ark*", "", false, false).is_empty() and not is_instance_valid(ark_arrow),
 			"the ark's words, tool list and arrow leave the screen")
 	check(cam.offset == framing[0] and cam.look_height == framing[1] and is_equal_approx(cam.fov, framing[2]) and cam.current,
@@ -326,10 +347,11 @@ func _run() -> void:
 	journey.open()
 	journey._on_stop("ark")
 	await settle()
-	ark_now = main.get_node("NoahsArk")
-	check(camp_story.phase == camp_story.Phase.IDLE and not camp_story._checklist.visible and not camp_story._words.visible,
-			"going back to the ark puts the camp's story away")
-	check(not camp.get_node("CampSounds").is_playing(), "the camp's crickets and fire stop on the mountaintop")
+	var ark_now: Node = main.get_node("NoahsArk")
+	check(not is_instance_valid(camp) and not is_instance_valid(camp_story) and main.get_node_or_null("KingsCamp") == null,
+			"going back to the ark frees the camp, its story, and its crickets and fire")
+	check(main.get_node("UI").find_children("Camp*", "", false, false).is_empty() and main.get_node("UI").find_children("*Checklist", "", false, false).size() == 1,
+			"and the camp's word chips and gift list leave the screen")
 	var ark_story_now: Node = ark_now.get_node("ChapterFour")
 	check(ark_story_now.phase == ark_story_now.Phase.ARRIVE and "Long before David" in ark_story_now._line.text,
 			"the ark starts again from its first line")

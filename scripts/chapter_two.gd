@@ -12,14 +12,15 @@ const WordChip := preload("res://scripts/word_chip.gd")
 const GiftChecklist := preload("res://scripts/gift_checklist.gd")
 const Hints := preload("res://scripts/wonder_item_hints.gd")
 const GameSettings := preload("res://scripts/game_settings.gd")
-const EasyWords := preload("res://scripts/easy_words.gd")
+## The camp's lines, with their easier versions and clips (dialogue_lines.gd).
+const LINES := preload("res://assets/dialogue/kings_camp.tres")
+const DevicePrompts := preload("res://scripts/device_prompts.gd")
 
 const Paper := preload("res://scripts/camp_paper.gd")
 const SoundLibrary := preload("res://scripts/sound_library.gd")
 
 enum Phase { IDLE, ARRIVE, MEET, FIND, GIVE, WORDS, CORD, VERSE, CHARM, DONE }
 
-const CHARM_LINE := "Wonder Light: \"A Friendship charm, for Jonathan giving David what was his.\""
 ## Seconds with no gift found before the golden arrow shows the way (chapter 1 waits 18).
 const HINT_DELAY := 14.0
 const WORD_LABELS: PackedStringArray = ["Knit", "Loved", "Friend"]
@@ -37,6 +38,7 @@ var _camera: Node
 var _player: Node3D
 var _line: Label
 var _prompt: Label
+var _prompt_raw: String = ""
 var _audio: Node
 ## Loops already given the chapter-1 tap, so a new loop chimes once.
 var _heard_loops: int = 0
@@ -65,6 +67,9 @@ func begin() -> void:
 	_audio = main.get_node_or_null("AudioDirector")
 	_camera = main.get_node_or_null("CameraDirector")
 	_player = main.get_node_or_null("Player")
+	var input_setup := main.get_node_or_null("InputSetup")
+	if input_setup and input_setup.has_signal("device_changed") and not input_setup.device_changed.is_connected(_on_device_changed):
+		input_setup.device_changed.connect(_on_device_changed)
 	_build_ui()
 	if _hints:
 		_hints.stop()
@@ -79,10 +84,7 @@ func begin() -> void:
 	if banner:
 		banner.visible = false
 	_spawn_gifts()
-	_say(
-		"Wonder Light: \"This is the king's camp. The day is turning into night.\"",
-		"Press Space to continue"
-	)
+	_say([&"arrive"], "Press Space to continue")
 
 
 ## Another story is starting: this one stops listening and puts its cards away. The next
@@ -95,6 +97,16 @@ func stand_down() -> void:
 	for card in [_checklist, _words, _cord]:
 		if is_instance_valid(card):
 			card.visible = false
+
+
+## The checklist, the word chips and the cord card live in the shared UI, outside the camp,
+## so they go with it. They leave the UI at once, so a replay's new ones keep their names.
+func _exit_tree() -> void:
+	for node in [_checklist, _words, _cord]:
+		if is_instance_valid(node):
+			if node.get_parent():
+				node.get_parent().remove_child(node)
+			node.queue_free()
 
 
 func _input(event: InputEvent) -> void:
@@ -129,26 +141,17 @@ func _on_cord_completed() -> void:
 	Profiles.unlock_verse(JournalContent.VERSE_SAMUEL_18_1)
 	if _audio:
 		_audio.play_success()
-	_say(
-		"1 Samuel 18:1 (WEB):\n\"The soul of Jonathan was knit with the soul of David, and Jonathan loved him as his own soul.\"",
-		"Press Space to continue"
-	)
+	_say_text(JournalContent.verse_card(JournalContent.VERSE_SAMUEL_18_1), "Press Space to continue")
 
 
 func _advance() -> void:
 	match phase:
 		Phase.ARRIVE:
 			phase = Phase.MEET
-			_say(
-				"Jonathan: \"I am Jonathan. David was brave today, because God was with him.\"",
-				"Press Space to continue"
-			)
+			_say([&"jonathan_hello"], "Press Space to continue")
 		Phase.MEET:
 			phase = Phase.FIND
-			_say(
-				"Wonder Light: \"Find Jonathan's robe, his bow, and his belt. They are gifts for David.\"",
-				"Walk up to a gift"
-			)
+			_say([&"find"], "Walk up to a gift")
 			_collect_overlapping.call_deferred()
 			_watch_gifts()
 		Phase.GIVE:
@@ -157,10 +160,7 @@ func _advance() -> void:
 			_words_done = false
 			_restyle_words()
 			# An existing Wonder Light recording, so this beat stays in her voice.
-			_say(
-				"Wonder Light: \"Friends stay tied together.\"",
-				"Tap Knit, Loved, and Friend"
-			)
+			_say([&"tied"], "Tap Knit, Loved, and Friend")
 		Phase.WORDS:
 			if not _words_done:
 				return
@@ -174,10 +174,7 @@ func _advance() -> void:
 			_cord.offset_right = Cord.PANEL.x * 0.5
 			_cord.completed.connect(_on_cord_completed)
 			_build_world_cord()
-			_say(
-				"Wonder Light: \"Hold still, and loop the cord. Three slow loops.\"",
-				"Hold Space / Enter or the button, then release to tie"
-			)
+			_say([&"cord"], "Hold Space / Enter or the button, then release to tie")
 		Phase.VERSE:
 			if is_instance_valid(_cord):
 				_cord.queue_free()
@@ -209,21 +206,14 @@ func _on_gift(body: Node, area: Area3D) -> void:
 	var light := get_parent().get_parent().get_node_or_null("WonderLight")
 	if light and light.has_method("celebrate"):
 		light.celebrate()
-	var flavor := {
-		"Robe": "Wonder Light: \"A folded robe. Jonathan is giving it to David.\"",
-		"Bow": "Wonder Light: \"A bow with no arrow. It is a gift, not a fight.\"",
-		"Belt": "Wonder Light: \"A belt with one gold square. A friend shares what he has.\"",
-	}
+	var flavor := {"Robe": &"robe", "Bow": &"bow", "Belt": &"belt"}
 	if _found < 3:
-		_say(flavor.get(area.name, ""), "Find the rest")
+		_say([flavor[String(area.name)]], "Find the rest")
 		return
 	phase = Phase.GIVE
 	if _hints:
 		_hints.stop()
-	_say(
-		"Jonathan: \"These were mine. I give them to David, because he is my friend.\"",
-		"Press Space to continue"
-	)
+	_say([&"jonathan_give"], "Press Space to continue")
 
 
 func _spawn_gifts() -> void:
@@ -321,7 +311,7 @@ func _collect_overlapping() -> void:
 ## The same paper ceremony as chapter 1: the Friendship charm floats down onto the
 ## Virtue Bracelet in a close-up, with the fanfare and a little confetti.
 func _award_charm() -> void:
-	_say(CHARM_LINE + "\n(Virtue Bracelet receives the charm.)", "…")
+	_say([&"charm", &"charm_arrives"], "…")
 	var main := get_parent().get_parent()
 	var award := main.get_node_or_null("CharmAward") as Node3D
 	var player := main.get_node_or_null("Player") as Node3D
@@ -343,10 +333,8 @@ func _award_charm() -> void:
 func _on_charm_sealed() -> void:
 	_ceremony = false
 	if _line:
-		var line := CHARM_LINE + "\n(Friendship charm sealed on the Virtue Bracelet.)"
-		_line.text = EasyWords.apply(line) if GameSettings.easy_words else line
-	if _prompt:
-		_prompt.text = _device_prompt("Press Space to keep your charm")
+		_line.text = LINES.block([&"charm", &"charm_sealed"], GameSettings.easy_words)["text"]
+	_set_prompt("Press Space to keep your charm")
 
 
 ## Chapter complete: back to the wide view, the cheer and confetti, the banner, and
@@ -360,10 +348,9 @@ func _finish() -> void:
 	var player := main.get_node_or_null("Player")
 	if player and "can_move" in player:
 		player.can_move = true
-	_say("Wonder Light: \"Friends stay tied together.\"", "Well done, Wonder-Walker!")
-	var director := main.get_node_or_null("ChapterDirector")
-	if director and director.has_method("play_finale"):
-		director.play_finale("Chapter 2 Complete!")
+	_say([&"tied"], "Well done, Wonder-Walker!")
+	if main.has_method("play_finale"):
+		main.play_finale("Chapter 2 Complete!")
 	var menu := main.get_node_or_null("GameMenu")
 	if menu and menu.has_method("show_end_panel"):
 		menu.show_end_panel(JournalContent.CHARM_FRIENDSHIP)
@@ -371,7 +358,7 @@ func _finish() -> void:
 
 ## The found gift leaves the meadow and sits in a row beside David, so the giving is visible.
 func _place_beside_david(gift_name: String) -> void:
-	var david := get_parent().get_parent().get_node_or_null("DavidMentor") as Node3D
+	var david := get_parent().get_parent().get_node_or_null("Valley/DavidMentor") as Node3D
 	if david == null:
 		return
 	var holder := get_parent().get_node_or_null("GivenGifts") as Node3D
@@ -425,8 +412,7 @@ func press_word(index: int) -> void:
 	if _words_done:
 		return
 	_words_done = true
-	if _prompt:
-		_prompt.text = _device_prompt("Press Space to loop the cord")
+	_set_prompt("Press Space to loop the cord")
 	if _audio and _audio.has_method("play_success"):
 		_audio.play_success()
 
@@ -511,10 +497,7 @@ func _watch_lookout(delta: float) -> void:
 	if _lookout_said or phase != Phase.FIND:
 		return
 	_lookout_said = true
-	_say(
-		"Wonder Light: \"Look. David's valley is still down there.\"",
-		"The waterfall is the way you came"
-	)
+	_say([&"lookout"], "The waterfall is the way you came")
 
 
 func _set_lookout(amount: float) -> void:
@@ -539,10 +522,24 @@ func _play_bleat(at: Vector3) -> void:
 	_bleat.play()
 
 
-func _say(text: String, prompt: String) -> void:
-	# Easy words (a child of 8 or younger): the lines with an easier version swap for it.
-	if GameSettings.easy_words:
-		text = EasyWords.apply(text)
+## Shows the camp's lines `ids` (assets/dialogue/kings_camp.tres) and reads them aloud, each
+## in its own clip. A child with Easy words on gets the easier version of each.
+func _say(ids: Array, prompt: String) -> void:
+	var said: Dictionary = LINES.block(ids, GameSettings.easy_words)
+	_present(said["text"], prompt)
+	if _audio and _audio.has_method("speak_lines"):
+		_audio.speak_lines(said["spoken"])
+
+
+## Shows and reads text that is not one of the camp's own lines: the verse, which the journal
+## shares, and whose clips are found by its words (vo_library.gd).
+func _say_text(text: String, prompt: String) -> void:
+	_present(text, prompt)
+	if _audio and _audio.has_method("speak_dialogue"):
+		_audio.speak_dialogue(text)
+
+
+func _present(text: String, prompt: String) -> void:
 	var close := phase == Phase.MEET or phase == Phase.GIVE or phase == Phase.WORDS
 	if _player:
 		_player.can_move = phase in [Phase.FIND, Phase.DONE]
@@ -558,35 +555,35 @@ func _say(text: String, prompt: String) -> void:
 	var jon := get_parent().get_node_or_null("Jonathan")
 	if jon:
 		jon.speaking = text.begins_with("Jonathan:")
-	var director := get_parent().get_parent().get_node_or_null("ChapterDirector")
+	var shell := get_parent().get_parent()
 	if _line:
 		_line.text = text
-	if _prompt:
-		_prompt.text = _device_prompt(prompt)
+	_set_prompt(prompt)
 	# The bar fits this line (not the last one of chapter 1), then the cards sit above it.
-	if director and director.has_method("_fit_dialogue_panel"):
-		director._fit_dialogue_panel()
+	if shell.has_method("fit_dialogue"):
+		shell.fit_dialogue()
 	if is_instance_valid(_cord):
 		_place_above_dialogue(_cord, Cord.PANEL.y)
 	if _words and _words.visible:
 		_place_above_dialogue(_words, 118.0)
-	if _audio and _audio.has_method("speak_dialogue"):
-		_audio.speak_dialogue(text)
 
 
-## Prompts are written for the keyboard. On a tablet or a gamepad they name that
-## device's buttons instead, as chapter 1's do.
-func _device_prompt(raw: String) -> String:
-	var input_setup := get_parent().get_parent().get_node_or_null("InputSetup")
-	var mode: String = input_setup.mode if input_setup and "mode" in input_setup else "keyboard"
-	match mode:
-		"touch":
-			return raw.replace("Press Space", "Tap NEXT").replace("Hold Space / Enter or the button", "Hold LOOP") \
-				.replace("A / D or arrows: look around", "stick: look around")
-		"gamepad":
-			return raw.replace("Press Space", "Press A").replace("Hold Space / Enter or the button", "Hold A") \
-				.replace("A / D or arrows: look around", "stick: look around")
-	return raw
+## Prompts are written for the keyboard and worded for the device used last (device_prompts.gd).
+## The prompt is kept as written, so switching device mid-line rewords it.
+func _set_prompt(raw: String) -> void:
+	_prompt_raw = raw
+	if _prompt:
+		var input_setup := get_parent().get_parent().get_node_or_null("InputSetup")
+		_prompt.text = DevicePrompts.reword(raw, input_setup, DevicePrompts.GOLD_BUTTON, "LOOP")
+
+
+func _on_device_changed(_mode: String) -> void:
+	if phase == Phase.IDLE:
+		return
+	_set_prompt(_prompt_raw)
+	var shell := get_parent().get_parent()
+	if shell.has_method("fit_dialogue"):
+		shell.fit_dialogue()
 
 
 func _pressed(event: InputEvent) -> bool:
@@ -617,6 +614,7 @@ func _build_ui() -> void:
 	if is_instance_valid(_checklist):
 		_checklist.queue_free()
 	_checklist = GiftChecklist.new()
+	_checklist.name = "CampGiftChecklist"
 	_checklist.position = Vector2(24, 90)
 	var ui := get_parent().get_parent().get_node("UI")
 	ui.add_child(_checklist)

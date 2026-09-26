@@ -14,6 +14,7 @@ signal closed
 const Profiles := preload("res://scripts/profiles.gd")
 const PaperUI := preload("res://scripts/paper_ui.gd")
 const MapArkSketch := preload("res://scripts/map_ark_sketch.gd")
+const MapHouseSketch := preload("res://scripts/map_house_sketch.gd")
 
 const MAP_PATH := "res://assets/ui/faith_journey_map.jpg"
 const MAP_ASPECT := 16.0 / 9.0
@@ -26,8 +27,9 @@ const DONE_FILL := Color(0.99, 0.95, 0.82)
 const STOPS := [
 	{"id": "valley", "chapter": Profiles.CHAPTER_VALLEY, "number": 1, "title": "The valley", "at": Vector2(0.22, 0.76)},
 	{"id": "camp", "chapter": Profiles.CHAPTER_CAMP, "number": 2, "title": "The King's Camp", "at": Vector2(0.545, 0.50)},
-	{"id": "ark", "chapter": Profiles.CHAPTER_ARK, "number": 3, "title": "Noah's Ark", "at": MapArkSketch.ANCHOR},
-	{"id": "ahead", "chapter": "", "number": 4, "title": "Coming soon", "at": Vector2(0.84, 0.22)},
+	{"id": "beginning", "chapter": Profiles.CHAPTER_BEGINNING, "number": 3, "title": "The Beginning", "at": MapHouseSketch.ANCHOR},
+	{"id": "ark", "chapter": Profiles.CHAPTER_ARK, "number": 4, "title": "Noah's Ark", "at": MapArkSketch.ANCHOR},
+	{"id": "ahead", "chapter": "", "number": 5, "title": "Coming soon", "at": Vector2(0.84, 0.22)},
 ]
 
 var _audio: Node
@@ -36,6 +38,7 @@ var _paused_by_me: bool = false
 var _choosing: bool = false
 var _map: TextureRect
 var _ark_sketch: Control
+var _house_sketch: Control
 var _line: Label
 var _back: Button
 var _change_player: Button
@@ -179,15 +182,18 @@ func open_to_choose() -> void:
 	var p := Profiles.active()
 	var next := Profiles.next_chapter(Profiles.active_id)
 	var line := "Tap a story to begin."
+	var spoken := ""
 	if next == Profiles.CHAPTER_VALLEY:
 		line = "Your journey starts in the valley."
 	elif next == Profiles.CHAPTER_CAMP:
 		line = "The King's Camp is next."
+	elif next == Profiles.CHAPTER_BEGINNING:
+		line = "The Beginning is next."
 	elif next == Profiles.CHAPTER_ARK:
 		line = "Noah's Ark is next."
 	# The name is on the screen only: the recorded "Hello!" cannot say every child's name.
 	var hello := "Hello, %s! " % p["name"] if not p.is_empty() else "Hello! "
-	_show_map(hello + line, "Hello!\n" + line)
+	_show_map(hello + line, "Hello!\n" + (spoken if not spoken.is_empty() else line))
 
 
 ## `spoken` is what Wonder Light reads (one recorded clip per line); by default the line itself.
@@ -270,6 +276,9 @@ func _build() -> void:
 	_ark_sketch = MapArkSketch.new()
 	_ark_sketch.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(_ark_sketch)
+	_house_sketch = MapHouseSketch.new()
+	_house_sketch.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(_house_sketch)
 
 	var title := PaperUI.label("Faith Journey", 40)
 	title.set_anchors_preset(Control.PRESET_CENTER_TOP)
@@ -430,6 +439,7 @@ func _layout() -> void:
 		return
 	var fitted := _fitted_map(view)
 	_ark_sketch.fit(fitted)
+	_house_sketch.fit(fitted)
 	for stop in _stops:
 		var at: Vector2 = stop["at"]
 		var button: Button = stop["button"]
@@ -459,22 +469,15 @@ func _on_stop(id: String) -> void:
 	if is_locked(id):
 		_show_locked(id)
 		return
-	if id == "valley":
-		_play_valley()
-	elif id == "camp":
-		var camp := get_parent().get_node_or_null("KingsCamp")
-		if camp and camp.has_method("visit"):
-			close()
-			camp.visit()
-		else:
-			_say("The King's Camp is still being prepared.")
-	elif id == "ark":
-		var ark := get_parent().get_node_or_null("NoahsArk")
-		if ark and ark.has_method("visit"):
-			close()
-			ark.visit()
-		else:
-			_say("Noah's Ark is still being prepared.")
+	var data := _stop_data(id)
+	var shell := get_parent()
+	var chapter: String = data["chapter"]
+	if not shell.has_method("has_story") or not shell.has_story(chapter):
+		_say("%s is still being prepared." % data["title"])
+		return
+	# The shell starts it: in place, or by loading the scene again for the valley mid-story.
+	close()
+	shell.switch_to(chapter)
 
 
 ## The story is closed: the button gives a little shake, and a card says which story
@@ -545,24 +548,6 @@ static func _wonder_light(text: String) -> String:
 	for line in text.split("\n", false):
 		lines.append("Wonder Light: \"%s\"" % line)
 	return "\n".join(lines)
-
-
-## Chapter 1. When the map is the first stop the valley is already waiting behind it, so it
-## simply begins; otherwise the scene is loaded fresh so the valley starts from its first line.
-func _play_valley() -> void:
-	var director := get_parent().get_node_or_null("ChapterDirector")
-	if _choosing and director and director.has_method("begin_valley"):
-		close()
-		director.begin_valley()
-		return
-	Profiles.current_chapter = Profiles.CHAPTER_VALLEY
-	get_tree().paused = false
-	_paused_by_me = false
-	if _audio and _audio.has_method("stop_speech"):
-		_audio.stop_speech()
-	for action in ["move_left", "move_right", "move_forward", "move_back"]:
-		Input.action_release(action)
-	get_tree().reload_current_scene()
 
 
 func _on_change_player() -> void:

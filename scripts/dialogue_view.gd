@@ -17,16 +17,19 @@ extends Control
 ##   const DialogueView := preload("res://scripts/dialogue_view.gd")
 
 const PaperUI := preload("res://scripts/paper_ui.gd")
+const DialogueLine := preload("res://scripts/dialogue_line.gd")
+const JournalContent := preload("res://scripts/journal_content.gd")
 
 const SPEAKERS := {
 	"Wonder Light": {"fill": Color(0.98, 0.78, 0.25), "ink": Color(0.35, 0.2, 0.08), "text": Color(0.66, 0.4, 0.02)},
 	"David": {"fill": Color(0.36, 0.55, 0.82), "ink": Color(1.0, 0.98, 0.92), "text": Color(0.18, 0.36, 0.66)},
 	"Jonathan": {"fill": Color(0.62, 0.2, 0.28), "ink": Color(1.0, 0.95, 0.88), "text": Color(0.58, 0.14, 0.24)},
+	"Samuel": {"fill": Color(0.86, 0.82, 0.7), "ink": Color(0.28, 0.24, 0.2), "text": Color(0.4, 0.38, 0.34)},
+	"Jesse": {"fill": Color(0.5, 0.42, 0.24), "ink": Color(1.0, 0.95, 0.86), "text": Color(0.4, 0.33, 0.14)},
 	"Noah": {"fill": Color(0.62, 0.32, 0.16), "ink": Color(1.0, 0.95, 0.86), "text": Color(0.45, 0.22, 0.08)},
 	"Noah's wife": {"fill": Color(0.28, 0.55, 0.52), "ink": Color(1.0, 0.96, 0.9), "text": Color(0.12, 0.36, 0.34)},
 	"Bible": {"fill": Color(0.52, 0.36, 0.2), "ink": Color(1.0, 0.95, 0.85), "text": Color(0.45, 0.28, 0.1)},
 }
-const VERSE_REFS := ["Joshua 1:9", "1 Samuel 18:1", "Genesis 9:13"]
 const INK := Color(0.3, 0.17, 0.06)
 const SOFT := Color(0.55, 0.42, 0.3)
 ## How far the lines not being read step back while one is read.
@@ -119,7 +122,7 @@ func _parse(text: String) -> void:
 			entry["kind"] = "direction"
 		else:
 			var named := false
-			for who_name in ["Wonder Light", "David", "Jonathan", "Noah's wife", "Noah"]:
+			for who_name in DialogueLine.SPEAKERS:
 				if line.begins_with(who_name + ":"):
 					who = who_name
 					named = true
@@ -127,7 +130,7 @@ func _parse(text: String) -> void:
 					line = line.substr(who_name.length() + 1)
 					break
 			if not named:
-				for ref in VERSE_REFS:
+				for ref in JournalContent.VERSES.map(func(v: Dictionary) -> String: return v["ref"]):
 					if line.begins_with(ref):
 						who = "Bible"
 						entry["kind"] = "reference"
@@ -251,6 +254,13 @@ func _draw_face(c: Vector2, r: float) -> void:
 			_person(c, r, Color(0.36, 0.55, 0.82), Color(0.42, 0.26, 0.12), false)
 		"Jonathan":
 			_person(c, r, Color(0.62, 0.2, 0.28), Color(0.22, 0.13, 0.08), true)
+		"Samuel":
+			# Grey hair and a short grey beard, over a cream robe.
+			_person(c, r, Color(0.86, 0.82, 0.7), Color(0.66, 0.64, 0.6), false)
+			_tag.draw_circle(c + Vector2(0.0, r * 0.2), r * 0.24, Color(0.72, 0.7, 0.66))
+		"Jesse":
+			# Short greying brown hair, over a warm olive-brown robe.
+			_person(c, r, Color(0.5, 0.42, 0.24), Color(0.4, 0.32, 0.24), false)
 		"Noah":
 			_person(c, r, Color(0.62, 0.32, 0.16), Color(0.35, 0.28, 0.22), false)
 			_tag.draw_circle(c + Vector2(0.0, r * 0.18), r * 0.26, Color(0.35, 0.28, 0.22))
