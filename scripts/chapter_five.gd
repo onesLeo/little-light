@@ -184,10 +184,12 @@ func _advance() -> void:
 			_board()
 		Phase.STORM:
 			phase = Phase.ADMIT
+			_world().feel("admit")
 			_two_shot(_world().jonah(), _world().captain())
 			_say([&"admit", &"put_me"], "Press Space to continue")
 		Phase.ADMIT:
 			phase = Phase.PLEAD
+			_world().feel("plead")
 			_two_shot(_world().captain(), _world().jonah())
 			_say([&"plead"], "Press Space to continue")
 		Phase.PLEAD:
@@ -196,6 +198,7 @@ func _advance() -> void:
 			_go_to_prayer()
 		Phase.VERSE:
 			phase = Phase.THANKS
+			_world().feel("thanks")
 			_world().jonah().kneel = 0.4
 			_say([&"thanks"], "Press Space to continue")
 		Phase.THANKS:
@@ -204,16 +207,19 @@ func _advance() -> void:
 			_follow()
 		Phase.WARNING:
 			phase = Phase.LISTENED
+			_world().feel("listened")
 			_world().crowd().set_pose("sorry", _world().jonah().global_position)
 			_say([&"listened", &"mercy"], "Press Space to continue")
 		Phase.LISTENED:
 			_to_hill()
 		Phase.HILL:
 			phase = Phase.WITHER
+			_world().feel("wither")
 			_world().plant().wither(3.2)
 			_say([&"wither"], "Press Space to continue")
 		Phase.WITHER:
 			phase = Phase.QUESTION
+			_world().feel("question")
 			_say([&"question"], "Press Space to continue")
 		Phase.QUESTION:
 			phase = Phase.REFLECT
@@ -293,6 +299,7 @@ func _meet(found_line: StringName = &"") -> void:
 	phase = Phase.MEET
 	var parts: Array = [] if found_line.is_empty() else [found_line]
 	parts.append(&"meet")
+	_world().feel("meet")
 	if _camera and _camera.has_method("cut_to_closeup"):
 		_camera.cut_to_closeup(_world().jonah())
 	_say(parts, "Press Space to continue")
@@ -371,6 +378,7 @@ func _storm() -> void:
 	phase = Phase.STORM
 	_mark("storm")
 	_world().set_storm(1.0, 5.0)
+	_world().feel("storm")
 	_two_shot(_world().captain(), _world().jonah())
 	_say([&"captain"], "Press Space to continue")
 
@@ -380,12 +388,14 @@ func _overboard() -> void:
 	phase = Phase.OVERBOARD
 	_busy = true
 	_world().over_side_shot()
+	_world().feel("overboard")
 	_say([&"calm"], "…")
 	var go: Tween = _world().jonah_into_sea()
 	await go.finished
 	if phase != Phase.OVERBOARD:
 		return
 	phase = Phase.FISH
+	_world().feel("after_storm")
 	_world().fish_shot()
 	_say([&"fish"], "…")
 	var rise: Tween = _world().fish().rise(4.0)
@@ -418,6 +428,7 @@ func _start_prayer() -> void:
 	_lit = 0
 	_light_idle = 0.0
 	_world().prayer_shot()
+	_world().feel("pray")
 	_say([&"pray"], "Tap Call, Hear and Go")
 	_show_lights(true)
 
@@ -463,6 +474,7 @@ func _to_shore() -> void:
 	if phase != Phase.SHORE:
 		return
 	_say([&"shore"], "…")
+	world.feel("shore")
 	var out: Tween = world.release()
 	await out.finished
 	if phase != Phase.SHORE:
@@ -489,6 +501,7 @@ func _warning() -> void:
 	_world().face(_world().jonah(), _world().LAND + _world().CROWD_AT)
 	_world().gate_shot()
 	_world().crowd().set_pose("listening", _world().jonah().global_position)
+	_world().feel("warning")
 	_say([&"warning"], "Press Space to continue")
 
 
@@ -506,6 +519,7 @@ func _to_hill() -> void:
 	if phase != Phase.HILL:
 		return
 	_mark("hill")
+	world.feel("cross")
 	_say([&"cross"], "Press Space to continue")
 	var grow: Tween = world.plant().grow(3.0)
 	await grow.finished
@@ -585,8 +599,9 @@ func _say(parts: Array, prompt: String) -> void:
 	var shell := _main()
 	if shell.has_method("fit_dialogue"):
 		shell.fit_dialogue()
-	var first: Array = said["spoken"]
-	_world().set_speaking("" if first.is_empty() else String(first[0]["speaker"]))
+	# Who the people turn to: the first character in the block, not Wonder Light's narration before
+	# them (with read-aloud on, each line turns them again as it is read; with it off, this is all).
+	_world().set_speaking(_first_character(said["spoken"]))
 	if _audio and _audio.has_method("speak_lines"):
 		_audio.speak_lines(said["spoken"])
 
@@ -594,6 +609,15 @@ func _say(parts: Array, prompt: String) -> void:
 func _two_shot(a: Node3D, b: Node3D) -> void:
 	if _camera and _camera.has_method("cut_to_two_shot"):
 		_camera.cut_to_two_shot(a, b)
+
+
+## The first speaker in `spoken` who is one of the story's people, or Wonder Light when only she
+## speaks, or "" for nobody.
+static func _first_character(spoken: Array) -> String:
+	for line in spoken:
+		if String(line["speaker"]) != "Wonder Light":
+			return String(line["speaker"])
+	return "" if spoken.is_empty() else String(spoken[0]["speaker"])
 
 
 func _on_line_started(line: Dictionary) -> void:

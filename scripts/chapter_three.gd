@@ -401,10 +401,20 @@ func _say(parts: Array, prompt: String) -> void:
 	var shell := get_parent().get_parent()
 	if shell.has_method("fit_dialogue"):
 		shell.fit_dialogue()
-	var first: Array = said["spoken"]
-	_house().set_speaking("" if first.is_empty() else String(first[0]["speaker"]))
+	# Who the people turn to: the first character in the block, not Wonder Light's narration before
+	# them (with read-aloud on, each line turns them again as it is read; with it off, this is all).
+	_house().set_speaking(_first_character(said["spoken"]))
 	if _audio and _audio.has_method("speak_lines"):
 		_audio.speak_lines(said["spoken"])
+
+
+## The first speaker in `spoken` who is one of the story's people, or Wonder Light when only she
+## speaks, or "" for nobody.
+static func _first_character(spoken: Array) -> String:
+	for line in spoken:
+		if String(line["speaker"]) != "Wonder Light":
+			return String(line["speaker"])
+	return "" if spoken.is_empty() else String(spoken[0]["speaker"])
 
 
 func _on_line_started(line: Dictionary) -> void:

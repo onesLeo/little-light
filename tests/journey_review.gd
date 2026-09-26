@@ -52,7 +52,12 @@ func reloaded() -> void:
 
 
 func quiet() -> void:
+	# The saved settings are the tablet's (a child who plays with Easy words saves it there): load them
+	# first, then set what the checks expect, so playing the game never changes a test's result.
+	Settings.load_settings()
 	Settings.read_aloud = false
+	Settings.easy_words = false
+	Settings.reduced_motion = false
 	# A map stop that reloads (the valley) has already freed this scene; reloaded() picks up the new one.
 	if not is_instance_valid(main) or not main.is_inside_tree():
 		return

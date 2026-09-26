@@ -32,7 +32,11 @@ func _initialize() -> void:
 	for chapter in [Profiles.CHAPTER_VALLEY, Profiles.CHAPTER_CAMP, Profiles.CHAPTER_BEGINNING]:
 		Profiles.finish_chapter(chapter)
 	Profiles.current_chapter = ""
+	# The saved settings are the tablet's (a child who plays with Easy words saves it there): load them
+	# first, then set what the checks expect, so playing the game never changes a test's result.
+	Settings.load_settings()
 	Settings.read_aloud = false
+	Settings.easy_words = false
 	Settings.reduced_motion = false
 	main = (load("res://scenes/main.tscn") as PackedScene).instantiate()
 	root.add_child(main)
@@ -193,9 +197,14 @@ func _run() -> void:
 	var carried_on: bool = await wait_for(func() -> bool: return story.phase == story.Phase.ADMIT, 8.0)
 	check(carried_on and "because of me" in line_text(), "with nobody tapping, the story carries on at sea: Jonah admits it")
 	check(faces(world.captain(), world.jonah()) or faces(world.jonah(), world.captain()), "Jonah and the captain turn to each other")
+	await create_timer(0.7).timeout
+	check(world.jonah().heart > 0.9 and world.jonah().slump > 0.5 and world.captain().brace > 0.4 and world.crew()[2].sway > 0.5,
+			"Jonah hangs his head, a hand on his heart; the crew brace and rock with the deck")
 	story._advance()
 	await settle()
-	check(story.phase == story.Phase.PLEAD and "please be kind" in line_text(), "the captain does not want to, and prays")
+	await create_timer(0.7).timeout
+	check(story.phase == story.Phase.PLEAD and "please be kind" in line_text() and world.captain().plead > 0.9,
+			"the captain does not want to, and raises his hands to pray")
 	story._advance()
 	await settle()
 	check(story.phase == story.Phase.OVERBOARD and story.get_action_hint() == "", "Jonah goes to the ship's side; nothing for the child to press")
@@ -265,6 +274,16 @@ func _run() -> void:
 			kneeling += 1
 	check(story.phase == story.Phase.LISTENED and kneeling >= 3 and "turned away from the wrong" in line_text(),
 			"they are sorry, and turn away from the wrong they did (%d kneel)" % kneeling)
+	var kneeler: Node3D = null
+	for person in world.crowd().people():
+		if person.kneel > 0.9:
+			kneeler = person
+	var sk := kneeler.find_children("*", "Skeleton3D", true, false)[0] as Skeleton3D
+	var knee := sk.global_transform * sk.get_bone_global_pose(sk.find_bone("Shin_L")).origin
+	var foot := sk.global_transform * (sk.get_bone_global_pose(sk.find_bone("Shin_L")) * Vector3(0.0, 0.2, 0.0))
+	var back := kneeler.global_basis.z
+	check((foot - knee).dot(back) > 0.1 and foot.y > kneeler.global_position.y - 0.05,
+			"kneeling, their feet are behind them on the ground, not stuck out in front")
 	story._advance()
 	var on_hill: bool = await wait_for(func() -> bool: return story.phase == story.Phase.HILL and not story._busy, 8.0)
 	check(on_hill and world.plant().grown > 0.99 and "a plant grow" in line_text(), "Jonah on the hill, cross; the plant grows over him")

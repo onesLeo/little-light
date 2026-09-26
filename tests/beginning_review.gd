@@ -28,7 +28,12 @@ func _initialize() -> void:
 	Profiles.finish_chapter(Profiles.CHAPTER_VALLEY)
 	Profiles.finish_chapter(Profiles.CHAPTER_CAMP)
 	Profiles.current_chapter = ""
+	# The saved settings are the tablet's (a child who plays with Easy words saves it there): load them
+	# first, then set what the checks expect, so playing the game never changes a test's result.
+	Settings.load_settings()
 	Settings.read_aloud = false
+	Settings.easy_words = false
+	Settings.reduced_motion = false
 	main = (load("res://scenes/main.tscn") as PackedScene).instantiate()
 	root.add_child(main)
 	main.get_node("GameMenu").end_panel_delay = 0.05

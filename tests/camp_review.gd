@@ -34,7 +34,12 @@ func shot(label: String) -> void:
 func _run() -> void:
 	await settle()
 	check(not paused, "scratch profile opens the game without the picker")
+	# The saved settings are the tablet's (a child who plays with Easy words saves it there): load them
+	# first, then set what the checks expect, so playing the game never changes a test's result.
+	Settings.load_settings()
 	Settings.read_aloud = false
+	Settings.easy_words = false
+	Settings.reduced_motion = false
 	main.get_node("AudioDirector").stop_speech()
 	check(main.get_node_or_null("KingsCamp") == null, "the camp is not in the scene until its story starts")
 	main.switch_to(Profiles.CHAPTER_CAMP)

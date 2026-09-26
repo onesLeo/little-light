@@ -623,6 +623,59 @@ func set_scene_for(beat: String) -> void:
 		(_spots[piece] as Node3D).visible = false
 
 
+## How everyone feels at story beat `beat` (story_person.gd mood): the fear and the prayers on
+## the ship, Jonah's shame, his prayer in the deep, his warning at the gate and his sulk on the hill.
+## Rocking with the deck is not a feeling: it follows the storm by itself (_process).
+func feel(beat: String) -> void:
+	var deckhand: Node3D = _crew[1]
+	var ropeman: Node3D = _crew[2]
+	match beat:
+		"meet":
+			_jonah.mood({"slump": 0.35})
+		"calm_deck":
+			_jonah.mood({})
+			for member in _crew:
+				member.mood({})
+		"storm":
+			_captain.mood({"brace": 1.0})
+			deckhand.mood({"brace": 0.8})
+			ropeman.mood({"brace": 1.0})
+			_jonah.mood({"slump": 0.4})
+		"admit":
+			_jonah.mood({"slump": 0.6, "heart": 1.0})
+			_captain.mood({"brace": 0.5})
+		"plead":
+			_captain.mood({"plead": 1.0})
+			ropeman.mood({"plead": 0.7})
+			deckhand.mood({"slump": 0.5, "brace": 0.4})
+			_jonah.mood({"slump": 0.6})
+		"overboard":
+			_jonah.mood({})
+		"after_storm":
+			# Quiet and sorry, once the sea is still.
+			for member in _crew:
+				member.mood({"slump": 0.35}, 1.5)
+		"pray":
+			_jonah.mood({"plead": 1.0}, 1.0)
+		"thanks":
+			_jonah.mood({"plead": 0.6})
+		"shore":
+			_jonah.mood({})
+		"warning":
+			_jonah.mood({})
+			var raise := create_tween()
+			raise.tween_property(_jonah, "reach", 0.75, 0.6).set_trans(Tween.TRANS_SINE)
+		"listened":
+			var lower := create_tween()
+			lower.tween_property(_jonah, "reach", 0.0, 0.8).set_trans(Tween.TRANS_SINE)
+		"cross":
+			_jonah.mood({"slump": 0.55})
+		"wither":
+			_jonah.mood({"slump": 0.85}, 1.2)
+		"question":
+			_jonah.mood({"slump": 0.3}, 1.5)
+
+
 ## Jonah for this place: on the quay at Joppa, on deck at sea, kneeling in the deep.
 func place_jonah(which: String) -> void:
 	_jonah.visible = true
@@ -630,6 +683,7 @@ func place_jonah(which: String) -> void:
 	match which:
 		"sea":
 			_jonah.kneel = 0.0
+			feel("calm_deck")
 			_jonah.global_position = AT_SEA + JONAH_AT_SEA
 			face(_jonah, AT_SEA + CAPTAIN_AT)
 		"deep":
@@ -752,6 +806,14 @@ func _process(delta: float) -> void:
 		(_gulls[i].get_child(0) as Node3D).rotation.z = sin(_time * 5.0 + i) * 0.35
 		(_gulls[i].get_child(1) as Node3D).rotation.z = -sin(_time * 5.0 + i) * 0.35
 	_crew_glances(delta)
+	# On deck everyone rocks a little with the sea, more as the storm rises (less with Calm motion).
+	if place == "sea" and _sea:
+		var rocking: float = _sea.storm * JonahSea.motion()
+		for member in _crew:
+			member.sway = rocking
+		_jonah.sway = rocking * 0.8
+	elif _jonah.sway > 0.0:
+		_jonah.sway = 0.0
 	if _deep_light:
 		_deep_light.light_energy = 1.6 + sin(_time * 1.3) * 0.2
 

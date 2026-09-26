@@ -66,6 +66,11 @@ func _initialize() -> void:
 	Profiles.set_active(Profiles.create("Test", "lamb"))
 	# As after "Play again" in the valley: the story goes straight into chapter 1.
 	Profiles.current_chapter = Profiles.CHAPTER_VALLEY
+	# The tablet's saved settings, then the story's plain words and full motion, whatever a child
+	# last chose while playing (Easy words is saved to the tablet too).
+	GameSettings.load_settings()
+	GameSettings.easy_words = false
+	GameSettings.reduced_motion = false
 	var main: Node = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
 	await process_frame  # let _ready() propagate through the tree first
