@@ -13,6 +13,10 @@ const BREATH := DIR + "sfx/breath_loop.wav"
 const CRICKETS := DIR + "ambience/crickets.wav"
 const CAMPFIRE := DIR + "ambience/campfire.wav"
 const OWL := DIR + "sfx/owl_hoot.wav"
+## Jonah: one seamless bed for Joppa, one for the storm, and one for Nineveh's market.
+const JONAH_HARBOUR := DIR + "ambience/jonah_harbour.wav"
+const JONAH_STORM := DIR + "ambience/jonah_storm.wav"
+const JONAH_MARKET := DIR + "ambience/jonah_market.wav"
 const BIRD_COUNT := 7
 const STEP_COUNT := 4
 ## Ground the footsteps change with (grass is the plain "step_N" files).
@@ -58,7 +62,8 @@ static func bleat(index: int) -> AudioStream:
 
 ## Every file the game expects, for the smoke test.
 static func all_paths() -> PackedStringArray:
-	var paths := PackedStringArray([MUSIC, WIND, STREAM, FLUTTER, BREATH, CRICKETS, CAMPFIRE, OWL])
+	var paths := PackedStringArray([MUSIC, WIND, STREAM, FLUTTER, BREATH, CRICKETS, CAMPFIRE, OWL,
+			JONAH_HARBOUR, JONAH_STORM, JONAH_MARKET])
 	for i in BIRD_COUNT:
 		paths.append(DIR + "ambience/bird_%d.wav" % (i + 1))
 	for i in STEP_COUNT:

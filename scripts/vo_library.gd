@@ -65,6 +65,17 @@ const LINES := {
 	"God.": "bg_word_god",
 	"Sees.": "bg_word_sees",
 	"Heart.": "bg_word_heart",
+	# Chapter 5, Jonah and the Great Fish: its story lines are in assets/dialogue/jonahs_journey.tres
+	# (Wonder Light in Juno, Jonah in Julian, the Captain in Alistair). These are spoken by their
+	# words: the map, the locked card, the verse, the prayer's three lights and the charm.
+	"Jonah and the Great Fish is next.": "jn5_map",
+	"Finish Chapter 4, Noah's Ark, first. Then Jonah will open for you.": "jn5_locked",
+	"Jonah, chapter two, verse two.": "jn5_verse_ref",
+	"I called because of my affliction to Yahweh. He answered me. Out of the belly of Sheol I cried. You heard my voice.": "jn5_verse",
+	"Call.": "jn5_word_call",
+	"Hear.": "jn5_word_hear",
+	"Go.": "jn5_word_go",
+	"A Mercy charm, for another chance, and for a city God would not give up on.": "jn5_charm",
 }
 
 static var _cache: Dictionary = {}

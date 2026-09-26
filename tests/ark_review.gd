@@ -32,7 +32,12 @@ func settle(frames: int = 5) -> void:
 
 func _run() -> void:
 	await settle()
+	# The saved settings are the tablet's (a child who plays with Easy words saves it there): load them
+	# first, then set what the checks expect, so playing the game never changes a test's result.
+	Settings.load_settings()
 	Settings.read_aloud = false
+	Settings.easy_words = false
+	Settings.reduced_motion = false
 	main.get_node("AudioDirector").stop_speech()
 	main.get_node("GameMenu").end_panel_delay = 0.05
 	var cam: Camera3D = main.get_node("TabletopCamera")

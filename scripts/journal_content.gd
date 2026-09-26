@@ -7,20 +7,22 @@ extends RefCounted
 ## Everything here is read aloud with the recorded clips in vo_library.gd, so a new verse or charm
 ## needs its text (and its "spoken_ref" for a verse) recorded and listed there. The smoke test checks
 ## that every line below has a clip, except an entry marked "recorded": false, which the system voice
-## reads until its chapter is cast (The Beginning, for now).
+## reads until its chapter is cast (none, for now).
 
 const VERSE_JOSHUA_1_9 := "joshua_1_9"
 const VERSE_SAMUEL_18_1 := "samuel_18_1"
 const VERSE_GENESIS_9_13 := "genesis_9_13"
 const VERSE_SAMUEL_16_7 := "samuel_16_7"
+const VERSE_JONAH_2_2 := "jonah_2_2"
 const CHARM_COURAGE := "courage"
 const CHARM_FRIENDSHIP := "friendship"
 const CHARM_TRUST := "trust"
 const CHARM_FAITHFUL_HEART := "faithful_heart"
+const CHARM_MERCY := "mercy"
 
 ## Charm slots shown as a dashed "?" after the earned charms, for adventures still to come.
-## With The Beginning's Faithful Heart in, one slot stays open, for Jonah.
-const MYSTERY_SLOTS := 1
+## With Jonah's Mercy in, all five charms of the first journey have their place: none stays open.
+const MYSTERY_SLOTS := 0
 
 const VERSES := [
 	{
@@ -52,6 +54,14 @@ const VERSES := [
 		"text": "But Yahweh said to Samuel, ‘Don't look on his face, or on the height of his stature, because I have rejected him; for I don't see as man sees. For man looks at the outward appearance, but Yahweh looks at the heart.’",
 		"why": "David was out caring for the sheep when Samuel came. People look at the outside first. God sees the heart.",
 	},
+	{
+		"id": VERSE_JONAH_2_2,
+		"ref": "Jonah 2:2",
+		"spoken_ref": "Jonah, chapter two, verse two.",
+		# World English Bible, Jonah 2:2 (docs/chapter-5-concept.md), without its opening "He said,".
+		"text": "I called because of my affliction to Yahweh. He answered me. Out of the belly of Sheol I cried. You heard my voice.",
+		"why": "Jonah had run away from God, and still God heard him when he called. Then God gave him another chance.",
+	},
 ]
 
 const CHARMS := [
@@ -82,6 +92,13 @@ const CHARMS := [
 		"reason": "For caring well in quiet places.",
 		"spoken": "A Faithful Heart charm, for caring well in quiet places.",
 		"color": Color(0.9, 0.52, 0.42),
+	},
+	{
+		"id": CHARM_MERCY,
+		"name": "Mercy",
+		"reason": "For another chance, and for a city God would not give up on.",
+		"spoken": "A Mercy charm, for another chance, and for a city God would not give up on.",
+		"color": Color(0.3, 0.46, 0.72),
 	},
 ]
 

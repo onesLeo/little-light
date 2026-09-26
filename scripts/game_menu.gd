@@ -48,6 +48,10 @@ var _journey_button: Button
 var _resume_button: Button
 var _read_check: CheckButton
 var _easy_check: CheckButton
+var _motion_check: CheckButton
+## The pause menu's list scrolls when it is taller than the screen (a small tablet, or more settings).
+var _pause_scroll: ScrollContainer
+var _pause_box: VBoxContainer
 var _volume: HSlider
 var _music_slider: HSlider
 var _sounds_slider: HSlider
@@ -156,9 +160,22 @@ func set_paused(paused: bool) -> void:
 		if _audio and _audio.has_method("stop_speech"):
 			_audio.stop_speech()
 		_sync_pause_controls()
+		_fit_pause_panel()
+		_pause_scroll.scroll_vertical = 0
 		_resume_button.grab_focus()
 	else:
 		get_viewport().gui_release_focus()
+
+
+## Sizes the pause menu's scrolling list: all of it when it fits, otherwise as tall as the screen
+## allows, and the rest is a finger drag (or the wheel) away.
+func _fit_pause_panel() -> void:
+	if _pause_scroll == null:
+		return
+	var want := _pause_box.get_combined_minimum_size()
+	var room := get_viewport().get_visible_rect().size.y - 96.0
+	var bar := 0.0 if want.y <= room else _pause_scroll.get_v_scroll_bar().get_combined_minimum_size().x + 10.0
+	_pause_scroll.custom_minimum_size = Vector2(want.x + bar, clampf(want.y, 160.0, maxf(room, 160.0)))
 
 
 ## "Start this chapter again": forgets where the child got to in it, then starts it over.
@@ -308,9 +325,15 @@ func _build_pause_panel() -> void:
 	var panel := PanelContainer.new()
 	panel.add_theme_stylebox_override("panel", _panel_style())
 	center.add_child(panel)
+	_pause_scroll = ScrollContainer.new()
+	_pause_scroll.name = "PauseScroll"
+	_pause_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	panel.add_child(_pause_scroll)
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 10)
-	panel.add_child(vbox)
+	_pause_scroll.add_child(vbox)
+	_pause_box = vbox
+	get_viewport().size_changed.connect(_fit_pause_panel)
 
 	vbox.add_child(_label("Paused", 40))
 
@@ -342,6 +365,15 @@ func _build_pause_panel() -> void:
 		_easy_check.add_theme_color_override(color_name, INK)
 	_easy_check.toggled.connect(_on_easy_check_toggled)
 	vbox.add_child(_easy_check)
+
+	_motion_check = CheckButton.new()
+	_motion_check.name = "CalmMotion"
+	_motion_check.text = "Calm motion"
+	_motion_check.add_theme_font_size_override("font_size", 24)
+	for color_name in TOGGLE_TEXT_STATES:
+		_motion_check.add_theme_color_override(color_name, INK)
+	_motion_check.toggled.connect(_on_motion_check_toggled)
+	vbox.add_child(_motion_check)
 
 	_volume = _add_slider_row(vbox, "Volume", _on_volume_changed)
 	_music_slider = _add_slider_row(vbox, "Music", _on_music_changed)
@@ -434,6 +466,7 @@ func _sync_pause_controls() -> void:
 	_read_check.visible = _audio != null and _audio.has_method("is_read_aloud_available") and _audio.is_read_aloud_available()
 	_read_check.set_pressed_no_signal(GameSettings.read_aloud)
 	_easy_check.set_pressed_no_signal(GameSettings.easy_words)
+	_motion_check.set_pressed_no_signal(GameSettings.reduced_motion)
 	_volume.set_value_no_signal(GameSettings.master_volume)
 	_music_slider.set_value_no_signal(GameSettings.music_volume)
 	_sounds_slider.set_value_no_signal(GameSettings.sounds_volume)
@@ -456,6 +489,12 @@ func _on_speaker_pressed() -> void:
 ## Takes effect from the next line of the story; what is on screen now stays as it is.
 func _on_easy_check_toggled(pressed: bool) -> void:
 	GameSettings.easy_words = pressed
+	GameSettings.save_settings()
+
+
+## Reduced motion: the sea calms at once (jonah_sea.gd reads it every frame).
+func _on_motion_check_toggled(pressed: bool) -> void:
+	GameSettings.reduced_motion = pressed
 	GameSettings.save_settings()
 
 

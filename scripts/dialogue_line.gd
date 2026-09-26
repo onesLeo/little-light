@@ -7,7 +7,7 @@ extends Resource
 
 const JournalContent := preload("res://scripts/journal_content.gd")
 ## Who can speak, as the dialogue bar writes them ("Noah's wife" before "Noah").
-const SPEAKERS := ["Wonder Light", "David", "Jonathan", "Samuel", "Jesse", "Noah's wife", "Noah"]
+const SPEAKERS := ["Wonder Light", "David", "Jonathan", "Samuel", "Jesse", "Noah's wife", "Noah", "Jonah", "Captain"]
 
 @export var id: StringName = &""
 ## One of SPEAKERS ("Wonder Light", "David", "Samuel", ...). Empty for a stage direction,

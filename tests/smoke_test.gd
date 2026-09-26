@@ -66,6 +66,11 @@ func _initialize() -> void:
 	Profiles.set_active(Profiles.create("Test", "lamb"))
 	# As after "Play again" in the valley: the story goes straight into chapter 1.
 	Profiles.current_chapter = Profiles.CHAPTER_VALLEY
+	# The tablet's saved settings, then the story's plain words and full motion, whatever a child
+	# last chose while playing (Easy words is saved to the tablet too).
+	GameSettings.load_settings()
+	GameSettings.easy_words = false
+	GameSettings.reduced_motion = false
 	var main: Node = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
 	await process_frame  # let _ready() propagate through the tree first
@@ -461,6 +466,7 @@ func _initialize() -> void:
 	for block in ["Hello!\nYour journey starts in the valley.", "Hello!\nThe King's Camp is next.", "Hello!\nNoah's Ark is next.", "Hello!\nTap a story to begin.",
 			"Hello!\nThe Beginning is next.", "Finish Chapter 2, The King's Camp, first. Then The Beginning will open for you.",
 			"Finish Chapter 3, The Beginning, first. Then Noah's Ark will open for you.",
+			"Hello!\nJonah and the Great Fish is next.", "Finish Chapter 4, Noah's Ark, first. Then Jonah will open for you.",
 			"One story at a time.", "Finish Chapter 1, The valley, first. Then The King's Camp will open for you.",
 			"This part of the path is still ahead. New stories will be waiting here."]:
 		for line in audio._spoken_lines(map_script._wonder_light(block)):
@@ -471,7 +477,8 @@ func _initialize() -> void:
 	for story in [["res://assets/dialogue/bethlehem_valley.tres", "res://scripts/chapter_director.gd"],
 			["res://assets/dialogue/kings_camp.tres", "res://scripts/chapter_two.gd"],
 			["res://assets/dialogue/noahs_ark.tres", "res://scripts/chapter_four.gd"],
-			["res://assets/dialogue/jesses_house.tres", "res://scripts/chapter_three.gd"]]:
+			["res://assets/dialogue/jesses_house.tres", "res://scripts/chapter_three.gd"],
+			["res://assets/dialogue/jonahs_journey.tres", "res://scripts/chapter_five.gd"]]:
 		var book: Resource = load(story[0])
 		var seen: Dictionary = {}
 		var faults: Array = []

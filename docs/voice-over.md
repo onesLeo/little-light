@@ -169,3 +169,20 @@ again; compare a take's length with its full line before keeping it.
 To fetch them again: `python tools/fetch_vo.py --only bg_ --force` (the verse needs
 `pip install miniaudio`), then turn Samuel's and Jesse's four clips down to about -19 dB again (the
 takes come in 3 to 4 dB louder), import in Godot and run the smoke test and `tests/beginning_review.gd`.
+
+## Chapter 5, Jonah and the Great Fish
+
+Fifty-four clips, mono 24 kHz PCM, all Seed Audio 1.0 (ids `jn5_*`, easy words `ez_jn5_*`; takes listed in
+`tools/fetch_vo.py`). The lines are in `assets/dialogue/jonahs_journey.tres`; the map, the locked card,
+Jonah 2:2, the prayer's three lights (Call, Hear, Go) and the Mercy charm are spoken by their words
+(`scripts/vo_library.gd`).
+
+| Role | Preset | Why |
+|---|---|---|
+| Wonder Light | Juno | as in every chapter; levelled to about -23 dB speech RMS |
+| Jonah | Julian | chosen by ear from Holden, Callan and Julian on "This storm is because of me…"; about -19 dB |
+| Captain | Alistair | chosen by ear from Barrett, Alistair and Harrison on "Hold on! This storm isn't like the others."; about -19 dB |
+
+Seed Audio refused "Put me into the sea, and the sea will be calm for you." three times (it seems to
+read it as unsafe), so Jonah says "If I go into the sea, the storm will stop." instead. "Hear." was
+trimmed after the word, where the take had a breath.
