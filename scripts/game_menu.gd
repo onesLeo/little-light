@@ -49,6 +49,9 @@ var _resume_button: Button
 var _read_check: CheckButton
 var _easy_check: CheckButton
 var _motion_check: CheckButton
+## The pause menu's list scrolls when it is taller than the screen (a small tablet, or more settings).
+var _pause_scroll: ScrollContainer
+var _pause_box: VBoxContainer
 var _volume: HSlider
 var _music_slider: HSlider
 var _sounds_slider: HSlider
@@ -157,9 +160,22 @@ func set_paused(paused: bool) -> void:
 		if _audio and _audio.has_method("stop_speech"):
 			_audio.stop_speech()
 		_sync_pause_controls()
+		_fit_pause_panel()
+		_pause_scroll.scroll_vertical = 0
 		_resume_button.grab_focus()
 	else:
 		get_viewport().gui_release_focus()
+
+
+## Sizes the pause menu's scrolling list: all of it when it fits, otherwise as tall as the screen
+## allows, and the rest is a finger drag (or the wheel) away.
+func _fit_pause_panel() -> void:
+	if _pause_scroll == null:
+		return
+	var want := _pause_box.get_combined_minimum_size()
+	var room := get_viewport().get_visible_rect().size.y - 96.0
+	var bar := 0.0 if want.y <= room else _pause_scroll.get_v_scroll_bar().get_combined_minimum_size().x + 10.0
+	_pause_scroll.custom_minimum_size = Vector2(want.x + bar, clampf(want.y, 160.0, maxf(room, 160.0)))
 
 
 ## "Start this chapter again": forgets where the child got to in it, then starts it over.
@@ -309,9 +325,15 @@ func _build_pause_panel() -> void:
 	var panel := PanelContainer.new()
 	panel.add_theme_stylebox_override("panel", _panel_style())
 	center.add_child(panel)
+	_pause_scroll = ScrollContainer.new()
+	_pause_scroll.name = "PauseScroll"
+	_pause_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	panel.add_child(_pause_scroll)
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 10)
-	panel.add_child(vbox)
+	_pause_scroll.add_child(vbox)
+	_pause_box = vbox
+	get_viewport().size_changed.connect(_fit_pause_panel)
 
 	vbox.add_child(_label("Paused", 40))
 

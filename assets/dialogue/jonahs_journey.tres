@@ -1,192 +1,284 @@
-[gd_resource type="Resource" load_steps=33 format=3]
+[gd_resource type="Resource" load_steps=80 format=3]
 
 [ext_resource type="Script" path="res://scripts/dialogue_lines.gd" id="1_lines"]
 [ext_resource type="Script" path="res://scripts/dialogue_line.gd" id="2_line"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/jn5_arrive.wav" id="jn5_arrive"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ez_jn5_arrive.wav" id="ez_jn5_arrive"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/jn5_road.wav" id="jn5_road"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ez_jn5_road.wav" id="ez_jn5_road"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/jn5_find.wav" id="jn5_find"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ez_jn5_find.wav" id="ez_jn5_find"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/jn5_found_bag.wav" id="jn5_found_bag"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/jn5_found_message.wav" id="jn5_found_message"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/jn5_found_lamp.wav" id="jn5_found_lamp"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/jn5_meet.wav" id="jn5_meet"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ez_jn5_meet.wav" id="ez_jn5_meet"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/jn5_board.wav" id="jn5_board"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/jn5_sail.wav" id="jn5_sail"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ez_jn5_sail.wav" id="ez_jn5_sail"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/jn5_cargo.wav" id="jn5_cargo"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ez_jn5_cargo.wav" id="ez_jn5_cargo"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/jn5_captain.wav" id="jn5_captain"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/jn5_admit.wav" id="jn5_admit"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ez_jn5_admit.wav" id="ez_jn5_admit"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/jn5_put_me.wav" id="jn5_put_me"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/jn5_plead.wav" id="jn5_plead"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/jn5_calm.wav" id="jn5_calm"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ez_jn5_calm.wav" id="ez_jn5_calm"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/jn5_fish.wav" id="jn5_fish"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/jn5_pray.wav" id="jn5_pray"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ez_jn5_pray.wav" id="ez_jn5_pray"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/jn5_thanks.wav" id="jn5_thanks"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/jn5_shore.wav" id="jn5_shore"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ez_jn5_shore.wav" id="ez_jn5_shore"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/jn5_again.wav" id="jn5_again"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ez_jn5_again.wav" id="ez_jn5_again"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/jn5_warning.wav" id="jn5_warning"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/jn5_listened.wav" id="jn5_listened"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ez_jn5_listened.wav" id="ez_jn5_listened"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/jn5_mercy.wav" id="jn5_mercy"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/jn5_cross.wav" id="jn5_cross"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ez_jn5_cross.wav" id="ez_jn5_cross"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/jn5_wither.wav" id="jn5_wither"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ez_jn5_wither.wav" id="ez_jn5_wither"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/jn5_question.wav" id="jn5_question"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ez_jn5_question.wav" id="ez_jn5_question"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/jn5_reflect.wav" id="jn5_reflect"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ez_jn5_reflect.wav" id="ez_jn5_reflect"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/jn5_charm.wav" id="jn5_charm"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ez_jn5_charm.wav" id="ez_jn5_charm"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/jn5_keep_close.wav" id="jn5_keep_close"]
+[ext_resource type="AudioStream" path="res://assets/audio/vo/ez_jn5_keep_close.wav" id="ez_jn5_keep_close"]
 
 [sub_resource type="Resource" id="Line_arrive"]
 script = ExtResource("2_line")
 id = &"arrive"
 speaker = "Wonder Light"
 text = "Noah trusted God before he could see the rain. Jonah heard God too, but Jonah ran the other way."
+clip = ExtResource("jn5_arrive")
 easy_text = "Noah trusted God. Jonah heard God too, but he ran the other way."
+easy_clip = ExtResource("ez_jn5_arrive")
 
 [sub_resource type="Resource" id="Line_road"]
 script = ExtResource("2_line")
 id = &"road"
 speaker = "Wonder Light"
 text = "God asked Jonah to go to Nineveh, down that road. But Jonah's ship is sailing the other way."
+clip = ExtResource("jn5_road")
 easy_text = "God said: go to Nineveh. But Jonah's ship goes the other way."
+easy_clip = ExtResource("ez_jn5_road")
 
 [sub_resource type="Resource" id="Line_find"]
 script = ExtResource("2_line")
 id = &"find"
 speaker = "Wonder Light"
 text = "Let's find Jonah's bag, his message and his lamp."
+clip = ExtResource("jn5_find")
 easy_text = "Find Jonah's bag, his message and his lamp."
+easy_clip = ExtResource("ez_jn5_find")
 
 [sub_resource type="Resource" id="Line_found_bag"]
 script = ExtResource("2_line")
 id = &"found_bag"
 speaker = "Wonder Light"
 text = "Jonah's travelling bag. He packed for a long way from home."
+clip = ExtResource("jn5_found_bag")
 
 [sub_resource type="Resource" id="Line_found_message"]
 script = ExtResource("2_line")
 id = &"found_message"
 speaker = "Wonder Light"
 text = "God's message for Nineveh. It keeps turning toward the road."
+clip = ExtResource("jn5_found_message")
 
 [sub_resource type="Resource" id="Line_found_lamp"]
 script = ExtResource("2_line")
 id = &"found_lamp"
 speaker = "Wonder Light"
 text = "A little oil lamp, for dark nights on the way."
+clip = ExtResource("jn5_found_lamp")
 
 [sub_resource type="Resource" id="Line_meet"]
 script = ExtResource("2_line")
 id = &"meet"
 speaker = "Jonah"
 text = "I know where God wants me to go. I don't want to go there."
+clip = ExtResource("jn5_meet")
 easy_text = "I know where God wants me to go. I don't want to go."
+easy_clip = ExtResource("ez_jn5_meet")
 
 [sub_resource type="Resource" id="Line_board"]
 script = ExtResource("2_line")
 id = &"board"
 speaker = "Wonder Light"
 text = "Jonah is getting on the ship. Let's go with him."
+clip = ExtResource("jn5_board")
 
 [sub_resource type="Resource" id="Line_sail"]
 script = ExtResource("2_line")
 id = &"sail"
 speaker = "Wonder Light"
 text = "The ship sails far from Nineveh. The sky is growing dark."
+clip = ExtResource("jn5_sail")
 easy_text = "The ship sails away. The sky is getting dark."
+easy_clip = ExtResource("ez_jn5_sail")
 
 [sub_resource type="Resource" id="Line_cargo"]
 script = ExtResource("2_line")
 id = &"cargo"
 speaker = "Wonder Light"
 text = "Let's help the sailors put the cargo in its place before the storm."
+clip = ExtResource("jn5_cargo")
 easy_text = "A storm is coming. Let's help put the cargo away."
+easy_clip = ExtResource("ez_jn5_cargo")
 
 [sub_resource type="Resource" id="Line_captain"]
 script = ExtResource("2_line")
 id = &"captain"
 speaker = "Captain"
 text = "Hold on! This storm isn't like the others."
+clip = ExtResource("jn5_captain")
 
 [sub_resource type="Resource" id="Line_admit"]
 script = ExtResource("2_line")
 id = &"admit"
 speaker = "Jonah"
 text = "This storm is because of me. I was running away from God."
+clip = ExtResource("jn5_admit")
 easy_text = "This storm is my fault. I ran away from God."
+easy_clip = ExtResource("ez_jn5_admit")
 
 [sub_resource type="Resource" id="Line_put_me"]
 script = ExtResource("2_line")
 id = &"put_me"
 speaker = "Jonah"
-text = "Put me into the sea, and the sea will be calm for you."
+text = "If I go into the sea, the storm will stop."
+clip = ExtResource("jn5_put_me")
 
 [sub_resource type="Resource" id="Line_plead"]
 script = ExtResource("2_line")
 id = &"plead"
 speaker = "Captain"
 text = "We don't want to do this. God, please be kind to us."
+clip = ExtResource("jn5_plead")
 
 [sub_resource type="Resource" id="Line_calm"]
 script = ExtResource("2_line")
 id = &"calm"
 speaker = "Wonder Light"
 text = "The sailors did not want to. But Jonah went into the sea, and the storm stopped."
+clip = ExtResource("jn5_calm")
 easy_text = "Jonah went into the sea, and the storm stopped."
+easy_clip = ExtResource("ez_jn5_calm")
 
 [sub_resource type="Resource" id="Line_fish"]
 script = ExtResource("2_line")
 id = &"fish"
 speaker = "Wonder Light"
 text = "God sent a great fish to keep Jonah safe."
+clip = ExtResource("jn5_fish")
 
 [sub_resource type="Resource" id="Line_pray"]
 script = ExtResource("2_line")
 id = &"pray"
 speaker = "Wonder Light"
 text = "Inside the great fish, Jonah prayed. Let's pray with him: Call, Hear, Go."
+clip = ExtResource("jn5_pray")
 easy_text = "Jonah prayed inside the fish. Let's pray with him. Tap Call, Hear and Go."
+easy_clip = ExtResource("ez_jn5_pray")
 
 [sub_resource type="Resource" id="Line_thanks"]
 script = ExtResource("2_line")
 id = &"thanks"
 speaker = "Jonah"
 text = "You heard me, God. Thank you for another chance."
+clip = ExtResource("jn5_thanks")
 
 [sub_resource type="Resource" id="Line_shore"]
 script = ExtResource("2_line")
 id = &"shore"
 speaker = "Wonder Light"
 text = "Then the great fish brought Jonah safely to dry land."
+clip = ExtResource("jn5_shore")
 easy_text = "The fish put Jonah safely on the shore."
+easy_clip = ExtResource("ez_jn5_shore")
 
 [sub_resource type="Resource" id="Line_again"]
 script = ExtResource("2_line")
 id = &"again"
 speaker = "Wonder Light"
 text = "God asked Jonah a second time: go to Nineveh. And this time, Jonah went."
+clip = ExtResource("jn5_again")
 easy_text = "God asked again. This time, Jonah went."
+easy_clip = ExtResource("ez_jn5_again")
 
 [sub_resource type="Resource" id="Line_warning"]
 script = ExtResource("2_line")
 id = &"warning"
 speaker = "Jonah"
 text = "Forty more days, and Nineveh will be overturned!"
+clip = ExtResource("jn5_warning")
 
 [sub_resource type="Resource" id="Line_listened"]
 script = ExtResource("2_line")
 id = &"listened"
 speaker = "Wonder Light"
 text = "The people of Nineveh listened. They were sorry, and they turned away from the wrong they did."
+clip = ExtResource("jn5_listened")
 easy_text = "The people listened. They were sorry, and they stopped doing wrong."
+easy_clip = ExtResource("ez_jn5_listened")
 
 [sub_resource type="Resource" id="Line_mercy"]
 script = ExtResource("2_line")
 id = &"mercy"
 speaker = "Wonder Light"
 text = "God saw them change, and God was kind to the city."
+clip = ExtResource("jn5_mercy")
 
 [sub_resource type="Resource" id="Line_cross"]
 script = ExtResource("2_line")
 id = &"cross"
 speaker = "Wonder Light"
 text = "But Jonah was cross that God was kind to Nineveh. He sat on a hill, and God made a plant grow to shade him."
+clip = ExtResource("jn5_cross")
 easy_text = "Jonah was cross. He sat on a hill, and God grew a plant to shade him."
+easy_clip = ExtResource("ez_jn5_cross")
 
 [sub_resource type="Resource" id="Line_wither"]
 script = ExtResource("2_line")
 id = &"wither"
 speaker = "Wonder Light"
 text = "The next day the plant dried up, and Jonah was sad."
+clip = ExtResource("jn5_wither")
 easy_text = "Next day the plant dried up. Jonah was sad."
+easy_clip = ExtResource("ez_jn5_wither")
 
 [sub_resource type="Resource" id="Line_question"]
 script = ExtResource("2_line")
 id = &"question"
 speaker = "Wonder Light"
 text = "Jonah cared about one plant. God cares about a whole city full of people."
+clip = ExtResource("jn5_question")
 easy_text = "Jonah cared about a plant. God cares about a whole city."
+easy_clip = ExtResource("ez_jn5_question")
 
 [sub_resource type="Resource" id="Line_reflect"]
 script = ExtResource("2_line")
 id = &"reflect"
 speaker = "Wonder Light"
 text = "God gave Jonah another chance. And God cared for the people Jonah did not want to forgive."
+clip = ExtResource("jn5_reflect")
 easy_text = "God gave Jonah another chance. And God loved the people of Nineveh too."
+easy_clip = ExtResource("ez_jn5_reflect")
 
 [sub_resource type="Resource" id="Line_charm"]
 script = ExtResource("2_line")
 id = &"charm"
 speaker = "Wonder Light"
 text = "A Mercy charm, for another chance, and for a city God would not give up on."
+clip = ExtResource("jn5_charm")
 easy_text = "A Mercy charm, for another chance."
+easy_clip = ExtResource("ez_jn5_charm")
 
 [sub_resource type="Resource" id="Line_charm_arrives"]
 script = ExtResource("2_line")
@@ -198,9 +290,10 @@ script = ExtResource("2_line")
 id = &"keep_close"
 speaker = "Wonder Light"
 text = "Keep it close. God gives second chances, even to the people we find hard to forgive."
+clip = ExtResource("jn5_keep_close")
 easy_text = "Keep it close. God gives second chances to everyone."
+easy_clip = ExtResource("ez_jn5_keep_close")
 
 [resource]
 script = ExtResource("1_lines")
 lines = Array[Resource]([SubResource("Line_arrive"), SubResource("Line_road"), SubResource("Line_find"), SubResource("Line_found_bag"), SubResource("Line_found_message"), SubResource("Line_found_lamp"), SubResource("Line_meet"), SubResource("Line_board"), SubResource("Line_sail"), SubResource("Line_cargo"), SubResource("Line_captain"), SubResource("Line_admit"), SubResource("Line_put_me"), SubResource("Line_plead"), SubResource("Line_calm"), SubResource("Line_fish"), SubResource("Line_pray"), SubResource("Line_thanks"), SubResource("Line_shore"), SubResource("Line_again"), SubResource("Line_warning"), SubResource("Line_listened"), SubResource("Line_mercy"), SubResource("Line_cross"), SubResource("Line_wither"), SubResource("Line_question"), SubResource("Line_reflect"), SubResource("Line_charm"), SubResource("Line_charm_arrives"), SubResource("Line_keep_close")])
-recorded = false

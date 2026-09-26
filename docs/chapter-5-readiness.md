@@ -7,7 +7,8 @@ is paper parts in code, and a review test plays every beat.
 Decided on 2026-09-26: same scope as Chapter 3 (greybox plus final characters and recorded voices),
 the verse is **Jonah 2:2** (WEB, checked against [ebible.org](https://ebible.org/eng-web/JON02.htm),
 shown without its opening "He said,"), and Nineveh has no voice of its own: Wonder Light tells what
-the city did. New voices only for Jonah and the Captain.
+the city did. New voices only for Jonah (Julian) and the Captain (Alistair), recorded with Wonder
+Light (Juno) on 2026-09-26 (docs/voice-over.md).
 
 ## What is in
 
@@ -29,7 +30,6 @@ themselves if the child stops tapping.
 ## Still to do
 
 - Jonah's own Blender model (for now he and the sailors are the tinted brother models).
-- Recorded voices for Jonah, the Captain and Wonder Light (the system voice reads them until then).
 - Harbour, storm, deep and market sound beds.
 - Playtests from the concept's improve pass: the fish silhouette and the storm with children and
   motion-sensitive adults, and a Bible-story review of the script.

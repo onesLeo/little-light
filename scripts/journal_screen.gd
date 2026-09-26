@@ -290,8 +290,11 @@ func _charm_button(c: Dictionary) -> Button:
 	icon.colours = Profiles.charm_colours(Profiles.active_id, c["id"]) if Profiles.has_coloured_charm(Profiles.active_id, c["id"]) else []
 	icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	column.add_child(icon)
-	var name_label := PaperUI.label(c["name"], 26)
+	# Two-word names (Faithful Heart) wrap onto a second line inside the card instead of running out.
+	var name_label := PaperUI.label(c["name"], 22 if " " in str(c["name"]) else 26)
 	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	name_label.custom_minimum_size.x = 136.0
 	column.add_child(name_label)
 	b.add_child(column)
 	b.pressed.connect(func() -> void:

@@ -315,6 +315,39 @@ func _run() -> void:
 	check(Profiles.place_in(Profiles.active_id, Profiles.CHAPTER_JONAH).is_empty(), "finishing forgets the place, so Play again starts at Joppa")
 	check(JournalContent.MYSTERY_SLOTS == 0, "all five charms of the first journey have their place in the journal")
 
+	print("-- the pause menu and the journal fit --")
+	# A short screen, shorter than the laptop the menu first ran off the bottom of.
+	var window_size: Vector2i = root.size
+	root.size = Vector2i(1280, 600)
+	await settle()
+	menu.set_paused(true)
+	await settle()
+	var scroll: ScrollContainer = menu._pause_scroll
+	var room: float = root.get_visible_rect().size.y
+	var buttons: Array = menu._pause_box.find_children("*", "Button", true, false).filter(func(b: Node) -> bool: return (b as Button).text == "Change player")
+	check(scroll.size.y <= room - 80.0 and buttons.size() == 1 and (menu._pause_box.size.y <= scroll.size.y + 1.0 or scroll.get_v_scroll_bar().max_value >= menu._pause_box.size.y - 1.0),
+			"the pause menu fits the screen (%d of %d px), and scrolls to Change player at the bottom" % [scroll.size.y, room])
+	menu.set_paused(false)
+	root.size = window_size
+	var journal: Node = main.get_node("JournalScreen")
+	Profiles.unlock_charm(JournalContent.CHARM_FAITHFUL_HEART)
+	journal.open()
+	await settle()
+	var fits := true
+	for card in journal._charm_row.get_children():
+		for label in card.find_children("*", "Label", true, false):
+			var inside: bool = (label as Label).get_rect().end.x <= (card as Control).size.x + 1.0 and (label as Label).get_global_rect().position.x >= (card as Control).get_global_rect().position.x - 1.0
+			if not inside:
+				print("   %s: %s in a card %s" % [(label as Label).text, (label as Label).get_global_rect(), (card as Control).get_global_rect()])
+			fits = fits and inside
+	var heart_label: Label = null
+	for label in journal._charm_row.find_children("*", "Label", true, false):
+		if (label as Label).text == "Faithful Heart":
+			heart_label = label
+	check(fits and heart_label != null and heart_label.get_line_count() <= 2 and journal._charm_row.get_child_count() == 2,
+			"every charm's name stays inside its card, Faithful Heart too (wrapping if it must)")
+	journal.close()
+
 	print("-- carrying on after the game was closed --")
 	var child := Profiles.active_id
 	Profiles.mark_place(Profiles.CHAPTER_JONAH, "prayer")

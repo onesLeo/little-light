@@ -7,7 +7,7 @@ extends RefCounted
 ## Everything here is read aloud with the recorded clips in vo_library.gd, so a new verse or charm
 ## needs its text (and its "spoken_ref" for a verse) recorded and listed there. The smoke test checks
 ## that every line below has a clip, except an entry marked "recorded": false, which the system voice
-## reads until its chapter is cast (Jonah, for now).
+## reads until its chapter is cast (none, for now).
 
 const VERSE_JOSHUA_1_9 := "joshua_1_9"
 const VERSE_SAMUEL_18_1 := "samuel_18_1"
@@ -61,7 +61,6 @@ const VERSES := [
 		# World English Bible, Jonah 2:2 (docs/chapter-5-concept.md), without its opening "He said,".
 		"text": "I called because of my affliction to Yahweh. He answered me. Out of the belly of Sheol I cried. You heard my voice.",
 		"why": "Jonah had run away from God, and still God heard him when he called. Then God gave him another chance.",
-		"recorded": false,
 	},
 ]
 
@@ -100,7 +99,6 @@ const CHARMS := [
 		"reason": "For another chance, and for a city God would not give up on.",
 		"spoken": "A Mercy charm, for another chance, and for a city God would not give up on.",
 		"color": Color(0.3, 0.46, 0.72),
-		"recorded": false,
 	},
 ]
 
